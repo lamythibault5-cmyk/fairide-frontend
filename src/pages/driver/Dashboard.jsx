@@ -32,6 +32,7 @@ import AlerteLivreurBar from '../../components/AlerteLivreurBar';
 import SelfieControle from '../../components/livreur/SelfieControle';
 import LivreurDedie from '../../components/livreur/LivreurDedie';
 import NotifCourses from '../../components/livreur/NotifCourses';
+import HeuresChargees from '../../components/livreur/HeuresChargees';
 import PositionRequise, { ExplicationPosition } from '../../components/livreur/PositionRequise';
 import useEtatPosition from '../../hooks/useEtatPosition';
 import Modale from '../../components/Modale';
@@ -315,7 +316,8 @@ export default function DriverDashboard() {
     api('/couriers/me', { token }).then((d) => {
       setSac(d.courier?.bag || null);
       setVehicule({ type: d.courier?.vehicleType || '', bikeMaxKm: d.pricing?.bikeMaxKm || 4, rate: ['velo', 'velo_electrique'].includes(d.courier?.vehicleType || '') ? d.pricing?.driverPerKmBike : d.pricing?.driverPerKmMotor, base: d.pricing?.deliveryBaseFee, baseKm: d.pricing?.deliveryBaseKm });
-      setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '', minFeeCents: d.courier?.minFeeCents ?? null });
+      // contratAJour : la version en vigueur signée (fondateur, 2026-10-31 : sans elle, aucune course ; routes/orders.js).
+      setDossier({ statut: d.courier?.lifecycleStatus || null, motif: d.courier?.reviewReason || '', minFeeCents: d.courier?.minFeeCents ?? null, contratAJour: !(d.missing || []).includes('contrat') });
       // Règles de la tournée (routes/couriers.js tarifsLivreur, tournee.js côté serveur), rappelées dès qu'une course est en main.
       setTournee({
         max: d.courier?.otherPlatforms?.works === true ? 1 : (d.pricing?.maxOrdersFairideOnly || 3),
@@ -692,6 +694,10 @@ export default function DriverDashboard() {
   const versToi = (o) => (maPosition && o.restaurantLat != null && o.restaurantLng != null
     ? haversineDistanceKm(maPosition.lat, maPosition.lng, o.restaurantLat, o.restaurantLng) * FACTEUR_RUES : null);
   const distanceLisible = (km) => (km < 1 ? `${Math.max(50, Math.round((km * 1000) / 50) * 50)} m` : `${dec(km, 1)} km`);
+  /* Le trajet commerce → client par les rues aussi (fondateur, 2026-10-31, maquettes/revue-parcours, question 5 A) : le
+     serveur le donne à vol d'oiseau (c'est sur lui que se calcule le prix, qui ne change pas), le premier trajet était déjà
+     × 1,3 : le livreur comparait deux chiffres comptés différemment, le second toujours trop court. */
+  const kmRues = (o) => (o.distanceKm != null ? `≈ ${distanceLisible(Number(o.distanceKm) * FACTEUR_RUES)}` : null);
   const minutesPour = (km) => Math.max(1, Math.round((km / vitesseKmh(vehicule?.type)) * 60));
   // Chez le client vers… : il rejoint le commerce, attend qu'elle soit prête, s'y arrête, puis roule jusqu'au client.
   const heureClient = (o) => {
@@ -733,7 +739,7 @@ export default function DriverDashboard() {
       const proche = versToi(offres[0]) != null ? offres[0] : null;
       const procheTrajet = available.filter((o) => o.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm)[0];
       sousAppli = proche ? t('ecransPro.plusProcheToi', { dist: distanceLisible(versToi(proche)), fee: fraisCourse(proche) })
-        : procheTrajet ? t('ecransPro.plusProche', { km: dec(procheTrajet.distanceKm, 1), fee: fraisCourse(procheTrajet) }) : null;
+        : procheTrajet ? t('ecransPro.plusProche', { km: kmRues(procheTrajet), fee: fraisCourse(procheTrajet) }) : null;
     } else {
       titreAppli = t('ecransPro.aucuneCourse');
     }
@@ -789,7 +795,7 @@ export default function DriverDashboard() {
       <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>
       {/* Le client peut changer l'adresse jusqu'à ce que tu aies la commande (fondateur, 2026-10-27) : tu reçois une notification. */}
       {o.addressChangedAt && <div className="small ecl-adresse-changee"><Icone nom="position" taille={14} /> {t('dashDriver.addressChanged')}</div>}
-      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
+      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${kmRues(o)})` : '' })}</div>}
       <DeliveryTiming order={o} />
       {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
       <div className="ecl-glisser">
@@ -842,7 +848,7 @@ export default function DriverDashboard() {
       {!auBandeau && <div className="small">{t('dashDriver.deliveryAt', { address: o.address })}</div>}
       {o.addressChangedAt && <div className="small ecl-adresse-changee"><Icone nom="position" taille={14} /> {t('dashDriver.addressChanged')}</div>}
       {o.restaurantAddress && <div className="small">{t('dashDriver.pickupAt', { address: o.restaurantAddress })}</div>}
-      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${dec(o.distanceKm, 1)} km)` : '' })}</div>}
+      {o.travelMinutes && <div className="small">{t('dashDriver.tripEstimate', { min: o.travelMinutes, km: o.distanceKm ? ` (${kmRues(o)})` : '' })}</div>}
       <DeliveryTiming order={o} />
       <p className="ecl-titre-sec">{t('dashDriver.phCustomerCode')}</p>
       <CodeCases id={`code-client-${o.id}`} manque={codeManquant === o.id && !(codeInputs[o.id] || '').length} libelle={t('dashDriver.phCustomerCode')} valeur={codeInputs[o.id] || ''} onValider={() => deliver(o)}
@@ -858,7 +864,7 @@ export default function DriverDashboard() {
 
   // Distance et durée d'une course proposée (« 1,2 km · ~6 min »), sur sa carte comme dans le détail du site.
   const voieOffre = (o) => {
-    const km = o.distanceKm != null ? (o.longDistance ? t('dashDriver.longDistance', { km: dec(o.distanceKm, 1) }) : t('dashDriver.shortDistance', { km: dec(o.distanceKm, 1) })) : null;
+    const km = o.distanceKm != null ? (o.longDistance ? t('dashDriver.longDistance', { km: kmRues(o) }) : t('dashDriver.shortDistance', { km: kmRues(o) })) : null;
     return [km, o.travelMinutes && t('ecranLivreur.minutes', { min: o.travelMinutes })].filter(Boolean).join(' · ');
   };
 
@@ -881,7 +887,7 @@ export default function DriverDashboard() {
             <span className="ecl-v3-seg"><b>{distanceLisible(km)}</b><small>~{minutesPour(km)} min</small></span>
           </>}
           <span className="ecl-v3-pt"><Icone nom="commerce" taille={17} /></span>
-          <span className="ecl-v3-seg">{o.distanceKm != null && <b>{dec(o.distanceKm, 1)} km</b>}{o.travelMinutes && <small>~{o.travelMinutes} min</small>}</span>
+          <span className="ecl-v3-seg">{o.distanceKm != null && <b>{kmRues(o)}</b>}{o.travelMinutes && <small>~{o.travelMinutes} min</small>}</span>
           <span className="ecl-v3-pt maison"><Icone nom="maison" taille={17} /></span>
         </div>
         <div className={`ecl-v3-libs${km == null ? ' sans-toi' : ''}`}>
@@ -889,6 +895,7 @@ export default function DriverDashboard() {
           <span className="milieu"><b>{o.restaurantName}</b><span className={`ecl-badge ${etat.classe}`}>{etat.texte}{etat.dans ? ` · ${etat.dans}` : ''}</span></span>
           <span><b>{o.commune || ''}</b>{client && t('ecranLivreur.versHeure', { time: client })}</span>
         </div>
+        {o.distanceKm != null && <p className="ecl-v3-note">{t('ecranLivreur.distancesRues')}</p>}
       </>
     );
   };
@@ -918,6 +925,10 @@ export default function DriverDashboard() {
           </>
         )}
         {o.bonusCents > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</p>}
+        {/* Pourboire déjà payé par le client avec sa commande (pourboireCommande.js) : 100 % au livreur, versé à la livraison
+            (revue des trois parcours, 2026-10-31 : le montant était dans la réponse, jamais montré avant la prise). Hors du
+            prix proposé, qui reste la course seule ; rendu au client si la course n'est pas livrée, d'où « à la livraison ». */}
+        {o.tipPaid && o.tipAmount > 0 && <p className="ecl-impact"><Icone nom="euro" taille={18} /><span>{t('ecranLivreur.pourboireOffre', { amount: dec(o.tipAmount) })}</span></p>}
         <div className="ecl-offre-pied">
           {/* Refuser reste discret et neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-ghost" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
@@ -1097,6 +1108,10 @@ export default function DriverDashboard() {
         </button>
       ) : null}
     </EtatVide>
+  ) : dossier?.contratAJour === false ? (
+    <EtatVide icone="contrat" titre={t('dashDriver.contratTitre')} texte={t('dashDriver.contratTexte')}>
+      <Link to="/driver/onboarding" className="btn-gold">{t('dashDriver.contratBouton')}</Link>
+    </EtatVide>
   ) : enPause ? (
     <div className="empty" style={{ marginTop: 18 }}>{t('dashDriver.pausedText')}</div>
   ) : null;
@@ -1145,6 +1160,7 @@ export default function DriverDashboard() {
       {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
       <PositionRequise>
         {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
+        {available.length === 0 && <HeuresChargees token={token} position={maPosition} />}
         {offres.map(carteOffre)}
       </PositionRequise>
       {/* Son, vibration, notifications : sous les offres depuis le 2026-10-16 (maquette), pour que la première course
@@ -1257,6 +1273,7 @@ export default function DriverDashboard() {
           {blocGrille}
           <PositionRequise>
             {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
+        {available.length === 0 && <HeuresChargees token={token} position={maPosition} />}
             {available.length > 0 && <div className="ecl-choix-liste">{offres.map(choixOffre)}</div>}
           </PositionRequise>
           {available.length > 0 && <p className="small ecl-astuce">{t('siteLivreur.astuceTelephone')}</p>}

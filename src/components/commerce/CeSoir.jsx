@@ -7,6 +7,7 @@ import { euros } from '../../prixPlat';
 import Icone from '../Icone';
 import { VeloMarque } from './BandeauCommerce';
 import { communeClient, partCommerce } from './clientCommande';
+import { useVirements } from './VirementsCommerce';
 
 /* L'ACCUEIL DU COMMERCE : SA SOIRÉE D'ABORD, LES RÉGLAGES APRÈS (audit design 2, section 3, fondateur 2026-10-19).
  *
@@ -108,7 +109,16 @@ export function TuilesCommerce({ restaurant: r, orders, restoId, token }) {
   const statutFacture = { emise: 'invoiceArchive.statusIssued', envoyee: 'invoiceArchive.statusSent', payee: 'invoiceArchive.statusPaid' };
   const mois = facture ? new Date(facture.periodStart).toLocaleDateString(getLocale(), { month: 'long', timeZone: 'Europe/Brussels' }) : '';
 
+  const virements = useVirements(restoId, token);
+  /* Le prochain virement (fondateur, 2026-10-31, maquettes/revue-parcours, question 2 B) : en tête, sur toute la largeur,
+     dès qu'un euro payé en ligne est passé par son compte ; il ouvre l'onglet « Virements » de Factures. */
+  const vedette = virements?.enCours && (virements.enCours.montant > 0 || virements.versements?.length > 0)
+    ? { to: '/dashboard/invoices', icone: 'banque', vedette: true, onglet: 'virements',
+      titre: t('virements.prochainTuile', { jour: new Date(`${virements.enCours.date}T12:00:00Z`).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Europe/Brussels' }) }),
+      montant: euros(virements.enCours.montant), sous: t('virements.prochainTuileSous') }
+    : null;
   const tuiles = [
+    ...(vedette ? [vedette] : []),
     { to: '/dashboard/stats', icone: 'stats', titre: t('serviceCommerce.tuileStats'),
       sous: ceMois ? t(ceMois === 1 ? 'serviceCommerce.ceMoisUne' : 'serviceCommerce.ceMoisN', { n: ceMois }) : t('serviceCommerce.ceMoisAucune') },
     { to: '/dashboard/promotions', icone: 'etiquette', titre: t('serviceCommerce.tuilePromos'),
@@ -119,9 +129,10 @@ export function TuilesCommerce({ restaurant: r, orders, restoId, token }) {
   return (
     <nav className="ec-outils" aria-label={t('serviceCommerce.outils')}>
       {tuiles.map((x) => (
-        <Link key={x.to} to={x.to} className="ec-outil">
+        <Link key={x.vedette ? 'virements' : x.to} to={x.to} className={`ec-outil${x.vedette ? ' ec-outil--vedette' : ''}`}
+          onClick={x.onglet ? () => { try { sessionStorage.setItem('fairide_factures_onglet', x.onglet); } catch { /* sans stockage */ } } : undefined}>
           <span className="ec-ligne-tuile" aria-hidden="true"><Icone nom={x.icone} taille={20} /></span>
-          <b>{x.titre}</b>
+          {x.vedette ? <><small>{x.titre}</small><b className="ec-outil-montant">{x.montant}</b></> : <b>{x.titre}</b>}
           <small>{x.sous || ' '}</small>
         </Link>
       ))}

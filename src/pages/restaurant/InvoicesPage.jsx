@@ -8,6 +8,7 @@ import CopieDac7 from '../../components/conformite/CopieDac7';
 import { useToast } from '../../context/ToastContext';
 import InvoiceArchive from '../../components/InvoiceArchive';
 import CommissionStatements from '../../components/CommissionStatements';
+import VirementsCommerce from '../../components/commerce/VirementsCommerce';
 import InvoicePreferences from '../../components/InvoicePreferences';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
@@ -81,6 +82,7 @@ export default function InvoicesPage() {
   const [generating, setGenerating] = useState(false);
   // Trois onglets : les factures (pièces comptables, mensuelles), les relevés détaillés (suivi libre par
   // semaine / mois / trimestre), l'abonnement (factures Stripe). L'onglet ouvert survit à un rechargement.
+  // « Virements » (fondateur, 2026-10-31, maquettes/revue-parcours, question 2 B) : ce qui part lundi, puis chaque versement.
   const [onglet, setOnglet] = useState(() => {
     try { const o = sessionStorage.getItem('fairide_factures_onglet') || 'factures'; return o === 'abonnement' && !achatsCommerceAutorises() ? 'factures' : o; } catch { return 'factures'; }
   });
@@ -143,8 +145,10 @@ export default function InvoicesPage() {
     <CadreSite appli classe="ec-factures" titre={t('invoicesResto.title')} sous={ordinateur ? t('invoicesResto.pageIntro') : t('ecransPro.facturesSous')}>
       <div className="no-print ec-factures-onglets">
         <SegmentGlisse libelle={t('invoicesResto.title')} valeur={onglet} onChange={choisirOnglet}
-          options={[['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ...(achatsCommerceAutorises() ? [['abonnement', t('invoicesResto.tabSubscription')]] : [])].map(([value, label]) => ({ value, label }))} />
+          options={[['virements', t('invoicesResto.tabPayouts')], ['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ...(achatsCommerceAutorises() ? [['abonnement', t('invoicesResto.tabSubscription')]] : [])].map(([value, label]) => ({ value, label }))} />
       </div>
+
+      {onglet === 'virements' && <div className="ec-bloc"><VirementsCommerce restoId={restoId} token={token} /></div>}
 
       {onglet === 'releves' && (
         <>

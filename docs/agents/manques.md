@@ -51,5 +51,6 @@ Real, verified as absent on 2026-09-22 — not speculation.
    « Fairide s'en occupe » (`POST /admin/restaurants/:id/act-as`) opens its dashboard to accept an order for it. See
    [docs/procedures-incidents.md](../../docs/procedures-incidents.md), case 3. What the team still cannot do from the console
    (audit 2026-10-24): push a message to offline couriers (broadcast is inbox + e-mail), change a delivery address (the customer can since
-   2026-10-27, from the tracking, see argent.md), or be
-   alerted before an unaccepted order is cancelled at 15 min.
+   2026-10-27, from the tracking, see argent.md). Since 2026-10-31 it IS alerted before an unaccepted order is cancelled:
+   7 minutes before the deadline (8 min after payment), a high-priority task, an e-mail and a push to the team with the
+   shop's phone (backend `orderTimeouts.alerterEquipeCommandesEnAttente`).

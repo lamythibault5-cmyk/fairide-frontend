@@ -5794,3 +5794,22 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
    bouton à remplir ; blanc souligné sur un bandeau iris. */
 .texte-plus { display: inline; min-height: 0 !important; padding: 2px 0; border: 0; background: none; font: inherit; font-weight: 600; color: var(--iris); cursor: pointer; }
 :is(.ec-bandeau, .ecl-bandeau) .texte-plus { color: #fff; text-decoration: underline; text-underline-offset: 2px; }
+
+/* Plat manquant (ReclamationPlat.jsx ; 31/10/2026) : les plats à cocher, la photo, la déclaration sur l'honneur, puis un
+   seul bouton lime. */
+.reclamation-titre { font-weight: 700; margin: 0 0 6px; }
+.reclamation-ligne { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid var(--line); }
+.reclamation-ligne:first-of-type { border-top: 0; }
+.reclamation-case { display: flex; align-items: center; gap: 12px; background: none; border: 0; padding: 4px 0; font: inherit; color: var(--ink); text-align: left; cursor: pointer; min-height: 40px; }
+.reclamation-case .case { width: 24px; height: 24px; border-radius: 7px; border: 2px solid #C9C4EE; display: grid; place-items: center; color: #fff; flex: 0 0 auto; }
+.reclamation-ligne.on .case { background: var(--iris); border-color: var(--iris); }
+.reclamation-prix { color: var(--ink-soft); font-weight: 600; white-space: nowrap; }
+.reclamation-qte { display: inline-flex; align-items: center; gap: 8px; font-weight: 700; white-space: nowrap; }
+.reclamation-qte button { width: 30px; height: 30px; border-radius: 50%; border: 1.5px solid #CFCAF2; background: var(--iris-tint, #EFEDFB); color: var(--iris); font: 700 17px/1 inherit; cursor: pointer; }
+.reclamation-photo { display: flex; align-items: center; gap: 10px; margin: 12px 0; padding: 12px 14px; border: 1.5px dashed #C9C4EE; border-radius: 16px; color: var(--iris); font-weight: 600; cursor: pointer; }
+.reclamation-photo.ok { border-style: solid; background: var(--iris-tint, #EFEDFB); }
+.reclamation-photo input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.reclamation-honneur { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; margin: 4px 0 10px; cursor: pointer; }
+.reclamation-honneur input { margin-top: 3px; accent-color: var(--iris); width: 18px; height: 18px; flex: 0 0 auto; }
+.reclamation-resume { background: var(--cream-dim); border-radius: 14px; padding: 10px 12px; font-size: 13.5px; margin: 0 0 12px; }
+.reclamation-envoyer { width: 100%; }

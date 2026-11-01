@@ -32,7 +32,8 @@ only −14.4 % under a « −15 % » label: a misleading price-reduction announc
 The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
 €5 excl. VAT for the first km, then €0.80 excl. VAT per started km, 21% VAT added (€6.05 incl. VAT minimum). **10% of it
 is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `service_fee_vat`); the courier receives
-**90% of their own grid** (bike €0.60/km, motorised €0.80/km), and the bike difference stays with Fairide. A courier's
+**90% of the fee the customer paid**, whatever the vehicle (founder, 2026-10-14: `tauxKmLivreur` in `pricing.js` returns the
+customer's per-km rate; the old bike €0.60 / motorised €0.80 grid, with the bike difference kept by Fairide, is gone). A courier's
 minimum (CODE-13) applies to their share: the client fee is raised to minimum / 0.9 when no courier accepts the grid
 (`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
 **Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-13: « tips go 100 percent to driver »; this
@@ -90,6 +91,41 @@ new address beyond `VELO_MAX_KM`. A cancelled order refunds each supplement sepa
 096, `POST /orders/:id/address/quote` and `POST /orders/:id/address`. The checkout also warns « Tu n'es pas à cette adresse ? » when
 the phone, with location already allowed (never asked for this), is more than 1 km from the address (`useLoinDeLAdresse`).
 
+## Shop cancels after a courier took the job; payouts list (founder, 2026-10-31)
+
+- A shop that cancels an accepted order (`PATCH /orders/:id/refuse` from `preparation`/`pret`) while a courier holds it:
+  the customer is refunded in full as before, and the courier gets the share of a 1 km trip (base fee × 90 % = 4,50 €)
+  for the trip (`annulationLivreur.js`, backend). Fairride pays it from its Stripe balance as a `virements_complements`
+  row of nature `annulation` (never twice, retried when the balance is empty), books it 613-ANNULATION → 441-LIVREUR,
+  and writes a `courier_earnings` line of kind `cancellation` (Gains: « Annulée par le commerce »). The courier's push
+  says « 4,50 € pour toi quand même ». Charging it back to the shop needs a clause in the next shop contract version
+  (30 days' notice): not done yet. The customer still can't cancel once the shop accepted (unchanged).
+- Courier contract 2026.9 (`courierContracts.js`): prices are final, VAT included (the « hors TVA » left from 8-14/10 is
+  gone), the courier's share in euros (4,50 € up to 1 km, 0,72 € per started km), straight-line distance, and the
+  cancellation pay above. Couriers sign again (a 2026.8 signature leaves « contrat » missing in their dossier).
+- Shops see their payouts: Factures › « Virements » and a « Prochain virement » tile on the home screen
+  (`GET /restaurants/:id/payouts`, `virementsCommerce.js`): the next Monday's amount (Stripe balance), and each Stripe
+  payout with its orders and deductions, read from the payout's balance transactions. Counter-paid orders are listed
+  apart: already in the till, never in a payout.
+- Courier offers show the shop → customer leg « ≈ x km » by the streets (× 1,3, like the first leg); the price still
+  uses the straight line.
+
+## Delivery grid, missing items, contracts to sign (founder, 2026-10-31, second round)
+
+- **Delivery grid** (migration 101, `pricing.js` DEFAULTS): 5,80 € up to 3 km, then 0,50 € per started km, final price.
+  Benchmarked on what Brussels customers pay elsewhere (Deliveroo 4,99 € + service fee, Takeaway ~4,49 € + 1,29 €). The
+  courier keeps 90 %: at least 5,22 €, 5 % above Uber Eats' reported flat 4,95 € per order. Fairride never tops it up.
+  The courier's cancellation pay (above) is the same 5,22 €.
+- **Missing or wrong item** (`reclamationsPlats.js`): the customer ticks the dishes within 24 h of delivery, adds a photo
+  of what arrived and confirms on honour. The shop gets a push and taps « Rembourser » or « Contester » (no photo asked of
+  the shop). No answer within 2 h = refunded at the shop's charge (`rembourserCommande`, responsibility `restaurant`).
+  Contested = no refund; the customer can « maintenir » (a ticket). Silence does NOT count as yes above 15 € or for a
+  customer with 2 contested claims in 90 days (still allowed to claim; the team gets a task, nothing is closed
+  automatically). A shop contesting 5+ claims from 3+ customers in 90 days gives a task.
+- **Contracts must be signed before working**: couriers need courier contract 2026.9 to see or take any job
+  (`courierContracts.contratAJour`); shops need RESTO-2026.21 from its date in force (2 December 2026, 30 days after the
+  2 November notice the founders send), with no grace period after it (`GRACE_COMMANDES_JOURS = 0`).
+
 ## Three sellers per order (decided 2026-09-23)
 
 The customer buys the food from the business, the **delivery from the independent courier** who accepts
@@ -98,8 +134,8 @@ the job, and the system fee (inside the delivery fee) from Fairide. The backend 
 
 - checkout recap labels each line with its seller (`conformite.seller*`);
 - [VendeurLivraison](../../src/components/conformite/VendeurLivraison.jsx) on the client's orders — the
-  courier's "Prénom N.", company number and VAT regime once known, and a free "decline this courier"
-  while the order hasn't left;
+  courier's "Prénom N.", company number and VAT regime once known (the free "decline this courier" was closed by the
+  founder on 2026-10-19: `PATCH /orders/:id/decline-courier` answers that it no longer exists);
 - driver offers show the price, any Fairide-paid increase and a **Refuse** button, and an approximate
   destination (the server strips the client's name, phone and house number before the job is taken);
 - [EspaceVendeurLivreur](../../src/components/conformite/EspaceVendeurLivreur.jsx) — minimum fee and the

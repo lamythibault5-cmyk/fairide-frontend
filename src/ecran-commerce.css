@@ -47,6 +47,9 @@
 .ec-bouton--iris:hover:not(:disabled) { background: var(--iris-deep); }
 .ec-bouton--texte { background: none; color: var(--ink-soft); font-weight: 600; margin-top: 2px; min-height: 44px; }
 .ec-bouton--texte:hover { color: var(--ink); }
+/* Plus de temps après avoir accepté (PlusDeTemps.jsx) : trois boutons en contour, sur une ligne. */
+.ec-plus-temps { display: flex; gap: 8px; margin-top: 8px; }
+.ec-plus-temps .ec-bouton { flex: 1; min-height: 44px; }
 
 /* L'interrupteur qui rebondit (Ma carte : en vente aujourd'hui ; Commandes : ouvert aux commandes). */
 .ec-interrupteur { position: relative; display: inline-block; width: 50px; height: 30px; min-height: 0 !important; padding: 0; border: 0; border-radius: 15px; background: var(--line); flex: none; cursor: pointer; transition: background .25s; }
@@ -273,6 +276,8 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 /* Factures : les onglets au pouce iris, l'alerte de configuration, la facture comme document. */
 .ec-factures-onglets { margin-bottom: 18px; }
 @media (min-width: 600px) { .ec-factures-onglets { max-width: 480px; } }
+/* Quatre onglets depuis « Virements » (31/10/2026) : chacun prend la largeur de son mot, « Abonnement » ne déborde plus. */
+.ec-factures-onglets .ec-segment:not(.ec-segment--lime) button { flex: 1 1 auto; padding: 0 8px; }
 .ec-alerte { margin: 14px 0 0; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--red); }
 .ec-alerte > b { color: var(--red); font-size: 14.5px; }
 .ec-alerte > p { margin: 4px 0 0; font-size: 13.5px; color: var(--ink-soft); }
@@ -419,6 +424,31 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .ec-outil .ec-ligne-tuile { margin-bottom: 6px; }
 .ec-outil b { font-size: 15.5px; font-weight: 700; }
 .ec-outil small { font-size: 13px; color: var(--ink-soft); line-height: 1.35; overflow-wrap: anywhere; }
+/* Le prochain virement, en tête des tuiles (maquettes/revue-parcours, question 2 B). */
+.ec-outils > .ec-outil--vedette { grid-column: 1 / -1; border: 1.5px solid var(--iris); background: #FBFAFF; }
+.ec-outil--vedette .ec-outil-montant { font-size: 24px; font-weight: 800; color: var(--iris); font-variant-numeric: tabular-nums; }
+/* Les virements (VirementsCommerce.jsx) : le prochain en iris, puis un lundi par ligne qui se déplie. */
+.ec-vir-prochain { background: var(--iris); color: #fff; border-radius: 22px; padding: 18px; margin: 4px 0 6px; display: flex; flex-direction: column; gap: 2px; }
+.ec-vir-prochain small { font-size: 14px; opacity: .85; }
+.ec-vir-prochain b { font-size: 32px; font-weight: 800; line-height: 1.1; color: var(--lime); font-variant-numeric: tabular-nums; }
+.ec-vir-prochain span { font-size: 14px; }
+.ec-vir-semaine { border: 1px solid var(--line); border-radius: 18px; margin: 10px 0; overflow: hidden; background: #fff; }
+.ec-vir-tete { width: 100%; display: grid; grid-template-columns: 1fr auto 14px; gap: 10px; align-items: center; padding: 14px 16px; background: none; border: 0; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+.ec-vir-tete b { display: block; font-size: 16px; font-weight: 800; }
+.ec-vir-tete small { display: block; font-size: 12.5px; color: var(--ink-soft); }
+.ec-vir-montant { text-align: right; }
+.ec-vir-montant b { font-size: 17px; font-variant-numeric: tabular-nums; }
+.ec-vir-montant em { font-style: normal; display: inline-block; margin-top: 2px; font-size: 12px; font-weight: 600; border-radius: 999px; padding: 1px 8px; background: rgba(59, 47, 181, .08); color: var(--iris); }
+.ec-vir-montant em.vert { background: #E6F2EA; color: #2E7D4F; }
+.ec-vir-montant em.rouge { background: #FFF1F0; color: var(--red, #D92D20); }
+.ec-vir-chev { font-size: 20px; color: var(--ink-soft); transition: transform .2s; }
+.ec-vir-semaine.ouvert .ec-vir-chev { transform: rotate(90deg); }
+.ec-vir-detail { padding: 0 16px 12px; }
+.ec-vir-ligne { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid #F0EEF4; font-size: 14px; }
+.ec-vir-ligne small { display: block; font-size: 12.5px; color: var(--ink-soft); }
+.ec-vir-ligne b { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ec-vir-ligne.moins { color: var(--red, #D92D20); }
+.ec-vir-ligne.total { font-weight: 800; border-top: 1.5px solid var(--ink); }
 
 /* « 1 commande à traiter » sur l'accueil : un bouton qui ouvre la feuille de la commande (NewOrderAlertBar `onOuvrir`). */
 .alerte-ouvrir { flex: 1 1 100%; display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 48px !important; padding: 0; border: 0; background: none;
@@ -602,3 +632,15 @@ html.avec-bande-a-traiter main { padding-bottom: calc(76px + env(safe-area-inset
 .ec-ajout-attente { font-size: 17px; line-height: 1.45; opacity: .85; margin: 0; }
 .ec-ajout--deux .ec-honneur--fait, .modal-box.ec-ajout:not(.ec-ajout--deux) .ec-honneur--fait { padding: 0; }
 .modal-box.ec-ajout:has(.ec-honneur--fait) { padding: 24px; }
+
+/* Plats manquants signalés (ReclamationsCommerce.jsx ; 31/10/2026) : une carte par réclamation qui attend, en tête de
+   Commandes. Contour rouge doux : il y a une réponse à donner, avant une heure dite. */
+.ec-reclamations { margin: 0 0 14px; }
+.ec-reclamation { border: 1.5px solid #F2B8B2; background: #FFF8F7; border-radius: 20px; padding: 14px 16px 6px; margin-bottom: 10px; }
+.ec-reclamation-tete { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
+.ec-reclamation-tete b { display: block; font-size: 16px; font-weight: 800; }
+.ec-reclamation-tete small { display: block; font-size: 13px; color: var(--ink-soft); }
+.ec-reclamation-montant { font-size: 18px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.ec-reclamation-plats { margin: 8px 0; padding: 0; list-style: none; font-size: 14.5px; font-weight: 600; }
+.ec-reclamation-photo { display: inline-flex; align-items: center; gap: 10px; margin: 2px 0 8px; color: var(--iris); font-size: 13.5px; font-weight: 600; text-decoration: none; }
+.ec-reclamation-photo img { width: 56px; height: 56px; object-fit: cover; border-radius: 10px; background: var(--cream-dim); }
