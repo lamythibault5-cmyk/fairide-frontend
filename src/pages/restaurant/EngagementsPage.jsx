@@ -80,6 +80,10 @@ export default function EngagementsPage() {
     !(pro?.declaredAt && pro.upToDate !== false) && 'pro'
   ].filter(Boolean);
 
+  // Version sans préavis (backend CALENDRIER.sansPreavis, fondateur 01/11/2026) : le commerce qui avait accepté une version
+  // antérieure renonce au préavis par la même case (règlement P2B art. 3 §2) — toujours une case et un bouton.
+  const renouvelleSansPreavis = aSigner.includes('contrat') && !!(contrat?.sansPreavis && contrat.acceptedAt && contrat.acceptedVersion && contrat.acceptedVersion !== contrat.version);
+
   function descendre(cle) {
     const el = champs[cle]?.current || signature.current;
     el?.scrollIntoView({ behavior: defilement(), block: 'center' });
@@ -97,7 +101,7 @@ export default function EngagementsPage() {
     try {
       // L'un après l'autre, comme ConformiteCarte : si l'un échoue, ceux d'avant restent signés et l'écran rechargé le montre.
       for (const quoi of aSigner) {
-        if (quoi === 'contrat') await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName, readConfirmed: true } });
+        if (quoi === 'contrat') await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName, readConfirmed: true, renonciationPreavis: renouvelleSansPreavis || undefined } });
         if (quoi === 'allergenes') await api(`/restaurants/${restoId}/allergens/attest`, { method: 'POST', token, body: { typedName, confirmed: true, contactPhone: tel.trim(), referentName: referent.trim() } });
         if (quoi === 'pro') await api(`/restaurants/${restoId}/professional-declaration`, { method: 'POST', token, body: { typedName, confirmed: true } });
       }
@@ -207,7 +211,7 @@ export default function EngagementsPage() {
               <p className="ec-feuille-titre" id={`${id}-sig`}>{t('engagementsCommerce.signature')}</p>
               <label className={`eg-case${manque === 'case' ? ' eg-manque' : ''}`}>
                 <input type="checkbox" ref={champs.case} checked={coche} onChange={(e) => { setCoche(e.target.checked); if (e.target.checked && manque === 'case') setManque(''); }} />
-                <span>{t('engagementsCommerce.case')}</span>
+                <span>{t(renouvelleSansPreavis ? 'engagementsCommerce.caseNow' : 'engagementsCommerce.case')}</span>
               </label>
               <div className={`field${manque === 'nom' ? ' eg-manque' : ''}`}>
                 <label htmlFor={`${id}-nom`}>{t('engagementsCommerce.nom')}</label>
