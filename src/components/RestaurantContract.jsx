@@ -36,12 +36,15 @@ export default function RestaurantContract({ restoId, onAccepte }) {
     if (!lu) { toast(t('restoContract.errRead'), 'erreur'); return; }
     if (!nom.trim()) { toast(t('restoContract.errName'), 'erreur'); return; }
     setBusy(true);
-    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true } }); setD(r); toast(t('restoContract.accepted'), 'succes'); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+    try { const r = await api(`/restaurants/${restoId}/contract/accept`, { method: 'POST', token, body: { typedName: nom.trim(), readConfirmed: true, renonciationPreavis: renouvelleSansPreavis || undefined } }); setD(r); toast(t('restoContract.accepted'), 'succes'); onAccepte?.(); } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }
   const basculer = (g) => {
     setOuverts((s) => { const n = new Set(s); if (n.has(g)) n.delete(g); else n.add(g); return n; });
   };
 
+  // Version sans préavis (backend CALENDRIER.sansPreavis, fondateur 01/11/2026) : pour qui avait accepté une version
+  // antérieure, la case dit aussi qu'elle s'applique dès maintenant — la renonciation au préavis du règlement P2B, en un geste.
+  const renouvelleSansPreavis = !!(d?.sansPreavis && d.acceptedAt && d.acceptedVersion && d.acceptedVersion !== d.version);
   if (erreur) return <p className="small">{erreur}</p>;
   if (!d) return <p className="small">{t('accountUi.loading')}</p>;
   if (!Array.isArray(d.clauses) || !d.summary) return <p className="small">{t('restoContract.pdfFailed')}</p>;
@@ -114,7 +117,7 @@ export default function RestaurantContract({ restoId, onAccepte }) {
         <div className="paiement-encart" style={{ marginTop: 12 }}>
           <label className="row" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer' }}>
             <input type="checkbox" checked={lu} onChange={(e) => setLu(e.target.checked)} style={{ marginTop: 3 }} />
-            <span className="small">{t('restoContract.readCheck')}</span>
+            <span className="small">{t(renouvelleSansPreavis ? 'restoContract.readCheckNow' : 'restoContract.readCheck')}</span>
           </label>
           <div className="row" style={{ gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <div className="field" style={{ flex: '1 1 200px', margin: 0 }}>

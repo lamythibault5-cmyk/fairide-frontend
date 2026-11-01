@@ -111,8 +111,8 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
   etapes.push(engagementsOk
     ? { cle: 'engagements', fait: true, icone: 'contrat', titre: t('miseEnLigne.commitmentsDone') }
     : { cle: 'engagements', icone: 'contrat',
-        titre: renouveler ? t('miseEnLigne.contractRenew', { date: jourLong(renouveler.inForceAt) }) : t('miseEnLigne.commitments'),
-        sous: renouveler ? t('miseEnLigne.contractRenewSub', { date: jourLong(renouveler.graceEndsAt) }) : t('miseEnLigne.commitmentsSub'),
+        titre: renouveler ? (renouveler.sansPreavis ? t('miseEnLigne.contractRenewNow') : t('miseEnLigne.contractRenew', { date: jourLong(renouveler.inForceAt) })) : t('miseEnLigne.commitments'),
+        sous: renouveler ? (renouveler.sansPreavis ? t('miseEnLigne.contractRenewNowSub') : t('miseEnLigne.contractRenewSub', { date: jourLong(renouveler.graceEndsAt) })) : t('miseEnLigne.commitmentsSub'),
         // Un seul écran pour les trois textes, en haut d'une page à lui (EngagementsPage.jsx, 2026-10-27) : avant, Mon compte ›
         // contrat (feuille ouverte sur une page défilée) ou le milieu de Ma carte (#conformite-carte), dans un long texte.
         action: { libelle: t('miseEnLigne.commitmentsBtn'), to: '/dashboard/engagements' } });
