@@ -28,7 +28,7 @@ import { statutOuverture } from '../../openingHours';
 import { useCart } from '../../context/CartContext';
 import { poserCommercePanier, retirerCommercePanier } from '../../fermeCourt';
 import { tarifLivraison, eurosCourts, horsZoneLivraison } from '../../livraison';
-import { fourchette, minutesLivraison, pointDuClient, prepAnnoncee } from '../../delaiEstime';
+import { aDeuxPas, fourchette, minutesLivraison, pointDuClient, prepAnnoncee } from '../../delaiEstime';
 import { euros, kmLisible, libellePromo, prixRemise, remiseCourte } from '../../prixPlat';
 import EmplacementSponsor from '../../components/EmplacementSponsor';
 import VisuelVide from '../../components/VisuelVide';
@@ -161,7 +161,12 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
   const delaiTexte = isClosed || r.vitrine ? null
     : minutes != null ? t('restoListUi.etaRange', fourchette(minutes))
       : emporterPossible ? t('restoListUi.etaPickup', { min: prepAnnoncee(r) }) : null;
-  const services = [emporterPossible && t('restoListUi.servicePickup'), livraisonPossible && t('restoListUi.serviceDelivery'), horsZone && t('restoListUi.outOfZone'), !emporterPossible && !livraisonOuverteIci && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && emporterPossible && t('restoListUi.pickupOnlyZone')].filter(Boolean);
+  /* LIVRAISON OU À EMPORTER, CÔTE À CÔTE (fondateur, 2026-10-31) : quand la pastille dit le temps de livraison et que le
+   * commerce est à deux pas (delaiEstime.aDeuxPas), « À emporter » dit aussi quand ce serait prêt. Sur la ligne des services
+   * et non dans la pastille de la photo : une pastille « 25–35 min · ou prête en 15 min » était coupée sur les petites cartes. */
+  const emporterTexte = minutes != null && aDeuxPas(r, user)
+    ? t('restoListUi.servicePickupReady', { min: prepAnnoncee(r) }) : t('restoListUi.servicePickup');
+  const services = [emporterPossible && emporterTexte, livraisonPossible && t('restoListUi.serviceDelivery'), horsZone && t('restoListUi.outOfZone'), !emporterPossible && !livraisonOuverteIci && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && emporterPossible && t('restoListUi.pickupOnlyZone')].filter(Boolean);
   // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
   // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
   // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.
@@ -739,16 +744,20 @@ export default function RestaurantList() {
     //
     // PAS DE TRI « LE PLUS RAPIDE » (fondateur, 2026-10-29, maquettes/delai-estime, question 8 : « pas maintenant »). Le
     // temps de chaque carte existe depuis (delaiEstime.js), mais tant que presque tous les commerces comptent les mêmes
-    // 12 minutes de préparation, il range exactement comme « Le plus proche ». À reprendre quand les temps mesurés diffèrent.
+    // minutes de préparation, il range exactement comme « Le plus proche ». À reprendre quand les temps mesurés diffèrent.
     .sort((a, b) => {
       if (tri === 'distance') return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity);
       return 0;
     })
-    // Sans filtre de commune explicite : d'abord les commerces de la commune du client, puis ceux
-    // des communes limitrophes, de proche en proche. Sort étant stable, l'ordre existant (plus
-    // récent d'abord, envoyé par le serveur) reste la règle de départage au sein d'un même anneau.
+    // « RECOMMANDÉ » = LE PLUS PROCHE D'ABORD quand l'adresse du compte est localisée (fondateur, 2026-10-31 : un « 40–50 min »
+    // ne doit pas être la première chose vue ; avant, sa commune puis les voisines, le plus récent d'abord dans chacune — un
+    // commerce à 3,5 km dans sa commune passait devant un autre à 600 m de l'autre côté de la limite). Les commerces sans
+    // coordonnées passent après. Sans position : d'abord la commune du client, puis les communes limitrophes de proche en
+    // proche (sauf filtre de commune explicite), l'ordre du serveur (plus récent d'abord) départageant un même anneau.
     .sort((a, b) => {
-      if (!homeCommune || commune || tri !== 'recommande') return 0;
+      if (tri !== 'recommande') return 0;
+      if (user?.lat && user?.lng) return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity) || 0;
+      if (!homeCommune || commune) return 0;
       return communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune);
     })
     // Puis les ouverts d'abord, quel que soit le tri choisi (voir ouvertsDabord).
