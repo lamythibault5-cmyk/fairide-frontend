@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -50,4 +51,9 @@
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
+    <!-- Le greffon background-geolocation (suivi du livreur écran verrouillé) déclare le GPS sans required="false", donc
+         OBLIGATOIRE : Google Play cacherait alors l'app aux appareils sans puce GPS (tablettes Wi-Fi…), clients compris.
+         Facultatif ici : sans GPS, la position vient du Wi-Fi et du réseau (2026-11-02). -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" tools:replace="android:required" />
 </manifest>
