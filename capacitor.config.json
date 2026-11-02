@@ -15,6 +15,7 @@
     "allowMixedContent": false,
     "backgroundColor": "#ffffff",
     "includePlugins": [
+      "@capacitor-community/background-geolocation",
       "@capacitor/app",
       "@capacitor/browser",
       "@capacitor/filesystem",

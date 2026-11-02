@@ -5,11 +5,9 @@
 //
 // Laissés hors d'Android EXPRÈS, avec leur raison :
 const HORS_ANDROID = {
-  // Le suivi du livreur téléphone verrouillé (natif.js, suivrePositionCourse) demande FOREGROUND_SERVICE_LOCATION, et Google
-  // exige alors une déclaration avec une vidéo de livraison réelle. Pas de livraison au lancement (fondateur, 2026-10-27) :
-  // retiré d'Android pour la 1.0, l'app y retombe sur le suivi au premier plan. À remettre dans la mise à jour qui ouvre la
-  // livraison, avec la vidéo d'un vrai livreur (Play Console › App content › Foreground service permissions).
-  '@capacitor-community/background-geolocation': 'suivi en arrière-plan du livreur, pas de livraison au lancement'
+  // Vide depuis le 2026-11-02 : le suivi du livreur téléphone verrouillé (@capacitor-community/background-geolocation),
+  // retiré de la 1.0 le 2026-10-27, est revenu. Il déclare FOREGROUND_SERVICE_LOCATION : chaque build Play Store qui le
+  // contient demande la déclaration Play Console › App content › Foreground service permissions (vidéo d'une course).
 };
 
 import { readFileSync } from 'node:fs';
