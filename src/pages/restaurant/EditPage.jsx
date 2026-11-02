@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useOutletContext } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { DAY_KEYS, formatDaySchedule } from '../../openingHours';
 import LigneCompte from '../../components/LigneCompte';
@@ -27,6 +27,7 @@ import { BandeauSoir, TuilesCommerce } from '../../components/commerce/CeSoir';
 import { euros } from '../../prixPlat';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import Account from '../Account';
+import { nouvelleVersionEnLigne } from '../../versionEnLigne';
 
 // « Mon commerce » : une rangée par sujet, qui dit l'état actuel, et un sous-écran pour le changer.
 //
@@ -66,7 +67,19 @@ export default function EditPage() {
   const { t } = useLanguage();
   const { restaurant, orders, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
   const { token } = useAuth();
-  const [ouvert, setOuvert] = useState(null);
+  const [params, setParams] = useSearchParams();
+  const [ouvert, setOuvert] = useState(() => (ECRANS[params.get('ecran')] ? params.get('ecran') : null));
+  // Onglet resté ouvert sur l'ancienne version (Maestro pizza, 2026-11-02 : l'ancien écran « Mes livreurs » à 22 h) : l'écran
+  // demandé s'ouvre après un rechargement vers la nouvelle (?ecran=…), pas dans l'ancien code. Voir src/versionEnLigne.js.
+  const ouvrir = (cle) => {
+    if (nouvelleVersionEnLigne()) { window.location.assign(`${window.location.pathname}?ecran=${cle}`); return; }
+    setOuvert(cle);
+  };
+  useEffect(() => {
+    if (!params.has('ecran')) return;
+    const suite = new URLSearchParams(params); suite.delete('ecran');
+    setParams(suite, { replace: true });
+  }, [params, setParams]);
   const etapes = useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange: () => loadDashboard(restoId), lectureSeule });
   // Sur téléphone (app et site), Commerce et Compte ne font qu'un onglet (fondateur, 2026-10-27, version A de
   // maquettes/compte-commerce) : Mon compte est monté ici, ses rangées autour de celles de la fiche. L'ordinateur garde ses deux
@@ -109,7 +122,7 @@ export default function EditPage() {
         </span>
       </div>
       {/* Une commande attend : sa bande lime au-dessus des onglets est LE prochain clic, le bouton passe en iris (un seul lime). */}
-      <button type="button" className={`ec-bouton ${commandeQuiAttend ? 'ec-bouton--iris' : 'ec-bouton--lime'}`} onClick={() => setOuvert(aFaire[0].cle)}>{t(`editResto.completer_${aFaire[0].cle}`)}</button>
+      <button type="button" className={`ec-bouton ${commandeQuiAttend ? 'ec-bouton--iris' : 'ec-bouton--lime'}`} onClick={() => ouvrir(aFaire[0].cle)}>{t(`editResto.completer_${aFaire[0].cle}`)}</button>
     </section>
   );
 
@@ -128,7 +141,7 @@ export default function EditPage() {
       : comptoir ? t('serviceCommerce.visibleComptoir') : t('serviceCommerce.visibleFerme');
   // Les outils du quotidien (Statistiques, Promotions, Factures ; plus d'Avis depuis le 22/10/2026), en tuiles sous la mise en ligne.
   const tuiles = <TuilesCommerce restaurant={r} orders={orders} restoId={restoId} token={token} />;
-  const ligne = (cle, props) => <LigneCompte {...props} onClick={() => setOuvert(cle)} />;
+  const ligne = (cle, props) => <LigneCompte {...props} onClick={() => ouvrir(cle)} />;
 
   // Ce que le commerce vend : ses spécialités dans l'ordre, la première étant celle de sa fiche (EcranTypeCommerce.jsx).
   const type = cuisinesCommerce(r).map((c) => restaurantTypeLabel(c, t) || c).join(', ');
@@ -147,7 +160,7 @@ export default function EditPage() {
           <b>{r.name}</b>
           <span className="small">{[type, r.commune, horairesDuJour].filter(Boolean).join(' · ')}</span>
           <div className="sp-fiche-liens">
-            <button type="button" className="sp-lien" onClick={() => setOuvert('identite')}>{t('sitePro.modifierFiche')}</button>
+            <button type="button" className="sp-lien" onClick={() => ouvrir('identite')}>{t('sitePro.modifierFiche')}</button>
             <Link to="/dashboard/preview" className="sp-lien">{t('sitePro.voirCommeClient')}</Link>
           </div>
         </div>
@@ -158,7 +171,7 @@ export default function EditPage() {
           <b>{t(nbPlats === 1 ? 'sitePro.plat' : 'sitePro.plats', { n: nbPlats })}</b>
           <span className="sp-lien">{t('sitePro.modifier')}</span>
         </Link>
-        <button type="button" className="sp-tuile" onClick={() => setOuvert('horaires')}>
+        <button type="button" className="sp-tuile" onClick={() => ouvrir('horaires')}>
           <small>{t('sitePro.tuileHoraires')}</small>
           <b>{horairesDuJour || aCompleter}</b>
           <span className="sp-lien">{t('sitePro.modifier')}</span>

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { prechargerPage } from '../routePrefetch';
 import { cheminSansPrefixe } from '../i18n/routing';
+import { VEILLE_MS, verifierVersion, nouvelleVersionEnLigne } from '../versionEnLigne';
 
 // Retour visuel pendant un changement de page. Les pages sont chargées à la demande (lazy, voir App.jsx)
 // et React garde l'ancienne page affichée tant que la nouvelle n'est pas prête : sans ce composant, un
@@ -12,27 +13,7 @@ import { cheminSansPrefixe } from '../i18n/routing';
 //   - le module de la page visée est préchargé dès le survol, le toucher ou le focus d'un lien, pour
 //     que le clic qui suit n'ait plus rien à télécharger.
 const DELAI_ABANDON = 8000;
-// Veille de version : toutes les 5 minutes (et au retour sur l'onglet), on relit index.html et on compare le
-// nom du fichier principal à celui qui tourne. S'il a changé, une nouvelle version est en ligne : le prochain
-// clic sur un lien interne quitte le routeur pour un vrai chargement de la page cible — la personne arrive
-// où elle voulait aller, dans la nouvelle version, sans jamais voir un rechargement en plein travail.
-const VEILLE_MS = 5 * 60 * 1000;
-let nouvelleVersion = false;
-function fichierPrincipalCourant() {
-  const el = document.querySelector('script[type="module"][src*="/assets/index-"]');
-  return el ? (el.getAttribute('src') || '').replace(/^.*\/assets\//, '') : null;
-}
-async function verifierVersion() {
-  const courant = fichierPrincipalCourant();
-  if (!courant || nouvelleVersion) return;
-  try {
-    const r = await fetch(`/index.html?v=${Date.now()}`, { cache: 'no-store' });
-    if (!r.ok) return;
-    const html = await r.text();
-    const m = html.match(/\/assets\/(index-[A-Za-z0-9_-]+\.js)/);
-    if (m && m[1] !== courant) nouvelleVersion = true;
-  } catch { /* hors ligne : on réessaiera */ }
-}
+// Veille de version : src/versionEnLigne.js.
 
 function lienInterne(e) {
   const a = e.target?.closest?.('a[href]');
@@ -57,7 +38,7 @@ export default function NavigationFeedback() {
       const url = lienInterne(e);
       if (!url) return;
       if (url.pathname === window.location.pathname && url.search === window.location.search) return;
-      if (nouvelleVersion) {
+      if (nouvelleVersionEnLigne()) {
         // Nouvelle version en ligne : chargement complet de la page cible, hors routeur.
         e.preventDefault(); e.stopPropagation();
         window.location.assign(url.href);
@@ -97,6 +78,9 @@ export default function NavigationFeedback() {
 
   // L'adresse a changé : la nouvelle page est affichée, la barre file jusqu'au bout puis s'efface.
   useEffect(() => {
+    // Navigation par bouton (navigate) alors qu'une nouvelle version est en ligne : l'adresse est déjà la nouvelle, recharger
+    // y arrive dans le nouveau code.
+    if (nouvelleVersionEnLigne()) { window.location.reload(); return undefined; }
     clearTimeout(abandon.current);
     setEtat((s) => (s === 'encours' ? 'fin' : s));
     finTimer.current = setTimeout(() => setEtat('repos'), 320);
