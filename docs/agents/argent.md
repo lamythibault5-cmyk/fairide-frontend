@@ -18,8 +18,9 @@ and the courier's delivery VAT are **not** affected.
 **Model of 2026-10-13 (founder), replacing « in-store price + 10 % »:** menus show **the business's own prices** by default.
 On an order paid online Fairide keeps **10% of the price paid** (`commissionFairide(subtotal, pricing)` = subtotal × r, plus
 Fairide's VAT if it ever becomes VAT-registered; `commission_vat` = 0 under the franchise): a €10 burger gives €1.00 to Fairide,
-€9.00 to the business. The business may raise its prices (`restaurants.price_markup_percent`, requested by the business,
-applied by the team) **up to `hausseMaxPourcent` = 10 %** (founder, 2026-10-16, whatever the VAT regime: €10 → €11.00 → €9.90 for
+€9.00 to the business. The business may raise its prices (`restaurants.price_markup_percent`, applied by the business itself from the
+« Tes prix sur Fairride » bar; only a business that has already served customers with the « Prix du comptoir » badge
+requests it and the team applies, founder 2026-11-02, `prixMagasin.hausseAValider`) **up to `hausseMaxPourcent` = 10 %** (founder, 2026-10-16, whatever the VAT regime: €10 → €11.00 → €9.90 for
 it; it was r / (1 − r) = 11.1 % from 10-13 to 10-16); never more. One function applies it everywhere (`appliquerHausse` in
 `../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded DOWN to €0.10 (`pricing.js`, `prixMagasin.js`; the team's « adjust all prices » tool rounds the same way, audit admin-31).
 The « C'est bon » page offers the max increase in one tap, only on cards with checked in-store prices.

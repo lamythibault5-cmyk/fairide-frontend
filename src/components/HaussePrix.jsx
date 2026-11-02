@@ -45,6 +45,9 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   const pct = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
   const change = valeur !== etat.percent;
   const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
+  // direct (serveur, prixMagasin.hausseAValider, 2026-11-02) : le commerce applique lui-même sa hausse, sauf s'il a déjà servi
+  // des clients avec le badge « Prix du comptoir ». L'équipe applique toujours directement.
+  const direct = modeAdmin || etat.direct === true;
 
   // Pourcentage passé en argument (audit du 19/10, admin-04) : « Appliquer +X % » faisait setValeur(demande) puis
   // setTimeout(appliquer), et cet appliquer-là lisait encore l'ancienne valeur (0 %) : la demande était effacée, rien ne montait.
@@ -52,7 +55,7 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
     setEnCours(true);
     try {
       const res = await api(`/restaurants/${restoId}/price-markup`, { method: 'PUT', token, body: { percent: v } });
-      // Le commerce DEMANDE (202, pending) ; l'équipe applique. Ses prix ne changent jamais sans validation.
+      // Badge déjà vu par des clients : le commerce DEMANDE (202, pending) et l'équipe applique. Sinon c'est appliqué.
       if (res.pending) {
         setEtat((e) => ({ ...e, percent: res.percent, requested: res.requested }));
         setValeur(res.percent);
@@ -108,10 +111,10 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
       )}
       {change && (
         <button type="button" className="btn-teal" style={{ width: '100%', minHeight: 44 }} disabled={enCours} onClick={() => appliquer()}>
-          {enCours ? '…' : modeAdmin ? t('menuPage.markupApply', { n: nbPlats }) : t('menuPage.markupRequestButton', { p: pct(valeur) })}
+          {enCours ? '…' : direct ? t('menuPage.markupApply', { n: nbPlats }) : t('menuPage.markupRequestButton', { p: pct(valeur) })}
         </button>
       )}
-      <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{modeAdmin ? t('menuPage.markupNote') : t('menuPage.markupNoteLocked')}</p>
+      <p className="small" style={{ margin: '8px 0 0', opacity: 0.75 }}>{direct ? t('menuPage.markupNote') : t('menuPage.markupNoteLocked')}</p>
     </div>
   );
 }
