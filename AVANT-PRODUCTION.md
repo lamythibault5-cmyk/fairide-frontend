@@ -116,7 +116,7 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       jusqu'au lancement suivant ? »
 - [ ] 🟠 **J — « Le restaurant ne doit plus gonfler ses prix »** (accueil, app, aide, e-mail de bienvenue, depuis le
       19/10). Garde-fous en place : aucun « moins cher » ni « mêmes prix qu'au restaurant » ; les montants (17,10 € avec
-      30 % de commission, 13,20 € au plus sur Fairide, pour un plat à 12 €) sont présentés comme un calcul, jamais comme
+      30 % de commission, 13,40 € au plus sur Fairride depuis le 02/11/2026, 13,20 € avant, pour un plat à 12 €) sont présentés comme un calcul, jamais comme
       un prix relevé chez un concurrent ; concurrents génériques (« grandes plateformes ») dans le visuel ; calcul complet
       dans l'aide ; badge « Prix du comptoir » seulement sur des prix vérifiés en magasin. Question : « Au regard des art.
       VI.17 (publicité comparative) et VI.97 (pratique trompeuse) CDE, ces formulations et ce calcul sont-ils licites ? »
@@ -278,7 +278,7 @@ Des clés ont circulé pendant la mise en place du staging, le 15/10. À faire, 
 Audit « ce qu'on dit / ce qu'on fait » : livreur à 90 % partout (vélo, commerces qui livrent eux-mêmes), pourboires
 100 % ; livraison au prix final TVA comprise (5 € + 0,80 €/km) ; reçus sans double comptage ; remboursement complet
 « aucun livreur » ; pas de commission sur une commande remboursée (note de crédit et virement automatiques) ; hausse de
-prix arrondie vers le bas (plafond 11,1 %) ; e-mails d'information avec désinscription (opt-out) ; suppression de
+prix arrondie vers le haut (plafond 11,11 %, depuis le 02/11/2026 ; vers le bas avant) ; e-mails d'information avec désinscription (opt-out) ; suppression de
 compte qui garde la comptabilité 10 ans ; durées de conservation appliquées ; plus de notes ni de classement des
 livreurs ; relevé mensuel des ventes du livreur au lieu de l'« autofacturation » ; DAC7 net des remboursements et
 frais de système déclarés ; SEO sans « moins cher » ; Google chargé au clic ; CGU-2026-10-14 et CONF-2026-10-14.

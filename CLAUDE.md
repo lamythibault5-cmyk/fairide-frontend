@@ -105,7 +105,9 @@ read that doc before working near it.
   *(design.md)*
 
 **Money and wording** *(argent.md, cartes.md)*
-- Fairide keeps 10 % of the price paid; a business may raise its prices by 10 % at most; the courier gets 90 % of the
+- Fairide keeps 10 % of the price paid; a business may raise its prices by 11.11 % at most, rounded UP to €0.10, so it gets
+  its full price (2026-11-02; customers never read a percentage for it, shops read « 11,11 % » and the rounding, voix.md); offers round DOWN to
+  €0.10; the courier gets 90 % of the
   delivery fee and 100 % of the tip. These are fixed rules in the backend (`REGLES_FIXES`), never settings.
 - Never multiply prices at import: shop prices go in as they are (`--prix-magasin`).
 - Customer-facing copy never says « moins cher » / « cheaper than », « le prix du commerce », « 100 % au restaurant »,

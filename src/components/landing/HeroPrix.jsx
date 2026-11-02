@@ -17,15 +17,18 @@ import { euros } from '../../prixPlat';
 // - Le plat et le restaurant ne sont PAS nommés (fondateur, 2026-10-26) : un partenaire ne doit jamais être reconnaissable
 //   à côté d'un prix gonflé. La date reste : sans elle, « +55 % » serait la seule phrase attaquable de la page.
 // - Les chiffres : 15,00 € au comptoir et 23,25 € sur la plateforme, relevés le 23/10/2026 (preuves datées dans
-//   l'espace de travail, jamais dans ce dépôt public). +55 % = 23,25 ÷ 15,00. « Au plus » sur Fairride = 15,00 + 10 %,
-//   arrondi aux 10 cents inférieurs (hausseMaxPourcent et prixAvecHausse du backend) = 16,50 €.
-// - À refaire chaque mois : un nouveau relevé, et la date de landing.prixReleve dans les trois langues.
+//   l'espace de travail, jamais dans ce dépôt public). +55 % = 23,25 ÷ 15,00. « Au plus » sur Fairride = 15,00 + 11,11 %,
+//   arrondi aux 10 cents supérieurs (hausseMaxPourcent et prixAvecHausse du backend, 02/11/2026) = 16,70 €. Sous le prix,
+//   landing.prixAuPlus dit seulement « au plus » : sur le site, plus de pourcentage pour Fairride (fondateur, 02/11/2026,
+//   version E de maquettes/prix-client : « on n'en parle plus »), le prix du plat suffit.
+// - Pas de relevé mensuel (fondateur, 02/11/2026) : la date reste affichée ; avant une campagne ou si le plat change de prix,
+//   un nouveau relevé, et la date de landing.prixReleve dans les trois langues.
 // - Jamais « moins cher », jamais un total livraison comprise : on compare un plat, pas une commande.
 const COMPTOIR = 15.0;
 const PLATEFORME = 23.25;
-const HAUSSE_MAX = 0.10;
-const dixCentimesInferieurs = (v) => Math.floor(v * 10 + 1e-6) / 10;
-const AU_PLUS = dixCentimesInferieurs(COMPTOIR * (1 + HAUSSE_MAX)); // 16,50 €
+const HAUSSE_MAX = 0.1111;
+const dixCentimesSuperieurs = (v) => Math.ceil(v * 10 - 1e-6) / 10;
+const AU_PLUS = dixCentimesSuperieurs(COMPTOIR * (1 + HAUSSE_MAX)); // 16,70 €
 const ECART = Math.round((PLATEFORME / COMPTOIR - 1) * 100); // 55
 
 export default function HeroPrix() {

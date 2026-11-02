@@ -20,14 +20,24 @@ On an order paid online Fairide keeps **10% of the price paid** (`commissionFair
 Fairide's VAT if it ever becomes VAT-registered; `commission_vat` = 0 under the franchise): a €10 burger gives €1.00 to Fairide,
 €9.00 to the business. The business may raise its prices (`restaurants.price_markup_percent`, applied by the business itself from the
 « Tes prix sur Fairride » bar; only a business that has already served customers with the « Prix du comptoir » badge
-requests it and the team applies, founder 2026-11-02, `prixMagasin.hausseAValider`) **up to `hausseMaxPourcent` = 10 %** (founder, 2026-10-16, whatever the VAT regime: €10 → €11.00 → €9.90 for
-it; it was r / (1 − r) = 11.1 % from 10-13 to 10-16); never more. One function applies it everywhere (`appliquerHausse` in
-`../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded DOWN to €0.10 (`pricing.js`, `prixMagasin.js`; the team's « adjust all prices » tool rounds the same way, audit admin-31).
+requests it and the team applies, founder 2026-11-02, `prixMagasin.hausseAValider`) **up to `hausseMaxPourcent` = r / (1 − r) = 11.11 %**,
+**prices rounded UP to €0.10** (founder, 2026-11-02: « 11,11 % et arrondi au dixième supérieur »): €10 → €11.20 → €10.08 for
+it, so the shop always gets at least its counter price (checked cent by cent to €300, `tests/hausse-prix.test.js`). It was a
+round 10 % rounded down from 10-16 to 11-02 (€10 → €11.00 → €9.90: 99 %, while contract 2026.21 said « l'équivalent de son
+prix de salle »), and 11.1 % from 10-13 to 10-16. Never more. Contract RESTO-2026.22 writes it; a shop still on 2026.21 keeps
+10 % until it accepts 2026.22 (`prixMagasin.hausseMaxPour`, its 2026.21 acceptance stays valid: `ACCEPTATIONS_GARDEES`).
+**Wording (founder, 2026-11-02: « truthful, same impact »)**: rounding up can push a cheap item past 11.11 % (€0.50 → €0.60),
+so shops read « 11,11 % au plus, arrondis aux 10 cents supérieurs : tu reçois ton prix entier »; customers get no percentage
+(founder, same day, maquettes/prix-client): no figure on the website, e-mails and badge screen, and in the app onboarding the
+measured dish in euros (« +8,25 € ailleurs, +1,70 € au plus »), see voix.md.
+A shop at 10 % moves to 11.11 % when it accepts RESTO-2026.22 (`hausseAuNouveauPlafond`, routes/restaurants.js), its menu
+re-signed in its name; the shop home shows a one-button card for the new version (`RenouvellementContrat.jsx`). One function applies it everywhere (`appliquerHausse` in
+`../fairide-backend/prixMagasin.js`): own price kept in `price_base`/`delta_base`, paid add-ons follow, rounded UP to €0.10 (`prixMagasin.prixAvecHausse`; the team's « adjust all prices » tool, a gesture on prices already shown, still rounds down, audit admin-31).
 The « C'est bon » page offers the max increase in one tap, only on cards with checked in-store prices.
-**Offers on a raised card (founder, 2026-10-26):** on a business with `price_markup_percent > 0` only, the price after a
+**Offers (founder, 2026-10-26, every shop since 2026-11-02):** the price after a
 « −X % » or « −X € » offer (Avantage Fairride included) is rounded DOWN to €0.10 (€11.10 − 15 % = €9.435 → €9.40); the
 discount is the difference. Down, never up: the discount given is never less than the one shown (rounding up gave €9.50,
-only −14.4 % under a « −15 % » label: a misleading price-reduction announcement, Owen refused that risk). Businesses without an increase (« Prix du comptoir » badge included) keep the cent rounding;
+only −14.4 % under a « −15 % » label: a misleading price-reduction announcement, Owen refused that risk). Since 2026-11-02 (backend PR #136 folded into the 11.11 % change) this holds in every shop, raised or not; counter prices without an offer keep their cents;
 « 1 + 1 » and « X € dès Y € » are not affected. Server `prixMagasin.prixOffreArrondi` (order) and site `prixPlat.js`
 (`activePromo.roundTenths`, set by `routes/restaurants.js`). The Stripe split does not change: 10 % of the price paid.
 The customer additionally pays the **delivery fee only — nothing is added on top** (model of 2026-10-08 evening):
@@ -132,8 +142,9 @@ the phone, with location already allowed (never asked for this), is more than 1 
   customer with 2 contested claims in 90 days (still allowed to claim; the team gets a task, nothing is closed
   automatically). A shop contesting 5+ claims from 3+ customers in 90 days gives a task.
 - **Contracts must be signed before working**: couriers need courier contract 2026.9 to see or take any job
-  (`courierContracts.contratAJour`); shops need RESTO-2026.21 from its date in force (2 December 2026, 30 days after the
-  2 November notice the founders send), with no grace period after it (`GRACE_COMMANDES_JOURS = 0`).
+  (`courierContracts.contratAJour`); shops need RESTO-2026.22 (or 2026.21, kept valid because 2026.22 only changes in their
+  favour: `ACCEPTATIONS_GARDEES`), in force without notice since 2 November 2026 (`sansPreavis`, waiver ticked at acceptance),
+  with no grace period after it (`GRACE_COMMANDES_JOURS = 0`).
 
 ## Three sellers per order (decided 2026-09-23)
 

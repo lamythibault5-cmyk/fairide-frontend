@@ -150,32 +150,42 @@ function SceneAccueil() {
 
 /* LES BARRES DU VRAI PLAT RELEVÉ (fondateur, 2026-10-26, maquettes/croissance/prix-gonfles.html) : le même plat que la carte
  * « Le même plat, trois prix » de l'accueil du site (HeroPrix.jsx, qui dit pourquoi la comparaison est légale) : 15,00 € au
- * comptoir, 23,25 € en ligne sur une grande plateforme (+55 %, en rouge comme sur le site), 16,50 € au plus sur Fairride
- * (+10 %, arrondi aux 10 cents inférieurs), et depuis le 2026-10-27 le prix du comptoir des restaurants qui ont le badge.
+ * comptoir, 23,25 € en ligne sur une grande plateforme (+55 %, en rouge comme sur le site), 16,70 € au plus sur Fairride
+ * (+11,11 %, arrondi aux 10 cents supérieurs, 02/11/2026), et depuis le 2026-10-27 le prix du comptoir des restaurants qui
+ * ont le badge.
  * Premier écran : en euros, sous « Le même plat, 15 € au comptoir », la ligne « Relevé en octobre 2026… Détails sur
- * demande » derrière un « i » (SourcePlat). « Sur Fairride, c'est réglé » : en pourcentages (`pourcent`). Le relevé se refait
- * chaque mois : changer les prix ici et dans HeroPrix.jsx, et la date d'appli.accSource et de landing.prixReleve. */
+ * demande » derrière un « i » (SourcePlat). « Sur Fairride, c'est réglé » : en euros en trop sur ce plat (`enPlus`). Pas de
+ * relevé mensuel (fondateur, 02/11/2026) : la date reste affichée ; un nouveau relevé change les prix ici et dans HeroPrix.jsx,
+ * et la date d'appli.accSource et de landing.prixReleve. */
 const COMPTOIR = 15.0;
 const EN_LIGNE = 23.25;
-const AU_PLUS = Math.floor(COMPTOIR * 1.1 * 10 + 1e-6) / 10; // 16,50 €
-const ECART = Math.round((EN_LIGNE / COMPTOIR - 1) * 100); // 55
+const HAUSSE_MAX = 11.11; // % : la hausse qui rend au restaurant son prix entier (pricing.hausseMaxPourcent du backend)
+const AU_PLUS = Math.ceil(COMPTOIR * (1 + HAUSSE_MAX / 100) * 10 - 1e-6) / 10; // 16,70 €
 const platAffiche = () => euros(COMPTOIR).replace(/[,.]00(?=\D|$)/, '');
 /* LA TROISIÈME BARRE, « PRIX DU COMPTOIR » (fondateur, 2026-10-27, version A de maquettes/badge-position/badge-position.html) :
- * l'accueil ne montrait que « 16,50 € au plus », alors que la plupart des restaurants vendent au prix de leur comptoir. Le
+ * l'accueil ne montrait que « 16,50 € au plus » (16,70 € depuis le 02/11), alors que la plupart des restaurants vendent au prix de leur comptoir. Le
  * premier écran (en euros) ajoute donc le badge, dessiné comme dans la liste, avec sa barre au prix du comptoir, et une phrase
  * qui dit ce qu'il veut dire. Sans compter les restaurants qui l'ont (fondateur : « ça va beaucoup bouger »). */
-function BarresPlat({ pourcent = false }) {
+/* « SUR FAIRRIDE, C'EST RÉGLÉ » EN EUROS EN TROP (fondateur, 2026-11-02, version D de maquettes/prix-client) : la hausse
+ * maximale est passée à 11,11 %, et « +11,11 % au plus » sonnait mal. Le même plat que le premier écran, dit en ce que le
+ * client paie EN PLUS du comptoir : +8,25 € ailleurs, +1,70 € au plus sur Fairride. Exact pour ce plat ; il change avec un
+ * nouveau relevé, comme les prix ci-dessus. Jamais « tu économises » (voix.md) : on montre un supplément, pas une économie. */
+function BarresPlat({ enPlus = false }) {
   const { t } = useLanguage();
-  const eux = pourcent ? t('appli.barJusqua', { pct: ECART }) : euros(EN_LIGNE);
-  const nous = pourcent ? t('appli.barAuPlus') : euros(AU_PLUS);
-  const ailleurs = pourcent ? t('appli.barAilleursCourt') : t('appli.barAilleurs');
-  const fairride = pourcent ? 'Fairride' : t('appli.barFairrideAuPlus');
   const comptoir = platAffiche();
+  const surplus = (v) => euros(Math.round((v - COMPTOIR) * 100) / 100);
+  const eux = enPlus ? `+${surplus(EN_LIGNE)}` : euros(EN_LIGNE);
+  const nous = enPlus ? t('appli.barEnPlusAuPlus', { montant: surplus(AU_PLUS) }) : euros(AU_PLUS);
+  const ailleurs = enPlus ? t('appli.barAilleursCourt') : t('appli.barAilleurs');
+  const fairride = enPlus ? 'Fairride' : t('appli.barFairrideAuPlus');
+  const largeur = enPlus ? (AU_PLUS - COMPTOIR) / (EN_LIGNE - COMPTOIR) : AU_PLUS / EN_LIGNE;
   return (
-    <div className="bv-barres" aria-label={`${ailleurs} ${eux}, ${fairride} ${nous}${pourcent ? '' : `, ${t('common.prixComptoir')} ${comptoir}`}`}>
+    <div className="bv-barres" aria-label={`${enPlus ? `${t('appli.barSurPlat', { prix: comptoir })} : ` : ''}${ailleurs} ${eux}, ${fairride} ${nous}${enPlus ? '' : `, ${t('common.prixComptoir')} ${comptoir}`}`}>
+      {/* Le même relevé que le premier écran : sa source reste à une touche ici aussi (voix.md, § 3). */}
+      {enPlus && <span className="bv-barres-tete">{t('appli.barSurPlat', { prix: comptoir })} <SourcePlat /></span>}
       <span>{ailleurs}</span><i className="gonfle" /><span className="gonfle-prix">{eux}</span>
-      <span>{fairride}</span><i className={`fairide${pourcent ? '' : ' au-plus'}`} style={{ width: `${Math.round((pourcent ? 10 / ECART : AU_PLUS / EN_LIGNE) * 100)}%` }} /><span>{pourcent ? <b>{nous}</b> : nous}</span>
-      {!pourcent && (
+      <span>{fairride}</span><i className={`fairide${enPlus ? '' : ' au-plus'}`} style={{ width: `${Math.round(largeur * 100)}%` }} /><span>{enPlus ? <b>{nous}</b> : nous}</span>
+      {!enPlus && (
         <>
           <span className="prix-comptoir"><Icone nom="etiquette" taille={12} />{t('common.prixComptoir')}</span>
           <i className="fairide" style={{ width: `${Math.round((COMPTOIR / EN_LIGNE) * 100)}%` }} /><span><b>{comptoir}</b></span>
@@ -303,7 +313,7 @@ export function EcranPourquoi({ onSuite, attente = false, premier = null }) {
           const [icone, k] = CARTES_POURQUOI[cle];
           return (
             <Fait key={cle} vedette={n === 0} icone={icone} titre={t(`appli.${k}`)} sous={t(`appli.${k}S`)}>
-              {cle === 'prix' && <BarresPlat pourcent />}
+              {cle === 'prix' && <BarresPlat enPlus />}
             </Fait>
           );
         })}

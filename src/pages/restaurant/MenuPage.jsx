@@ -456,7 +456,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
   // ne faisait que refermer la carte de démarrage.
 
   // « Geste prix » sur la carte déjà en ligne : tous les prix ± X %, après confirmation. Outil de l'équipe (audit du 19/10,
-  // admin-31) : au plus +10 %, arrondi au 0,10 € inférieur comme la hausse, « à la demande de » noté dans l'historique des
+  // admin-31) : au plus +11,11 %, arrondi au 0,10 € inférieur (la hausse du commerce, elle, s'arrondit vers le haut), « à la demande de » noté dans l'historique des
   // plats ; si la carte signée ne l'est plus, le commerce est invité à la revalider (le serveur s'en charge et le dit).
   const [ajustPct, setAjustPct] = useState('');
   const [ajustDemandePar, setAjustDemandePar] = useState('');

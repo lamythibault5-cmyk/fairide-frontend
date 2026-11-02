@@ -70,7 +70,10 @@ export default function ValiderCarte() {
   const rate = carte?.fairideRateChoice?.rate || 0;
   // Hausse qui rend au commerce son prix entier après la commission (11,1 % en franchise TVA), calculée par le serveur.
   const hausse = carte?.fairideRateChoice?.markup || 0;
-  const pctLocal = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
+  const pctLocal = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 2 });
+  // La hausse proposée rend-elle le prix entier ? Oui au plafond (11,11 % pour 10 %, arrondi au 0,10 € supérieur) ; non pour
+  // un commerce resté sur un contrat antérieur à RESTO-2026.22 (10 %) : le texte le dit au lieu de promettre le prix entier.
+  const hausseEntiere = (r) => Math.round((r / (1 - r)) * 10000) / 100;
   const avecCommission = choixOffert && ajouter;
   const prixAVerifier = !!carte?.pricesToCheck;
   const [envoiPhoto, setEnvoiPhoto] = useState(false);
@@ -255,7 +258,7 @@ export default function ValiderCarte() {
             </div>
             <p className="gn-taux-aide">
               {ajouter
-                ? t('validerCarte.rateAddHelp', { markup: pctLocal(hausse) })
+                ? t(hausse >= hausseEntiere(rate) - 0.005 ? 'validerCarte.rateAddHelp' : 'validerCarte.rateAddHelpOld', { markup: pctLocal(hausse) })
                 : t('validerCarte.rateKeepHelp', { pct: pctLocal(rate * 100) })}
             </p>
             {/* Le badge « Prix du comptoir » (fondateur, 2026-10-19 : faire fortement envie de garder les prix magasin). Le choix

@@ -37,8 +37,8 @@ Approve and Publish in the admin console. Don't describe an import as "live".
 (printed menu, chalkboard), not on a platform — set by `importer-carte.js --prix-magasin` or the admin drawer toggle
 (`PATCH /admin/restaurants/:id/in-store-prices`); the admin list shows « Prix magasin ✓ » / « Prix à vérifier ». Only a
 marked card offers the business, on the « C'est bon » page ([ValiderCarte.jsx](../../src/pages/ValiderCarte.jsx)), one choice:
-keep its prices, or raise the whole card by the maximum increase (+11.1 %, `hausseMaxPourcent`), rounded **down** to €0.10
-(since 2026-10-14 — rounding up broke the cap: €10.00 → €11.20 is +12 %), paid
+keep its prices, or raise the whole card by the maximum increase (+11.11 %, `hausseMaxPourcent`), rounded **up** to €0.10
+(since 2026-11-02, so the shop gets at least its counter price: €10.00 → €11.20 → €10.08; down from 10-14 to 11-02), paid
 add-ons too. Choice, prices and signature go in one transaction, once (`fairide_rate_choice`). Structured `*-menu.json`
 imports no longer get name-guessed option groups (`optionsExact`): the file's choices, including « none », are final. A
 choice inside a choice (Habebe's « Formule + soft » → Spa/Pales) is flattened into the parent list (`aplatirChoix`): the
@@ -52,7 +52,7 @@ menu lock (`MENU_LOCKED`, 2026-10-01) opens on three gestures of the owner only,
 a « + photo » square on each dish without a photo and a « N plats sans photo » burst (live at once, the team removes a bad
 one from the console); « Ajouter un plat » (one sheet); touching a dish's price. The business always types its **counter
 price**, never a percentage: the backend computes the shown price with the card's rule (`prixAvecHausse`, same price or the
-increase rounded down to €0.10) and keeps the counter price in `price_base`. Every new dish and every price change goes
+increase rounded up to €0.10 since 2026-11-02) and keeps the counter price in `price_base`. Every new dish and every price change goes
 through the honour screen, whose lime button is the declaration (« Oui, 12,00 € au comptoir »); the backend keeps each one
 (`menu_price_declarations`, migration 097, `declarationPrix.js`: dish, prices, name, date, exact text) and re-signs the card
 if it was signed. If a price is false the « Prix du comptoir » badge goes, **nothing else**: the screen threatens nothing

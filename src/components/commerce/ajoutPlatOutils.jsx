@@ -7,10 +7,10 @@ import { vibrer } from '../../gestes';
 // Le calcul du prix et les deux crochets de AjoutPlat.jsx (le pourquoi y est), à part : un fichier de composants n'exporte
 // que des composants (rafraîchissement à chaud de Vite).
 
-// Prix affiché pour un prix du comptoir : le même, ou + la hausse arrondie aux 10 cents inférieurs (prixMagasin.js).
+// Prix affiché pour un prix du comptoir : le même, ou + la hausse arrondie aux 10 cents supérieurs (prixMagasin.js, 02/11/2026).
 export function prixSurFairride(comptoir, pourcent) {
   const b = Number(comptoir);
-  return pourcent > 0 ? Math.floor(b * (1 + pourcent / 100) * 10 + 1e-6) / 10 : Math.round(b * 100) / 100;
+  return pourcent > 0 ? Math.ceil(b * (1 + pourcent / 100) * 10 - 1e-6) / 10 : Math.round(b * 100) / 100;
 }
 // « 12,5 », « 12.50 », « 12 € » → 12.5 ; vide ou illisible → null.
 export function lirePrix(s) {

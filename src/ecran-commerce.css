@@ -636,6 +636,13 @@ html.avec-bande-a-traiter main { padding-bottom: calc(76px + env(safe-area-inset
 /* Plats manquants signalés (ReclamationsCommerce.jsx ; 31/10/2026) : une carte par réclamation qui attend, en tête de
    Commandes. Contour rouge doux : il y a une réponse à donner, avant une heure dite. */
 .ec-reclamations { margin: 0 0 14px; }
+/* Nouvelle version du contrat, un bouton (RenouvellementContrat.jsx, 2026-11-02) : en tête de Commandes, cadre iris. */
+.ec-renouvellement { border: 1.5px solid var(--iris); background: #F6F5FF; border-radius: 20px; padding: 14px 16px 10px; margin: 0 0 14px; display: flex; flex-direction: column; gap: 6px; }
+.ec-renouvellement-titre { font-size: 16px; font-weight: 800; }
+.ec-renouvellement-hausse { margin: 0; font-size: 14.5px; font-weight: 600; }
+.ec-renouvellement-liste { margin: 0; padding-left: 18px; }
+.ec-renouvellement-mention { margin: 0; text-align: center; }
+.ec-renouvellement .ec-lien { align-self: flex-start; }
 .ec-reclamation { border: 1.5px solid #F2B8B2; background: #FFF8F7; border-radius: 20px; padding: 14px 16px 6px; margin-bottom: 10px; }
 .ec-reclamation-tete { display: flex; justify-content: space-between; gap: 10px; align-items: flex-start; }
 .ec-reclamation-tete b { display: block; font-size: 16px; font-weight: 800; }
