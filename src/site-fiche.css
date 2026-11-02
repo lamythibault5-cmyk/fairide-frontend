@@ -187,7 +187,6 @@
 @media (max-width: 400px) { .fiche-site .plat-ligne:not(.plat-ligne-sans-photo):not(.plat-ligne-tuile) > .plat-pas { top: 64px; } }
 /* Une section toute en photos (client-ui.css, « La grille des photos ») : des tuiles, autant de colonnes que la carte en tient. */
 .fiche-site .plats-liste.plats-grille { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); column-gap: 16px; }
-.fiche-site .fiche-vendeur { margin-top: 8px; }
 
 /* ---------- Le panier, colonne collante à droite (PanierColonne.jsx) ---------- */
 .fiche-panier-col { display: none; }

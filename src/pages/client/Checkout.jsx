@@ -1017,6 +1017,9 @@ export default function Checkout() {
               {' · '}
               <button type="button" className="co-vendeurs-lien" aria-expanded={vendeursOuverts} onClick={() => setVendeursOuverts((v) => !v)}>{t('checkout.vendeursDetails')}</button>
             </p>
+            {/* Allergènes AVANT de payer, sans toucher (AR 17/07/2014 art. 5) : la mention a quitté le cadre de la fiche pour
+                « Infos » le 2026-11-02 (maquettes/vendeur-discret) ; elle reste ici, sous les vendeurs. */}
+            {restaurant.allergenContactPhone && <p className="co-vendeurs">{t('conformite.allergyCheckoutLine', { phone: restaurant.allergenContactPhone })}</p>}
             {vendeursOuverts && (
               <ul className="co-vendeurs-detail">
                 <li>{t('checkout.ticketPlats')} {t('conformite.sellerFood', { name: restaurant.name })}</li>
