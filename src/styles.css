@@ -719,7 +719,27 @@ a.btn-primary:hover, a.btn-gold:hover, a.btn-teal:hover, a.btn-outline:hover { f
   .hero .header-row > .header-nav, .hero .header-row > .lang-switcher, .hero .header-row .header-register-btn { display: none; }
   .hero .header-row::before { display: none; }
   .hero .header-row .header-auth-link { padding: 8px 16px; border: 0; }
+  /* … mais la langue revient en haut, en une seule pastille (fondateur, 2026-11-02 : au pied d'une page de 4 000 px, personne
+     ne la trouvait). order 1 : la même place que Connexion dans la rangée sous 760px, juste après lui. */
+  .hero .header-row > .langue-compacte { display: inline-flex; order: 1; }
 }
+/* Pastille translucide, comme le fond des langues sur ordinateur : « Connexion » reste la seule pastille blanche. */
+.hero .langue-compacte { display: none; flex-shrink: 0; align-items: center; gap: 4px; padding: 8px 12px; min-height: 0; border: 0; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .14); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .04em; cursor: pointer; }
+.hero .langue-compacte[aria-expanded="true"] { background: rgba(255, 255, 255, .24); }
+/* La liste ouverte : la carte blanche des suggestions d'adresse (.hero-adresse-liste), posée dans <body> par LanguageSwitcher.jsx.
+   Apparaît en place, fondu de 0,15 s, sans glissement (comme les fenêtres de l'app). */
+.langue-liste {
+  position: fixed; z-index: 60; min-width: 180px; padding: 6px; display: flex; flex-direction: column;
+  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: var(--radius);
+  animation: bv-etape-fondu .15s ease-out;
+}
+.langue-liste button {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; padding: 10px 12px;
+  border: 0; border-radius: 12px; background: transparent; color: var(--ink); font-size: 15px; font-weight: 600; text-align: left; cursor: pointer;
+}
+.langue-liste button:hover { background: var(--cream-dim); }
+.langue-liste button[aria-checked="true"] { color: var(--iris); }
+@media (prefers-reduced-motion: reduce) { .langue-liste { animation: none; } }
 .footer-langues { margin-top: 10px; }
 /* Sur le blanc du pied de page : le fond gris et l'encre des sélecteurs posés dans une feuille (.card .lang-switcher). */
 .footer-langues .lang-switcher { display: inline-flex; background: var(--cream-dim); }
@@ -1639,7 +1659,7 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
 .hp-champ { position: absolute; left: -10000px; top: auto; width: 1px; height: 1px; overflow: hidden; }
 /* Cibles tactiles : au doigt (pointer: coarse), tout ce qui se presse fait au moins 44px de haut (WCAG 2.5.8). */
 @media (pointer: coarse) {
-  button:not(.crm-etoile):not(.record-drawer-close):not(.lang-switcher button), .chip, a.btn-gold, a.btn-teal, a.btn-outline, a.btn-primary, .role-nav a, .account-link-row, input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
+  button:not(.crm-etoile):not(.record-drawer-close):not(.lang-switcher button):not(.langue-compacte), .chip, a.btn-gold, a.btn-teal, a.btn-outline, a.btn-primary, .role-nav a, .account-link-row, input:not([type="checkbox"]):not([type="radio"]), select { min-height: 44px; }
   .lang-switcher button { min-height: 36px; }
   /* LE TEXTE AU MILIEU DES 44 PX. Un <button> centre son contenu de lui-même, pas un <div> ni un <a> : les
      pastilles-filtres (.chip, surtout des div), les pastilles-liens de la recherche et les liens de la barre

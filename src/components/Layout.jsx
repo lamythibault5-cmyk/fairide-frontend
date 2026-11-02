@@ -11,7 +11,7 @@ import MotMarque from './MotMarque';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
 import Icone from './Icone';
-import LanguageSwitcher from './LanguageSwitcher';
+import LanguageSwitcher, { LangueCompacte } from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
 import FloatingCart from './FloatingCart';
 import SuiviCommande from './client/SuiviCommande';
@@ -388,6 +388,7 @@ export default function Layout() {
               </div>
             )}
             <LanguageSwitcher />
+            <LangueCompacte />
           </div>
         </div>
       </div>
