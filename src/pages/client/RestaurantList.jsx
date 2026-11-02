@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee, photoVue, retenirPhotoVue } from '../../images';
-import { chargerAvecCache, lireCache, poserFavoriEnCache, prechargerFiche } from '../../cacheDonnees';
+import { CHEMIN_COMMANDES_RECENTES, chargerAvecCache, lireCache, poserFavoriEnCache, prechargerFiche } from '../../cacheDonnees';
 import { useActionOptimiste } from '../../actionOptimiste';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
@@ -498,7 +498,7 @@ export default function RestaurantList() {
     return () => retirerCommercePanier(commercePanier);
   }, [commercePanier]);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
-  const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache('/orders/mine', token) || []).map((o) => o.restaurantId) : []));
+  const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache(CHEMIN_COMMANDES_RECENTES, token) || []).map((o) => o.restaurantId) : []));
   const [loading, setLoading] = useState(() => !lireCache(CHEMIN_LISTE, jetonListe(user, token)));
   // La liste n'a pas pu être lue (réseau, serveur) : « Impossible de charger » et Réessayer, pas « Aucun commerce ».
   const [echecListe, setEchecListe] = useState(false);
@@ -601,9 +601,9 @@ export default function RestaurantList() {
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
       const favoris = lireCache('/restaurants/favorites/ids', token);
-      const commandes = lireCache('/orders/mine', token);
+      const commandes = lireCache(CHEMIN_COMMANDES_RECENTES, token);
       chargerAvecCache('/restaurants/favorites/ids', { token, forcer }).then((ids) => { if (ids !== favoris) setFavoriteIds(new Set(ids)); }).catch(() => {});
-      chargerAvecCache('/orders/mine', { token, forcer }).then((orders) => { if (orders !== commandes) setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId))); }).catch(() => {});
+      chargerAvecCache(CHEMIN_COMMANDES_RECENTES, { token, forcer }).then((orders) => { if (orders !== commandes) setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId))); }).catch(() => {});
     }
     return commerces;
   }

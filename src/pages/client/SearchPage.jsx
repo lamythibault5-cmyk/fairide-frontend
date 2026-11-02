@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Icone from '../../components/Icone';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
+import { CHEMIN_COMMANDES_RECENTES, chargerAvecCache } from '../../cacheDonnees';
 import { CHEMIN_LISTE, CHEMIN_PLATS_RECHERCHE, jetonListe } from '../../resumeCarte';
 import { MENTIONS_ALIMENTAIRES, platBio, platVegan, platHalal, platSansGluten, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { useAuth } from '../../context/AuthContext';
@@ -119,7 +120,9 @@ export default function SearchPage() {
   };
   useEffect(() => {
     chargerCommerces();
-    if (token) api('/orders/mine', { token }).then(setCommandes).catch(() => {});
+    // Les 30 plus récentes, partagées avec la liste des commerces (CHEMIN_COMMANDES_RECENTES, tenir la charge, 2026-11-02) :
+    // la recherche n'en montre que quelques-unes, et Mes commandes s'ouvre sur les mêmes 30.
+    if (token) chargerAvecCache(CHEMIN_COMMANDES_RECENTES, { token }).then(setCommandes).catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 

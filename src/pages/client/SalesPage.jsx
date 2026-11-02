@@ -343,9 +343,9 @@ export default function SalesPage() {
 // ----------------------------------------------------------------------------------------------- photo
 // « Photo du commerce » (fondateur, 2026-09-22) : le commercial prend la devanture en photo ; le serveur lit la position
 // de la photo (sinon celle du téléphone), propose les commerces OpenStreetMap autour, l'adresse et la zone ; le
-// commercial choisit le bon, corrige si besoin, et valide → fiche créée « contacté », photo gardée. Plus rien à taper.
-// Depuis le 22/09 (décision du fondateur), l'ENSEIGNE est aussi lue par un modèle de vision : son nom passe en tête des
-// candidats (« lu sur l'enseigne »), et l'adresse ou le téléphone visibles pré-remplissent la fiche.
+// commercial choisit le bon (ou tape le nom), corrige si besoin, et valide → fiche créée « contacté », photo gardée.
+// L'enseigne n'est plus lue par un modèle de vision (branché le 22/09, retiré le 2026-11-02 par le fondateur : le serveur
+// n'appelle plus aucune API d'IA). Sans candidat autour, le commercial tape le nom.
 function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
   const inputRef = useRef(null);
   const pelliculeRef = useRef(null);
@@ -364,14 +364,14 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
     setFichier(fich); setApercu(URL.createObjectURL(fich)); setEtape('analyse');
     // Position du téléphone en parallèle : utile si la photo n'a pas de GPS (WhatsApp, capture d'écran…). Pas pour une
     // photo de la pellicule : elle a pu être prise ailleurs, la position du téléphone tromperait la recherche — on se
-    // fie alors au GPS de la photo et à la lecture de l'enseigne.
+    // fie alors au seul GPS de la photo.
     let pos = null; if (source === 'camera') { try { pos = await maPosition(); } catch { /* sans position */ } }
     try {
       const r = await apiUpload('/sales/photo', { file: fich, token, fieldName: 'photo', fields: pos ? { lat: pos.lat, lng: pos.lng } : undefined });
       setReco(r);
       const premier = r.candidates?.[0];
       setChoix(premier ? 0 : 'autre');
-      setF((s) => ({ ...s, name: premier?.name || '', address: r.address || '', commune: r.commune || r.zone?.commune || '', phone: r.phone || '', cuisine: premier?.cuisine || r.sign?.cuisine || '' }));
+      setF((s) => ({ ...s, name: premier?.name || '', address: r.address || '', commune: r.commune || r.zone?.commune || '', cuisine: premier?.cuisine || '' }));
       setEtape('verifier');
     } catch (e) { toast(e.message); setEtape('choisir'); }
   }
@@ -421,7 +421,6 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
             <div className="crm-photo-entete">
               {apercu && <img src={apercu} alt="" className="crm-photo-apercu" />}
               <div className="small">
-                {reco.sign?.name && <p style={{ margin: '0 0 4px' }}><b>{t('sales.photoSign', { name: reco.sign.name })}</b>{reco.sign.notes ? <span> · {reco.sign.notes}</span> : null}</p>}
                 <p style={{ margin: 0 }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{reco.position ? (reco.position.source === 'photo' ? t('sales.photoPosPhoto') : t('sales.photoPosDevice')) : t('sales.photoPosNone')}</p>
                 {zone && <p style={{ margin: '4px 0 0' }}><Icone nom="cible" taille={16} className="icone-texte" />{' '}{t('sales.photoZone', { zone: zone.name, commune: zone.commune })}{zoneEtat?.status === 'taken' ? ` · ${t('sales.zoneTakenOther')}` : zoneEtat?.status === 'mine' ? ` · ${t('sales.zoneMineGroup')}` : ''}</p>}
                 {(reco.address || reco.commune) && <p style={{ margin: '4px 0 0' }}><Icone nom="maison" taille={16} className="icone-texte" />{' '}{[reco.address, reco.postalCode, reco.commune].filter(Boolean).join(', ')}</p>}
@@ -442,7 +441,7 @@ function PhotoProspect({ token, t, toast, zones, onClose, onSaved }) {
               <div className="crm-photo-candidats" role="radiogroup" aria-label={t('sales.photoWhich')}>
                 {reco.candidates.map((c, i) => (
                   <button type="button" key={i} role="radio" aria-checked={choix === i} className={`crm-photo-candidat${choix === i ? ' actif' : ''}`} onClick={() => choisir(i)}>
-                    <b>{c.name}{c.source === 'sign' || c.source === 'osm+sign' ? <span className="crm-zone-qui" style={{ marginLeft: 6 }}>{t(c.source === 'sign' ? 'sales.photoFromSign' : 'sales.photoFromBoth')}</span> : null}</b><span className="small">{[c.cuisine, c.type, c.distanceM !== null && c.distanceM !== undefined ? t('sales.photoDistance', { m: c.distanceM }) : null].filter(Boolean).join(' · ')}</span>
+                    <b>{c.name}</b><span className="small">{[c.cuisine, c.type, c.distanceM !== null && c.distanceM !== undefined ? t('sales.photoDistance', { m: c.distanceM }) : null].filter(Boolean).join(' · ')}</span>
                   </button>
                 ))}
                 <button type="button" role="radio" aria-checked={choix === 'autre'} className={`crm-photo-candidat${choix === 'autre' ? ' actif' : ''}`} onClick={() => choisir('autre')}><b>{t('sales.photoOther')}</b></button>

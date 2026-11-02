@@ -279,7 +279,9 @@ export default function Account({ integre = false, milieu = null }) {
       definirModeEquipe(list[0]?.staffRole === 'service');
       if (list[0]) {
         setRestoId(list[0].id);
-        api(`/orders/restaurant/${list[0].id}`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {});
+        // ?vue=paiements : seulement les commandes payées en ligne, sans les plats (tenir la charge, 2026-11-02) ; sans
+        // paramètre, la route rend tout l'historique du commerce.
+        api(`/orders/restaurant/${list[0].id}?vue=paiements`, { token }).then((rows) => setCommandesResto(Array.isArray(rows) ? rows : [])).catch(() => {});
         // Fiche à jour (numéros légaux, Stripe) même quand l'id n'a pas changé.
         api(`/restaurants/${list[0].id}`, { token }).then(setRestaurant).catch((e) => setErreurCommerce(e.message));
       }

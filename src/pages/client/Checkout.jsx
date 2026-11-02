@@ -17,7 +17,7 @@ import { useToast } from '../../context/ToastContext';
 import { SkeletonCards, SqueletteEcran, EcranAttente } from '../../components/Skeleton';
 import ErreurChargement from '../../components/ErreurChargement';
 import EtatVide from '../../components/EtatVide';
-import { lireCache } from '../../cacheDonnees';
+import { CHEMIN_COMMANDES_RECENTES, lireCache } from '../../cacheDonnees';
 import { distanceLivraisonKm } from '../../livraison';
 import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
@@ -288,7 +288,7 @@ export default function Checkout() {
   const consignesReprises = useRef(false);
   useEffect(() => {
     if (consignesReprises.current || !token) return;
-    const commandes = lireCache('/orders/mine', token);
+    const commandes = lireCache(CHEMIN_COMMANDES_RECENTES, token);
     if (!Array.isArray(commandes)) return;
     consignesReprises.current = true;
     const meme = (a, b) => String(a || '').trim().toLowerCase() === String(b || '').trim().toLowerCase();
