@@ -28,14 +28,17 @@ function publier(commandes) {
   abonnes.forEach((f) => f());
   // Une commande en cours : relecture toutes les 15 s. Plus aucune : on arrête.
   const enCours = commandes.some(commandeSuivie);
-  if (enCours && !minuterie) minuterie = setInterval(() => relireAvec(jeton), 15000);
+  // Pas pendant que l'app est en arrière-plan (tenir la charge, 2026-11-02) : le retour la relit (useRevalidation).
+  if (enCours && !minuterie) minuterie = setInterval(() => { if (document.visibilityState === 'visible') relireAvec(jeton); }, 15000);
   if (!enCours && minuterie) { clearInterval(minuterie); minuterie = null; }
 }
 
 function relireAvec(token) {
   if (!token) return Promise.resolve();
   derniereLecture = Date.now();
-  return api('/orders/mine', { token })
+  // ?suivi=1 : seulement les commandes en cours et les récentes, pas tout l'historique (backend routes/orders.js ›
+  // filtreMesCommandes, tenir la charge, 2026-11-02). La plus récente reste la première, comme avant.
+  return api('/orders/mine?suivi=1', { token })
     // Une réponse arrivée après une déconnexion ou un changement de compte ne doit pas montrer les commandes de l'autre.
     .then((liste) => { if (token === jeton && Array.isArray(liste)) publier(liste); })
     .catch(() => {});

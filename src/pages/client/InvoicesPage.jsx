@@ -31,6 +31,24 @@ function isInPeriod(order, period) {
   return false;
 }
 
+/* TOUTES LES COMMANDES, PAGE PAR PAGE (tenir la charge, 2026-11-02). Sans paramètre, /orders/mine ne rend plus que les 100
+ * plus récentes : un client fidèle aurait perdu ses plus anciens reçus sans le savoir. Les filtres par période et « tout
+ * télécharger » ont besoin de la liste entière : on lit donc par pages de 50 (?limite, ?avant) jusqu'à la dernière, une
+ * seule fois par visite (pas de relecture régulière ici). Garde-fou : 100 pages, soit 5 000 commandes. */
+const PAGE_FACTURES = 50;
+async function toutesLesCommandes(token) {
+  const toutes = [];
+  for (let n = 0; n < 100; n++) {
+    const derniere = toutes[toutes.length - 1];
+    const suite = derniere ? `&avant=${encodeURIComponent(new Date(derniere.createdAt).toISOString())}` : '';
+    const page = await api(`/orders/mine?limite=${PAGE_FACTURES}${suite}`, { token });
+    if (!Array.isArray(page)) break;
+    toutes.push(...page);
+    if (page.length < PAGE_FACTURES) break;
+  }
+  return toutes;
+}
+
 export default function InvoicesPage() {
   const { t } = useLanguage();
   const { token, role } = useAuth();
@@ -48,7 +66,7 @@ export default function InvoicesPage() {
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
     setEchec(false);
     setOrders(null);
-    api('/orders/mine', { token }).then((data) => setOrders(data.filter((o) => o.paid))).catch(() => {
+    toutesLesCommandes(token).then((data) => setOrders(data.filter((o) => o.paid))).catch(() => {
       if (!isPreviewingRestaurant) setEchec(true);
       setOrders([]);
     });

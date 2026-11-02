@@ -42,6 +42,12 @@ export default defineConfig({
   /* LE MANIFESTE DE CONSTRUCTION (audit du 24/10) : dist/.vite/manifest.json dit quel fichier porte quel module. Le pré-rendu
      (scripts/prerender.mjs) y lit le nom du morceau nl / en pour l'annoncer dans les pages /nl et /en, puis le supprime : il
      ne part ni sur Vercel ni dans l'app. */
-  build: { manifest: true },
+  build: {
+    manifest: true,
+    /* LE TRAVAILLEUR DE LA CARTE EN « .js » (fond OpenFreeMap, 2026-11-02). MapLibre décode les tuiles dans un Worker livré à
+       part (maplibre-gl-worker.mjs, importé avec ?url dans carteVecteur.js). En « .mjs », l'application iPhone/Android peut le
+       servir sans type JavaScript, et un Worker module est alors refusé : la carte n'aurait que son fond beige. */
+    rollupOptions: { output: { assetFileNames: (a) => (/\.mjs$/.test(a.names?.[0] || a.name || '') ? 'assets/[name]-[hash].js' : 'assets/[name]-[hash][extname]') } }
+  },
   define: { __BUILD_ID__: JSON.stringify(buildId) }
 })

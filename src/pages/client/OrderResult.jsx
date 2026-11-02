@@ -92,7 +92,7 @@ function ResultatCommande({ success }) {
     // Seulement si elle est bien IMPAYÉE : un client peut annuler une commande payée tant que le commerce ne
     // l'a pas acceptée (remboursement), et un retour arrière vers cette page ne doit pas le faire à sa place.
     if (orderId && token) {
-      api('/orders/mine', { token })
+      api('/orders/mine?suivi=1', { token })
         .then((orders) => {
           const o = orders.find((x) => String(x.id) === String(orderId));
           if (o && !o.paid && o.status === 'nouveau') return api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
@@ -111,10 +111,11 @@ function ResultatCommande({ success }) {
     async function check() {
       polls += 1;
       try {
+        // ?suivi=1 : la commande vient d'être passée, elle est dans les récentes (tenir la charge, 2026-11-02).
         // /orders/mine plutôt qu'un GET /orders/:id : c'est l'endpoint dont on est certain qu'il
         // existe (déjà utilisé par Orders.jsx), et il est déjà filtré sur le client connecté — donc
         // impossible de consulter la commande de quelqu'un d'autre en changeant l'id dans l'URL.
-        const orders = await api('/orders/mine', { token });
+        const orders = await api('/orders/mine?suivi=1', { token });
         if (cancelled) return;
         const order = orders.find((o) => o.id === orderId || String(o.id) === String(orderId));
         if (order?.paid) {

@@ -52,6 +52,8 @@ html:not(.appli) .sc-route .rs-arret.fait svg { stroke-width: 3; }
 /* Dans l'app, la commande du bandeau garde l'ordre de sa carte (carteEnCours) : sa note « et maintenant ? » comme dans la carte. */
 .sc-commandes .sc-encours .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 0 0 10px; color: var(--ink); font-size: 13.5px; }
 .sc-passees { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+/* « Voir plus de commandes » sous l'historique (tenir la charge, 2026-11-02) : centré, la largeur de son texte. */
+.sc-voir-plus { display: block; margin: 16px auto 4px; }
 .sc-passees .sc-nom-c { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .sc-passees .sc-nom-texte { display: flex; flex-direction: column; min-width: 0; }
 .sc-passees .sc-nom-texte b { font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

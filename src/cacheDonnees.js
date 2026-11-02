@@ -20,6 +20,11 @@ import { CHEMIN_LISTE } from './resumeCarte';
 // Au-delà, une donnée gardée ne s'affiche plus d'avance (squelette, comme avant) : un menu ou des horaires d'il y a une
 // demi-heure, même corrigés une seconde après, seraient une fausse information le temps de la relecture.
 const AGE_MAX_MS = 30 * 60 * 1000;
+/* LES COMMANDES RÉCENTES DU CLIENT, gardées en mémoire (tenir la charge, 2026-11-02) : la liste des commerces y lit où il a
+ * déjà commandé (« À découvrir » les écarte) et le paiement les consignes de sa dernière livraison à la même adresse. Les 30
+ * plus récentes suffisent aux deux ; /orders/mine sans paramètre en rend 100, avec plats et photos. Même chemin des deux
+ * côtés : c'est la clé de la mémoire. */
+export const CHEMIN_COMMANDES_RECENTES = '/orders/mine?limite=30';
 // Une lecture faite il y a moins de FRAIS_MS n'est pas refaite : le préchargement au toucher de la carte (prechargerFiche)
 // sert alors tel quel à la fiche qui s'ouvre, sans seconde requête identique.
 const FRAIS_MS = 3000;

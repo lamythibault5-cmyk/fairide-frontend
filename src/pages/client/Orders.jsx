@@ -51,6 +51,21 @@ function vignettePhoto(url, taille, carre = true) {
 }
 const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 
+/* MES COMMANDES PAR PAGES (tenir la charge, 2026-11-02). GET /orders/mine rendait tout l'historique, plats et photos, à chaque
+ * relecture (toutes les 15 s). Les 30 plus récentes d'abord, puis « Voir plus de commandes » pour les précédentes
+ * (?avant=<date de la dernière reçue>, backend routes/orders.js › filtreMesCommandes). */
+const PAR_PAGE = 30;
+const CHEMIN_COMMANDES = `/orders/mine?limite=${PAR_PAGE}`;
+const ETATS_SUIVIS = ['nouveau', 'preparation', 'pret', 'livraison'];
+// La première page relue remplace ses commandes ; les plus anciennes déjà chargées par « Voir plus » restent en dessous.
+function fusionnerPremierePage(premiere, avant) {
+  if (!Array.isArray(premiere)) return avant;
+  if (premiere.length < PAR_PAGE) return premiere;
+  const ids = new Set(premiere.map((o) => o.id));
+  const limite = premiere[premiere.length - 1].createdAt;
+  return [...premiere, ...avant.filter((o) => !ids.has(o.id) && o.createdAt < limite)];
+}
+
 // COMMANDES PASSÉES (fondateur, 22/10/2026) : son nom mène à la fiche du commerce. Un commerce qui a quitté Fairide
 // (restaurantExists à false, GET /api/orders/mine) garde son nom sur la commande, sans lien. Devant le nom, la PHOTO du
 // commerce en vignette carrée (fondateur, 2026-10-25, version A de maquettes/sans-logo/sans-logo.html : plus de logo), la
@@ -139,6 +154,33 @@ function PourboireForm({ order, token, toast, onDone, t }) {
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
+  // Plus ancienne page déjà lue ? (« Voir plus de commandes », tenir la charge, 2026-11-02.) `toutLu` : la dernière page
+  // reçue était incomplète, il n'y a plus rien avant.
+  const [toutLu, setToutLu] = useState(false);
+  const [chargePlus, setChargePlus] = useState(false);
+  const commandesLues = useRef(orders);
+  commandesLues.current = orders;
+  // Promet la première page (un tableau) et la range dans la liste.
+  const relirePremierePage = () => api(CHEMIN_COMMANDES, { token }).then((l) => {
+    const page = Array.isArray(l) ? l : [];
+    setOrders((avant) => fusionnerPremierePage(page, avant));
+    return page;
+  });
+  async function voirPlus() {
+    const derniere = commandesLues.current[commandesLues.current.length - 1];
+    if (!derniere || chargePlus) return;
+    setChargePlus(true);
+    try {
+      const page = await api(`${CHEMIN_COMMANDES}&avant=${encodeURIComponent(new Date(derniere.createdAt).toISOString())}`, { token });
+      const suite = Array.isArray(page) ? page : [];
+      setOrders((avant) => { const ids = new Set(avant.map((o) => o.id)); return [...avant, ...suite.filter((o) => !ids.has(o.id))]; });
+      setToutLu(suite.length < PAR_PAGE);
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setChargePlus(false);
+    }
+  }
   // Le site sur un téléphone suit la commande en cours comme l'app (fondateur, 2026-10-25, maquettes/une-action/panier-et-site,
   // réponse 7) : le livreur, son code, « Détails » replié. Sur un ordinateur, le suivi garde ses deux colonnes (corpsSite).
   const siteLarge = useSiteLarge(900);
@@ -234,9 +276,14 @@ export default function Orders() {
     // Un restaurateur en mode aperçu n'a pas de vraies commandes client (403 côté API) — liste vide
     // silencieuse plutôt qu'un message d'erreur trompeur, voir MapPage.jsx pour le même filet.
     const isPreviewingRestaurant = previewMode && role === 'restaurant';
-    api('/orders/mine', { token }).then(setOrders).catch(() => { if (!isPreviewingRestaurant) setEchec(true); }).finally(() => setLoading(false));
+    relirePremierePage().then((l) => setToutLu(l.length < PAR_PAGE)).catch(() => { if (!isPreviewingRestaurant) setEchec(true); }).finally(() => setLoading(false));
+    /* RELECTURE SEULEMENT S'IL Y A QUELQUE CHOSE À SUIVRE (tenir la charge, 2026-11-02). La liste entière était relue toutes
+     * les 15 s, même sans commande en cours et l'app en arrière-plan. Maintenant : seulement quand une commande est en
+     * cours et que la page est à l'écran ; le retour dans l'app relit de toute façon (useRevalidation, plus bas). */
     const interval = setInterval(() => {
-      api('/orders/mine', { token }).then((l) => { setOrders(l); setEchec(false); }).catch(() => {});
+      if (document.visibilityState !== 'visible') return;
+      if (!commandesLues.current.some((o) => ETATS_SUIVIS.includes(o.status))) return;
+      relirePremierePage().then(() => setEchec(false)).catch(() => {});
     }, 15000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -261,7 +308,7 @@ export default function Orders() {
   useEffect(() => {
     if (searchParams.get('tip') !== 'paid') return;
     setPourboireId(null);
-    api('/orders/mine', { token }).then(setOrders).catch(() => {});
+    relirePremierePage().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
   /* RETOUR DU PAIEMENT D'UN CHANGEMENT D'ADRESSE (/orders?adresse=payee) : l'adresse change à l'arrivée du paiement chez le
@@ -270,14 +317,14 @@ export default function Orders() {
     if (searchParams.get('adresse') !== 'payee') return undefined;
     setAdresseDe(null);
     toast(t('orders.addrPaid'), 'succes');
-    const relire = () => api('/orders/mine', { token }).then(setOrders).catch(() => {});
+    const relire = () => relirePremierePage().catch(() => {});
     relire();
     const id = setTimeout(relire, 4000);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
   // Retour sur l'onglet après une absence : relecture immédiate des commandes.
-  useRevalidation(() => api('/orders/mine', { token }).then(setOrders), { actif: !(previewMode && role === 'restaurant') });
+  useRevalidation(() => relirePremierePage(), { actif: !(previewMode && role === 'restaurant') });
 
   // Le client peut annuler tant que le restaurant n'a pas accepté la commande (statut « nouveau »), payée
   // ou non : le paiement est alors remboursé. Dès la préparation, plus d'annulation en ligne.
@@ -308,7 +355,7 @@ export default function Orders() {
     setPayingId(o.id);
     try {
       await api(`/orders/${o.id}/confirm-on-site`, { method: 'POST', token });
-      setOrders(await api('/orders/mine', { token }));
+      await relirePremierePage();
       toast(t('checkout.toastOnSiteConfirmed'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
@@ -391,7 +438,7 @@ export default function Orders() {
       <div className="ec-page sc-page sc-commandes">
         {bandeauTitre}
         <FeuilleCommande>
-          <ErreurChargement onReessayer={() => { setEchec(false); setLoading(true); api('/orders/mine', { token }).then(setOrders).catch(() => setEchec(true)).finally(() => setLoading(false)); }} />
+          <ErreurChargement onReessayer={() => { setEchec(false); setLoading(true); relirePremierePage().then((l) => setToutLu(l.length < PAR_PAGE)).catch(() => setEchec(true)).finally(() => setLoading(false)); }} />
         </FeuilleCommande>
       </div>
     );
@@ -399,7 +446,7 @@ export default function Orders() {
   /* AUCUNE COMMANDE (fondateur, 2026-10-17, « My orders » de maquettes/commerces-marque/commerces-marque.html) : le même bandeau que Mes favoris,
      le calendrier d'ouverture posé dessus en note translucide, le vélo qui attend dans la feuille blanche. */
   // Tirer pour actualiser (app) : la même relecture que le sondage des 15 s.
-  const tirer = <TirerPourActualiser onActualiser={() => api('/orders/mine', { token }).then(setOrders)} />;
+  const tirer = <TirerPourActualiser onActualiser={() => relirePremierePage()} />;
   if (listeAffichee.length === 0) {
     return (
       <div className="ecran-bandeau commandes-vide">
@@ -960,6 +1007,11 @@ export default function Orders() {
                 })}
               </tbody>
             </table>
+            {!toutLu && (
+              <button type="button" className="btn-outline sc-voir-plus" onClick={voirPlus} disabled={chargePlus}>
+                {chargePlus ? t('orders.voirPlusChargement') : t('orders.voirPlus')}
+              </button>
+            )}
           </section>
         )}
       </FeuilleCommande>

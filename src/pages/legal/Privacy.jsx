@@ -19,9 +19,9 @@ const REQUEST_TYPES = ['access', 'delete', 'rectify', 'portability', 'objection'
 // cloudinary.js, main.jsx pour Sentry. La politique n'en citait que trois (Stripe, Resend, Google) ;
 // cinq recevaient des données personnelles sans être déclarés nulle part. Ajouter un service ici
 // quand on en branche un — et l'EN RETIRER quand on le débranche : Anthropic (Claude) y figurait
-// pour l'import et la traduction des cartes, supprimés le 2026-09-21 — et il y est revenu le 2026-10-09 :
-// depuis le 2026-09-22, le module Sales lui envoie les photos de devanture pour lire l'enseigne
-// (backend salesPhoto.js, déjà au registre registreTraitements.js), sans que la politique le dise.
+// pour l'import et la traduction des cartes, supprimés le 2026-09-21, y est revenu le 2026-10-09 (le module Sales lui
+// envoyait depuis le 2026-09-22 les photos de devanture pour lire l'enseigne), et en est retiré le 2026-11-02 avec cette
+// lecture (fondateur : le serveur n'appelle plus aucune API d'IA ; politique CONF-2026-11-02).
 // Firebase (notifications de l'application, fcm.js du backend) et Apple (« Continuer avec Apple », service de
 // notification de l'iPhone) n'y figuraient pas avant le 2026-10-26, alors que l'application les utilisait déjà.
 // Les noms sont des noms propres : ils ne se traduisent pas, seule la description est dans les
@@ -35,12 +35,11 @@ const SOUS_TRAITANTS = [
   ['nominatim', 'Nominatim (OpenStreetMap)'],
   ['photon', 'Photon (Komoot)'],
   ['osrm', 'OSRM'],
-  ['maptiler', 'MapTiler'],
+  ['openfreemap', 'OpenFreeMap'],
   ['osmTiles', 'OpenStreetMap'],
   ['plausible', 'Plausible'],
   ['gatewayapi', 'GatewayAPI'],
   ['cloudinary', 'Cloudinary'],
-  ['anthropic', 'Anthropic'],
   ['sentry', 'Sentry'],
   ['vercel', 'Vercel'],
   ['railway', 'Railway'],
