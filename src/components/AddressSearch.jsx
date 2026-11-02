@@ -4,9 +4,18 @@ import { useLanguage } from '../context/LanguageContext';
 import Icone from './Icone';
 
 // Barre de recherche d'adresse : on tape le début (« avenue georges henri 12 »), le serveur propose des
-// adresses belges (GET /restaurants/lookup/suggest, Photon/OpenStreetMap), on en choisit une et les
-// champs rue / numéro / code postal / ville se remplissent. Rien n'oblige à passer par là : les champs
-// restent éditables à la main, et une suggestion « rue seule » laisse le numéro à compléter.
+// adresses belges (GET /restaurants/lookup/suggest), on en choisit une et les champs rue / numéro / code
+// postal / ville se remplissent. Rien n'oblige à passer par là : les champs restent éditables à la main, et
+// une suggestion « rue seule » laisse le numéro à compléter.
+//
+// GOOGLE EN SESSION (fondateur, 2026-11-02). Le serveur propose d'abord les adresses de Google, puis, au-delà de notre
+// plafond, celles du registre officiel (geocode.suggestAddresses). Un jeton de session par adresse saisie : Google ne
+// facture alors que l'adresse choisie, pas chaque frappe. Une suggestion Google n'a pas de position (ses conditions) :
+// au choix, on demande ses composants (rue, numéro, code postal, commune) à /lookup/suggest-details, et la position sera
+// calculée par le registre à l'enregistrement. « Google Maps » sous la liste quand ses suggestions y sont (attribution).
+const MOTIF_BOITE = /[\s,]+(?:bte|boîte|boite|bus|bt|b\.)\s*\.?\s*([\w-]+)/i;
+const nouvelleSession = () => globalThis.crypto?.randomUUID?.() || `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 14)}`;
+
 export default function AddressSearch({ onSelect, compact = false }) {
   const { t } = useLanguage();
   const [q, setQ] = useState('');
@@ -17,6 +26,8 @@ export default function AddressSearch({ onSelect, compact = false }) {
   const boite = useRef(null);
   // Après un choix, le champ reçoit le libellé complet : ce changement-là ne doit pas relancer une recherche.
   const ignorerProchaine = useRef(false);
+  // Jeton de session Google : créé à la première frappe d'une adresse, oublié au choix (la session se clôt là).
+  const session = useRef(null);
 
   useEffect(() => {
     if (ignorerProchaine.current) { ignorerProchaine.current = false; return undefined; }
@@ -26,7 +37,8 @@ export default function AddressSearch({ onSelect, compact = false }) {
     const timer = setTimeout(async () => {
       setEtat('loading');
       try {
-        const r = await api(`/restaurants/lookup/suggest?q=${encodeURIComponent(terme)}`);
+        if (!session.current) session.current = nouvelleSession();
+        const r = await api(`/restaurants/lookup/suggest?q=${encodeURIComponent(terme)}&session=${encodeURIComponent(session.current)}`);
         if (annule) return;
         setSuggestions(r.suggestions || []); setEtat('done'); setOuvert(true); setActif(-1);
       } catch {
@@ -43,11 +55,21 @@ export default function AddressSearch({ onSelect, compact = false }) {
     return () => document.removeEventListener('pointerdown', fermer);
   }, []);
 
-  function choisir(s) {
-    onSelect?.({ street: s.street || '', number: s.number || '', postalCode: s.postalCode || '', city: s.city || '' });
+  async function choisir(s) {
     ignorerProchaine.current = true;
     setQ(s.label);
     setOuvert(false);
+    let adresse = { street: s.street || '', number: s.number || '', postalCode: s.postalCode || '', city: s.city || '' };
+    const jeton = session.current;
+    session.current = null;
+    if (s.source === 'google' && s.placeId && jeton) {
+      const boite = (q.match(MOTIF_BOITE) || [])[1] || '';
+      try {
+        const d = await api(`/restaurants/lookup/suggest-details?placeId=${encodeURIComponent(s.placeId)}&session=${encodeURIComponent(jeton)}${boite ? `&boite=${encodeURIComponent(boite)}` : ''}`);
+        if (d?.found) adresse = { street: d.street || adresse.street, number: d.number || adresse.number, postalCode: d.postalCode || adresse.postalCode, city: d.city || adresse.city };
+      } catch { /* Google muet : on garde ce que la suggestion affichait */ }
+    }
+    onSelect?.(adresse);
   }
 
   function clavier(e) {
@@ -76,6 +98,7 @@ export default function AddressSearch({ onSelect, compact = false }) {
               <span className="small">{[s.postalCode, s.city].filter(Boolean).join(' ')}{!s.number ? ` · ${t('addressSearch.streetOnly')}` : ''}</span>
             </li>
           ))}
+          {suggestions.some((s) => s.source === 'google') && <li role="presentation" className="address-search-attribution"><span className="attribution-google" translate="no">Google Maps</span></li>}
         </ul>
       )}
       {etat === 'loading' && <p className="small" style={{ margin: 0 }}>{t('addressSearch.searching')}</p>}
