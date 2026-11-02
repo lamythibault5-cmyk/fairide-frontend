@@ -58,7 +58,7 @@ this repo's i18n files (see « Legal texts » below).
 Other workflows: `app-android-test.yml` builds the Fairide Test APK on every merge to `main`; `app-android-store.yml`
 (by hand: Actions › *App Android Play Store* › *Run workflow*) builds the signed Play bundle and uploads it to Internal
 testing itself — never bump `versionCode` by hand; `staging-miroir.yml` copies `main` to the `staging` branch
-(staging.fairide.be).
+(Vercel preview behind a Vercel login only: there is no staging website, staging.fairide.be is gone).
 
 ### Environment variables
 

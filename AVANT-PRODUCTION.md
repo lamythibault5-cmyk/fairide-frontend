@@ -64,8 +64,7 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
       comptoir et cocher « prix vérifiés en magasin » — c'est aussi ce qui donne le badge « Prix du comptoir ».
       *Vérifié le 24/10 : 18 cartes sur 30 ; Maestro pizza (vendable, carte Uber Eats), Masa et Snack bodrum ne le sont pas.*
 - [ ] 🔴 **F — Une vraie commande de bout en bout sur le staging** (voir « Le staging » en bas) : commande, acceptation,
-      remise, puis les cas difficiles — refus, annulation, commande non récupérée. *Vérifié le 24/10 : `staging.fairide.be`
-      n'a toujours pas d'enregistrement DNS (§5) ; en production, 0 commande réelle, et aucun à emporter payé sur place
+      remise, puis les cas difficiles — refus, annulation, commande non récupérée. *Vérifié le 24/10 : en production, 0 commande réelle, et aucun à emporter payé sur place
       n'a encore été passé dans un vrai commerce : une commande d'essai (compte de test) dans chacun des 3 avant le 1/11.*
 - [x] 🟡 **F — L'abonnement des commerces reste éteint** (décision du 14/10 ; *vérifié le 24/10 : facturé pour 0 commerce*). Le jour où on l'allume : prévenir
       chaque commerce **30 jours avant** (contrat, clause « Abonnement ») — l'interrupteur admin ferme sinon
@@ -231,8 +230,7 @@ T = Thibault seul (titulaire des comptes), J = juriste, C = comptable, D = déve
 - [x] **T — Liens universels** (*vérifié le 24/10 : `assetlinks.json` porte `be.fairide.app` avec 3 empreintes,
       `apple-app-site-association` le Team ID*). Le chemin `/retour-appli` manquait côté iPhone : ajouté par la PR
       `fix/appli-2410` (en attente du go d'Owen).
-- [ ] **T — Google Cloud › Identifiants** : origine `https://staging.fairide.be` (connexion Google sur le staging) ;
-      clients OAuth Android et iOS pour la connexion native.
+- [ ] **T — Google Cloud › Identifiants** : clients OAuth Android et iOS pour la connexion native.
 - [x] ⚪️ **F — La promesse « applications le 6 octobre »** (`appStoresAt`, `src/launch.js`) est passée (*vérifié le
       24/10 : plus rien ne l'affiche ; le backend renvoie encore `appStoresAt`, sans effet*).
 
@@ -244,14 +242,13 @@ chaque fusion part en production *et* sur le staging.
 | Quoi | Où | Suit |
 |---|---|---|
 | Serveur | `https://fairide-backend-staging.up.railway.app` (Railway, environnement `staging`) | `main` |
-| Site | `https://staging.fairide.be` (environnement Vercel `staging`) | branche `staging`, recopiée de `main` par GitHub |
+| Site | aucun site public : seulement l'aperçu Vercel de la branche `staging`, derrière une connexion Vercel (staging.fairide.be n'existe plus, 2026-11-02) | branche `staging`, recopiée de `main` par GitHub |
 | Android de test | « Fairide Test », envoyée aux testeurs par Firebase App Distribution | chaque push sur `main` |
 
 Stripe en mode **test** (carte `4242 4242 4242 4242`), dates d'ouverture passées, base séparée avec les 29 commerces
-de démonstration. Le compte `contact@fairide.be` y est admin.
+de démonstration. `contact@fairide.be` y serait admin, mais n'y a pas de compte (relevé du 02/11) : on y teste par l'appli
+« Fairide Test » et par l'API.
 
-- [ ] **T — DNS chez OVH** : CNAME `staging` → `25fbe1a85acf72dc.vercel-dns-017.com.` (sans lui, le site de staging
-      demande une connexion Vercel). *Vérifié le 24/10 : toujours absent (NXDOMAIN).*
 - [ ] **D — Un commerce et un livreur de test** sur le staging, paiements Stripe (test) activés, pour les commandes
       complètes.
 - [ ] Passer à l'**option B** (fusionner d'abord dans `staging`, tester, puis `staging` → `main`) quand il y aura de vrais
@@ -260,8 +257,8 @@ de démonstration. Le compte `contact@fairide.be` y est admin.
 ## 6. Ménage des accès (avant le 15 novembre)
 
 Des clés ont circulé pendant la mise en place du staging, le 15/10. À faire, dans cet ordre :
-- [ ] **T — Vercel** : supprimer la clé « Protection Bypass for Automation » (Settings › Deployment Protection) dès que
-      `staging.fairide.be` répond, puis le jeton Vercel.
+- [ ] **T — Vercel** : supprimer la clé « Protection Bypass for Automation » (Settings › Deployment Protection),
+      puis le jeton Vercel.
 - [ ] **F — Railway** : supprimer le jeton d'accès créé le 15/10 (Account Settings › Tokens).
 - [ ] **F — GitHub** : supprimer le jeton à grain fin du 15/10 (Settings › Developer settings).
 - [ ] **F — Stripe** : régénérer (« roll ») la clé secrète de **test**, puis la remettre dans Railway › staging
