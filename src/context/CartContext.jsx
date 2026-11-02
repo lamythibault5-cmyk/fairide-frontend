@@ -46,8 +46,14 @@ function lirePanier(raw) {
   if (parsed.at && Date.now() - parsed.at > PANIER_MAX_MS) return vide;
   return { restaurantId: parsed.restaurantId ?? null, restaurantName: parsed.restaurantName ?? '', lines: parsed.lines ?? {}, requestId: parsed.requestId || nouvelIdDemande(), at: parsed.at || null, userId: parsed.userId || null };
 }
-function loadPersisted() {
+/* ONGLET DE SIMULATION (Admin › Simulation, 2026-11-02) : son panier reste dans l'onglet (sessionStorage, autre clé).
+   Dans le localStorage commun, l'onglet de l'admin et celui du client de simulation — deux comptes dans le même
+   navigateur — se le renvoyaient : l'ajout du client arrivait chez l'admin, qui le vidait (« panier d'un autre compte »,
+   plus bas), et ce panier vide revenait aussitôt dans l'onglet de simulation. Le client n'y voyait jamais de panier. */
+const SIMU_STORAGE_KEY = 'fairide_cart_simulation';
+function loadPersisted(simu) {
   try {
+    if (simu) return lirePanier(sessionStorage.getItem(SIMU_STORAGE_KEY));
     let raw = localStorage.getItem(STORAGE_KEY);
     // Panier d'avant ce changement, encore dans l'onglet : repris une fois.
     if (!raw) raw = sessionStorage.getItem(STORAGE_KEY);
@@ -58,21 +64,23 @@ function loadPersisted() {
 }
 
 export function CartProvider({ children }) {
-  const [restaurantId, setRestaurantId] = useState(() => loadPersisted().restaurantId);
-  const [restaurantName, setRestaurantName] = useState(() => loadPersisted().restaurantName);
+  const { user, simulation } = useAuth() || {};
+  // Fixé au montage : un onglet est de simulation ou ne l'est pas (AuthContext, simulationInitiale).
+  const simu = useRef(!!simulation).current;
+  const [restaurantId, setRestaurantId] = useState(() => loadPersisted(simu).restaurantId);
+  const [restaurantName, setRestaurantName] = useState(() => loadPersisted(simu).restaurantName);
   // lineKey -> { itemId, name, imageUrl, optionItemIds, optionsSnapshot, unitPrice, qty }
   // name/imageUrl dénormalisés à l'ajout : le panier flottant (persistant sur toutes les pages, voir
   // FloatingCart.jsx) doit pouvoir s'afficher sans avoir sous la main le menu complet du restaurant.
-  const [lines, setLines] = useState(() => loadPersisted().lines);
-  const [requestId, setRequestId] = useState(() => loadPersisted().requestId);
+  const [lines, setLines] = useState(() => loadPersisted(simu).lines);
+  const [requestId, setRequestId] = useState(() => loadPersisted(simu).requestId);
   /* 24 HEURES APRÈS LA DERNIÈRE MODIFICATION, PAS APRÈS LA DERNIÈRE OUVERTURE (audit du 19/10, discovery-12). La date était
      réécrite à chaque montage : ouvrir l'appli une fois par jour gardait le panier indéfiniment, contre ce que dit la
      politique des cookies (« 24 heures au plus »). Elle ne bouge plus qu'avec le contenu (effet `signature` plus bas). */
-  const [miseAJour, setMiseAJour] = useState(() => loadPersisted().at || Date.now());
+  const [miseAJour, setMiseAJour] = useState(() => loadPersisted(simu).at || Date.now());
   /* LE COMPTE QUI A REMPLI CE PANIER (audit du 19/10, discovery-14). Une session expirée garde le panier (USR-6), mais si
      c'est un AUTRE compte qui se connecte ensuite sur l'appareil, il ne doit pas hériter du panier du précédent. */
-  const { user } = useAuth() || {};
-  const [proprietaire, setProprietaire] = useState(() => loadPersisted().userId);
+  const [proprietaire, setProprietaire] = useState(() => loadPersisted(simu).userId);
   useEffect(() => {
     if (!user?.id) return;
     if (proprietaire && proprietaire !== user.id) { setLines({}); setRestaurantId(null); setRestaurantName(''); }
@@ -98,6 +106,7 @@ export function CartProvider({ children }) {
      l'autre. L'événement `storage` (émis dans les AUTRES onglets) recharge l'état. L'empreinte est recalée d'abord : la
      même commande garde le même identifiant de demande dans les deux onglets (règle CMD-19 ci-dessus). */
   useEffect(() => {
+    if (simu) return undefined; // son panier n'est pas dans le localStorage commun
     const surStockage = (e) => {
       if (e.key !== STORAGE_KEY) return;
       let p;
@@ -126,7 +135,9 @@ export function CartProvider({ children }) {
 
   useEffect(() => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ restaurantId, restaurantName, lines, requestId, at: miseAJour, userId: proprietaire || undefined }));
+      const panier = JSON.stringify({ restaurantId, restaurantName, lines, requestId, at: miseAJour, userId: proprietaire || undefined });
+      if (simu) { sessionStorage.setItem(SIMU_STORAGE_KEY, panier); return; }
+      localStorage.setItem(STORAGE_KEY, panier);
       sessionStorage.removeItem(STORAGE_KEY);
     } catch {
       // stockage indisponible (navigation privée stricte, etc.) — le panier reste fonctionnel en mémoire
