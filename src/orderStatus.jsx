@@ -64,6 +64,8 @@ export const ORDER_STAGES = [
   { key: 'preparation', label: 'En préparation', icon: 'restaurants', defaultColor: '#C8F03C' },
   { key: 'attenteLivreur', label: 'Prête, en attente de l\'arrivée du livreur', icon: 'horloge', defaultColor: '#E07A1F' },
   { key: 'pretClient', label: 'Prête, en attente du client', icon: 'horloge', defaultColor: '#E07A1F' },
+  // Livrée par l'équipe du commerce (fondateur, 2026-11-02) : prête, c'est à son équipe de partir (« Partie en livraison »).
+  { key: 'pretEquipe', label: 'Prête, ton équipe peut partir', icon: 'velo', defaultColor: '#E07A1F' },
   { key: 'enLivraison', label: 'Livreur en route', icon: 'velo', defaultColor: '#2B7FB8' },
   { key: 'terminee', label: 'Terminée', icon: 'valider', defaultColor: '#14121F' },
   { key: 'annulee', label: 'Refusée / annulée', icon: 'interdit', defaultColor: '#8A8A8A' }
@@ -74,11 +76,12 @@ export function orderStageKey(order) {
   if (order.status === 'livre') return 'terminee';
   if (order.status === 'livraison') return 'enLivraison';
   if (order.status === 'pret') {
+    if (order.orderType === 'delivery' && order.deliveryBy === 'restaurant') return 'pretEquipe';
     if (order.orderType === 'delivery') return order.driverId ? 'enLivraison' : 'attenteLivreur';
     return 'pretClient';
   }
   if (order.status === 'preparation') {
-    if (order.orderType === 'delivery' && !order.driverId) return 'attenteConfirmationLivreur';
+    if (order.orderType === 'delivery' && order.deliveryBy !== 'restaurant' && !order.driverId) return 'attenteConfirmationLivreur';
     return 'preparation';
   }
   return 'nouveau';
@@ -87,7 +90,7 @@ export function orderStageKey(order) {
 // Priorité d'affichage : ce qui demande une action ou une surveillance du restaurateur en premier,
 // ce qui est déjà réglé (terminé/annulé) en dernier — pour qu'il n'ait jamais à chercher dans la liste
 // ce qui compte maintenant, réduisant le risque d'en oublier une.
-const STAGE_PRIORITY = ['nouveau', 'attenteConfirmationLivreur', 'attenteLivreur', 'preparation', 'pretClient', 'enLivraison', 'terminee', 'annulee'];
+const STAGE_PRIORITY = ['nouveau', 'attenteConfirmationLivreur', 'attenteLivreur', 'pretEquipe', 'preparation', 'pretClient', 'enLivraison', 'terminee', 'annulee'];
 export function orderStagePriority(order) {
   const idx = STAGE_PRIORITY.indexOf(orderStageKey(order));
   return idx === -1 ? STAGE_PRIORITY.length : idx;
@@ -286,6 +289,10 @@ export function ProchaineEtape({ order }) {
   else if (status === 'refuse') cle = 'next_refuse';
   else if (status === 'annule') cle = order.pickupNoShow ? 'next_no_show' : 'next_annule';
   if (!cle) return null;
+  // Livrée par l'équipe du commerce (fondateur, 2026-11-02) : pas de livreur Fairride, pas de code ; c'est le commerce qui livre.
+  if (livraison && order.deliveryBy === 'restaurant' && ['preparation', 'pret', 'livraison'].includes(status)) {
+    return <div className="small order-next">{t(`livraisonEquipe.next_${status}`, { restaurant: order.restaurantName })}</div>;
+  }
   // Livreur déjà nommé (audit du 19/10, AO-14) : « un livreur viendra… tu recevras son nom » était faux, on dit lequel.
   if (livraison && order.driverName && ['next_preparation_delivery', 'next_pret_delivery'].includes(cle)) {
     return <div className="small order-next">{t(`orderStatus.${cle}_driver`, { name: prenomLivreur(order) })}</div>;

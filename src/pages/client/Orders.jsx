@@ -175,7 +175,8 @@ export default function Orders() {
         </div>
       );
     }
-    if (o.orderType !== 'delivery' || !o.deliveryCode) return null;
+    // Livrée par l'équipe du commerce : pas de code à donner (c'est le commerce qui touche « Livrée », fondateur 2026-11-02).
+    if (o.orderType !== 'delivery' || !o.deliveryCode || o.deliveryBy === 'restaurant') return null;
     return (
       <div className="suivi-code">
         <div className="suivi-code-lib">
@@ -512,8 +513,26 @@ export default function Orders() {
       {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
     </>
   );
-  // La carte du trajet, pendant la livraison seulement. Plus haute sur le site, où elle tient sa propre colonne.
-  const blocCarte = (o) => (o.status === 'livraison' && o.restaurantLat && o.deliveryLat ? (
+  /* LIVRÉE PAR UN LIVREUR DU RESTAURANT (fondateur, 2026-11-02 : « le client doit savoir pourquoi il ne voit pas la position en
+   * direct, parce que c'est le livreur du restaurant »). Le commerce livre avec son équipe : pas de livreur Fairride, donc ni
+   * carte, ni nom, ni code. On le dit tout de suite, avec la raison, et le client peut appeler le commerce (son numéro est
+   * donné pendant la livraison, backend GET /orders/mine). */
+  // Son livreur partage sa position depuis son compte de l'équipe (fondateur, 2026-11-02) : la carte s'affiche (blocCarte),
+  // et le texte dit que c'est le livreur du restaurant ; sinon, il dit pourquoi il n'y a pas de carte.
+  const blocEquipe = (o) => (o.deliveryBy === 'restaurant' && ['preparation', 'pret', 'livraison'].includes(o.status) ? (
+    <div className="suivi-equipe">
+      <b>{t('livraisonEquipe.clientTitre', { restaurant: o.restaurantName })}</b>
+      <p>{t(o.status === 'livraison' && o.driverLat ? 'livraisonEquipe.clientSuivi' : 'livraisonEquipe.clientPourquoi', { restaurant: o.restaurantName })}</p>
+      {o.restaurantPhone && (
+        <a className="suivi-appeler" href={`tel:${String(o.restaurantPhone).replace(/[^+\d]/g, '')}`}>
+          <Icone nom="telephone" taille={16} />{t('livraisonEquipe.appeler', { restaurant: o.restaurantName })}
+        </a>
+      )}
+    </div>
+  ) : null);
+  // La carte du trajet, pendant la livraison seulement (un livreur du restaurant : seulement s'il partage sa position). Plus haute sur le
+  // site, où elle tient sa propre colonne.
+  const blocCarte = (o) => (o.status === 'livraison' && (o.deliveryBy !== 'restaurant' || o.driverLat) && o.restaurantLat && o.deliveryLat ? (
     <div className="suivi-carte-trajet" style={{ margin: '10px 0' }}>
       <DeliveryTrackingMap
         restaurantLat={o.restaurantLat} restaurantLng={o.restaurantLng}
@@ -780,6 +799,7 @@ export default function Orders() {
         <LivreurALaPorte order={o} />
         {blocNonTermine(o)}
         {enRoute && blocCarte(o)}
+        {blocEquipe(o)}
         {note}
         {boutonAnnuler(o)}
         {!enRoute && blocPhoto(o)}
@@ -836,7 +856,7 @@ export default function Orders() {
       <div className={`sc-suivi${carte ? ' avec-carte' : ''}`}>
         <div className="sc-suivi-g">{carte ? <div className="sc-suivi-carte">{carte}</div> : suivi}</div>
         <div className="sc-suivi-d">
-          <div className="sc-suivi-code">{codeDeRemise(o)}{blocPhoto(o)}</div>
+          <div className="sc-suivi-code">{codeDeRemise(o)}{blocEquipe(o)}{blocPhoto(o)}</div>
           {carte && suivi}
           <div className="sc-suivi-total">{blocTotal(o)}</div>
           <div className="sc-suivi-actions">{blocActions(o)}</div>

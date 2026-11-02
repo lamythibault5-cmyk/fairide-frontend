@@ -1105,7 +1105,6 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
    « blanc ou iris » tient aussi pour un avertissement : c'est le filet rouge et le texte qui alertent. */
 .plat-age { font-size: .78em; font-weight: 700; border: 1px solid var(--ink); border-radius: var(--radius-chip); padding: 0 4px; margin-left: 4px; white-space: nowrap; }
 .plat-allergenes { color: var(--ink-soft); margin-top: 2px; }
-.fiche-vendeur { border: 1px solid var(--line); }
 .bandeau-allergie { border: 1px solid var(--red); border-radius: var(--radius-chip); color: var(--red); padding: 6px 10px; margin: 6px 0; font-size: 14px; }
 .bandeau-allergie.est-confirme { border-color: var(--line); color: var(--ink); }
 .badge-alcool { font-weight: 700; margin: 4px 0; }

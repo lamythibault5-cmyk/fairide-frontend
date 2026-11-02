@@ -96,13 +96,13 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
        * Le refus ne change pas : la fenêtre du motif attend la réponse PUIS la relecture, comme avant. */
       if (chemin === 'accept') modifierCommandes?.((liste) => fusionnerCommande(liste, maj));
       fermer();
-      const relecture = loadDashboard?.(restoId, { fiche: false, annexes: false, silencieux: true });
+      const relecture = loadDashboard?.(restoId, { fiche: false, silencieux: true });
       if (chemin !== 'accept') await relecture;
       return true;
     } catch (e) {
       toast(e.message, 'erreur');
       // Acceptée ou refusée ailleurs entre-temps : relue tout de suite, la feuille se ferme d'elle-même (shop-214).
-      loadDashboard?.(restoId, { fiche: false, annexes: false, silencieux: true });
+      loadDashboard?.(restoId, { fiche: false, silencieux: true });
       return false;
     } finally { setAction(null); }
   }

@@ -31,7 +31,7 @@ export default function RupturesDuJour({ restaurant, restoId, token, toast, load
         toast(corps.outOfStock ? t('ordersResto.stockOutDone') : t('ordersResto.stockBackDone'));
       },
       // Sans fiche gardée à modifier, la relecture reprend la fiche (le plat ne bougerait pas sinon).
-      rafraichir: () => loadDashboard(restoId, { fiche: !modifierRestaurant, annexes: false, silencieux: true })
+      rafraichir: () => loadDashboard(restoId, { fiche: !modifierRestaurant, silencieux: true })
     });
   }
   if (!plats.length) return null;

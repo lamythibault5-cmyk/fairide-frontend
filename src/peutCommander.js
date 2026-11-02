@@ -7,10 +7,10 @@ import { livraisonOuverte, paiementEnLigneOuvert, livreurFairideLibre, commandes
  * (MapPage.jsx) disent la même chose que les cartes des commerces. */
 
 // Livraison réellement possible ici et maintenant : ouverte (GO), dans la zone, et un livreur libre dans le pool Fairide
-// (audit du 19/10, discovery-02 ; un commerce qui livre lui-même garde sa vérification sur sa fiche).
+// (audit du 19/10, discovery-02) — sauf un commerce qui livre avec son équipe : il n'attend aucun livreur.
 export function livraisonPossibleIci(r, user) {
   return !!r.offersDelivery && livraisonOuverte(user) && !horsZoneLivraison(r, user)
-    && (r.deliveryMode === 'own' || livreurFairideLibre(user));
+    && (r.deliveredByRestaurant || livreurFairideLibre(user));
 }
 
 // L'à emporter réellement commandable aujourd'hui : ouvert (bouton « Ouvrir l'à emporter », payé sur place) et, s'il ne se paie qu'en ligne,

@@ -36,6 +36,14 @@ is Fairide's system fee, included** (`fraisService`, stored as `service_fee` + `
 customer's per-km rate; the old bike €0.60 / motorised €0.80 grid, with the bike difference kept by Fairide, is gone). A courier's
 minimum (CODE-13) applies to their share: the client fee is raised to minimum / 0.9 when no courier accepts the grid
 (`routes/orders.js`, `troisVendeurs.prixAvecMinimum`). Takeaway paid on site: no commission, no fee.
+**A shop that delivers with its own employees (founder, 2026-11-02, `../fairide-backend/livraisonCommerce.js`)** sells the
+delivery itself: the customer pays the shop's fixed fee (`own_delivery_fee`, 0 to 20 €, no « dès »), Fairride keeps **10 % of
+it, the same commission as on food, counted in `orders.commission`** (so on the monthly commission invoice, whose line amount
+then includes the delivery), and the rest goes to the shop with its food in the same Stripe transfer. No system fee
+(`service_fee` 0), no courier payout, no tip. The shop transfer, `RESTAURANT_DUE_SQL`, `virementsCommerce.PART_SQL`,
+`accountingService` (440, nothing to 441), `chiffresArgent`, DAC7 (the delivery is part of the shop's consideration) and the
+receipt (« Livraison vendue par <commerce> ») all read `orders.delivery_by = 'restaurant'`. Example: 25,50 € of food + 3 €
+delivery → Fairride 2,85 €, the shop 25,65 €. « Renfort Fairride » orders are ordinary Fairride deliveries (grid price, 90/10).
 **Tips go 100% to the courier** (`tipFairideRate` 0 — founder, 2026-10-13: « tips go 100 percent to driver »; this
 reverses the 90/10 rule of 2026-10-09. Backend migration 026 had put 10% in the database, migration 032 resets it to 0).
 The courier and restaurant contracts, the T&Cs and the courier texts promise it. **Since 2026-10-21 it is a fixed rule, not a

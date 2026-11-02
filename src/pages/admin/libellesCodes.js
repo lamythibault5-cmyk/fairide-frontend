@@ -25,9 +25,9 @@ export const SUBSCRIPTION_STATUS_LABELS = parLangue({
   nl: { none: 'geen', trialing: 'gratis maand loopt', active: 'actief', past_due: 'betaling achterstallig', paused: 'gepauzeerd', canceled: 'opgezegd', incomplete: 'onvolledig', incomplete_expired: 'verlopen', unpaid: 'onbetaald' }
 });
 export const DELIVERY_MODE_LABELS = parLangue({
-  fr: { fairide: 'livreurs Fairride', own: 'ses propres livreurs' },
-  en: { fairide: 'Fairride couriers', own: 'its own couriers' },
-  nl: { fairide: 'Fairride-koeriers', own: 'eigen koeriers' }
+  fr: { fairide: 'livreurs Fairride', restaurant: 'son équipe' },
+  en: { fairide: 'Fairride couriers', restaurant: 'its own staff' },
+  nl: { fairide: 'Fairride-koeriers', restaurant: 'eigen team' }
 });
 // Libellé d'un code, ou le code lui-même quand la table ne le connaît pas encore.
 export const libelle = (table, code) => (code && table[code]) || code || '-';

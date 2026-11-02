@@ -763,3 +763,9 @@ body:has([role="dialog"], .carte-page .carte-fiche, .carte-page .map-detail-card
 .sc-arret { padding: 6px 0 18px; border-bottom: 1px solid var(--line); margin-bottom: 8px; }
 .sc-arret .suivi-refus { font-size: 15px; }
 .sc-arret-action { display: block; width: 100%; text-align: center; margin-top: 16px; }
+
+/* Livrée par un livreur du restaurant (Orders.jsx, blocEquipe) : pourquoi pas de carte, et « Appeler » le commerce. */
+.suivi-equipe { margin: 12px 0; padding: 12px 14px; border-radius: 16px; background: var(--iris-tint); color: var(--ink); font-size: 14px; }
+.suivi-equipe b { display: block; margin-bottom: 4px; }
+.suivi-equipe p { margin: 0 0 10px; color: var(--ink-soft); line-height: 1.45; }
+.suivi-equipe p:last-child { margin-bottom: 0; }

@@ -39,9 +39,10 @@ ignored since, and can be deleted.
   between activation and GO (`prolongerEssais`: the free month counts from the opening). A Stripe failure opens an
   admin task instead of blocking.
 - **After GO, no courier = no delivery.** `lancement.livreursDisponibles` counts couriers who could take the job now:
-  approved, Stripe active, status verified, not paused, not test, no job in hand, no selfie check past its 60-min deadline, right pool
-  (`delivery_mode` own/fairide), bikes only within `VELO_MAX_KM`. Zero → order and quote refused with
-  `NO_COURIER_AVAILABLE` (409). It only COUNTS couriers: never add ratings, rankings or acceptance history to it
+  approved, Stripe active, status verified, not paused, not test, no job in hand, no selfie check past its 60-min deadline
+  and bikes only within `VELO_MAX_KM`. Zero → order and quote refused with
+  `NO_COURIER_AVAILABLE` (409), except for a shop that delivers with its own employees (`livraisonCommerce.livreParCommerce`,
+  `lancement.livraisonPossible`, 2026-11-02): it waits for no courier, but still only after GO. It only COUNTS couriers: never add ratings, rankings or acceptance history to it
   (employment-presumption rule, see `notifLivreurs.js`). Scheduled orders are judged like immediate ones.
 - **Website** ([src/launch.js](../../src/launch.js)): reads `GET /orders/launch` (`go`, `goAt`, `pickupOpen`) at start, every
   minute while visible and on return to the tab; the last answer is kept in `localStorage` (`fairide_lancement`). Components that depend

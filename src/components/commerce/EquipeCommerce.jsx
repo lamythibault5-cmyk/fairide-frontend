@@ -41,6 +41,14 @@ export default function EquipeCommerce({ restoId }) {
     if (!email.trim()) return;
     if (await envoyerInvitation(email.trim(), nom.trim())) { setEmail(''); setNom(''); }
   }
+  // LIVRE POUR MOI (fondateur, 2026-11-02 ; livraison par l'équipe du commerce) : ce membre est un de tes livreurs salariés.
+  // Quand il touche lui-même « Partie en livraison » sur son téléphone, sa position est montrée au client jusqu'à « Livrée ».
+  async function marquerLivreur(m, delivers) {
+    try {
+      const r = await api(`/restaurants/${restoId}/team/${m.id}`, { method: 'PATCH', token, body: { delivers } });
+      if (Array.isArray(r?.members)) setMembres(r.members);
+    } catch (err) { toast(err.message, 'erreur'); }
+  }
   async function retirer(m) {
     try {
       await api(`/restaurants/${restoId}/team/${m.id}`, { method: 'DELETE', token });
@@ -68,6 +76,12 @@ export default function EquipeCommerce({ restoId }) {
                 <span className={`eg-pastille eg-pastille--${m.status}`} title={t(`team.status_${m.status}`)}>
                   {['invited', 'expired'].includes(m.status) ? t(`team.pill_${m.status}`) : t(`team.status_${m.status}`)}
                 </span>
+                {m.status === 'active' && (
+                  <label className="eg-livreur">
+                    <input type="checkbox" checked={!!m.delivers} onChange={(e) => marquerLivreur(m, e.target.checked)} />
+                    <span>{t('livraisonEquipe.livrePourMoi')}<small>{t('livraisonEquipe.livrePourMoiAide')}</small></span>
+                  </label>
+                )}
               </span>
               {/* Invitation expirée : la renvoyer d'un geste, sans retaper l'adresse (shop-416). */}
               {m.status === 'expired' && (

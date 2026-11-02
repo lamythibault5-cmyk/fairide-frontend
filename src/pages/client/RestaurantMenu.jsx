@@ -697,7 +697,11 @@ export default function RestaurantMenu({ id }) {
     : restaurant.freeDelivery
       ? t('restaurantMenu.feeFree')
       // Montant au format de la langue (« from €5 », pas « from 5,00 € ») : audit du 19/10, discovery-22.
-      : t('restaurantMenu.feeFrom', { amount: eurosCourts(tarifLivraison(restaurant).depart) });
+      // Livrée par l'équipe du commerce (fondateur, 2026-11-02) : ses frais sont fixes, pas de « dès ».
+      : restaurant.deliveredByRestaurant ? eurosCourts(tarifLivraison(restaurant).depart)
+        : t('restaurantMenu.feeFrom', { amount: eurosCourts(tarifLivraison(restaurant).depart) });
+  const libelleFrais = modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel')
+    : restaurant.deliveredByRestaurant ? t('livraisonEquipe.ficheLabel', { name: restaurant.name }) : t('restaurantMenu.feeLabel');
   /* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
      forfaitaire côté client : le montant exact dépend de la distance et se calcule au
      serveur, exactement comme l'annonce déjà le paiement.
@@ -746,7 +750,7 @@ export default function RestaurantMenu({ id }) {
           <div><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></div>
         ) : null}
         {!onlineOrderingDisabled && (
-          <div><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></div>
+          <div><b>{fraisLivraison}</b><small>{libelleFrais}</small></div>
         )}
       </div>}
       {/* Montant minimum choisi par le commerce (PAN-3), annoncé avant de composer le panier. */}
@@ -791,7 +795,7 @@ export default function RestaurantMenu({ id }) {
   const panneauFrais = onlineOrderingDisabled ? null : vueAppli ? null : (
     <div className="fiche-frais">
       {caseTemps && <span><b>{caseTemps.valeur}</b><small>{caseTemps.libelle}</small></span>}
-      <span><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></span>
+      <span><b>{fraisLivraison}</b><small>{libelleFrais}</small></span>
       {!caseTemps && modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
         <span><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></span>
       )}
@@ -1092,6 +1096,14 @@ export default function RestaurantMenu({ id }) {
               </section>
             )}
 
+            {/* LE VENDEUR DANS « INFOS » (fondateur, 2026-11-02, maquettes/vendeur-discret : « on ne peut pas juste le mettre dans le
+                bouton Infos ? »). Le cadre de six lignes au milieu de la fiche disait qui vend, à qui demander pour les allergènes,
+                et où signaler le commerce. Le DSA (art. 30) demande ces informations sur la page du commerce, facilement
+                accessibles : un toucher sur « Infos », en haut de la fiche, le fait. Ce qui doit se voir AVANT de payer, sans
+                toucher, est dans le paiement : « vendeur professionnel » (CDE VI.45/1) et la ligne allergènes (AR 17/07/2014
+                art. 5) sous les vendeurs (Checkout.jsx). */}
+            <FicheVendeur restaurant={restaurant} />
+
           <div className="modal-pied">
             {/* Fermer n'est pas une étape : contour, pas lime (audit du 15/10/2026, « une pointe de lime par vue »). */}
             <button type="button" className="btn-outline" onClick={() => setInfosOuvertes(false)}>{t('common.close')}</button>
@@ -1136,8 +1148,6 @@ export default function RestaurantMenu({ id }) {
         {apercuCarte}
         {sectionsEtResultat}
         {carte}
-        {/* Vendeur (A8) : toujours affiché avant la commande, sans clic, sous la carte plutôt qu'entre l'en-tête et les plats. */}
-        <FicheVendeur restaurant={restaurant} />
         {decouvrir}
         {fenetres}
       </div>
@@ -1164,8 +1174,6 @@ export default function RestaurantMenu({ id }) {
             </header>
             {sectionsEtResultat}
             {carte}
-            {/* Vendeur (A8) : toujours affiché avant la commande, sans clic, sous la carte. */}
-            <FicheVendeur restaurant={restaurant} />
           </div>
           {avecPanier && <PanierColonne restaurant={restaurant} mode={modeActif} />}
         </div>

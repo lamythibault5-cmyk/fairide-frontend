@@ -272,7 +272,7 @@ export default function AdminDriversPage() {
                 </span>
               </div>
             </div>
-            <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}{d.linkedRestaurantName ? tr('adminDrivers.linkedToSuffix', { name: d.linkedRestaurantName }) : ''}</div>
+            <div className="small">{d.email}{d.phone ? ` · ${d.phone}` : ''}</div>
             <ProfilLine u={d} tr={tr} />
             <div className="small"><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{courierLine(d, tr)}</div>
             <div className="small">

@@ -1,8 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 
-/* Qui vend, et à qui demander pour les allergènes — visible sur la fiche SANS clic, avant l'ajout au
- * panier (backlog de conformité du 23/09/2026).
+/* Qui vend, et à qui demander pour les allergènes (backlog de conformité du 23/09/2026). Depuis le 2026-11-02 (fondateur,
+ * maquettes/vendeur-discret), au bas de la feuille « Infos » de la fiche, plus au milieu de la page ; le paiement redit, sans
+ * toucher, « vendeur professionnel » et la ligne allergènes (Checkout.jsx).
  *
  *   A8 — CDE VI.45 §1 et VI.45/1 : identité du professionnel avant la commande, et le fait que la vente
  *        est conclue avec le commerce, pas avec la plateforme. Les champs viennent de la charge utile
@@ -26,11 +27,11 @@ export default function FicheVendeur({ restaurant }) {
   ].filter(Boolean).join(' · ');
   const tel = r.allergenContactPhone;
   return (
-    <section className="fiche-vendeur card" aria-label={t('conformite.sellerTitle')}>
-      <p className="small" style={{ margin: 0 }}>
-        <b>{t('conformite.sellerTitle')}</b> : {identite} — {t('conformite.sellerProfessional')}
-      </p>
-      <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.sellerContract')}</p>
+    <section className="fiche-infos-bloc fiche-vendeur" aria-label={t('conformite.sellerTitle')}>
+      <h4>{t('conformite.sellerTitle')}</h4>
+      <p className="small" style={{ margin: 0 }}>{identite} — {t('conformite.sellerProfessional')}</p>
+      {/* Livrée par son équipe (fondateur, 2026-11-02) : le commerce vend aussi la livraison, Fairride n'en assure aucune. */}
+      <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t(r.deliveredByRestaurant ? 'livraisonEquipe.sellerContract' : 'conformite.sellerContract')}</p>
       {tel && (
         <p className="small" style={{ margin: '6px 0 0' }}>
           <b>{t('conformite.allergensTitle')}</b> : {t('conformite.allergensAskBefore')}{' '}

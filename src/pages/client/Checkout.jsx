@@ -317,7 +317,7 @@ export default function Checkout() {
 
   // Ce qui manque pour atteindre le minimum du commerce (PAN-3), sur la valeur des plats avant remises, comme le serveur.
   const manqueMinimum = restaurant.minOrderAmount ? Math.max(0, +(restaurant.minOrderAmount - cart.rawTotal).toFixed(2)) : 0;
-  const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder, deliveryMode: restaurant.deliveryMode, ownDeliveryFee: restaurant.ownDeliveryFee });
+  const totals = cart.totals(restaurant.menu, restaurant.activeCartPromo, { freeDelivery: restaurant.freeDelivery, deliveryFeeDiscount: restaurant.deliveryFeeDiscount, freeDeliveryMinOrder: restaurant.freeDeliveryMinOrder, deliveredByRestaurant: restaurant.deliveredByRestaurant, ownDeliveryFee: restaurant.ownDeliveryFee });
   // Mode choisi par le commerce : en ligne seulement, sur place seulement, ou au choix du client.
   const modeEmporter = restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online');
   // Payée sur place : ce que le commerce accepte au comptoir, et ce qui arrive si l'on ne vient pas (fondateur, 18/10/2026).
@@ -438,7 +438,10 @@ export default function Checkout() {
    * Stripe. montantAnnonce reste donc le total de la commande — c'est lui que placeOrder compare au total du serveur —,
    * et l'écran affiche montantAnnonce + pourboire. Seulement en livraison payée en ligne, et pas sur une commande que
    * le solde couvre en entier : elle n'ouvre aucune page de paiement. */
-  const offrePourboire = fulfillmentType === 'delivery' && !surPlaceChoisi && montantAnnonce > 0;
+  // Livrée par l'équipe du commerce (fondateur, 2026-11-02) : il vend la livraison, pas de livreur Fairride, pas de pourboire.
+  // Le devis fait foi (vendeur figé à la commande) ; sans devis, la fiche du commerce dit qui livrerait maintenant.
+  const livreParCommerce = fulfillmentType === 'delivery' && (devisValide ? devisValide.deliveryBy === 'restaurant' : !!restaurant.deliveredByRestaurant);
+  const offrePourboire = fulfillmentType === 'delivery' && !livreParCommerce && !surPlaceChoisi && montantAnnonce > 0;
   const pourboireChoisi = !offrePourboire ? 0
     : pourboire === 'autre' ? Math.max(0, +(Number(String(pourboireAutre).replace(',', '.')) || 0).toFixed(2))
     : Number(pourboire);
@@ -995,7 +998,7 @@ export default function Checkout() {
               {fulfillmentType === 'delivery' && (
                 <>
                   {/* « dès » seulement sans devis, quand la distance réelle peut encore faire monter la base. */}
-                  <LigneTicket libelle={`${t('checkout.deliveryFeeLine')}${devisValide ? '' : ` (${t('checkout.fromPrefix')})`}`} montant={euros(devisValide ? devisValide.deliveryFee : totals.deliveryFee)} />
+                  <LigneTicket libelle={livreParCommerce ? t('livraisonEquipe.ligneLivraison', { name: restaurant.name }) : `${t('checkout.deliveryFeeLine')}${devisValide ? '' : ` (${t('checkout.fromPrefix')})`}`} montant={euros(devisValide ? devisValide.deliveryFee : totals.deliveryFee)} />
                   {remiseLivraison > 0 && <LigneTicket libelle={t('checkout.deliveryDiscountLine', { name: restaurant.name })} montant={`−${euros(remiseLivraison)}`} />}
                 </>
               )}
@@ -1010,14 +1013,17 @@ export default function Checkout() {
                 dit donc à qui le client achète. En une ligne ; le détail (et les frais de système de Fairide, compris dans la
                 livraison, montant seulement) sous « détails ». */}
             <p className="co-vendeurs">
-              {t(fulfillmentType === 'delivery' ? 'checkout.vendeursLivraison' : 'checkout.vendeursEmporter', { name: restaurant.name })}
+              {t(livreParCommerce ? 'livraisonEquipe.vendeurs' : fulfillmentType === 'delivery' ? 'checkout.vendeursLivraison' : 'checkout.vendeursEmporter', { name: restaurant.name })}
               {' · '}
               <button type="button" className="co-vendeurs-lien" aria-expanded={vendeursOuverts} onClick={() => setVendeursOuverts((v) => !v)}>{t('checkout.vendeursDetails')}</button>
             </p>
+            {/* Allergènes AVANT de payer, sans toucher (AR 17/07/2014 art. 5) : la mention a quitté le cadre de la fiche pour
+                « Infos » le 2026-11-02 (maquettes/vendeur-discret) ; elle reste ici, sous les vendeurs. */}
+            {restaurant.allergenContactPhone && <p className="co-vendeurs">{t('conformite.allergyCheckoutLine', { phone: restaurant.allergenContactPhone })}</p>}
             {vendeursOuverts && (
               <ul className="co-vendeurs-detail">
                 <li>{t('checkout.ticketPlats')} {t('conformite.sellerFood', { name: restaurant.name })}</li>
-                {fulfillmentType === 'delivery' && <li>{t('checkout.deliveryFeeLine')} {t('conformite.sellerDelivery')}</li>}
+                {fulfillmentType === 'delivery' && <li>{t('checkout.deliveryFeeLine')} {livreParCommerce ? t('livraisonEquipe.vendeurLivraison', { name: restaurant.name }) : t('conformite.sellerDelivery')}</li>}
                 {/* Pas de « dont frais de système » sous une livraison offerte : le client n'en paie rien (checkout-25). */}
                 {fraisServiceEstimes > 0 && (devisValide ? Number(devisValide.deliveryFee || 0) : totals.deliveryFee) - remiseLivraison > 0 && (
                   <li>{t('checkout.fraisSystemeDetail', { amount: euros(devisValide ? Number(devisValide.serviceFee || 0) + Number(devisValide.serviceFeeVat || 0) : fraisServiceEstimes) })}</li>
@@ -1241,11 +1247,11 @@ export default function Checkout() {
               {pendingOrder.promoDiscount > 0 && <div className="line"><span>{t('checkout.promoLine', { label: pendingOrder.promoLabel })}</span><span>-{euros(pendingOrder.promoDiscount)}</span></div>}
               {pendingOrder.orderType === 'delivery' && (
                 <>
-                  <div className="line"><span>{t('checkout.deliveryFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerDelivery')}</span></span><span>{euros(pendingOrder.deliveryFee)}</span></div>
+                  <div className="line"><span>{t('checkout.deliveryFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{pendingOrder.deliveryBy === 'restaurant' ? t('livraisonEquipe.vendeurLivraison', { name: restaurant.name }) : t('conformite.sellerDelivery')}</span></span><span>{euros(pendingOrder.deliveryFee)}</span></div>
                   {pendingOrder.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="velo" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(pendingOrder.deliveryDiscount)}</span></div>
                   )}
-                  <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>
+                  {pendingOrder.deliveryBy !== 'restaurant' && <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>}
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
@@ -1253,7 +1259,7 @@ export default function Checkout() {
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
               {(() => {
                 // Même règle que confirmAndPay : le pourboire n'est débité qu'en livraison, sur un total non nul.
-                const tipCarte = pendingOrder.orderType === 'delivery' && Number(pendingOrder.total) > 0 ? pourboireChoisi : 0;
+                const tipCarte = pendingOrder.orderType === 'delivery' && pendingOrder.deliveryBy !== 'restaurant' && Number(pendingOrder.total) > 0 ? pourboireChoisi : 0;
                 return (
                   <>
                     {tipCarte > 0 && <div className="line"><span>{t('checkout.tipLine')}</span><span>{euros(tipCarte)}</span></div>}
