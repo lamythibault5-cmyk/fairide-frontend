@@ -64,7 +64,7 @@ function aujourdhuiIso() {
 
 export default function EditPage() {
   const { t } = useLanguage();
-  const { restaurant, orders, drivers, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
+  const { restaurant, orders, restoId, loadDashboard, communs, onConnect, connecting, lectureSeule } = useOutletContext();
   const { token } = useAuth();
   const [ouvert, setOuvert] = useState(null);
   const etapes = useMiseEnLigne({ restaurant, restoId, token, onConnect, connecting, onChange: () => loadDashboard(restoId), lectureSeule });
@@ -183,7 +183,7 @@ export default function EditPage() {
 
     <p className="ec-feuille-titre">{t('editResto.delivery')}</p>
     <div className="card account-groupe" aria-label={t('editResto.delivery')}>
-      {ligne('livraison', { icone: 'velo', titre: t('editResto.delivery'), sous: r.deliveryMode === 'own' ? t('editResto.deliveryOwn', { n: drivers.filter((d) => d.status !== 'invited').length }) : t('editResto.deliveryPool') })}
+      {ligne('livraison', { icone: 'velo', titre: t('editResto.delivery'), sous: r.restaurantDelivery?.actif ? t('livraisonEquipe.ligneEquipe', { montant: Number(r.ownDeliveryFee || 0).toFixed(2).replace('.', ',') }) : t('editResto.deliveryPool') })}
       {ligne('offre', { icone: 'etiquette', titre: t('editResto.rowDeliveryOffer'), sous: offre })}
       {/* Distance de livraison et plafond de commandes par jour (fondateur, 2026-10-01) : pas de limite par défaut. */}
       {/* Le temps de préparation et le minimum de commande, réglés sur le même écran, s'ajoutent au résumé quand ils sont
@@ -245,7 +245,7 @@ export default function EditPage() {
       </FeuilleCommerce>
 
       {/* « Supprimer ce restaurant » vit dans Infos légales (audit design 2) : jamais en vue sur l'écran du service. */}
-      {Ecran && <Ecran restaurant={r} drivers={drivers} restoId={restoId} loadDashboard={loadDashboard} onFermer={() => setOuvert(null)}
+      {Ecran && <Ecran restaurant={r} restoId={restoId} loadDashboard={loadDashboard} onFermer={() => setOuvert(null)}
         onSupprimer={ouvert === 'legal' ? () => setOuvert('suppression') : undefined} />}
     </div>
   );

@@ -415,7 +415,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       email: email.trim(), emailSecondary: '', website: '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
       pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
-      deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
+      deliveryMode: services.deliveryMode === 'restaurant' ? 'restaurant' : 'fairide',
       businessSource: 'manuel',
       ...regimes
     };
@@ -748,7 +748,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
           <Option multi on={services.delivery} icone="velo" titre={t('auth.serviceDelivery')} onClick={() => setServices((s) => ({ ...s, delivery: !s.delivery }))} />
           {services.delivery && (
             <Segments label={t('auth.serviceDelivery')} valeur={services.deliveryMode} onChoix={(v) => setServices((s) => ({ ...s, deliveryMode: v }))}
-              options={[['fairide', t('appli.insLivFairide')], ['own', t('appli.insLivPropres')]]} />
+              options={[['fairide', t('appli.insLivFairide')], ['restaurant', t('appli.insLivPropres')]]} />
           )}
           <Option multi on={services.pickup} icone="maison" titre={t('auth.servicePickup')} onClick={() => setServices((s) => ({ ...s, pickup: !s.pickup }))} />
           {services.pickup && (

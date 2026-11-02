@@ -241,7 +241,7 @@ export default function MenuPage({ contexte = null, modeAdmin = false }) {
       annuler: (avant) => modifierPlat(modifierRestaurant, itemId, avant),
       confirmer: (rep) => { modifierPlat(modifierRestaurant, itemId, etatStock(rep)); toast(messageOk); },
       // Sans fiche gardée à modifier, la relecture reprend la fiche (le plat ne bougerait pas sinon).
-      rafraichir: () => loadDashboard(restoId, { fiche: !modifierRestaurant, annexes: false, silencieux: true })
+      rafraichir: () => loadDashboard(restoId, { fiche: !modifierRestaurant, silencieux: true })
     });
     if (!r.ok && !r.depasse) throw r.erreur;
   }

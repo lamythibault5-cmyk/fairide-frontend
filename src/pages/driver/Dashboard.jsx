@@ -30,7 +30,6 @@ import useRevalidation from '../../useRevalidation';
 import useAlerteLivreur from '../../hooks/useAlerteLivreur';
 import AlerteLivreurBar from '../../components/AlerteLivreurBar';
 import SelfieControle from '../../components/livreur/SelfieControle';
-import LivreurDedie from '../../components/livreur/LivreurDedie';
 import NotifCourses from '../../components/livreur/NotifCourses';
 import HeuresChargees from '../../components/livreur/HeuresChargees';
 import PositionRequise, { ExplicationPosition } from '../../components/livreur/PositionRequise';
@@ -1303,8 +1302,6 @@ export default function DriverDashboard() {
         {/* Selfie de contrôle au hasard à la prise de service (CODE-14) : 60 minutes pour le prendre, ensuite plus de nouvelle
             course tant qu'il n'est pas envoyé (controleSelfie.js côté serveur). */}
         {peutRouler && <SelfieControle token={token} onDepose={load} onEtat={setSelfie} />}
-        {/* Invitation d'un commerce à devenir son livreur dédié, à accepter ou refuser (audit du 19/10, shop-301). */}
-        <LivreurDedie token={token} toast={toast} onChange={load} />
 
         {!approuve ? (() => {
           /* LE MESSAGE SUIT L'ÉTAT DU DOSSIER (audit du 15/10/2026). « L'équipe vérifie ton dossier » s'affichait aussi à un

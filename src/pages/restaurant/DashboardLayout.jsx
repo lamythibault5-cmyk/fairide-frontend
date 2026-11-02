@@ -24,7 +24,7 @@ import { demarrerTerminalNavigateur, EVENEMENT_COMMANDE } from '../../terminalNa
 import Icone from '../../components/Icone';
 import '../../site-pro.css';
 
-// Charge une seule fois restaurant/orders/drivers et les partage aux sous-pages via
+// Charge une seule fois restaurant/orders et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
 // commun à toutes les sous-pages : création du commerce quand le compte n'en a pas (les écrans de l'inscription,
 // pages/app/InscriptionAppli.jsx) et bannières (validation/abonnement/Stripe).
@@ -82,7 +82,6 @@ export default function DashboardLayout() {
      « Pas encore de commande » quand rien n'était jamais arrivé. « echecs » compte les relectures ratées d'affilée,
      « derniereMaj » l'heure de la dernière réussie, « accesPerdu » un 403 (membre retiré, commerce fermé). */
   const [etatCommandes, setEtatCommandes] = useState({ echecs: 0, derniereMaj: null, erreur: null, accesPerdu: false });
-  const [drivers, setDrivers] = useState([]);
 
   // Les écrans de l'inscription, ouverts d'eux-mêmes quand le compte n'a pas de commerce (voir chargerCommerces).
   const [creationOuverte, setCreationOuverte] = useState(false);
@@ -195,11 +194,11 @@ export default function DashboardLayout() {
       tour.current += 1;
       // Rafraîchissement en arrière-plan : une coupure réseau passagère ne doit pas afficher une erreur toutes les 15 s.
       if (tour.current % 4 === 0 && document.visibilityState === 'visible') loadDashboard(restoId, { silencieux: true });
-      else loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+      else loadDashboard(restoId, { fiche: false, silencieux: true });
     }, 15000);
     // Sur un appareil associé comme terminal, le flux du serveur annonce chaque commande (terminalNavigateur.js) : relecture
     // immédiate, l'alarme part dans la seconde au lieu de jusqu'à 15 s plus tard.
-    const tout = () => loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+    const tout = () => loadDashboard(restoId, { fiche: false, silencieux: true });
     window.addEventListener(EVENEMENT_COMMANDE, tout);
     return () => { clearInterval(interval); window.removeEventListener(EVENEMENT_COMMANDE, tout); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,27 +235,24 @@ export default function DashboardLayout() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chemin, restoId]);
 
-  // `fiche` : recharger aussi la fiche du commerce (carte comprise) ; `annexes` : les livreurs. Plus d'avis à lire depuis
+  // `fiche` : recharger aussi la fiche du commerce (carte comprise). Plus de livreurs dédiés (mode retiré le 02/11/2026,
+  // livraison par l'équipe du commerce : EcranLivreurs.jsx). Plus d'avis à lire depuis
   // leur retrait (fondateur, 22/10/2026 : pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise
   // impression ; on les refera peut-être plus tard).
-  async function loadDashboard(id, { fiche = true, annexes = true, silencieux = false } = {}) {
+  async function loadDashboard(id, { fiche = true, silencieux = false } = {}) {
     const version = versionCommandes.current;
     try {
       // Retour de l'onboarding Stripe Connect : le statut (pas suivi par webhook pour ce type de compte) est relu par
       // l'effet « retour de Stripe » plus haut, qui recharge ensuite le tableau de bord (shop-7).
-      const [ordersData, restoData, driversData] = await Promise.all([
+      const [ordersData, restoData] = await Promise.all([
         // Vue « service » (shop-213) : en cours + closes depuis 24 h, au lieu de tout l'historique toutes les 15 s.
         api(`/orders/restaurant/${id}?vue=service`, { token }),
-        fiche ? api(`/restaurants/${id}`, { token }) : null,
-        // Annexes (livreurs) : un échec ne doit jamais vider la liste des commandes (banc du 9 oct. 2026 : un 404 sur une
-        // annexe laissait « Pas encore de commande » alors que le serveur en renvoyait).
-        annexes ? api(`/restaurants/${id}/drivers`, { token }).catch(() => null) : null
+        fiche ? api(`/restaurants/${id}`, { token }) : null
       ]);
       if (versionCommandes.current === version) setOrders(Array.isArray(ordersData) ? ordersData : (ordersData?.orders || []));
       if (!Array.isArray(ordersData) && ordersData) setStatsService({ historyCount: ordersData.historyCount || 0, monthCount: ordersData.monthCount || 0 });
       setEtatCommandes({ echecs: 0, derniereMaj: Date.now(), erreur: null, accesPerdu: false });
       if (restoData) setRestaurant(restoData);
-      if (driversData) setDrivers(driversData);
       // Marque la fin du premier chargement réel : sans ce signal, l'alerte "nouvelle commande"
       // prend l'arrivée des données initiales pour des commandes qui viennent de tomber (voir
       // useNewOrderAlert).
@@ -526,7 +522,7 @@ export default function DashboardLayout() {
           {/* modifierRestaurant / modifierCommandes (2026-10-23, app lente) : un geste (« épuisé », « Prête », pause, accepter)
               change la fiche ou la liste ici même, avant la réponse ou sans attendre le rechargement complet
               (actionOptimiste.js, components/commerce/majLocale.js). Le sondage de 15 s et les relectures les corrigent. */}
-          <Outlet context={{ restaurant: restaurant || null, orders, drivers, restoId, loadDashboard, ordersLoaded, etatCommandes, statsService,
+          <Outlet context={{ restaurant: restaurant || null, orders, restoId, loadDashboard, ordersLoaded, etatCommandes, statsService,
             modifierRestaurant: setRestaurant, modifierCommandes,
             communs: bandeau ? communs : null, onConnect: connectOnboard, connecting, lectureSeule: !!actingAs,
             alerte: { ...orderAlert, push } }} />

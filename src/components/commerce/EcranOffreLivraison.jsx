@@ -20,8 +20,8 @@ export default function EcranOffreLivraison({ restaurant, restoId, loadDashboard
   const [aPartirDe, setAPartirDe] = useState(restaurant.freeDeliveryMinOrder != null);
   const [minimum, setMinimum] = useState(restaurant.freeDeliveryMinOrder != null ? String(restaurant.freeDeliveryMinOrder) : '20');
   const [enCours, setEnCours] = useState(false);
-  // Commerce qui livre lui-même : il fixe ses frais à 100 % (vide = tarif Fairide, forfait + distance).
-  const livreLuiMeme = restaurant.deliveryMode === 'own';
+  // Commerce qui livre avec son équipe (EcranLivreurs.jsx) : il change ici aussi ses frais (0 à 20 €).
+  const livreLuiMeme = restaurant.deliveryMode === 'restaurant';
   const [fraisPropres, setFraisPropres] = useState(restaurant.ownDeliveryFee != null ? String(restaurant.ownDeliveryFee) : '');
 
   async function valider() {

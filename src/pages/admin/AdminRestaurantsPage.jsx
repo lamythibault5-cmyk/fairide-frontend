@@ -19,6 +19,7 @@ import ReasonDialog from '../../components/admin/ReasonDialog';
 import AdminNotesPanel from '../../components/admin/AdminNotesPanel';
 import ChangementTvaGlobal from '../../components/admin/ChangementTvaGlobal';
 import LienValidationCarte from '../../components/admin/LienValidationCarte';
+import LivraisonEquipeAdmin from '../../components/admin/LivraisonEquipeAdmin';
 import VerificationAfsca from '../../components/admin/VerificationAfsca';
 import AdminActionHistory from '../../components/admin/AdminActionHistory';
 import CreateTicketButton from '../../components/admin/CreateTicketButton';
@@ -936,11 +937,12 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
           {detail.subscriptionBillingEnabled && !detail.isDemo && !detail.subscriptionGraceUntil && !['active', 'trialing'].includes(detail.subscriptionStatus) && (
             <p className="small" style={{ margin: '2px 0', color: 'var(--red)' }}>{tr('adminRestos.subBilledNoOrders')}</p>
           )}
-          {/* Livraison Fairide dans la zone : coupée pour un commerce seul (pas de livreur) ; sans objet s'il livre lui-même. */}
+          {/* Livraison par l'équipe du commerce (2026-11-02) : état, et l'arrêt motivé par l'équipe. */}
+          <LivraisonEquipeAdmin restaurantId={detail.id} etat={detail.restaurantDelivery} onChanged={onChanged} />
+          {/* Livraison Fairide dans la zone : coupée pour un commerce seul (pas de livreur) ; un commerce qui livre avec son
+              équipe n'est touché que pour ses commandes « Renfort Fairride ». */}
           <div className="small zone-livraison" style={{ margin: '6px 0' }}>
-            {detail.deliveryMode === 'own' ? (
-              <span style={{ color: 'var(--ink-faint)' }}><Icone nom="scooter" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOwn')}</span>
-            ) : detail.fairideDeliveryDisabled ? (
+            {detail.fairideDeliveryDisabled ? (
               <>
                 <span className="pill"><Icone nom="interdit" taille={16} className="icone-texte" />{' '}{tr('adminRestos.zoneDeliveryOffBadge')}</span>
                 {detail.fairideDeliveryDisabledReason && <span style={{ marginLeft: 6 }}>{detail.fairideDeliveryDisabledReason}</span>}

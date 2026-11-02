@@ -66,7 +66,7 @@ export default function InterrupteurService({ restaurant, restoId, token, loadDa
       confirmer: (rep) => {
         if (champ === 'pausedUntil' && rep && rep.pausedUntil !== undefined) modifierRestaurant?.((r) => (r ? { ...r, pausedUntil: rep.pausedUntil } : r));
       },
-      rafraichir: () => loadDashboard(restoId, { annexes: false, silencieux: true })
+      rafraichir: () => loadDashboard(restoId, { silencieux: true })
     });
   }
   const pause = (minutes) => agir('pausedUntil', minutes ? Date.now() + minutes * 60000 : null,

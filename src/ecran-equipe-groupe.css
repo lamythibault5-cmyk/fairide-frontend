@@ -203,3 +203,7 @@ html.appli .eg-retirer:active, html.appli .eg-bouton-iris:active { transform: sc
   html.appli .eg-invit-feuille { animation: none; }
   .eg-bouton-iris, .eg-retirer { transition: none; }
 }
+/* « Livre pour moi » (livraison par l'équipe du commerce, 2026-11-02). */
+.eg-livreur { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; font-size: 13px; cursor: pointer; }
+.eg-livreur input { width: auto; margin-top: 2px; }
+.eg-livreur small { display: block; color: var(--ink-soft); font-size: 12px; }

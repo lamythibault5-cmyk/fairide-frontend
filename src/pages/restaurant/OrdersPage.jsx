@@ -41,6 +41,8 @@ import AlerteBandeau from '../../components/commerce/AlerteBandeau';
 import { useModeEquipe } from '../../modeEquipe';
 import AnneauDelai from '../../components/commerce/AnneauDelai';
 import LigneAlarme from '../../components/commerce/LigneAlarme';
+import RenfortFairride from '../../components/commerce/RenfortFairride';
+import PositionLivreurEquipe from '../../components/commerce/PositionLivreurEquipe';
 import ListePlats from '../../components/commerce/ListePlats';
 import LivreurCommande from '../../components/commerce/LivreurCommande';
 import PlusDeTemps from '../../components/commerce/PlusDeTemps';
@@ -54,7 +56,7 @@ const SITE = !experienceApp();
 const COLONNES = [
   { cle: 'nouv', etapes: ['nouveau'], icone: 'cloche', titre: 'sitePro.colNouvelles', vide: 'sitePro.videNouvelles' },
   { cle: 'prep', etapes: ['attenteConfirmationLivreur', 'preparation'], icone: 'horloge', titre: 'sitePro.colPreparation', vide: 'sitePro.videColonne' },
-  { cle: 'pret', etapes: ['attenteLivreur', 'pretClient', 'enLivraison'], icone: 'valider', titre: 'sitePro.colPretes', vide: 'sitePro.videColonne' }
+  { cle: 'pret', etapes: ['attenteLivreur', 'pretEquipe', 'pretClient', 'enLivraison'], icone: 'valider', titre: 'sitePro.colPretes', vide: 'sitePro.videColonne' }
 ];
 // La nouvelle commande la plus pressée d'abord : échéance d'acceptation la plus proche (à défaut, la plus ancienne).
 const echeance = (o) => Number(o.acceptDeadline ? new Date(o.acceptDeadline).getTime() : new Date(o.createdAt).getTime() + 15 * 60000) || 0;
@@ -87,6 +89,29 @@ function CodeRetrait({ order, t }) {
   );
 }
 
+// LIVRÉE PAR L'ÉQUIPE DU COMMERCE (fondateur, 2026-11-02 ; maquettes/livraison-commerce, étapes 3 à 6) : pas de livreur Fairride,
+// donc ni code de retrait ni « Lou arrive ». Le commerce fait avancer la commande lui-même : « Partie en livraison » une fois
+// prête, puis « Livrée » quand son livreur l'a remise (sans code : question 2 de la maquette). Le badge le dit dès l'arrivée.
+function BadgeEquipe({ order, t }) {
+  if (order.deliveryBy !== 'restaurant') return null;
+  return <span className="badge-equipe">{t('livraisonEquipe.badge', { montant: euros(order.deliveryFee) })}</span>;
+}
+function GestesEquipe({ order, t, occupe, classe, onAction, moi }) {
+  if (order.deliveryBy !== 'restaurant') return null;
+  // C'est lui qui livre, depuis son compte de l'équipe : son téléphone partage sa position, et il le sait.
+  if (order.status === 'livraison' && moi && order.shopCourierId === moi) {
+    return (
+      <>
+        <p className="small le-position">{t('livraisonEquipe.positionPartagee')}</p>
+        <button type="button" className={classe} disabled={occupe} onClick={() => onAction(order.id, 'shop-delivered')}>{t('livraisonEquipe.livree')}</button>
+      </>
+    );
+  }
+  if (order.status === 'pret') return <button type="button" className={classe} disabled={occupe} onClick={() => onAction(order.id, 'shop-departed')}>{t('livraisonEquipe.partie')}</button>;
+  if (order.status === 'livraison') return <button type="button" className={classe} disabled={occupe} onClick={() => onAction(order.id, 'shop-delivered')}>{t('livraisonEquipe.livree')}</button>;
+  return null;
+}
+
 // L'anneau du temps qui reste pour accepter vit dans components/commerce/AnneauDelai.jsx (partagé avec la feuille
 // « Nouvelle commande » depuis l'audit design 2, 2026-10-19).
 
@@ -98,7 +123,7 @@ export default function OrdersPage() {
      d'abord et « Accepter » en bas de l'écran. Le tableau, sur un téléphone, mettait trois colonnes l'une sous l'autre. */
   const siteLarge = useSiteLarge(900);
   const tableau = SITE && siteLarge;
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const toast = useToast();
   const { orders, restaurant, restoId, loadDashboard, communs, alerte, onConnect, connecting, lectureSeule, ordersLoaded, etatCommandes, statsService, modifierRestaurant, modifierCommandes } = useOutletContext();
   // Membre de l'équipe (modeEquipe.js) : la mise en ligne du commerce et le terminal sont l'affaire du propriétaire.
@@ -281,7 +306,7 @@ export default function OrdersPage() {
       // Seulement si elle est encore « pret » d'après nous : une relecture entre-temps a pu lui donner un autre état réel.
       annuler: (avant) => modifierCommandes?.((liste) => liste.map((o) => (o.id === orderId && o.status === 'pret' && avant ? { ...o, status: avant } : o))),
       confirmer: (maj) => modifierCommandes?.((liste) => fusionnerCommande(liste, maj)),
-      rafraichir: () => loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true })
+      rafraichir: () => loadDashboard(restoId, { fiche: false, silencieux: true })
     }).finally(() => pretesEnVol.current.delete(orderId));
   }
 
@@ -301,7 +326,7 @@ export default function OrdersPage() {
        * refus garde, lui, son rechargement complet avant de fermer la fenêtre du motif. */
       if (action === 'accept' && modifierCommandes) {
         modifierCommandes((liste) => fusionnerCommande(liste, maj));
-        loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+        loadDashboard(restoId, { fiche: false, silencieux: true });
         return { ok: true };
       }
       await loadDashboard(restoId);
@@ -310,7 +335,7 @@ export default function OrdersPage() {
       toast(e.message, 'erreur');
       // La carte n'attendait plus (acceptée sur un autre appareil, statut changé) : on relit tout de suite au lieu de laisser
       // jusqu'à 15 s un bouton qui répondra la même erreur (shop-214).
-      loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+      loadDashboard(restoId, { fiche: false, silencieux: true });
       return { ok: false, code: e.code };
     } finally {
       verrous.current.delete(orderId);
@@ -407,7 +432,7 @@ export default function OrdersPage() {
     try {
       await apiUpload(`/orders/${o.id}/photo`, { file: fichier, token, fieldName: 'photo' });
       toast(t('ordersResto.photoToast'));
-      await loadDashboard(restoId, { fiche: false, annexes: false, silencieux: true });
+      await loadDashboard(restoId, { fiche: false, silencieux: true });
     } catch (e) { toast(e.message, 'erreur'); } finally { setPhotoEnCours(null); }
   }
   /* UNE COMMANDE (nouveau style, 2026-10-16, « La commande qui sonne » ; revue à l'audit design 2, 2026-10-19).
@@ -537,6 +562,7 @@ export default function OrdersPage() {
         {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>}
       </div>
       <p className="ec-cmd-sous">{sousTitre(o)}</p>
+      <BadgeEquipe order={o} t={t} />
       {/* Paiement sur place : encadré, c'est de l'argent à encaisser (fondateur, 2026-10-07). */}
       {o.paymentMode === 'on_site' && (!rienAEncaisser(o) || o.pickupNoShow) && (
         <span className={`small paiement-badge paiement-sur-place${o.pickupNoShow ? ' est-pas-venu' : ''}`} style={{ fontWeight: 700, color: o.pickupNoShow ? 'var(--red)' : undefined }}>
@@ -577,13 +603,14 @@ export default function OrdersPage() {
         </div>
       )}
       {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
+      <div onClick={(e) => e.stopPropagation()}><GestesEquipe order={o} t={t} occupe={actionsEnCours.has(o.id)} classe={boutonGeste(o)} onAction={orderAction} moi={user?.id} /></div>
       {close && ligneRaison(o)}
       {/* RETRAIT SANS RIEN TAPER (simulation du 10 oct. 2026) : le commerce compare à l'œil le code que le livreur lui
           montre avec celui-ci ; c'est le livreur qui confirme le retrait de son côté (PATCH /orders/:id/picked-up). */}
       <CodeRetrait order={o} t={t} />
       {/* Le livreur, une personne : qui vient, s'il est là (et depuis quand), son pourboire. */}
       <LivreurCommande order={o} />
-      {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
+      {o.status === 'pret' && o.orderType === 'delivery' && o.deliveryBy !== 'restaurant' && !o.driverId && (
         <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p>
       )}
     </div>
@@ -811,6 +838,7 @@ export default function OrdersPage() {
             <Icone nom={stage.icon} taille={14} className="icone-texte" /> {t(`orderStatus.stage_${stage.key}`)}
           </span>
         )}
+        <BadgeEquipe order={o} t={t} />
         <ListePlats items={o.items} />
         <PastilleCouverts order={o} />
         <div className="sp-cmd-paiement">
@@ -851,9 +879,10 @@ export default function OrdersPage() {
           </div>
         )}
         {o.status === 'pret' && o.orderType === 'pickup' && remiseClient(o)}
+        <div className="sp-cmd-boutons" onClick={(e) => e.stopPropagation()}><GestesEquipe order={o} t={t} occupe={actionsEnCours.has(o.id)} classe="ec-bouton ec-bouton--iris" onAction={orderAction} moi={user?.id} /></div>
         <CodeRetrait order={o} t={t} />
         <LivreurCommande order={o} />
-        {o.status === 'pret' && o.orderType === 'delivery' && !o.driverId && (
+        {o.status === 'pret' && o.orderType === 'delivery' && o.deliveryBy !== 'restaurant' && !o.driverId && (
           <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.waitingDriver')}</p>
         )}
         {['terminee', 'annulee'].includes(stageKey) && ligneRaison(o)}
@@ -905,6 +934,8 @@ export default function OrdersPage() {
           {alerte && <AlerteBandeau {...alerte} terminal={membreEquipe ? null : etatTerminal} />}
         </div>
         {restaurant && <InterrupteurService surBandeau restaurant={restaurant} restoId={restoId} token={token} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />}
+        {restaurant && <RenfortFairride restaurant={restaurant} restoId={restoId} token={token} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />}
+        <PositionLivreurEquipe orders={orders} moi={user?.id} token={token} />
         {restaurant && !membreEquipe && <MiseEnLigne surBandeau restaurant={restaurant} restoId={restoId} token={token} onConnect={onConnect} connecting={connecting}
           onChange={() => loadDashboard(restoId)} lectureSeule={lectureSeule} />}
       </BandeauCommerce>
@@ -988,6 +1019,8 @@ export default function OrdersPage() {
         </p>
         <RouteVelo roule className="ec-b-route" />
         <LigneAlarme alerte={alerte} />
+        <PositionLivreurEquipe orders={orders} moi={user?.id} token={token} />
+        {restaurant && <RenfortFairride restaurant={restaurant} restoId={restoId} token={token} loadDashboard={loadDashboard} modifierRestaurant={modifierRestaurant} />}
       </BandeauCommerce>
       <FeuilleCommerce>
         {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}

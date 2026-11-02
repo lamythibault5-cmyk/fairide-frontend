@@ -254,7 +254,7 @@ export default function Auth() {
       website: fiche.website || '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
       pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
-      deliveryMode: services.deliveryMode === 'own' ? 'own' : 'fairide',
+      deliveryMode: services.deliveryMode === 'restaurant' ? 'restaurant' : 'fairide',
       // Commerce trouvé dans la recherche, ou saisi à la main parce qu'il n'y était pas : dans les deux
       // cas l'inscription aboutit à un vrai commerce, la provenance n'est qu'une mention pour l'admin.
       businessSource: fiche.source === 'web' ? 'recherche' : fiche.source === 'manuel' ? 'manuel' : 'inconnu',
@@ -1685,7 +1685,7 @@ export default function Auth() {
                   {services.delivery && (
                     <div className="service-suboptions">
                       <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'fairide'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'fairide' }))} /> <span>{t('auth.serviceDeliveryFairide')}</span></label>
-                      <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'own'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'own' }))} /> <span>{t('auth.serviceDeliveryOwn')}</span></label>
+                      <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'restaurant'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'restaurant' }))} /> <span>{t('auth.serviceDeliveryOwn')}</span></label>
                     </div>
                   )}
                   <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span><Icone nom="maison" taille={16} className="icone-texte" />{' '}{t('auth.servicePickup')}</span></label>

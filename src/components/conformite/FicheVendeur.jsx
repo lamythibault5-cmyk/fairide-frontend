@@ -30,7 +30,8 @@ export default function FicheVendeur({ restaurant }) {
       <p className="small" style={{ margin: 0 }}>
         <b>{t('conformite.sellerTitle')}</b> : {identite} — {t('conformite.sellerProfessional')}
       </p>
-      <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t('conformite.sellerContract')}</p>
+      {/* Livrée par son équipe (fondateur, 2026-11-02) : le commerce vend aussi la livraison, Fairride n'en assure aucune. */}
+      <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t(r.deliveredByRestaurant ? 'livraisonEquipe.sellerContract' : 'conformite.sellerContract')}</p>
       {tel && (
         <p className="small" style={{ margin: '6px 0 0' }}>
           <b>{t('conformite.allergensTitle')}</b> : {t('conformite.allergensAskBefore')}{' '}

@@ -29,9 +29,18 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   four points on the establishment unit + screenshot) is an **optional spot check** — alerts only, never blocks
   publication, except a « Introuvable » result (no override; it also blocks auto-publication and new orders, and takes an
   online business off the site with an e-mail). Procedure: `../fairide-backend/docs/verification-afsca.md`.
-- **Dedicated couriers need their consent** (audit 2026-10-19, shop-301): Mon commerce › Livraison sends an invitation; the
-  courier accepts or declines it on his dashboard ([LivreurDedie](../../src/components/livreur/LivreurDedie.jsx), backend
-  `livreurDedie.js`) and can leave at any time. Nothing changes for him, and the business sees no name or phone, until he accepts.
+- **A shop delivers with its own employees, never with « dedicated » Fairride couriers** (founder, 2026-11-02;
+  `maquettes/livraison-commerce`, all recommendations). The old « mes livreurs » mode (independent Fairride couriers tied
+  to one shop by invitation, `livreurDedie.js`) was removed: a self-employed courier with a single client is the textbook
+  false freelancer, and no real shop used it. Now Mon commerce › Livraison › « Mon équipe livre »
+  ([EcranLivreurs](../../src/components/commerce/EcranLivreurs.jsx), backend `livraisonCommerce.js`, migration 103): the shop
+  signs a declaration (`LIVCOM-*`: its riders are declared employees, it sells the delivery, it moves the order on, the
+  grounds on which Fairride may stop the mode) and activates it alone; the team gets a task and can stop it only through a
+  reasoned decision (Admin › Commerces). Each order keeps one delivery seller, fixed at creation (`orders.delivery_by`):
+  no Fairride courier sees or is notified of the shop's own deliveries, no map, no code, no tip; the shop taps « Partie en
+  livraison » then « Livrée »; the customer is told why there is no live position and can call the shop. « Renfort Fairride »
+  (Commandes) sends NEW orders to Fairride couriers at the Fairride price during a rush. Forgotten « en livraison » after 60
+  min: push to the shop; after 90 min: a task for the team.
 - **Pickup without a restaurant click** (2026-10-10): the restaurant sees the pickup code and compares it by eye; the
   **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
   « Ma carte et mes engagements » ([ConformiteCarte](../../src/components/conformite/ConformiteCarte.jsx)) is one checkbox,

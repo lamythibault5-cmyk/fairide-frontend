@@ -697,7 +697,11 @@ export default function RestaurantMenu({ id }) {
     : restaurant.freeDelivery
       ? t('restaurantMenu.feeFree')
       // Montant au format de la langue (« from €5 », pas « from 5,00 € ») : audit du 19/10, discovery-22.
-      : t('restaurantMenu.feeFrom', { amount: eurosCourts(tarifLivraison(restaurant).depart) });
+      // Livrée par l'équipe du commerce (fondateur, 2026-11-02) : ses frais sont fixes, pas de « dès ».
+      : restaurant.deliveredByRestaurant ? eurosCourts(tarifLivraison(restaurant).depart)
+        : t('restaurantMenu.feeFrom', { amount: eurosCourts(tarifLivraison(restaurant).depart) });
+  const libelleFrais = modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel')
+    : restaurant.deliveredByRestaurant ? t('livraisonEquipe.ficheLabel', { name: restaurant.name }) : t('restaurantMenu.feeLabel');
   /* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
      forfaitaire côté client : le montant exact dépend de la distance et se calcule au
      serveur, exactement comme l'annonce déjà le paiement.
@@ -746,7 +750,7 @@ export default function RestaurantMenu({ id }) {
           <div><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></div>
         ) : null}
         {!onlineOrderingDisabled && (
-          <div><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></div>
+          <div><b>{fraisLivraison}</b><small>{libelleFrais}</small></div>
         )}
       </div>}
       {/* Montant minimum choisi par le commerce (PAN-3), annoncé avant de composer le panier. */}
@@ -791,7 +795,7 @@ export default function RestaurantMenu({ id }) {
   const panneauFrais = onlineOrderingDisabled ? null : vueAppli ? null : (
     <div className="fiche-frais">
       {caseTemps && <span><b>{caseTemps.valeur}</b><small>{caseTemps.libelle}</small></span>}
-      <span><b>{fraisLivraison}</b><small>{modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel') : t('restaurantMenu.feeLabel')}</small></span>
+      <span><b>{fraisLivraison}</b><small>{libelleFrais}</small></span>
       {!caseTemps && modeActif !== 'pickup' && restaurant.deliveryRadiusKm != null && (
         <span><b>{t('siteFiche.radiusValue', { km: String(restaurant.deliveryRadiusKm).replace('.', ',') })}</b><small>{t('siteFiche.radiusLabel')}</small></span>
       )}

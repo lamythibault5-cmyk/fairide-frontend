@@ -3,7 +3,8 @@
 //   - tarif Fairide (fondateur, 2026-10-14) : 5,00 € jusqu'à 1 km, puis 0,80 € par kilomètre entamé dès le 2e — prix
 //     finaux, TVA comprise le cas échéant, plus de « + 21 % » (6,05 € du 08 au 14/10) ; calculé au serveur — d'où
 //     le « dès » ; 10 % de frais de système Fairide sont COMPRIS dedans (le livreur touche 90 %), rien ne s'ajoute au total ;
-//   - commerce qui livre lui-même (deliveryMode 'own') avec ses propres frais : c'est son montant (son livreur en touche 90 %) ;
+//   - commerce qui livre avec son équipe (deliveredByRestaurant, fondateur 2026-11-02) : ses frais, fixes, à lui ; avec
+//     « Renfort Fairride » allumé, ses nouvelles commandes suivent le tarif Fairride ;
 //   - le commerce peut offrir une part fixe (deliveryFeeDiscount : 1,50 € → livraison dès 3 €), la totalité
 //     (freeDelivery), ou la totalité dès un montant de commande (freeDeliveryMinOrder). Ce qu'il offre, il le reçoit
 //     en moins sur son virement, et le livreur touche sa part complète.
@@ -13,7 +14,7 @@ import { haversineDistanceKm } from './menuCategories';
 export const FORFAIT_LIVRAISON = 5;
 
 export function tarifLivraison(r) {
-  const propre = r?.deliveryMode === 'own' && r?.ownDeliveryFee != null;
+  const propre = !!r?.deliveredByRestaurant && r?.ownDeliveryFee != null;
   const base = propre ? Number(r.ownDeliveryFee) : FORFAIT_LIVRAISON;
   const offerte = !!r?.freeDelivery;
   const remise = Math.min(Number(r?.deliveryFeeDiscount) || 0, base);
