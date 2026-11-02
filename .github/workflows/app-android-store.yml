@@ -8,6 +8,13 @@
 # Pourquoi l'envoi direct : l'antivirus de l'ordinateur d'Owen (Defender, « Trojan:JS/Tisifi.A ») bloquait le
 # téléchargement du .zip à cause des pages Factures — fausse alerte, voir le message du commit (17 oct. 2026).
 #
+# PARTAGE INTERNE (2026-11-02). Choix « Où envoyer » = partage-interne : le même .aab part dans Play Console › Internal
+# app sharing au lieu d'Internal testing, et le résumé du lancement donne un lien d'installation. Ce n'est pas une
+# version (ni piste, ni revue, ni validation d'une « Edit », l'étape refusée le 02/11) : c'est ce qui sert à installer sur
+# un appareil une version que Google refuse encore de publier — le 02/11, le suivi du livreur écran verrouillé, dont
+# Google veut la vidéo AVANT d'accepter une version qui le contient. Sur l'appareil : Play Store › Paramètres › À propos,
+# toucher 7 fois « Version du Play Store », puis activer « Partage d'applications interne » ; ouvrir le lien.
+#
 # CONFIGURATION (Réglages du dépôt › Secrets and variables › Actions).
 #   Secrets :
 #     ANDROID_UPLOAD_KEYSTORE_BASE64   obligatoire — clé d'envoi (fichier .p12 en base64) ; avec
@@ -30,6 +37,11 @@ on:
         description: 'Notes de version (en français, vues par les testeurs)'
         required: true
         default: 'Corrections et améliorations.'
+      envoi:
+        description: 'Où envoyer : internal = Internal testing (normal) ; partage-interne = lien d''installation, sans version'
+        type: choice
+        options: [internal, partage-interne]
+        default: internal
 
 # Lecture seule (audit sécurité 2026-10-31) : ce build ne pousse rien dans git et ne crée aucune release ; l'envoi au
 # Play Store passe par le compte de service Google, l'artefact par le jeton d'exécution d'Actions, pas par GITHUB_TOKEN.
@@ -139,7 +151,7 @@ jobs:
           echo "ok=true" >> "$GITHUB_OUTPUT"
 
       - name: Envoi dans Internal testing
-        if: steps.play.outputs.ok == 'true'
+        if: steps.play.outputs.ok == 'true' && inputs.envoi != 'partage-interne'
         # v1.1.5, épinglée par son commit : cette action reçoit la clé du compte de service.
         uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
         with:
@@ -150,3 +162,27 @@ jobs:
           track: internal
           status: completed
           whatsNewDirectory: ${{ runner.temp }}/notes
+
+      - name: Envoi en partage interne (lien d'installation)
+        id: partage
+        if: steps.play.outputs.ok == 'true' && inputs.envoi == 'partage-interne'
+        uses: r0adkll/upload-google-play@e738b9dd8f2476ea806d921b64aacd24f34515a5
+        with:
+          serviceAccountJsonPlainText: ${{ secrets.PLAY_SERVICE_ACCOUNT_JSON }}
+          packageName: be.fairide.app
+          releaseFiles: ${{ runner.temp }}/fairide-${{ github.run_number }}.aab
+          track: internalsharing
+
+      - name: Lien d'installation
+        if: steps.partage.outcome == 'success'
+        env:
+          LIEN: ${{ steps.partage.outputs.internalSharingDownloadUrl }}
+        run: |
+          echo "Lien d'installation (partage interne) : $LIEN"
+          {
+            echo "### Lien d'installation (partage interne, build ${{ github.run_number }})"
+            echo ""
+            echo "$LIEN"
+            echo ""
+            echo "À ouvrir sur l'appareil, après Play Store › Paramètres › À propos › 7 touches sur « Version du Play Store » › « Partage d'applications interne » activé."
+          } >> "$GITHUB_STEP_SUMMARY"
