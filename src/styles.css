@@ -1058,7 +1058,7 @@ a.btn-primary, a.btn-gold, a.btn-teal, a.btn-outline {
   .modal-overlay { align-items: flex-end; padding: 0; }
   .modal-box {
     max-width: none; border-radius: var(--radius) var(--radius) 0 0;
-    max-height: 88vh; padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
+    max-height: 88vh; max-height: 88dvh; padding: 20px 20px calc(20px + env(safe-area-inset-bottom));
     animation-name: feuille-monte;
   }
   .modal-pied { bottom: calc(-20px - env(safe-area-inset-bottom)); margin: 16px -20px calc(-20px - env(safe-area-inset-bottom)); padding: 14px 20px calc(14px + env(safe-area-inset-bottom)); }

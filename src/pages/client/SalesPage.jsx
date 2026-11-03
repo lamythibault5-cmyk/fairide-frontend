@@ -679,7 +679,13 @@ function ProspectDetail({ id, token, t, toast, locale, stageLabel, onClose, onDe
   return createPortal(
     <div className="modal-overlay drawer-overlay" role="dialog" aria-modal="true" aria-label={p?.name || ''} onClick={onClose}>
       <div className="modal-box drawer-box crm-fiche" onClick={(e) => e.stopPropagation()}>
-        {!p ? <div className="small">{t('common.loading')}</div> : (
+        {/* La fiche couvre tout l'écran du téléphone : le ✕ aussi pendant le chargement, sinon un chargement raté y enfermait. */}
+        {!p ? (
+          <div className="crm-fiche-tete">
+            <div className="small">{t('common.loading')}</div>
+            <button type="button" className="btn-ghost" onClick={onClose} aria-label={t('common.close')}>✕</button>
+          </div>
+        ) : (
           <>
             {p.photoUrl && <a href={p.photoUrl} target="_blank" rel="noreferrer"><img className="crm-fiche-photo" src={p.photoUrl} alt={p.name} /></a>}
             <div className="crm-fiche-tete">

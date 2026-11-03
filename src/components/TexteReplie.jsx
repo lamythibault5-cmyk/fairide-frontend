@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSiteLarge } from '../hooks/useSiteLarge';
 import Modale from './Modale';
+import { experienceApp } from '../natif';
 
 /* UNE PHRASE, LE RESTE DERRIÈRE « EN SAVOIR PLUS » (fondateur, 2026-10-27, réponse 10 de maquettes/ecrans-pro/ecrans-pro.html).
  * Les Factures du commerce et du livreur et Ma carte s'ouvraient sur des paragraphes de quatre à six lignes (le bandeau des
@@ -26,6 +27,8 @@ export default function TexteReplie({ texte, titre, as: Balise = 'p', className,
       {ouvert && (
         <Modale titre={titre || t('ecransPro.enSavoirPlus')} onFermer={() => setOuvert(false)}>
           <p style={{ margin: 0, lineHeight: 1.5 }}>{texte}</p>
+          {/* Sur le site, la feuille ne se tire pas : un bouton pour la refermer. */}
+          {!experienceApp() && <div className="modal-pied"><button type="button" className="btn-outline" onClick={() => setOuvert(false)}>{t('common.close')}</button></div>}
         </Modale>
       )}
     </>

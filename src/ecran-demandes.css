@@ -70,7 +70,8 @@
 html:not(.appli) .dm-carte--fin .dm-carte-bouton { width: auto; padding-inline: 22px; }
 
 /* ---------- La fenêtre « Lequel ? » (cadre de ConfirmDialog : .confirm-feuille) ---------- */
-.dm-fenetre { max-width: 480px; width: 100%; max-height: 92vh; overflow-y: auto; }
+/* dvh, pas vh : dans le navigateur d'un téléphone, 92vh se mesure sans la barre d'adresse et la fenêtre couvrait tout. */
+.dm-fenetre { max-width: 480px; width: 100%; max-height: 92vh; max-height: 92dvh; overflow-y: auto; }
 .dm-champ { margin: 0 0 10px; }
 .dm-resultats { min-height: 8px; }
 .dm-resultats > .small { margin: 6px 0 10px; }

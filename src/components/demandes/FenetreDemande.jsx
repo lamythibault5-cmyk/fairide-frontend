@@ -6,6 +6,7 @@ import useDialogue from '../../hooks/useDialogue';
 import useTirerPourFermer from '../../hooks/useTirerPourFermer';
 import { COMMUNES, communeDepuisCodePostal } from '../../menuCategories';
 import { vibrer } from '../../gestes';
+import { experienceApp } from '../../natif';
 import Icone from '../Icone';
 import {
   chercher, demander, dessinDemande, sousTitreDemande, rangEcrit, telephoneAVerifier, CHEMIN_VERIFIER_TELEPHONE
@@ -230,6 +231,9 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
           <button type="button" className="btn-gold" onClick={envoyer} disabled={envoi}>
             {envoi ? '...' : nomChoisi ? t('demandes.demanderNom', { nom: nomChoisi }) : t('demandes.demanderCeRestaurant')}
           </button>
+          {/* Sur le site, pas de feuille à tirer (useTirerPourFermer) : sur téléphone, une fois les résultats affichés, la
+            * fenêtre couvrait tout l'écran et rien ne la refermait (fondateur, 2026-11-03). */}
+          {!experienceApp() && <button type="button" className="btn-ghost" onClick={onFermer} disabled={envoi}>{t('common.cancel')}</button>}
         </div>
       </>
     );
