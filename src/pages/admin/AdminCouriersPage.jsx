@@ -213,12 +213,12 @@ function ApercuPieces({ courierId, documents, token, toast, tr }) {
   return (
     <div className="row" style={{ gap: 10, flexWrap: 'wrap', margin: '0 0 10px' }}>
       {pieces.map((x) => (
-        <figure key={x.id} style={{ margin: 0, width: 150 }}>
+        <figure key={x.id} style={{ margin: 0, width: 138 }}>
           {adresses[x.id] && !enPdf[x.id]
             ? <button type="button" onClick={() => ouvrir(x)} title={tr('adminCouriers.piecesAgrandir')} style={{ padding: 0, border: '1px solid var(--line)', borderRadius: 'var(--radius-chip)', background: 'var(--surface)', cursor: 'zoom-in', display: 'block' }}>
-                <img src={adresses[x.id]} alt={tr(`courierOnboarding.doc_${x.docType}`)} onError={() => setEnPdf((p) => ({ ...p, [x.id]: true }))} style={{ width: 148, height: 148, objectFit: 'contain', display: 'block', borderRadius: 'var(--radius-chip)' }} />
+                <img src={adresses[x.id]} alt={tr(`courierOnboarding.doc_${x.docType}`)} onError={() => setEnPdf((p) => ({ ...p, [x.id]: true }))} style={{ width: 136, height: 136, objectFit: 'contain', display: 'block', borderRadius: 'var(--radius-chip)' }} />
               </button>
-            : <div className="small" style={{ width: 148, height: 148, border: '1px solid var(--line)', borderRadius: 'var(--radius-chip)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            : <div className="small" style={{ width: 136, height: 136, border: '1px solid var(--line)', borderRadius: 'var(--radius-chip)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 {adresses[x.id] === undefined ? '…' : <button type="button" className="btn-outline btn-sm" onClick={() => ouvrir(x)}>{tr('adminCouriers.piecesOuvrir')}</button>}
               </div>}
           <figcaption className="small">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}{x.verifiedAt ? ' ✓' : ''}</figcaption>
@@ -228,7 +228,79 @@ function ApercuPieces({ courierId, documents, token, toast, tr }) {
   );
 }
 
-function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onIdentiteOk }) {
+/* VÉRIFIER LA PIÈCE EN UN CLIC (Owen, 03/11 : « je voudrais juste confirmer le visage »). Tout ce que l'équipe doit lire
+ * sur la pièce est sur la même carte que le visage : une case par point ouvert (visage, nationalité, titre de séjour), le
+ * nom et la date de naissance de la pièce préremplis à confirmer, et un seul bouton. Il appelle les routes qui existaient
+ * déjà, dans l'ordre : chaque pièce regardée (PATCH …/documents/:id, verified), puis PATCH …/verify (identité,
+ * nationalité), qui fait avancer le dossier (avancerDossier) : sans autre manque, il se valide aussitôt (« validated »).
+ * La date de naissance confirmée sur la pièce est ce qui permet cette validation sans clic de plus
+ * (validationLivreur.raisonsRevueHumaine) ; elle est préremplie avec celle que le livreur a tapée, à corriger si la pièce
+ * dit autre chose. Le BCE n'est pas ici : il se lit au registre, pas sur la pièce. */
+const PIECES_IDENTITE = ['identity_card', 'driving_licence', 'residence_permit'];
+function VerifierPiece({ d, tr, busy, agir, token, toast, onDocuments, onRefuserIdentite }) {
+  const c = d.courier; const id = c.identity ?? {};
+  const points = (d.teamChecks ?? []).filter((p) => ['identite', 'nationalite', 'titre_sejour'].includes(p));
+  const docs = (d.documents ?? []).filter((x) => !x.rejectedReason);
+  const mots = String(d.user?.name || '').trim().split(/\s+/).filter(Boolean);
+  const [coches, setCoches] = useState({});
+  const [prenom, setPrenom] = useState(id.firstName || mots[0] || '');
+  const [nom, setNom] = useState(id.lastName || mots.slice(1).join(' '));
+  const [naissance, setNaissance] = useState(c.birthDate || '');
+  const ids = useId();
+  const identite = points.includes('identite');
+  const pret = points.every((p) => coches[p]) && (!identite || (prenom.trim() && nom.trim() && /^\d{4}-\d{2}-\d{2}$/.test(naissance)));
+  const sansCarte = points.includes('titre_sejour') && !docs.some((x) => x.docType === 'professional_card') && !c.selfEmploymentByResidence;
+  const aRegarder = docs.filter((x) => !x.verifiedAt && (
+    (identite && [...PIECES_IDENTITE, 'selfie', 'profile_photo'].includes(x.docType))
+    || (points.includes('titre_sejour') && ['residence_permit', 'professional_card'].includes(x.docType))));
+  const valider = () => agir(async () => {
+    for (const x of aRegarder) await api(`/admin/couriers/${c.id}/documents/${x.id}`, { method: 'PATCH', token, body: { verified: true } });
+    return api(`/admin/couriers/${c.id}/verify`, { method: 'PATCH', token, body: {
+      ...(identite ? { identityVerified: true, provider: 'manual', firstName: prenom.trim(), lastName: nom.trim(), birthDate: naissance } : {}),
+      ...(points.includes('nationalite') ? { nationalityVerified: true } : {})
+    } });
+  }, tr('adminCouriers.unClicToast'));
+  const caseA = (p, texte) => (
+    <label key={p} className="row small" style={{ gap: 8, alignItems: 'flex-start', cursor: 'pointer', margin: '0 0 6px' }}>
+      <input type="checkbox" style={{ width: 'auto', marginTop: 2 }} checked={!!coches[p]} onChange={(e) => setCoches((k) => ({ ...k, [p]: e.target.checked }))} />
+      <span>{texte}</span>
+    </label>
+  );
+  return (
+    <div className="card" style={{ padding: '10px 12px', marginBottom: 8 }}>
+      <b>{tr('adminCouriers.unClicTitre')}</b>
+      <div className="small" style={{ margin: '2px 0 8px' }}>{tr('adminCouriers.unClicAide')}</div>
+      <ApercuPieces courierId={c.id} documents={d.documents ?? []} token={token} toast={toast} tr={tr} />
+      {identite && caseA('identite', tr('adminCouriers.unClicVisage'))}
+      {points.includes('nationalite') && caseA('nationalite', tr('adminCouriers.unClicNationalite', { declaree: c.nationalityGroup ? tr(`conformite.nationality_${c.nationalityGroup}`) : '-' }))}
+      {points.includes('titre_sejour') && caseA('titre_sejour', tr('adminCouriers.unClicSejour'))}
+      {sansCarte && <p className="small" style={{ color: 'var(--gold-deep)', margin: '0 0 6px' }}>{tr('adminCouriers.unClicSansCarte')}</p>}
+      {identite && (
+        <div className="row" style={{ gap: 8, flexWrap: 'wrap', margin: '4px 0 8px' }}>
+          <div className="field" style={{ flex: '1 1 140px', margin: 0 }}>
+            <label htmlFor={`${ids}-prenom`}>{tr('adminCouriers.identityFirstName')}</label>
+            <input id={`${ids}-prenom`} value={prenom} onChange={(e) => setPrenom(e.target.value)} />
+          </div>
+          <div className="field" style={{ flex: '1 1 140px', margin: 0 }}>
+            <label htmlFor={`${ids}-nom`}>{tr('adminCouriers.identityLastName')}</label>
+            <input id={`${ids}-nom`} value={nom} onChange={(e) => setNom(e.target.value)} />
+          </div>
+          <div className="field" style={{ flex: '1 1 140px', margin: 0 }}>
+            <label htmlFor={`${ids}-naissance`}>{tr('adminCouriers.unClicNaissance')}</label>
+            <input id={`${ids}-naissance`} type="date" value={naissance} onChange={(e) => setNaissance(e.target.value)} />
+          </div>
+        </div>
+      )}
+      <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
+        <button className="btn-teal" disabled={busy || !pret} onClick={valider}>{tr('adminCouriers.unClicValider')}</button>
+        <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>
+        {identite && <button className="btn-danger-ghost" disabled={busy} onClick={onRefuserIdentite}>{tr('adminCouriers.markIdentityKo')}</button>}
+      </div>
+    </div>
+  );
+}
+
+function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIdentite }) {
   const c = d.courier; const id = c.identity ?? {};
   const points = d.teamChecks ?? [];
   const photo = (d.documents ?? []).find((x) => x.docType === 'profile_photo' && !x.rejectedReason);
@@ -236,7 +308,6 @@ function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onIdentiteOk 
   const verifier = (corps, ok) => agir(() => api(`/admin/couriers/${c.id}/verify`, { method: 'PATCH', token, body: corps }), ok);
   const chiffres = String(c.independent?.companyNumber || '').replace(/\D/g, '');
   const registre = d.companyRegistry;
-  const piece = id.documentType ? `${tr(`adminCouriers.exPiece_${id.documentType}`)}${id.documentCountry ? ` · ${id.documentCountry}` : ''}` : tr('adminCouriers.exPieceInconnue');
   const ligne = (cle, texte, actions) => (
     <div key={cle} className="card" style={{ padding: '10px 12px', marginBottom: 8 }}>
       <b>{tr(`adminCouriers.exPoint_${cle}`)}</b>
@@ -254,21 +325,12 @@ function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onIdentiteOk 
         </div>
       )}
       {points.length > 0 && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
-      {points.some((p) => ['identite', 'nationalite', 'titre_sejour'].includes(p)) && <ApercuPieces courierId={c.id} documents={d.documents ?? []} token={token} toast={toast} tr={tr} />}
+      {points.some((p) => ['identite', 'nationalite', 'titre_sejour'].includes(p)) && <VerifierPiece d={d} tr={tr} busy={busy} agir={agir} token={token} toast={toast} onDocuments={onDocuments} onRefuserIdentite={onRefuserIdentite} />}
       {points.includes('bce') && ligne('bce',
         tr('adminCouriers.exBceDetail', { num: c.independent?.companyNumber || '-', registre: !registre ? tr('adminCouriers.exRegistrePasLu') : registre.valid ? tr('adminCouriers.exRegistreValide', { name: registre.name }) : registre.valid === false ? tr('adminCouriers.exRegistreAbsent') : tr('adminCouriers.exRegistrePasLu'), nom: `${id.firstName || ''} ${id.lastName || ''}`.trim() || '-' }),
         <>
           {chiffres.length === 10 && <a className="btn-outline" href={`https://kbopub.economie.fgov.be/kbopub/toonondernemingps.html?ondernemingsnummer=${chiffres}`} target="_blank" rel="noopener noreferrer">{tr('adminCouriers.exOuvrirBce')}</a>}
           <button className="btn-teal" disabled={busy} onClick={() => verifier({ companyVerified: true }, tr('adminCouriers.toastCompanyOk'))}>{tr('adminCouriers.exBceOk')}</button>
-        </>)}
-      {points.includes('nationalite') && ligne('nationalite',
-        tr('adminCouriers.exNatDetail', { declaree: c.nationalityGroup ? tr(`conformite.nationality_${c.nationalityGroup}`) : '-', piece }),
-        <button className="btn-teal" disabled={busy} onClick={() => verifier({ nationalityVerified: true }, tr('adminCouriers.exNatToast'))}>{tr('adminCouriers.exNatOk')}</button>)}
-      {points.includes('titre_sejour') && ligne('titre_sejour', tr('adminCouriers.exSejourDetail'), <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>)}
-      {points.includes('identite') && ligne('identite', tr('adminCouriers.exIdentiteDetail'),
-        <>
-          <button className="btn-teal" disabled={busy} onClick={onIdentiteOk}>{tr('adminCouriers.markIdentityOk')}</button>
-          <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>
         </>)}
     </>
   );
@@ -327,6 +389,9 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       } else toast(e.message, 'erreur');
     } finally { setBusy(false); }
   }
+  // Refus motivé de l'identité : le motif part au livreur par e-mail et notification (admin-43). Même fenêtre depuis la
+  // section Identité et depuis « Vérifier la pièce ».
+  const refuserIdentite = () => setMotifDialog({ title: tr('adminCouriers.markIdentityKo'), message: tr('adminCouriers.identityKoBody'), label: tr('adminCouriers.identityKoReason'), danger: true, confirmLabel: tr('adminCouriers.markIdentityKo'), run: (reason) => agir(() => api(`/admin/couriers/${id}/verify`, { method: 'PATCH', token, body: { identityVerified: false, reason } }), tr('adminCouriers.toastIdentityRefused')) });
   const c = d?.courier;
   const documents = d?.documents ?? []; const events = d?.events ?? []; const contracts = d?.contracts ?? []; const missing = d?.missing ?? [];
   const gains = d?.earnings ?? { byYear: [], byQuarter: [] };
@@ -363,7 +428,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
     <>
       {onglet === 'dossier' && (
         <>
-          <ARegarder d={d} tr={tr} token={token} toast={toast} busy={busy} agir={agir} onDocuments={() => setOnglet('documents')} onIdentiteOk={() => setIdentiteOk(true)} />
+          <ARegarder d={d} tr={tr} token={token} toast={toast} busy={busy} agir={agir} onDocuments={() => setOnglet('documents')} onRefuserIdentite={refuserIdentite} />
           <h4 className="drawer-section-title">{tr('adminCouriers.secStatus')}</h4>
           <DrawerRow label={tr('adminCouriers.colStatus')} value={`${statut(c.statusType)}${c.statusVerifiedAt ? ` · ${tr('adminCouriers.statusVerifiedAt')} ${fmt(c.statusVerifiedAt)}` : ` · ${tr('adminCouriers.statusNotVerified')}`}`} strong />
           <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '-'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '-'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />
