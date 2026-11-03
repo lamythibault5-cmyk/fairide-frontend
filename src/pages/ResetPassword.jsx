@@ -8,6 +8,7 @@ import CadreConnexion from '../components/CadreConnexion';
 import { BandeauGeneral, FeuilleGenerale } from '../components/EcranGeneral';
 import Icone from '../components/Icone';
 import { experienceApp } from '../natif';
+import { mdpValide } from '../validation';
 
 /* NOUVEAU MOT DE PASSE (/reset-password?token=…, le lien de l'e-mail « mot de passe oublié »).
  *
@@ -18,9 +19,9 @@ import { experienceApp } from '../natif';
  * renvoie que { ok }) — on dit plutôt ce qui va se passer, vérifié dans la même route : toutes les sessions sont fermées.
  *
  * Les règles sont cochées au fil de la frappe sous le premier champ (les mêmes que l'inscription : motDePasse.js côté
- * serveur, 6 caractères, une majuscule, une minuscule) ; le toast reste en filet de sécurité à l'envoi. */
+ * serveur : 8 caractères depuis le 2026-11-02, validation.js) ; le toast reste en filet de sécurité à l'envoi. */
 const APPLI = experienceApp();
-const REGLES = [['mdpLongueur', (v) => v.length >= 6], ['mdpMajuscule', (v) => /[A-Z]/.test(v)], ['mdpMinuscule', (v) => /[a-z]/.test(v)]];
+const REGLES = [['mdpLongueur', mdpValide]];
 
 export default function ResetPassword() {
   const { t } = useLanguage();

@@ -282,27 +282,12 @@ export function AuthProvider({ children }) {
     return data;
   }
 
+  // Le compte s'ouvre tout de suite, sans code (fondateur, 2026-11-02, maquettes/inscription-legere) : le numéro se prouve à la
+  // première commande (VerifTelephone.jsx, feuille « Avant de commander »).
   async function register(payload) {
     const data = await api('/auth/register', { method: 'POST', body: payload });
-    if (!data.needsVerification) setSession(data);
+    if (data.token) setSession(data);
     return data;
-  }
-
-  async function verifyEmail(email, code) {
-    const data = await api('/auth/verify-email', { method: 'POST', body: { email, code } });
-    setSession(data);
-    return data;
-  }
-
-  // canal 'email' : « Recevoir le code par e-mail » quand le SMS n'arrive pas (22/10/2026, routes/auth.js › /resend-code).
-  async function resendCode(email, canal) {
-    return api('/auth/resend-code', { method: 'POST', body: { email, ...(canal === 'email' ? { canal } : {}) } });
-  }
-
-  // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : le compte en attente se prouve par son mot de
-  // passe, ou par le jeton Apple / Google (preuve = { fournisseur, jeton }), et un code part au nouveau numéro.
-  async function changePendingPhone(email, phone, { password, preuve } = {}) {
-    return api('/auth/pending/phone', { method: 'POST', body: { email, phone, ...(preuve?.jeton ? { fournisseur: preuve.fournisseur, jeton: preuve.jeton } : { password }) } });
   }
 
   async function forgotPassword(email) {
@@ -320,8 +305,7 @@ export function AuthProvider({ children }) {
 
   async function loginWithGoogle(credential, role, extra) {
     const data = await api('/auth/google', { method: 'POST', body: { credential, role, ...extra } });
-    // Nouveau compte : le téléphone se prouve par SMS d'abord (needsVerification), la session vient avec le code.
-    if (!data.needsVerification) setSession(data);
+    if (data.token) setSession(data);
     return data;
   }
 
@@ -332,7 +316,7 @@ export function AuthProvider({ children }) {
   async function loginWithApple(idToken, role, extra) {
     const data = await api('/auth/apple', { method: 'POST', body: { idToken, authorizationCode: codeApple(idToken), role, ...extra } });
     oublierCodeApple(idToken);
-    if (!data.needsVerification) setSession(data);
+    if (data.token) setSession(data);
     return data;
   }
 
@@ -488,9 +472,6 @@ export function AuthProvider({ children }) {
     quitterSimulation,
     login,
     register,
-    verifyEmail,
-    resendCode,
-    changePendingPhone,
     forgotPassword,
     confirmForgotPassword,
     resetPassword,

@@ -46,5 +46,6 @@ export const retirer = (id, token) => api(`/demandes/${id}`, { method: 'DELETE',
 export const miennes = (token) => api('/demandes/miennes', { token });
 
 // Le serveur refuse une demande sans téléphone vérifié (REQUEST_PHONE_REQUIRED) : l'écran envoie vérifier le numéro.
-export const CHEMIN_VERIFIER_TELEPHONE = '/account?ouvrir=connexion';
+// verifier=telephone : le code part tout seul (VerifTelephone.jsx dans Mon compte, 2026-11-02).
+export const CHEMIN_VERIFIER_TELEPHONE = '/account?ouvrir=connexion&verifier=telephone';
 export const telephoneAVerifier = (e) => e?.code === 'REQUEST_PHONE_REQUIRED';

@@ -8,7 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import Icone from '../components/Icone';
 import PasswordInput from '../components/PasswordInput';
-import PhoneVerification from '../components/PhoneVerification';
+import VerifTelephone from '../components/VerifTelephone';
 import EmailConfirmation from '../components/EmailConfirmation';
 import DriverDocuments from '../components/DriverDocuments';
 import DriverContractTerms from '../components/DriverContractTerms';
@@ -51,7 +51,7 @@ import { rubriqueDe } from '../rubriqueCompte';
 import '../ecran-compte.css';
 // Le site sur ordinateur (2026-10-16) : rubriques à gauche, contenu à droite. Sans effet dans l'app (html.appli).
 import '../site-compte.css';
-import { telephoneLisible } from '../validation';
+import { telephoneLisible, mdpValide } from '../validation';
 import ErrorCard from '../components/ErrorCard';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
@@ -512,9 +512,8 @@ export default function Account({ integre = false, milieu = null }) {
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
   async function savePassword(e) {
     e.preventDefault();
-    // Même règle que le serveur (routes/auth.js) : longueur ET casse. Ne contrôler que la longueur
-    // ici laissait passer un mot de passe que l'enregistrement refusait ensuite en 400.
-    if (newPassword.length < 6 || !/[A-Z]/.test(newPassword) || !/[a-z]/.test(newPassword)) { toast(t('account.toastPasswordTooShort')); return; }
+    // Même règle que le serveur (backend motDePasse.js, validation.js) : 8 caractères depuis le 2026-11-02.
+    if (!mdpValide(newPassword)) { toast(t('account.toastPasswordTooShort')); return; }
     if (newPasswordConfirm !== newPassword) { toast(t('auth.errPasswordMismatch'), 'erreur'); return; }
     setSavingPassword(true);
     try {
@@ -723,7 +722,10 @@ export default function Account({ integre = false, milieu = null }) {
           field="phone" label={t('accountUi.phoneNumber')} currentValue={user.phone} type="tel" placeholder={t('accountUi.phPhone')}
           requestContactChange={requestContactChange} confirmContactChange={confirmContactChange} toast={toast}
         />
-        <PhoneVerification />
+        {/* Le numéro se prouve ici quand on le veut (VerifTelephone.jsx, le même qu'au paiement). L'étape « Vérifie ton mobile »
+            d'un commerce mène ici avec ?verifier=telephone : le code part tout seul, et « retour » ramène au tableau de bord. */}
+        <VerifTelephone key={user.phone} auto={searchParams.get('verifier') === 'telephone'}
+          onFait={() => { toast(t('accountUi.phoneVerifiedToast'), 'succes'); if (retour && searchParams.get('verifier') === 'telephone') allerVers(retour); }} />
       </LigneCompte>
     </>
   );

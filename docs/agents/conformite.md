@@ -14,7 +14,13 @@ components live in [src/components/conformite/](../../src/components/conformite/
 - **Checkout** ([CheckoutConformite](../../src/components/conformite/CheckoutConformite.jsx)): allergy request
   (the business must confirm before preparing), age declaration when the cart holds alcohol, T&Cs
   acceptance when the account hasn't accepted the current version. The pay button reads « Commander et
-  payer » on purpose (CDE VI.46 §2) — don't rename it.
+  payer » on purpose (CDE VI.46 §2) — don't rename it. **The phone number is proven at the first order** (founder,
+  2026-11-02, workspace mockup `maquettes/inscription-legere`): accounts open without any code, and the pay button first asks
+  the SMS code once ([VerifTelephone](../../src/components/VerifTelephone.jsx): top of the « Avant de commander » sheet in
+  the app, a window on the site; the order then leaves by itself when nothing else is to tick). The backend refuses an order
+  otherwise (`PHONE_VERIFICATION_REQUIRED`, routes/orders.js; the quote passes). « Je n'ai pas reçu le SMS » gives an e-mail
+  code after 30 s that lets the order through without proving the number (`users.phone_email_fallback_at`); the sign-up
+  promo code is credited only when the number is proven by SMS (one account per number).
 - **Restaurant page**: seller block visible without a click ([FicheVendeur](../../src/components/conformite/FicheVendeur.jsx)),
   allergens and an 18+ badge on each dish, a « Signaler » link to [/signaler](../../src/pages/legal/ReportPage.jsx).
   [/classement](../../src/pages/legal/RankingPage.jsx) describes the ranking **as the code does it** — if you
@@ -45,7 +51,8 @@ components live in [src/components/conformite/](../../src/components/conformite/
   is status + company number + vehicle only; bag and « another platform? » are in the profile's Infos step, the
   municipality comes from the address. The courier profile opens on a « Prochaine étape » card.
   **Express courier signup since 2026-10-22** (founder, version A of `maquettes/inscription-livreur/inscription-livreur.html`):
-  the app signup asks the account only (e-mail, name, phone, last screen + SMS code; no status, company number, vehicle or
+  the app signup asks the account only (e-mail, name, phone, last screen; no code since 2026-11-02: the number is proven on
+  the dossier's first screen « Ton numéro », a `telephone` missing item that blocks the sending; no status, company number, vehicle or
   address — the backend accepts a courier without them). The dossier then asks « Ton activité » (status, company number read
   at the EU VAT register VIES, which fills legal name, seat, address and zone; the address typed only when nobody gives it;
   school, VAT regime, nationality declared in one tap, social insurance fund), « Tes courses » (vehicle, zone, other

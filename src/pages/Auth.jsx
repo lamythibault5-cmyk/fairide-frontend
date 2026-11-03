@@ -24,11 +24,11 @@ import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
 import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
-import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS } from '../validation';
+import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS, mdpValide } from '../validation';
 import { lireAdresseAccueil } from '../adresseAccueil';
-import useDecompte, { DELAI_RENVOI_S, DELAI_CODE_EMAIL_S } from '../hooks/useDecompte';
 import RedirectionRole from '../components/RedirectionRole';
-import Icone from '../components/Icone';
+
+import Icone from '../components/Icone';
 import CadreConnexion from '../components/CadreConnexion';
 import AvecMarque from '../components/AvecMarque';
 import VerifSociete from '../components/commerce/VerifSociete';
@@ -388,10 +388,6 @@ export default function Auth() {
   }
   function oublierGoogle() { setGoogleCredential(null); setGoogleProfile(null); setEmail(''); }
   const [loading, setLoading] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState('');
-  const [pendingChannel, setPendingChannel] = useState('email'); // 'sms' | 'email' : par où le code est parti
-  const [pendingPhone, setPendingPhone] = useState('');
-  const [code, setCode] = useState('');
   // Double authentification : le champ n'apparaît qu'après un premier essai où le serveur a répondu
   // TOTP_REQUIRED — donc seulement pour les comptes qui l'ont activée, et seulement une fois le mot de
   // passe validé. Voir routes/auth.js pour la raison de cet ordre.
@@ -402,34 +398,9 @@ export default function Auth() {
   // avec lui par le même bouton « Se connecter » — il reste valable une heure.
   const [googleEnAttente2fa, setGoogleEnAttente2fa] = useState(null);
   const [resending, setResending] = useState(false);
-  // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12, voir hooks/useDecompte.js).
-  const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
-  useEffect(() => { if (pendingEmail) lancerAttenteRenvoi(DELAI_RENVOI_S); }, [pendingEmail, lancerAttenteRenvoi]);
-  // « Je n'ai pas reçu le SMS », puis le code par e-mail 30 s plus tard (voir DELAI_CODE_EMAIL_S).
-  const [smsPasRecu, setSmsPasRecu] = useState(false);
-  const [attenteEmail, lancerAttenteEmail] = useDecompte();
-  // Code SMS lu par Chrome sur Android (WebOTP, audit du 19/10, auth-35) : le SMS finit par « @fairide.be #123456 »
-  // (routes/auth.js, smsCode) ; le navigateur propose alors de remplir le champ. Ailleurs (iPhone, ordinateur, application),
-  // rien ne change : autocomplete="one-time-code" fait le reste.
-  useEffect(() => {
-    if (!pendingEmail || pendingChannel !== 'sms' || estNatif() || !('OTPCredential' in window)) return undefined;
-    const arret = new AbortController();
-    navigator.credentials.get({ otp: { transport: ['sms'] }, signal: arret.signal })
-      .then((otp) => { if (otp?.code) setCode(String(otp.code).replace(/\D/g, '').slice(0, 6)); })
-      .catch(() => { /* refusé, expiré ou abandonné : la saisie à la main reste */ });
-    return () => arret.abort();
-  }, [pendingEmail, pendingChannel]);
   // Erreurs de connexion et du code SOUS le champ (audit du 19/10, auth-10) : le toast de 3 s passait sous le clavier du
   // téléphone, et le formulaire semblait n'avoir rien fait. Le toast reste en plus.
   const [erreurConnexion, setErreurConnexion] = useState('');
-  const [erreurCode, setErreurCode] = useState('');
-  // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : le champ du bon numéro, et la preuve que le compte
-  // est à soi — le mot de passe tapé (gardé en mémoire, jamais dans le brouillon), ou le jeton Apple / Google.
-  const [changerNumero, setChangerNumero] = useState(false);
-  const [nouveauNumero, setNouveauNumero] = useState('');
-  const [erreursNumero, setErreursNumero] = useState({});
-  // Jeton Apple / Google d'une CONNEXION sur un compte qui attend son code (PHONE_NOT_VERIFIED) : la preuve du compte.
-  const [preuveCode, setPreuveCode] = useState(null);
   // ?oubli=1 : arrivée depuis un lien de réinitialisation périmé (ResetPassword.jsx), directement sur « mot de passe oublié ».
   const [forgotMode, setForgotMode] = useState(() => searchParams.get('oubli') === '1');
   const [forgotEmail, setForgotEmail] = useState('');
@@ -459,8 +430,6 @@ export default function Auth() {
     restoPhone: [restoPhone, setRestoPhone], responsables: [responsables, setResponsables],
     emailSecondary: [emailSecondary, setEmailSecondary], emailSecondaryOuvert: [emailSecondaryOuvert, setEmailSecondaryOuvert],
     siteTrouve: [siteTrouve, setSiteTrouve], infosVerifiees: [infosVerifiees, setInfosVerifiees], typeDepuisSite: [typeDepuisSite, setTypeDepuisSite],
-    // Code de vérification en attente : sans eux, un rechargement renvoyait au formulaire alors que le compte existe.
-    pendingEmail: [pendingEmail, setPendingEmail], pendingChannel: [pendingChannel, setPendingChannel], pendingPhone: [pendingPhone, setPendingPhone],
     forgotMode: [forgotMode, setForgotMode], forgotEmail: [forgotEmail, setForgotEmail]
   };
   const brouillonRepris = useRef(false);
@@ -503,9 +472,8 @@ export default function Auth() {
   useEffect(() => {
     if (!brouillonRepris.current) return undefined;
     // Seulement une INSCRIPTION en cours (audit du 19/10, auth-31) : l'e-mail tapé pour se connecter sur un ordinateur
-    // partagé restait 48 h dans le navigateur. Exception : un code d'activation attendu (pendingEmail), pour qu'un
-    // rechargement rouvre l'écran du code.
-    if (mode !== 'register' && !pendingEmail) return undefined;
+    // partagé restait 48 h dans le navigateur.
+    if (mode !== 'register') return undefined;
     const minuteur = setTimeout(() => {
       try {
         const champs = Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur]));
@@ -516,7 +484,7 @@ export default function Auth() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, valeursBrouillon);
 
-  const { user, login, register, verifyEmail, resendCode, changePendingPhone, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, login, register, forgotPassword, confirmForgotPassword, loginWithGoogle, loginWithApple } = useAuth();
   // Déjà connecté EN ARRIVANT (et non pendant une connexion faite ici) : voir la redirection juste avant le rendu.
   const [connecteALArrivee] = useState(() => !!user);
   // Google ou Apple selon d'où vient le jeton. Apple n'a pas le nom dans son jeton : on envoie celui du formulaire
@@ -594,6 +562,11 @@ export default function Auth() {
   const steps = (STEP_KEYS[role] || STEP_KEYS.client).filter((k) => !(k === 'address' && adresseDepuisFiche));
   const stepKey = steps[Math.min(step, steps.length - 1)];
   const isLastStep = step >= steps.length - 1;
+  // Un événement par étape de l'inscription (fondateur, 2026-11-02, maquettes/inscription-legere, question 8 ; site pareil que
+  // l'app) : le nom de l'étape et le profil, rien d'autre (analytics.js).
+  useEffect(() => {
+    if (mode === 'register' && !forgotMode) suivre('inscription_ecran', { ecran: `site-${stepKey}`, role, support: 'site' });
+  }, [mode, forgotMode, stepKey, role]);
 
   /* Titre et sous-titre de l'étape en cours. Le sous-titre de l'adresse dépend du rôle : ce n'est
      pas la même adresse ni le même usage selon qu'on commande, qu'on livre ou qu'on vend. Dire à
@@ -701,7 +674,7 @@ export default function Auth() {
       // Même forme que le serveur (routes/auth.js, EMAIL_RE) : au moins deux lettres après le dernier point.
       else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) e.email = t('auth.errEmailInvalid');
       if (!password) e.password = required;
-      else if (password.length < 6 || !/[A-Z]/.test(password) || !/[a-z]/.test(password)) {
+      else if (!mdpValide(password)) {
         e.password = t('auth.errPasswordStrength');
       }
     }
@@ -719,7 +692,7 @@ export default function Auth() {
   motDePasseActuel.current = password;
   function verifierMotDePasse(valeur) {
     if (!valeur) return Promise.resolve(null);
-    if (valeur.length < 6 || !/[A-Z]/.test(valeur) || !/[a-z]/.test(valeur)) return Promise.resolve('forme');
+    if (!mdpValide(valeur)) return Promise.resolve('forme');
     if (verifMdp.current.valeur === valeur && verifMdp.current.promesse) return verifMdp.current.promesse;
     const promesse = api('/auth/check-password', { method: 'POST', body: { password: valeur } })
       .then((r) => (r && r.ok === false ? (r.raison || 'forme') : null))
@@ -851,12 +824,7 @@ export default function Auth() {
       toast(t('auth.welcome', { name: data.user.name }), 'succes');
       await allerApresConnexion(data.user);
     } catch (err) {
-      if (err.message === 'PHONE_NOT_VERIFIED') {
-        // Inscription Google / Apple faite, code SMS jamais saisi : l'écran du code (« Renvoyer » y est). Le jeton est gardé
-        // en mémoire : il prouve le compte si le numéro est à changer (auth-03).
-        setPreuveCode({ fournisseur: fed.fournisseur || 'google', jeton: response.credential });
-        setPendingEmail(err.data?.email || ''); setPendingChannel('sms'); setPendingPhone(err.data?.phoneMasked || '');
-      } else if (err.message === 'INCOMPLETE_PROFILE') {
+      if (err.message === 'INCOMPLETE_PROFILE') {
         // Pas encore de compte pour cette adresse Google : on enchaîne sur l'inscription, profil prérempli.
         retenirGoogle(response.credential, fed);
         setMode('register');
@@ -891,13 +859,7 @@ export default function Auth() {
       ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {})
     });
     suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
-    // Le téléphone se prouve par SMS, Google et Apple compris (fondateur, 18/10/2026) : le même écran du code qu'au mot de passe.
-    if (data.needsVerification) {
-      setPendingEmail(data.email);
-      setPendingChannel(data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(data.phoneMasked || phone.trim());
-      toast(t(data.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
-      return false;
-    }
+    // Le compte s'ouvre sans code (fondateur, 2026-11-02) : le numéro se prouve à la première commande.
     toast(t('auth.welcome', { name: data.user.name }), 'succes');
     // Une inscription, même par Google, arrive dans son espace (tableau de bord, dossier livreur) — pas sur l'accueil.
     await allerApresInscription(data.user);
@@ -1046,14 +1008,10 @@ export default function Auth() {
         });
         // Statistiques (sans donnée personnelle) : une inscription par type de compte.
         suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
-        if (data.needsVerification) {
-          setPendingEmail(data.email);
-          setPendingChannel(data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(data.phoneMasked || phone.trim());
-          toast(t(data.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
-        } else if (data.token) {
-          toast(t('auth.welcome', { name: data.user.name }), 'succes');
-          await allerApresInscription(data.user);
-        }
+        // Le compte s'ouvre sans code (fondateur, 2026-11-02) : le numéro se prouve à la première commande.
+        reussi = true;
+        toast(t('auth.welcome', { name: data.user.name }), 'succes');
+        await allerApresInscription(data.user);
       } else if (googleEnAttente2fa) {
         const data = await connexionFed(fournisseurFed, googleEnAttente2fa, role, { totpCode: totpCode.trim() });
         reussi = true;
@@ -1067,22 +1025,7 @@ export default function Auth() {
         await allerApresConnexion(data.user);
       }
     } catch (err) {
-      if (err.message === 'EMAIL_NOT_VERIFIED') {
-        // Code de l'inscription ENCORE VALABLE (codeActif, audit du 19/10, auth-02) : l'écran du code, sans SMS de plus —
-        // celui que la personne a reçu marche. Expiré : on en envoie un neuf plutôt que d'ouvrir un écran qui attend un code
-        // que la personne n'a plus. Le canal (SMS ou e-mail) vient de la réponse.
-        if (err.data?.codeActif) {
-          setPendingChannel(err.data.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(err.data.phoneMasked || '');
-          setPendingEmail(email.trim());
-          toast(t('auth.codeStillValid'));
-          return;
-        }
-        let canal = null;
-        try { canal = await resendCode(email.trim()); } catch { /* plafond atteint ou réseau : le bouton « Renvoyer » reste là */ }
-        setPendingChannel(canal?.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(canal?.phoneMasked || '');
-        setPendingEmail(email.trim());
-        toast(t(canal?.channel === 'sms' ? 'auth.errVerificationSentSms' : canal ? 'auth.errVerificationSent' : 'auth.errEmailNotVerified'), canal ? undefined : 'erreur');
-      } else if (err.code === 'TOTP_REQUIRED') {
+      if (err.code === 'TOTP_REQUIRED') {
         // Mot de passe bon, second facteur attendu : on ouvre le champ sans rien dire d'alarmant.
         setTotpAttendu(true);
       } else if (err.code === 'TOTP_INVALID' || err.code === 'TOTP_REPLAY') {
@@ -1123,46 +1066,6 @@ export default function Auth() {
     }
   }
 
-  /* COMPTE DÉJÀ CONFIRMÉ AILLEURS (revue du 24/10) : code tapé dans l'app ou un autre onglet, réponse perdue. Le serveur
-   * répond ALREADY_VERIFIED à chaque code et l'écran restait bloqué. C'est une réussite : avec le mot de passe encore en
-   * mémoire, on connecte ; sinon retour au formulaire de connexion, adresse remplie, avec le message du serveur. */
-  async function compteDejaConfirme(err) {
-    const adresse = pendingEmail;
-    if (password && adresse) {
-      try {
-        const data = await login(adresse, password);
-        toast(t('auth.welcome', { name: data.user.name }), 'succes');
-        await allerApresInscription(data.user);
-        return true;
-      } catch { /* second facteur, mot de passe changé : le formulaire de connexion s'en charge */ }
-    }
-    setPendingEmail(''); setCode(''); setErreurCode(''); setChangerNumero(false); setPreuveCode(null);
-    setEmail(adresse); setMode('login');
-    toast(err.message);
-    return false;
-  }
-
-  async function submitCode(e) {
-    e.preventDefault();
-    setErreurCode('');
-    if (!code.trim()) { toast(t('auth.errCodeRequired'), 'erreur'); return; }
-    setLoading(true);
-    let reussi = false;
-    try {
-      const data = await verifyEmail(pendingEmail, code.trim());
-      reussi = true;
-      toast(t('auth.welcome', { name: data.user.name }), 'succes');
-      await allerApresInscription(data.user);
-    } catch (err) {
-      if (err.code === 'ALREADY_VERIFIED') { reussi = await compteDejaConfirme(err); return; }
-      setErreurCode(err.message);
-      toast(err.message, 'erreur');
-      reussi = false;
-    } finally {
-      if (!reussi) setLoading(false);
-    }
-  }
-
   async function submitForgotPassword(e) {
     e.preventDefault();
     if (!forgotEmail.trim()) { toast(t('auth.errEmailRequired'), 'erreur'); return; }
@@ -1198,53 +1101,6 @@ export default function Auth() {
     try { await forgotPassword(forgotEmail.trim()); setForgotCode(''); toast(t('auth.newCodeSent')); }
     catch (err) { toast(err.message, 'erreur'); }
     finally { setResending(false); }
-  }
-
-  // canal 'email' : « Recevoir le code par e-mail », quand le SMS n'arrive pas (22/10/2026).
-  async function handleResend(canal) {
-    setResending(true);
-    try {
-      const r = await resendCode(pendingEmail, canal);
-      if (r?.channel) { setPendingChannel(r.channel === 'sms' ? 'sms' : 'email'); if (r.phoneMasked) setPendingPhone(r.phoneMasked); }
-      setCode(''); setErreurCode('');
-      lancerAttenteRenvoi(DELAI_RENVOI_S);
-      toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : r?.channel === 'email' ? 'auth.errVerificationSent' : 'auth.newCodeSent'));
-    } catch (err) {
-      toast(err.message, 'erreur');
-    } finally {
-      setResending(false);
-    }
-  }
-
-  // « Changer de numéro » (audit du 19/10, auth-03) : un code part au bon numéro, l'ancien ne vaut plus. Sans mot de passe en
-  // mémoire ni jeton (page rechargée), on le demande.
-  const preuveNumero = preuveCode || (googleCredential ? { fournisseur: fournisseurFed, jeton: googleCredential } : null);
-  async function envoyerNouveauNumero(e) {
-    e.preventDefault();
-    const requis = t('auth.errFieldRequired');
-    const manque = {};
-    if (!nouveauNumero.trim()) manque.phone = requis;
-    if (!preuveNumero && !password) manque.password = requis;
-    setErreursNumero(manque);
-    if (Object.keys(manque).length) return;
-    setResending(true);
-    try {
-      const r = await changePendingPhone(pendingEmail, nouveauNumero.trim(), { password, preuve: preuveNumero });
-      setPendingChannel(r?.channel === 'sms' ? 'sms' : 'email'); setPendingPhone(r?.phoneMasked || nouveauNumero.trim());
-      // Le formulaire garde le bon numéro : une nouvelle inscription repartirait avec lui.
-      setPhone(nouveauNumero.trim());
-      setCode(''); setErreurCode(''); setChangerNumero(false);
-      lancerAttenteRenvoi(DELAI_RENVOI_S);
-      toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
-    } catch (err) {
-      const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
-      if (err.code === 'ALREADY_VERIFIED') await compteDejaConfirme(err);
-      else if (err.field === 'phone') setErreursNumero({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
-      else if (err.code === 'BAD_CREDENTIALS' && !preuveNumero) setErreursNumero({ password: err.message });
-      else toast(err.message, 'erreur');
-    } finally {
-      setResending(false);
-    }
   }
 
   // Décor et en-tête suivent le rôle choisi, pas seulement l'adresse d'arrivée : changer de type de compte
@@ -1321,82 +1177,6 @@ export default function Auth() {
               </button>
             </>
           )}
-        </div>
-      </CadreConnexion>
-    );
-  }
-
-  if (pendingEmail) {
-    return (
-      <CadreConnexion decorClass={decorClass} titre={t('siteCadre.codeTitre')} sous={t('siteCadre.codeSous')}>
-        <div className="auth-site-form">
-          <h2 style={{ marginTop: 0 }}>{t(pendingChannel === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle')}</h2>
-          <p className="small" style={{ marginBottom: 14 }}>
-            {pendingChannel === 'sms' ? t('auth.verifyTextSms', { phone: pendingPhone }) : t('auth.verifyText', { email: pendingEmail })}
-          </p>
-          <form onSubmit={submitCode}>
-            <div className="field">
-              <label htmlFor="auth-f-2">{t('auth.verifyCodeLabel')}</label>
-              <input id="auth-f-2"
-                value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); setErreurCode(''); }} placeholder="123456"
-                inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" className={erreurCode ? 'input-invalid' : undefined}
-                maxLength={6} style={{ textAlign: 'center', fontSize: 22, letterSpacing: 6 }}
-              />
-              {/* Chiffres seulement (audit du 19/10, auth-16) : « 123 456 » collé gardait l'espace et perdait le dernier chiffre. */}
-              {erreurCode && <p className="field-error" role="alert">{erreurCode}</p>}
-            </div>
-            {/* Six chiffres avant d'envoyer (audit du 19/10, LIVE-28) : un code incomplet partait au serveur pour « Code incorrect ». */}
-            <button type="submit" className="btn-gold btn-block" disabled={loading || code.length !== 6}>
-              {loading ? t('common.loading') : t('auth.confirm')}
-            </button>
-          </form>
-          <button className="btn-ghost" style={{ marginTop: 10 }} disabled={resending || attenteRenvoi > 0} onClick={() => handleResend()}>
-            {resending ? t('common.loading') : attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}
-          </button>
-          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026). Dernier recours, en deux temps
-              (fondateur) : « Je n'ai pas reçu le SMS », puis le code par e-mail après un décompte VISIBLE (DELAI_CODE_EMAIL_S) ;
-              l'ancien bouton, désactivé sans le dire pendant l'attente de « Renvoyer », semblait ne pas marcher (22/10). */}
-          {pendingChannel === 'sms' && (!smsPasRecu ? (
-            <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending} onClick={() => { setSmsPasRecu(true); lancerAttenteEmail(DELAI_CODE_EMAIL_S); }}>
-              {t('auth.smsPasRecu')}
-            </button>
-          ) : (
-            <>
-              <p className="small" style={{ margin: '8px 0 0', textAlign: 'center' }}>{t('auth.smsPasRecuAide')}</p>
-              <button className="btn-ghost" style={{ marginTop: 4 }} disabled={resending || attenteEmail > 0} onClick={() => handleResend('email')}>
-                {attenteEmail > 0 ? t('auth.codeByEmailIn', { s: attenteEmail }) : t('auth.codeByEmail')}
-              </button>
-            </>
-          ))}
-          {/* Un numéro mal tapé : on le corrige ici, depuis l'inscription comme depuis la connexion (audit du 19/10, auth-03). */}
-          {changerNumero ? (
-            <form onSubmit={envoyerNouveauNumero} style={{ marginTop: 14 }} noValidate>
-              <h3 style={{ margin: '0 0 4px' }}>{t('auth.changePhoneTitle')}</h3>
-              <p className="small" style={{ marginBottom: 10 }}>{t('auth.changePhoneText')}</p>
-              <div className="field">
-                <label htmlFor="auth-f-nouveau-tel">{t('auth.phone')}</label>
-                <PhoneInput id="auth-f-nouveau-tel" value={nouveauNumero} onChange={setNouveauNumero} invalid={!!erreursNumero.phone} />
-                {erreursNumero.phone && <p className="field-error" role="alert">{erreursNumero.phone}</p>}
-              </div>
-              {!preuveNumero && (
-                <div className="field">
-                  <label htmlFor="auth-f-tel-mdp">{t('auth.changePhonePassword')}</label>
-                  <PasswordInput id="auth-f-tel-mdp" value={password} invalid={!!erreursNumero.password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
-                  {erreursNumero.password && <p className="field-error" role="alert">{erreursNumero.password}</p>}
-                </div>
-              )}
-              <button type="submit" className="btn-gold btn-block" disabled={resending}>
-                {resending ? t('common.loading') : t('auth.changePhoneSend')}
-              </button>
-            </form>
-          ) : (
-            <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setNouveauNumero(phone); setErreursNumero({}); setChangerNumero(true); }}>
-              {t('auth.changePhone')}
-            </button>
-          )}
-          <button className="btn-ghost" style={{ marginTop: 4 }} onClick={() => { setPendingEmail(''); setCode(''); setChangerNumero(false); setPreuveCode(null); }}>
-            {t('auth.back')}
-          </button>
         </div>
       </CadreConnexion>
     );
@@ -1809,11 +1589,9 @@ export default function Auth() {
                     onChange={(e) => { setPassword(e.target.value); if (errors.password) setErrors((prev) => { const { password: _p, ...reste } = prev; return reste; }); }}
                     onBlur={controlerMotDePasseEnQuittant} invalid={!!errors.password} />
                   {errors.password ? fieldError('password') : (
-                    // Les trois critères, cochés au fil de la frappe : on sait tout de suite ce qui manque.
+                    // La règle, cochée au fil de la frappe (8 caractères, sans majuscule imposée depuis le 2026-11-02, validation.js).
                     <ul className="mdp-criteres" aria-live="polite">
-                      {[['mdpLongueur', password.length >= 6], ['mdpMajuscule', /[A-Z]/.test(password)], ['mdpMinuscule', /[a-z]/.test(password)]].map(([cle, ok]) => (
-                        <li key={cle} className={ok ? 'ok' : ''}><span aria-hidden="true">{ok ? '✓' : '○'}</span> {t(`auth.${cle}`)}</li>
-                      ))}
+                      <li className={mdpValide(password) ? 'ok' : ''}><span aria-hidden="true">{mdpValide(password) ? '✓' : '○'}</span> {t('auth.mdpLongueur')}</li>
                     </ul>
                   )}
                   {/* Le texte d'exemple a disparu du champ : le libellé « Mot de passe » est juste

@@ -8,6 +8,7 @@ export const ETAPES = {
   restaurant: ['email', 'nom', 'tel', 'commerce', 'type', 'entreprise', 'horaires', 'services', 'adresse', 'fin']
 };
 
-// Le nombre d'écrans de l'inscription, code compris : l'accueil en tient compte pour que les deux partagent une seule route
-// (fondateur, 2026-10-30, maquettes/progression).
-export const ecransInscription = (role) => (ETAPES[role] || ETAPES.client).length + 1;
+// Le nombre d'écrans de l'inscription : l'accueil en tient compte pour que les deux partagent une seule route (fondateur,
+// 2026-10-30, maquettes/progression). Plus d'écran du code à la fin depuis le 2026-11-02 (maquettes/inscription-legere) : la
+// route est pleine sur le dernier écran, « Dernière étape ».
+export const ecransInscription = (role) => (ETAPES[role] || ETAPES.client).length;

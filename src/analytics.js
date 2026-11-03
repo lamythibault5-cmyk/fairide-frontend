@@ -8,6 +8,11 @@
 //   commande_emporter   (raccourci de commande_finalisee mode emporter, pour un objectif dédié)
 //   inscription_restaurant
 //   candidature_livreur
+//   inscription_client
+//   inscription_ecran   { ecran, role, support: 'appli' | 'site' | 'commun' } : chaque écran de l'accueil et de l'inscription,
+//                       et la feuille du code à la première commande (fondateur, 2026-11-02, maquettes/inscription-legere) —
+//                       pour voir où l'on s'arrête. Le nom de l'écran seulement.
+//   telephone_prouve    { support } : le code du numéro tapé (VerifTelephone.jsx)
 const DOMAINE = import.meta.env.VITE_PLAUSIBLE_DOMAIN || '';
 let charge = false;
 
