@@ -7,7 +7,7 @@
 // (openfreemap.org, FAQ et conditions du 14/10/2026). Sans garantie de service : en cas d'échec, carte.js repasse sur le fond
 // raster de secours.
 import 'maplibre-gl/dist/maplibre-gl.css';
-import { setWorkerUrl } from 'maplibre-gl';
+import { prewarm, setWorkerUrl } from 'maplibre-gl';
 import { maplibreGL } from '@maplibre/maplibre-gl-leaflet';
 // LE TRAVAILLEUR QUI DÉCODE LES TUILES. MapLibre le cherche à côté de son propre fichier, qui n'existe plus une fois le code
 // regroupé par Vite ; dans l'application (capacitor://), il ne le cherche même pas (adresse vide). Sans lui, la carte ne montre
@@ -49,4 +49,27 @@ export async function chargerStyle(url) {
 // Calque Leaflet qui dessine le style avec MapLibre, sous les marqueurs et les tracés (même volet que les tuiles).
 export function coucheVecteur(style, attribution) {
   return maplibreGL({ style, interactive: false, attributionControl: { customAttribution: attribution } });
+}
+
+/* PRÉPARER SANS DESSINER (carte.js, prechargerCarte ; fondateur, 2026-11-03 : 2,5 s à la première ouverture de la carte).
+ * prewarm() démarre déjà les travailleurs de MapLibre (leur fichier est lu et compilé) ; le style, la description des tuiles,
+ * les icônes et les polices passent dans le cache du navigateur (OpenFreeMap : un jour pour le style, une semaine pour les
+ * polices). Les tuiles, elles, dépendent de l'endroit montré : on ne les devine pas. Un échec ne coûte rien : la carte
+ * refera ces lectures à l'ouverture, comme avant. */
+export async function prechauffer(url) {
+  prewarm();
+  const style = await chargerStyle(url);
+  const adresses = Object.values(style.sources || {}).map((s) => s.url).filter(Boolean);
+  if (typeof style.sprite === 'string') {
+    const echelle = window.devicePixelRatio > 1 ? '@2x' : '';
+    adresses.push(`${style.sprite}${echelle}.json`, `${style.sprite}${echelle}.png`);
+  }
+  // Les noms et numéros de rue en alphabet latin : la plage 0-255 de chaque police que le style emploie seule.
+  const polices = new Set();
+  for (const couche of style.layers || []) {
+    const f = couche.layout?.['text-font'];
+    if (Array.isArray(f) && f.length === 1 && typeof f[0] === 'string') polices.add(f[0]);
+  }
+  if (typeof style.glyphs === 'string') for (const p of polices) adresses.push(style.glyphs.replace('{fontstack}', p).replace('{range}', '0-255'));
+  await Promise.all(adresses.map((a) => fetch(a).then((r) => r.blob()).catch(() => null)));
 }

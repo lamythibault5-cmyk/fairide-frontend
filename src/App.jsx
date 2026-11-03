@@ -1,4 +1,4 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { lazyPage } from './lazyPage';
 import { experienceApp } from './natif';
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
@@ -13,6 +13,7 @@ import NavigationFeedback from './components/NavigationFeedback';
 import ProtectedRoute from './components/ProtectedRoute';
 import { SkeletonCards } from './components/Skeleton';
 import { useAuth } from './context/AuthContext';
+import { prechargerPage } from './routePrefetch';
 
 // Découpage du bundle par rôle.
 //
@@ -143,6 +144,21 @@ function BarreSimulation() {
   return <Suspense fallback={null}><SimulationBar /></Suspense>;
 }
 
+// Carte préparée en arrière-plan pour un compte connecté (carte.js, prechargerCarte) : carte.js est lu à ce moment-là
+// seulement, pas au premier affichage. Avec elle, l'écran de carte que ce rôle ouvre.
+const PAGES_CARTE = {
+  client: () => Promise.all([prechargerPage('/map'), import('./components/RestaurantsMap')]),
+  driver: () => Promise.all([prechargerPage('/driver/map'), import('./components/livreur/CarteCourse')])
+};
+function PrechauffageCarte() {
+  const { user } = useAuth();
+  const role = user ? user.role || 'client' : null;
+  useEffect(() => {
+    if (role) import('./carte').then((m) => m.prechargerCarte(PAGES_CARTE[role])).catch(() => {});
+  }, [role]);
+  return null;
+}
+
 // Anciens liens de réservation (/reserver/:id, /restaurants/:id/reserver) → la fiche du commerce.
 function RedirectionFiche() {
   const { id } = useParams();
@@ -171,6 +187,7 @@ export default function App() {
       <AttenteStripe />
       <NavigationFeedback />
       <BarreSimulation />
+      <PrechauffageCarte />
       {/* Un seul Suspense autour de toutes les routes : le repli réutilise les squelettes déjà employés
           au chargement des données, donc l'attente d'un module a la même apparence que l'attente d'une
           requête — pas un deuxième vocabulaire visuel à apprendre pour l'utilisateur. */}
