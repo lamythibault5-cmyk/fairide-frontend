@@ -1,9 +1,9 @@
 import { getLocale } from './context/LanguageContext';
 
-// Commerce qui a monté ses prix (`activePromo.roundTenths`, posé par le serveur) : le prix après une offre « −X % » / « −X € »
-// est arrondi au 0,10 € INFÉRIEUR (fondateur, 2026-10-26 ; 11,10 € − 15 % → 9,40 €), pour que la remise donnée ne soit jamais
-// inférieure à celle annoncée. Même règle que la commande (serveur, prixMagasin.prixOffreArrondi). Les autres commerces
-// gardent le calcul au centime.
+// Le prix après une offre « −X % » / « −X € » est arrondi au 0,10 € INFÉRIEUR (fondateur, 2026-10-26 ; 11,10 € − 15 % → 9,40 €),
+// pour que la remise donnée ne soit jamais inférieure à celle annoncée. Même règle que la commande (serveur,
+// prixMagasin.prixOffreArrondi). Le serveur pose `activePromo.roundTenths` dans tout commerce depuis le 2026-11-02 (avant :
+// seulement sur une carte montée) ; sans lui (ancienne réponse en cache), le calcul reste au centime.
 function prixOffreArrondi(prix, p) {
   const v = Number(p.value) || 0;
   const net = p.type === 'percent' ? prix * (1 - v / 100) : Math.max(0, prix - v);

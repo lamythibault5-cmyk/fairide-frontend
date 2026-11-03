@@ -11,9 +11,10 @@ import Icone from './Icone';
  *
  * LE BADGE EN GRAND (fondateur, 2026-10-28, version A de maquettes/badge-simple/badge-simple.html : « fais exactement ça »).
  * Tout l'écran en iris, comme le premier écran de l'accueil : au milieu le badge en très grand, qui brille en lime, « Le même
- * prix que sur place. », « Les autres : 10 % de plus au plus. », « Compris ». 17 mots. La première version du même jour
+ * prix que sur place. », « Les autres : jamais une carte gonflée. » (« 10 % de plus au plus » jusqu'au 02/11/2026 : la hausse
+ * maximale est passée à 11,11 %, et le fondateur ne veut plus de pourcentage côté client), « Compris ». La première version du même jour
  * (deux fausses cartes, « Exemple », deux phrases, ≈ 37 mots) était « pas assez simple ». L'écran ne dit pas combien de
- * restaurants l'ont : il ne change jamais. « 10 % de plus au plus » parle d'un prix, comme « C'est réglé » : jamais de
+ * restaurants l'ont : il ne change jamais. « Jamais une carte gonflée » parle d'un prix, comme « C'est réglé » : jamais de
  * commission.
  *
  * QUI, QUAND (maquettes/badge-ecran, choix 2, 3 et 6). Dans l'app seulement (le site garde le titre au survol), pour tout client

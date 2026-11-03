@@ -27,8 +27,8 @@ the better deal, « the 1+1 »; they don't choose an app for what the courier ea
 
 | Audience | Why (their own) | How (the proof) | What |
 |---|---|---|---|
-| Customer | « Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. » | Ailleurs, jusqu'à +55 % sur la carte. Ici, +10 % au plus, souvent le prix du comptoir (badge « Prix du comptoir »). Rien n'est ajouté au paiement. | Livraison et à emporter des restaurants de Bruxelles. « Voir les commerces qui livrent ici. » |
-| Shop | « Tes clients devraient voir tes vrais prix, et ton travail te payer toi. » | 10 %, pas 30. Tes prix du comptoir, ou 10 % de plus au plus. Ta carte préparée pour toi. | « Inscrire mon commerce. » |
+| Customer | « Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. » | Ailleurs, jusqu'à +55 % sur la carte. Ici, le restaurant ne gonfle plus sa carte, souvent le prix du comptoir (badge « Prix du comptoir »). Rien n'est ajouté au paiement. | Livraison et à emporter des restaurants de Bruxelles. « Voir les commerces qui livrent ici. » |
+| Shop | « Tes clients devraient voir tes vrais prix, et ton travail te payer toi. » | 10 %, pas 30. Tes prix du comptoir, ou 11,11 % de plus pour recevoir ton prix entier. Ta carte préparée pour toi. | « Inscrire mon commerce. » |
 | Courier | « Ta course devrait te payer toi. » | 90 % de chaque livraison, 100 % des pourboires, tu fixes ton minimum, personne ne te note. | « Commencer à livrer. » |
 
 What the courier earns (90 % of the delivery, all tips) is told **only to couriers** (courier onboarding, courier ads,
@@ -41,7 +41,7 @@ The front page opens with the call, then the customer's why (founder's mix, 2026
 
 > **Arrête de payer des prix gonflés.**
 > Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. Ailleurs, c'est jusqu'à +55 %. Sur
-> Fairride, +10 % au plus : le restaurant ne gonfle plus sa carte, et ton argent reste à Bruxelles.
+> Fairride, le restaurant ne gonfle plus sa carte, et ton argent reste à Bruxelles.
 
 « L'alternative à Uber Eats » left the subtitle but not the page: people search for it, so it is the heading of the
 section under « Déjà sur Fairride » (`landing.altTitre`), and it stays in the Google title and description (`seo.*`)
@@ -67,12 +67,20 @@ Fairride picks a fight with a norm: paying the platform's ~30 % cut hidden in th
   `story.faqQ9` (how we measured, write to contact@) does that. The founder dropped the « Comment on a mesuré » link and
   the proof section on 2026-10-26, and the dish is not named, so the partner can't be recognised. Before a measured
   figure goes public, get the measured restaurant's written OK (a request for details reveals it), keep the dated
-  screenshots in the workspace, and redo the measurement monthly (date in `landing.prixReleve`, three languages).
+  screenshots in the workspace, and keep its date visible (`landing.prixReleve`, `appli.accSource`, three languages). No
+  monthly re-measurement (founder, 2026-11-02: « on ne va pas faire ça »): a dated measurement stays a true fact, but the
+  older it gets the easier it is to call misleading if prices moved, so re-check the dish before a campaign and when its
+  price changes.
   « Jusqu'à +55 % » is the top of what we measured, not a typical figure: never « tu paies 50 % de plus » as a general fact.
   In the app's welcome card the line sits behind an « i » next to « Le même plat, 15 € au comptoir » (founder, 2026-10-27:
   « retire la ligne Détails sur demande, ça fait trop de texte »): still one tap away, never removed.
-- « Ici, +10 % au plus » holds only while every published card has its counter prices checked
-  (`in_store_prices_checked_at`) and the markup cap (`hausseMaxPourcent`, argent.md). Check before a campaign.
+- **Fairride's own markup, to customers (founder, 2026-11-02, maquettes/prix-client)**: the cap became 11.11 % and « +11,11 % »
+  sounded bad, so the website, e-mails, Google and « Notre histoire » give NO figure for Fairride (« le restaurant ne gonfle
+  plus sa carte »); the badge screen says « Les autres : jamais une carte gonflée. »; only the app onboarding keeps a figure,
+  in euros on the measured dish: « Sur un plat à 15 € : ailleurs +8,25 €, Fairride +1,70 € au plus » (16,70 € on the first
+  screen). Never « +11 % au plus » (11.11 > 11) nor « +10 % » (both false). Shops always read « 11,11 %, arrondis aux 10
+  cents supérieurs : tu reçois ton prix entier ». The FAQ that explains the mechanism keeps its worked example (13,40 €).
+  These hold only while every published card has its counter prices checked (`in_store_prices_checked_at`).
 - Never « moins cher », never a total including delivery (our delivery fee can be higher than a platform's promotional
   one on a small order). The deal is told as « pas de prix gonflé », « le prix du comptoir », and real promos.
 - A restaurant is never identifiable next to an inflated figure: « un restaurant indien, +55 % » in the same e-mail as
@@ -95,7 +103,7 @@ Fairride picks a fight with a norm: paying the platform's ~30 % cut hidden in th
 |---|---|
 | Paie ton repas, pas la plateforme. | L'alternative à Uber Eats (except `<title>` / meta) |
 | Le même plat ne devrait pas coûter plus cher en ligne. | Une livraison plus équitable pour tous |
-| Ici, +10 % au plus. Ailleurs, jusqu'à +55 %. | Moins cher, tu économises X € |
+| Ailleurs, jusqu'à +55 %. Ici, le restaurant ne gonfle plus sa carte. | Moins cher, tu économises X € ; « +11 % » / « +10 % au plus » |
 | Ce n'est pas le restaurant, c'est la commission. | Les restaurants gonflent leurs prix (as a reproach) |
 | Arrête de payer des prix gonflés. | Arnaque, ils te volent |
 | On prend 10 %, pas 30. | La plateforme (about Fairride), commission réduite, se veut |

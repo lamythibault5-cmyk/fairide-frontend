@@ -5439,6 +5439,8 @@ html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
 /* Le vrai plat relevé (2026-10-26) : le prix en ligne en rouge, comme un avertissement (le même que l'accueil du site). */
 .bv-barres .gonfle { background: var(--promo); }
 .bv-barres .gonfle-prix { color: var(--promo); font-weight: 600; }
+/* « Sur un plat à 15 € » au-dessus des barres en euros en trop (« Sur Fairride, c'est réglé », 2026-11-02). */
+.bv-barres-tete { grid-column: 1 / -1; font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
 .bv-carte-barres .bv-petit { display: block; margin-top: 4px; }
 /* La 3e barre, « Prix du comptoir » (2026-10-27, maquettes/badge-position) : le badge tel que dans la liste en étiquette, sa barre
    iris pleine ; celle de « Fairride, au plus » pâlit, c'est le plafond, pas le cas courant. */

@@ -47,6 +47,7 @@ import ListePlats from '../../components/commerce/ListePlats';
 import LivreurCommande from '../../components/commerce/LivreurCommande';
 import PlusDeTemps from '../../components/commerce/PlusDeTemps';
 import ReclamationsCommerce from '../../components/commerce/ReclamationsCommerce';
+import RenouvellementContrat from '../../components/commerce/RenouvellementContrat';
 import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
 import { telephoneLisible } from '../../validation';
 
@@ -942,6 +943,7 @@ export default function OrdersPage() {
       <FeuilleCommerce>
         {communs}
         {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
+        {!membreEquipe && <RenouvellementContrat restoId={restoId} token={token} toast={toast} lectureSeule={lectureSeule} onChange={() => loadDashboard(restoId)} />}
         <div className="sp-cadre">
         {etatListe}
         {ordersLoaded && enCours.length === 0 && <div className="sp-vide-etroit"><EtatVide icone="commandes" titre={orders.length === 0 && !nbHistorique ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} /></div>}
@@ -1026,6 +1028,7 @@ export default function OrdersPage() {
         {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}
         {communs}
         {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
+        {!membreEquipe && <RenouvellementContrat restoId={restoId} token={token} toast={toast} lectureSeule={lectureSeule} onChange={() => loadDashboard(restoId)} />}
         {etatListe}
         {ordersLoaded && enCours.length === 0 && <EtatVide icone="commandes" titre={orders.length === 0 && !nbHistorique ? t('ordersResto.noneYet') : t('ordersResto.noneCurrent')} />}
         {sections.slice(1).filter((c) => c.liste.length > 0).map((c) => <div key={c.cle}>{enTete(c)}{c.liste.map((o) => carteCommande(o))}</div>)}

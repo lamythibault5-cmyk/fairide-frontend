@@ -8,9 +8,11 @@ import { useLanguage } from '../context/LanguageContext';
 import AvecMarque from './AvecMarque';
 
 // « Tes prix sur Fairide » — modèle du 13/10/2026 (fondateur). Par défaut, la carte affiche les prix du commerce et Fairide
-// garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (10 %, plafond du 16/10/2026 ; 11,1 % du 13 au 16/10, la hausse qui rendait au
-// commerce son prix entier ; jamais plus. Le serveur recalcule toute la carte (PUT /restaurants/:id/price-markup, arrondi au
-// 0,10 € inférieur pour ne jamais dépasser le plafond, prixMagasin.js côté serveur) et retrouve les prix du commerce au retour à 0 %.
+// garde 10 % du prix payé. La barre monte les prix de 0 à etat.max (11,11 % depuis le 02/11/2026 : la hausse qui rend au
+// commerce son prix entier ; 10 % du 16/10 au 02/11), jamais plus. Le serveur recalcule toute la carte (PUT
+// /restaurants/:id/price-markup, arrondi au 0,10 € SUPÉRIEUR pour que le commerce reçoive au moins son prix, prixMagasin.js
+// côté serveur) et retrouve les prix du commerce au retour à 0 %. Un commerce resté sur un contrat antérieur à RESTO-2026.22
+// a etat.max = 10 et etat.maxContract = 11,11 : la barre s'arrête à 10 et une ligne lui dit comment aller plus loin.
 const EXEMPLE_SUR_PLACE = 10;
 const euros = (v, locale) => v.toLocaleString(locale, { style: 'currency', currency: 'EUR' });
 
@@ -35,14 +37,17 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   // franchise TVA (lettre du SPF Finances du 12/10/2026) : fairideVat = 0, les deux valent 10 %. Assujettie : 12,1 % et 10 %.
   const sansTva = !(Number(etat.fairideVat) > 0);
   const r = etat.fairideRate;
-  // Même calcul que le serveur : prix du commerce × (1 + hausse), au 0,10 € inférieur ; Fairide garde r du prix payé.
-  const affiche = valeur > 0 ? Math.floor(EXEMPLE_SUR_PLACE * (1 + valeur / 100) * 10 + 1e-6) / 10 : EXEMPLE_SUR_PLACE;
+  // Même calcul que le serveur : prix du commerce × (1 + hausse), au 0,10 € supérieur ; Fairide garde r du prix payé.
+  const affiche = valeur > 0 ? Math.ceil(EXEMPLE_SUR_PLACE * (1 + valeur / 100) * 10 - 1e-6) / 10 : EXEMPLE_SUR_PLACE;
   const partFairide = Math.round(affiche * r * 100) / 100;
   const partFairideHt = Math.round(affiche * (etat.fairideRateHt ?? r) * 100) / 100;
   const recu = affiche - partFairide;
   const tauxAffiche = (r * 100).toLocaleString(locale, { maximumFractionDigits: 1 });
-  // Pourcentages à une décimale, dans la langue de l'écran.
-  const pct = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 1 });
+  // Pourcentages à deux décimales au plus (11,11 %), dans la langue de l'écran.
+  const pct = (v) => Number(v).toLocaleString(locale, { maximumFractionDigits: 2 });
+  // La barre avance par 0,1 % ; son dernier cran est le plafond exact (11,11 %, pas 11,1 : la hausse qui rend le prix entier).
+  const crans = Math.ceil(etat.max * 10 - 1e-9);
+  const cran = valeur >= etat.max ? crans : Math.min(crans, Math.round(valeur * 10));
   const change = valeur !== etat.percent;
   const demande = etat.requested !== null && etat.requested !== undefined ? etat.requested : null;
   // direct (serveur, prixMagasin.hausseAValider, 2026-11-02) : le commerce applique lui-même sa hausse, sauf s'il a déjà servi
@@ -80,12 +85,13 @@ export default function HaussePrix({ restoId, nbPlats, onChange, modeAdmin = fal
   return (
     <div className="card hausse-prix" id="menu-hausse-prix">
       <h3 style={{ margin: '0 0 6px', fontSize: 15 }}><Icone nom="tendance" taille={16} className="icone-texte" />{' '}<AvecMarque>{t('menuPage.markupTitle')}</AvecMarque></h3>
-      <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche, max: pct(etat.max) })}</p>
+      <p className="small" style={{ margin: '0 0 10px' }}>{t('menuPage.markupIntro', { rate: tauxAffiche, max: pct(etat.maxContract ?? etat.max) })}</p>
+      {etat.maxContract && <p className="small" style={{ margin: '0 0 10px', fontWeight: 600 }}>{t('menuPage.markupContractMore', { max: pct(etat.max), full: pct(etat.maxContract) })}</p>}
       <label htmlFor="hausse-prix-barre" className="small" style={{ fontWeight: 700, display: 'block' }}>
         {valeur === 0 ? t('menuPage.markupValueZero') : t('menuPage.markupValue', { p: pct(valeur) })}
       </label>
-      <input id="hausse-prix-barre" type="range" min="0" max={etat.max} step="0.1" value={valeur}
-        onChange={(e) => setValeur(Math.round(Number(e.target.value) * 10) / 10)} style={remplissage(valeur, 0, etat.max)}
+      <input id="hausse-prix-barre" type="range" min="0" max={crans} step="1" value={cran}
+        onChange={(e) => { const n = Number(e.target.value); setValeur(n >= crans ? etat.max : n / 10); }} style={remplissage(cran, 0, crans)}
         aria-valuetext={`+${pct(valeur)} %`} />
       <div className="row small" style={{ justifyContent: 'space-between', opacity: 0.7, marginTop: -2 }}>
         <span>{t('menuPage.markupMin')}</span><span>+{pct(etat.max)} %</span>
