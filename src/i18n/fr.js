@@ -5154,7 +5154,7 @@ export default {
     // Nouvelle version du contrat, un bouton (RenouvellementContrat.jsx, 2026-11-02).
     renouvellementContrat: {
       titre: "Nouvelle version de ton contrat",
-      sous: "Fairride a mis à jour ton contrat de partenariat (version {version}). Accepte-la en un toucher pour continuer comme avant.",
+      sous: "Fairride a mis à jour ton contrat de partenariat (version {version}). Rien ne s'arrête en attendant : accepte-la en un toucher.",
       hausse: "Pour toi : tes prix sur Fairride passent de +10 % à +{p} %, pour que tu reçoives ton prix entier après notre commission. Un plat à 10,00 € chez toi s'affiche {affiche}, et tu reçois {recu} au lieu de 9,90 €.",
       voir: "Voir ce qui change ({n})",
       masquer: "Masquer",
@@ -6934,10 +6934,8 @@ export default {
       commitmentsBtn: 'Signer',
       commitmentsDone: 'Engagements signés',
       accountDone: 'Compte créé',
-      contractRenew: "Nouveau contrat à accepter avant le {date}",
-      contractRenewSub: "Ta fiche reste en ligne. Sans ton accord, tu ne pourras plus valider de changement de carte après cette date, et ta fiche quittera le site le {date}.",
-      contractRenewNow: "Nouveau contrat à signer",
-      contractRenewNowSub: "Ta commission et ton abonnement ne changent pas. Signe-le pour recevoir des commandes : une case et un bouton.",
+      contractRenewNow: "Nouvelles conditions à accepter",
+      contractRenewNowSub: "Rien ne s'arrête : tes commandes et ta carte continuent. Accepte-les en un toucher, en tête de Commandes.",
       payments: 'Configure tes paiements',
       paymentsSub: 'Chez Stripe, en quelques minutes : ton identité et ton IBAN. Versement chaque lundi.',
       paymentsDone: 'Paiements actifs',

@@ -152,9 +152,13 @@ the phone, with location already allowed (never asked for this), is more than 1 
   customer with 2 contested claims in 90 days (still allowed to claim; the team gets a task, nothing is closed
   automatically). A shop contesting 5+ claims from 3+ customers in 90 days gives a task.
 - **Contracts must be signed before working**: couriers need courier contract 2026.9 to see or take any job
-  (`courierContracts.contratAJour`); shops need RESTO-2026.22 (or 2026.21, kept valid because 2026.22 only changes in their
-  favour: `ACCEPTATIONS_GARDEES`), in force without notice since 2 November 2026 (`sansPreavis`, waiver ticked at acceptance),
-  with no grace period after it (`GRACE_COMMANDES_JOURS = 0`).
+  (`courierContracts.contratAJour`); a shop needs to have accepted **any** version of its contract (`VERSIONS_VALABLES`).
+- **A new shop contract version never stops anything** (Owen, 2026-11-03, RESTO-2026.23): the shop keeps selling and editing
+  its menu on the version it accepted, sees « Nouvelles conditions » at the top of Commandes and accepts in one tap
+  (`RenouvellementContrat.jsx`; that tap is also the P2B notice waiver). So a new rule that costs the shop something applies
+  only to shops that accepted the version bringing it: `restaurantContract.aAccepte(r, 'RESTO-x')`, never
+  `contract_version === VERSION` (e.g. silence-as-yes on missing items needs 2026.21, the 11.11 % cap needs 2026.22).
+  New version = bump `VERSION`, add it to `VERSIONS_VALABLES`, write `CHANGEMENTS` and the clauses; nothing else.
 
 ## Three sellers per order (decided 2026-09-23)
 

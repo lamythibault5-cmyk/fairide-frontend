@@ -104,15 +104,15 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
       : { cle: 'valider', icone: 'valider', titre: t(commandesArretees ? 'miseEnLigne.validateStopped' : 'miseEnLigne.validate'), sous: t(commandesArretees ? 'miseEnLigne.validateStoppedSub' : 'miseEnLigne.validateSub'),
           action: { libelle: occupe ? '…' : t('miseEnLigne.validateBtn'), onClick: validerCarte, disabled: occupe } });
   }
-  // Nouvelle version du contrat pour un commerce déjà en ligne (audit du 19/10, shop-15) : la date limite et ce qui se passe
-  // ensuite, au lieu de « Signe tes engagements · avant d'être visible des clients » alors qu'il l'est.
+  // Nouvelle version du contrat pour un commerce déjà en ligne (audit du 19/10, shop-15) : « Nouvelles conditions », pas
+  // « Signe tes engagements · avant d'être visible des clients » alors qu'il l'est. Rien ne s'arrête en attendant : sa
+  // version continue de valoir (backend RESTO-2026.23) ; il accepte en un toucher (RenouvellementContrat.jsx, Commandes).
   const renouveler = !o.contractAccepted && o.contractRenewal && restaurant.publicListed ? o.contractRenewal : null;
-  const jourLong = (iso) => new Date(iso).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
   etapes.push(engagementsOk
     ? { cle: 'engagements', fait: true, icone: 'contrat', titre: t('miseEnLigne.commitmentsDone') }
     : { cle: 'engagements', icone: 'contrat',
-        titre: renouveler ? (renouveler.sansPreavis ? t('miseEnLigne.contractRenewNow') : t('miseEnLigne.contractRenew', { date: jourLong(renouveler.inForceAt) })) : t('miseEnLigne.commitments'),
-        sous: renouveler ? (renouveler.sansPreavis ? t('miseEnLigne.contractRenewNowSub') : t('miseEnLigne.contractRenewSub', { date: jourLong(renouveler.graceEndsAt) })) : t('miseEnLigne.commitmentsSub'),
+        titre: renouveler ? t('miseEnLigne.contractRenewNow') : t('miseEnLigne.commitments'),
+        sous: renouveler ? t('miseEnLigne.contractRenewNowSub') : t('miseEnLigne.commitmentsSub'),
         // Un seul écran pour les trois textes, en haut d'une page à lui (EngagementsPage.jsx, 2026-10-27) : avant, Mon compte ›
         // contrat (feuille ouverte sur une page défilée) ou le milieu de Ma carte (#conformite-carte), dans un long texte.
         action: { libelle: t('miseEnLigne.commitmentsBtn'), to: '/dashboard/engagements' } });
