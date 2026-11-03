@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
 import Icone from '../../components/Icone';
@@ -70,6 +70,30 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
   const bceAttendu = manques.includes('bce') || manques.includes('tva_numero');
   const aAgir = piecesRefusees || textesARelire || bceAttendu || identiteARefaire || versementAFaire || etat === 'blocked_threshold';
 
+  /* CE QUI RESTE AU LIVREUR, EN HAUT (fondateur, 2026-11-03, maquettes/dossier-livreur-simple, version RA). Le 03/11, trois
+   * dossiers « envoyés » n'attendaient que leur livreur (nouveau contrat à signer), mais l'écran disait « Dossier envoyé, réponse
+   * sous 2 jours » et le contrat n'était qu'une ligne grise : ils croyaient attendre l'équipe. Désormais le titre dit ce qu'il
+   * doit faire (« Plus qu'une chose », « Encore 3 choses »), une carte lime montre la première et un bouton lime y mène.
+   * « Dossier envoyé » ne revient que quand plus rien n'est de son côté. Ordre : ce qui l'empêche de rouler d'abord. */
+  const telephoneAFaire = manques.includes('telephone');
+  const restes = [
+    textesARelire && { cle: 'textes', titre: t(contratASigner ? 'ecranLivreur.dosContratTitre' : 'ecranLivreur.dosTextesTitre'), duree: t('ecranLivreur.dosDureeTextes'), bouton: t(contratASigner ? 'ecranLivreur.dosLireSigner' : 'ecranLivreur.dosLireAccepter') },
+    identiteARefaire && { cle: 'identite', titre: t('ecranLivreur.dosPieceTitre'), duree: t('ecranLivreur.dosDureePiece'), bouton: t('ecranLivreur.dosRefairePiece') },
+    piecesRefusees && { cle: 'pieces', ancre: 'dos-pieces', titre: t('ecranLivreur.dosPiecesTitre'), duree: t('ecranLivreur.dosDureeDocument'), bouton: t('ecranLivreur.dosRemplacer') },
+    versementAFaire && { cle: 'versement', titre: t('ecranLivreur.dosVersementTitre'), duree: t('ecranLivreur.dosDureeVersement'), bouton: t('ecranLivreur.dosActiverCompte') },
+    telephoneAFaire && { cle: 'telephone', ancre: 'dos-telephone', titre: t('verifTel.dossierTitre'), duree: t('ecranLivreur.dosDureeTelephone'), bouton: t('ecranLivreur.dosProuverNumero') },
+    bceAttendu && { cle: 'numero', ancre: 'dos-numero', titre: t('ecranLivreur.dosNumeroTitre'), duree: t('ecranLivreur.dosNumeroSous'), bouton: t('ecranLivreur.dosAjouterNumero') }
+  ].filter(Boolean);
+  const aSonTour = restes.length > 0 && ['pending_review', 'approved'].includes(etat);
+  const faireLaPremiere = () => {
+    const r = restes[0];
+    if (r.ancre) document.getElementById(r.ancre)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    else setFeuille(r.cle);
+  };
+  // « Lire et signer » de la feuille ouverte sur n'importe quel onglet (FeuilleTextesLivreur) : on arrive ici, la feuille des textes ouverte.
+  const location = useLocation();
+  useEffect(() => { if (location.state?.ouvrir === 'textes' && textesARelire) setFeuille('textes'); }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const autreStatut = STATUTS.find((x) => x !== c.statusType);
   /* APRÈS LA VALIDATION, ENCORE À SA MAIN (audit du 19/10, courier-5, courier-6, courier-7) : ses courses (zone, véhicule, autres
    * plateformes, sac), son minimum et, hors EEE, son titre de séjour et sa carte professionnelle, chacun dans sa feuille. */
@@ -106,8 +130,8 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
           <span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span>
           {c.statusType && <span className="ecl-b-pilule">{t(`courierOnboarding.status_${c.statusType}`)}</span>}
         </div>
-        <h1 className="ecl-b-titre">{titre}</h1>
-        <p className="ecl-b-sous">{sous}</p>
+        <h1 className="ecl-b-titre">{aSonTour ? (restes.length === 1 ? t('ecranLivreur.dosResteUne') : t('ecranLivreur.dosReste', { n: restes.length })) : titre}</h1>
+        <p className="ecl-b-sous">{aSonTour ? t(valide ? (restes.length === 1 ? 'ecranLivreur.dosResteRoulerUne' : 'ecranLivreur.dosResteRouler') : (restes.length === 1 ? 'ecranLivreur.dosResteEnvoyeUne' : 'ecranLivreur.dosResteEnvoye')) : sous}</p>
         {/* Validé : le vélo traverse la route et saute à l'arrivée. Envoyé : il attend au bout, immobile. */}
         {valide ? <RouteVelo depart={6} position={94} saut /> : <RouteVelo position={94} pause={etat !== 'pending_review'} />}
       </section>
@@ -120,6 +144,16 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
             {c.needsRenewal && <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.renewalNeeded')}</p>}
             {/* Le geste qui lève le renouvellement (audit du 19/10, courier-30) : confirmer l'école et l'année académique. */}
             {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
+            {aSonTour && (
+              <>
+                <button type="button" className="ecl-prochaine" onClick={faireLaPremiere}>
+                  <small>{t('appli.dosProchaine')}</small>
+                  <b>{restes[0].titre}</b>
+                  <span>{restes[0].duree}</span>
+                </button>
+                <button type="button" className="btn-gold ecl-bouton-dossier" style={{ marginTop: 0 }} onClick={faireLaPremiere}>{restes[0].bouton}</button>
+              </>
+            )}
             <Notifications t={t} token={token} enFeuille />
 
             {valide && (
@@ -147,11 +181,11 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
                 ))}
               </ul>
             )}
-            <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />
-            {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
+            <div id="dos-pieces"><PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} /></div>
+            {bceAttendu && <div id="dos-numero"><NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} /></div>}
             {/* Numéro jamais prouvé (compte ouvert sans code depuis le 2026-11-02, ou dossier d'avant) : il se prouve ici. */}
-            {manques.includes('telephone') && (
-              <div className="card">
+            {telephoneAFaire && (
+              <div className="card" id="dos-telephone">
                 <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('verifTel.dossierTitre')}</h3>
                 <p className="small" style={{ margin: '0 0 10px' }}>{t('verifTel.dossierSous')}</p>
                 <VerifTelephone onFait={() => charger?.()} />

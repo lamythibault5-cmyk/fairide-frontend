@@ -6,6 +6,7 @@ import { dateOuverturePaiements, paiementsOuverts } from '../../launch';
 import { ouvrirStripe } from '../../ouvrirStripe';
 import { libelleManque } from '../../conformite';
 import ouvrirDocument from '../../ouvrirDocument';
+import { ouvrirLienExterne } from '../../natif';
 import Icone from '../../components/Icone';
 import EcranPlein from '../../components/EcranPlein';
 import SousEcran from '../../components/SousEcran';
@@ -83,11 +84,17 @@ const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 
 // Ancienne étape du dossier du site (retour de Stripe : setEtape('envoi')) → écran d'ici.
 const ECRAN_DE_ETAPE = { statut: 'activite', identite: 'identite', infos: 'activite', engagements: 'engagements', paiement: 'paiement', envoi: 'paiement' }; // « envoi » : le retour de Stripe Connect (Onboarding.jsx)
 
+/* LA PARTIE « NUMÉRO D'ENTREPRISE » DE « TON ACTIVITÉ » (fondateur, 2026-11-03, maquettes/dossier-livreur-simple, version A) :
+ * ce qu'un livreur qui n'est pas encore indépendant ne peut pas donner. Quand il ne manque que ça, l'étape « peut attendre »
+ * et le sommaire dit « Presque prêt ». */
+const NUMERO_ENTREPRISE = ['bce', 'tva', 'tva_numero', 'caisse', 'siege'];
+
 // Ce qui manque → l'écran qui le demande.
 function ecranDuManque(m) {
   if (m.startsWith('document_')) return m === 'document_identity_card' ? 'identite' : `doc:${m.slice('document_'.length)}`;
   const table = {
-    statut: 'activite', identite: 'identite', nationalite: 'activite', date_naissance: 'registre', registre_national: 'registre', age_minimum: 'registre',
+    // Le statut et la nationalité : « Ton statut », la première question (2026-11-03) ; le reste de l'activité vient en dernier.
+    statut: 'profil', identite: 'identite', nationalite: 'profil', date_naissance: 'registre', registre_national: 'registre', age_minimum: 'registre',
     zone: 'courses', vehicule: 'courses', permis_immatriculation: 'courses', ecole: 'activite', bce: 'activite', tva: 'activite', tva_numero: 'activite',
     caisse: 'activite', siege: 'activite',
     titre_sejour: 'doc:residence_permit', carte_professionnelle: 'doc:professional_card',
@@ -129,8 +136,14 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
    * numéro se prouve ici, avant l'envoi (backend routes/couriers.js, manque « telephone »). Écran présent seulement pour qui
    * ne l'a pas encore prouvé en ouvrant le dossier ; fixé à l'ouverture pour que la route ne bouge pas une fois le code tapé. */
   const [avecTelephone] = useState(() => manques.includes('telephone'));
-  const ecrans = [...(avecTelephone ? ['telephone'] : []), 'activite', 'courses', ...docsSejour.map((x) => `doc:${x}`), 'identite', 'registre', 'paiement',
-    ...docs.filter((x) => !docsSejour.includes(x)).map((x) => `doc:${x}`), 'engagements'];
+  /* ROULER D'ABORD (fondateur, 2026-11-03, maquettes/dossier-livreur-simple/dossier-livreur-simple.html, version A). Le 03/11,
+   * 11 brouillons sur 15 s'étaient arrêtés juste après le choix du statut : « Ton activité » venait en premier et demandait
+   * d'un coup numéro d'entreprise, régime TVA, nationalité et caisse sociale, à des gens souvent pas encore indépendants. Les
+   * trois qui l'avaient passé finissaient tout en quelques minutes. D'abord ce qui se fait tout de suite, sans papier (son
+   * statut et sa nationalité d'un toucher, ses courses, sa pièce, sa photo, son contrat, son compte de versement), le numéro
+   * d'entreprise en dernier : il « peut attendre » (MANQUES_APRES_ENVOI). Le statut reste avant le contrat, dont il décide. */
+  const ecrans = [...(avecTelephone ? ['telephone'] : []), 'profil', 'courses', ...docsSejour.map((x) => `doc:${x}`), 'identite', 'registre',
+    ...docs.filter((x) => !docsSejour.includes(x)).map((x) => `doc:${x}`), 'engagements', 'paiement', 'activite'];
   const aFaire = (e) => manques.some((m) => ecranDuManque(m, c.statusType) === e);
 
   // Le premier écran qui manque encore quelque chose : là où mène « Compléter mon dossier ».
@@ -160,8 +173,13 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     if (!large || !panneau.current) return;
     if (panneau.current.getBoundingClientRect().top < 0) panneau.current.scrollIntoView({ behavior: defilement(), block: 'start' });
   }, [ouvert, large]);
-  const aller = (e, arriere = false) => { setRecule(arriere); setEcran(e); };
-  const suivant = () => aller(ecrans[Math.min(rang + 1, ecrans.length - 1)]);
+  /* « Ton activité » en trois temps (2026-11-03) : la question « As-tu déjà un numéro d'entreprise ? », puis le numéro et la
+   * TVA en mots simples (« oui »), ou le guide pour l'obtenir (« non »). `null` : choisi à l'ouverture de l'écran (un numéro
+   * déjà tapé ouvre directement le champ). */
+  const [modeNumero, setModeNumero] = useState(null);
+  const aller = (e, arriere = false, mode = null) => { setRecule(arriere); setModeNumero(mode); setEcran(e); };
+  // Après le dernier écran (« Ton activité »), ce qui manque encore : l'écran « manques », pas le même écran une seconde fois.
+  const suivant = () => (rang >= ecrans.length - 1 ? aller('manques') : aller(ecrans[rang + 1]));
   // La croix (et le retour depuis le premier écran) ramène au sommaire, plus au tableau de bord : on y voit ce qui reste.
   const fermer = () => aller(null, true);
   const retour = () => (rang > 0 ? aller(ecrans[rang - 1], true) : fermer());
@@ -174,7 +192,8 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
 
   const sommaire = (panneauOuvert = null) => (
     <SommaireDossier d={d} t={t} user={user} ecrans={ecrans} docs={docs} manques={manques} aFaire={aFaire} stripeActif={stripeActif}
-      premierEcran={premierEcran} onOuvrir={(e) => aller(e)} ouvert={large ? ouvert : null} renvoi={refuse && envoyable ? envoyer : null} busy={busy}>
+      premierEcran={premierEcran} onOuvrir={(e) => aller(e)} onGuide={() => aller('activite', false, 'non')}
+      ouvert={large ? ouvert : null} renvoi={refuse && envoyable ? envoyer : null} busy={busy}>
       {panneauOuvert}
     </SommaireDossier>
   );
@@ -194,6 +213,35 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     // Le code part à l'ouverture et se valide tout seul à six chiffres ; prouvé, on passe à « Ton activité ».
     contenu = <VerifTelephone auto onFait={() => { charger(); refreshUser?.(); suivant(); }} />;
     pied = manques.includes('telephone') ? null : continuer();
+  } else if (ouvert === 'profil') {
+    // Le statut et la nationalité, d'un toucher chacun (2026-11-03) : le statut décide du contrat, la nationalité des pièces.
+    titre = t('appli.exProfilTitre'); sous = t('appli.exProfilSous');
+    contenu = <EcranProfil c={c} f={f} val={val} t={t} token={token} busy={busy} action={action} legal={d.legal ?? {}} />;
+    pied = continuer(enregistrerPuisSuivant);
+  } else if (ouvert === 'activite' && (modeNumero ?? (f.companyNumber ? 'oui' : 'question')) === 'question') {
+    titre = t('appli.exNumeroQuestion'); sous = t('appli.exNumeroQuestionSous');
+    contenu = (
+      <>
+        <Option icone="valider" titre={t('appli.exNumeroOui')} sous={t('appli.exNumeroOuiS')} onClick={() => setModeNumero('oui')} />
+        <Option icone="horloge" titre={t('appli.exNumeroNon')} sous={t('appli.exNumeroNonS')} onClick={() => setModeNumero('non')} />
+      </>
+    );
+  } else if (ouvert === 'activite' && modeNumero === 'non') {
+    // Le guide « Pas encore de numéro ? C'est normal. » (version G1) : comment l'obtenir, puis il continue sans.
+    titre = t('appli.exGuideTitre'); sous = t('appli.exGuideSous');
+    contenu = <GuideNumero c={c} f={f} val={val} t={t} compteId={compteId} />;
+    // Le lime ouvre le champ du numéro ; « Continuer, je l'ajouterai après » passe à la suite sans lui.
+    pied = (
+      <>
+        <button type="button" className="bv-btn btn-gold" onClick={() => setModeNumero('oui')}>{t('appli.exGuideJaiUnNumero')}</button>
+        <button type="button" className="bv-ajout ecl-lien-centre" disabled={busy} onClick={async () => {
+          // Rien d'autre à envoyer qu'une école d'étudiant tapée ici : le numéro, la TVA et la caisse viendront avec le numéro.
+          const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsInfos(f, c) }));
+          if (ok) suivant();
+        }}>{t('appli.exGuideContinuer')}</button>
+        <p className="bv-aide" style={{ textAlign: 'center', margin: 0 }}>{t('appli.exGuideRappel')}</p>
+      </>
+    );
   } else if (ouvert === 'activite') {
     titre = t('appli.exActiviteTitre'); sous = t('appli.exActiviteSous');
     contenu = <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} select={select} />;
@@ -303,17 +351,19 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
  * (`ouvert`) est alors marquée dans la liste et le bouton lime s'efface (le geste lime est celui de l'écran) ; `renvoi`, un
  * dossier refusé que plus rien ne retient : son bouton lime le renvoie à l'équipe ; « Avant de commencer » en bas, comme sur
  * le dossier envoyé (DossierSuivi). */
+// Dans l'ordre des écrans depuis le 2026-11-03 (version A, « Rouler d'abord ») : « Ton activité », le numéro d'entreprise, en dernier.
 const ETAPES_SOMMAIRE = [
   ['telephone', ['telephone']], // seulement tant que le numéro n'était pas prouvé à l'ouverture (voir avecTelephone)
-  ['activite', ['activite']],
+  ['profil', ['profil']],
   ['courses', ['courses']],
   ['identite', ['identite', 'registre']],
-  ['paiement', ['paiement']],
   ['documents', null], // les écrans doc:… (photo, et hors EEE les deux pièces)
-  ['engagements', ['engagements']]
+  ['engagements', ['engagements']],
+  ['paiement', ['paiement']],
+  ['activite', ['activite']]
 ];
 
-function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActif, premierEcran, onOuvrir, ouvert = null, renvoi = null, busy = false, children = null }) {
+function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActif, premierEcran, onOuvrir, onGuide, ouvert = null, renvoi = null, busy = false, children = null }) {
   const c = d.courier;
   const [avant, setAvant] = useState(false);
   // « Inscription » d'abord, toujours faite (fondateur, 2026-10-30, maquettes/progression) : c'est vrai, et une étape déjà
@@ -327,7 +377,13 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
   const faites = etapes.filter((e) => e.fait);
   const total = etapes.length;
   const prenom = c.identity?.firstName || (d.user?.name || user?.name || '').trim().split(/\s+/)[0];
-  const sousBandeau = !restantes.length ? t('appli.dosToutFait', { total })
+  /* UNE PROCHAINE ÉTAPE À LA FOIS (2026-11-03, maquettes/dossier-livreur-simple, version A) : la première étape à faire, dans
+   * une carte à filet lime au-dessus de la liste, avec le temps qu'elle prend. « Ton activité » qui n'attend plus que le numéro
+   * d'entreprise (NUMERO_ENTREPRISE) « peut attendre » ; quand c'est la seule étape qui reste : « Presque prêt ». */
+  const numeroSeul = (e) => e.cle === 'activite' && e.manquants.length > 0 && e.manquants.every((m) => NUMERO_ENTREPRISE.includes(m));
+  const prochaine = restantes[0] || null;
+  const presque = restantes.length === 1 && numeroSeul(restantes[0]);
+  const sousBandeau = presque ? t('appli.dosPresqueSous') : !restantes.length ? t('appli.dosToutFait', { total })
     : t(restantes.length === 1 ? 'appli.dosEtapesUne' : 'appli.dosEtapes', { fait: faites.length, total, reste: restantes.length });
 
   // Sous une étape à faire : ce qui y manque s'il n'y a qu'une chose, combien s'il y en a plusieurs (les libellés des manques
@@ -335,12 +391,14 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
   // qui a été choisi.
   const detail = (e) => {
     if (!e.fait) {
+      if (numeroSeul(e)) return t('appli.dosPeutAttendre');
       if (!e.manquants.length) return t(`appli.dosAide_${e.cle}`);
       if (e.manquants.length > 1) return t('appli.dosAManquer', { n: e.manquants.length });
       const txt = libelleManque(e.manquants[0], t);
       return txt.charAt(0).toUpperCase() + txt.slice(1);
     }
-    if (e.cle === 'activite') return [c.statusType && t(`courierOnboarding.status_${c.statusType}`), c.independent?.companyNumber].filter(Boolean).join(' · ') || null;
+    if (e.cle === 'activite') return c.independent?.companyNumber || null;
+    if (e.cle === 'profil') return [c.statusType && t(`courierOnboarding.status_${c.statusType}`), c.nationalityGroup && t(`appli.exNat_${c.nationalityGroup}`)].filter(Boolean).join(' · ') || null;
     if (e.cle === 'courses') return [c.vehicleType && t(`courierOnboarding.vehicle_${c.vehicleType}`), c.zone].filter(Boolean).join(' · ') || null;
     if (e.cle === 'paiement') return t('courierOnboarding.paymentActive');
     if (e.cle === 'inscription') return d.user?.email || user?.email || null;
@@ -374,14 +432,27 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
   // ordinateur (`children`), aucun dans la liste : l'écran ouvert à droite porte le sien.
   const boutonLime = children ? null : renvoi ? (
     <button type="button" className="btn-gold ecl-bouton-dossier" disabled={busy} onClick={renvoi}>{busy ? t('common.loading') : t('appli.dosRenvoyer')}</button>
+  ) : presque ? (
+    <>
+      <button type="button" className="btn-gold ecl-bouton-dossier" onClick={() => onOuvrir('activite')}>{t('appli.dosAjouterNumero')}</button>
+      <button type="button" className="bv-ajout ecl-lien-centre" onClick={onGuide}>{t('appli.dosCommentObtenir')}</button>
+    </>
   ) : restantes.length > 0 ? (
-    <button type="button" className="btn-gold ecl-bouton-dossier" onClick={() => onOuvrir(premierEcran)}>{t('appli.dosCompleter')}</button>
+    <button type="button" className="btn-gold ecl-bouton-dossier" onClick={() => onOuvrir(premierEcran)}>{t(faites.length > 1 ? 'appli.dosContinuer' : 'appli.dosCommencer')}</button>
   ) : null;
+  const ouvrirEtape = (e) => onOuvrir(e.siens.find(aFaire) || e.siens[0]);
 
   const liste = (
     <>
       {c.lifecycleStatus === 'rejected' && c.reviewReason && (
         <p className="ecl-note"><Icone nom="alerte" taille={18} /><span>{t('courierOnboarding.rejectedReason', { reason: c.reviewReason })}{renvoi && !children && <> {t('appli.dosRenvoyerAide')}</>}</span></p>
+      )}
+      {prochaine && !renvoi && (
+        <button type="button" className="ecl-prochaine" onClick={() => ouvrirEtape(prochaine)}>
+          <small>{t('appli.dosProchaine')}</small>
+          <b>{t(`appli.dosEtape_${prochaine.cle}`)}</b>
+          <span>{numeroSeul(prochaine) ? t('appli.dosNumeroQuand') : t(`appli.dosDuree_${prochaine.cle}`)}</span>
+        </button>
       )}
       {restantes.length > 0 && (
         <>
@@ -417,7 +488,7 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
     <div className={`ecl ecl-page ecl-dossier${children ? ' ecl-page-large ecl-dossier-large' : ''}`}>
       <section className="ecl-bandeau">
         <div className="ecl-b-haut"><span>{t('appli.dosLivreur')}{prenom && <> · <b>{prenom}</b></>}</span></div>
-        <h1 className="ecl-b-titre">{t('appli.dosTitre')}</h1>
+        <h1 className="ecl-b-titre">{t(presque ? 'appli.dosPresqueTitre' : 'appli.dosTitre')}</h1>
         <p className="ecl-b-sous">{sousBandeau}</p>
         <RouteVelo position={Math.round(6 + (88 * faites.length) / Math.max(1, total))} depart={6} />
       </section>
@@ -433,12 +504,13 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
   );
 }
 
-/* « TON ACTIVITÉ » (version A) : le statut, le numéro d'entreprise — lu au registre TVA européen dès qu'il a ses dix chiffres
+/* « TON ACTIVITÉ » (version A) : le numéro d'entreprise — lu au registre TVA européen dès qu'il a ses dix chiffres
  * (PATCH /couriers/me : le serveur remplit dénomination, siège, adresse et zone avec ce que le registre dit) —, l'adresse quand
- * personne ne la donne, l'école d'un étudiant, la TVA, la nationalité (la pièce la confirmera) et la caisse. */
+ * personne ne la donne, l'école d'un étudiant, la TVA et la caisse. Depuis le 2026-11-03 (maquettes/dossier-livreur-simple) :
+ * le dernier écran du dossier, ouvert par « Oui, je l'ai » ; le statut et la nationalité sont dans « Ton statut » (EcranProfil). */
 // « RUE DU BAILLI 42 1050 IXELLES » (registre, en capitales) → « Rue Du Bailli 42 1050 Ixelles », lisible sur la carte.
 const adresseLisible = (a) => String(a || '').toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (x) => x.toUpperCase());
-function EcranActivite({ d, f, val, t, token, busy, action, select }) {
+function EcranActivite({ d, f, val, t, token, action, select }) {
   const c = d.courier;
   const registre = d.companyRegistry;
   const chiffres = String(f.companyNumber || '').replace(/\D/g, '');
@@ -451,36 +523,21 @@ function EcranActivite({ d, f, val, t, token, busy, action, select }) {
   }, [chiffres]); // eslint-disable-line react-hooks/exhaustive-deps
   // Le registre a trouvé le numéro : il est assujetti à la TVA (VIES ne connaît que les assujettis).
   useEffect(() => { if (dejaLu && registre?.valid && !f.vatStatus) val('vatStatus', 'assujetti'); }, [dejaLu, registre?.valid]); // eslint-disable-line react-hooks/exhaustive-deps
-  const segments = (id, k, liste, libelle) => (
-    <div className="bv-segments" role="radiogroup" aria-labelledby={id}>
-      {liste.map((v) => <button key={v} type="button" role="radio" aria-checked={f[k] === v} className={f[k] === v ? 'on' : ''} onClick={() => val(k, v)}>{libelle(v)}</button>)}
-    </div>
-  );
   const connue = !f.socialInsuranceFund || CAISSES.includes(f.socialInsuranceFund);
   const legal = d.legal ?? {};
-  const [comparer, setComparer] = useState(false);
+  /* LA TVA EN MOTS SIMPLES (2026-11-03, maquettes/dossier-livreur-simple, fil B) : « Non / Oui / Je ne sais pas » au lieu de
+   * « Franchise / Assujetti ». « Je ne sais pas » enregistre la franchise, le cas de la plupart des livreurs, et se change ici. */
+  const [tvaInconnue, setTvaInconnue] = useState(false);
+  // Le seuil en euros ronds (« 25 000 € », pas « 25 000,00 € ») : la configuration fiscale de l'année, sinon celui de 2026.
+  const maxFranchise = `${Number(legal.franchiseMaxTurnover ?? 25000).toLocaleString(getLocale(), { maximumFractionDigits: 0 })} €`;
   return (
     <>
-      <div className="bv-segments" role="radiogroup" aria-label={t('auth.courierStatusTitle')}>
-        {STATUTS.map((st) => (
-          <button key={st} type="button" role="radio" aria-checked={c.statusType === st} className={c.statusType === st ? 'on' : ''} disabled={busy}
-            onClick={() => st !== c.statusType && action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType: st } }))}>{t(`appli.exStatut_${st}`)}</button>
-        ))}
-      </div>
-      {/* Le comparatif des deux statuts et le guide « devenir indépendant », que seul le dossier du site montrait. */}
-      <button type="button" className="bv-ajout" style={{ marginTop: -4, marginBottom: 12 }} onClick={() => setComparer(true)}>{t('appli.exLequel')}</button>
-      {comparer && (
-        <SousEcran titre={t('courierOnboarding.chooseStatus')} onFermer={() => setComparer(false)}>
-          <div className="ecl-dans-feuille"><ComparaisonStatuts legal={legal} t={t} actuel={c.statusType} /></div>
-        </SousEcran>
-      )}
       <Champ id="dos-bce" label={t('courierOnboarding.fBce')}>
         <input id="dos-bce" inputMode="numeric" value={f.companyNumber} onChange={(e) => val('companyNumber', e.target.value)} placeholder="0123.456.789" />
       </Champ>
       {dejaLu && registre.valid === true && <Fait icone="valider" titre={t('appli.exRegistreOk', { name: registre.name })} sous={t('appli.exRegistreOkS', { address: adresseLisible(registre.address) })} />}
       {dejaLu && registre.valid === false && <Fait icone="horloge" titre={t('appli.exRegistreNon')} sous={t('appli.exRegistreNonS')} />}
       {dejaLu && registre.valid == null && <Fait icone="horloge" titre={t('appli.exRegistreMuet')} sous={t('appli.exRegistreMuetS')} />}
-      {!chiffres && <p className="bv-aide" style={{ marginTop: -4 }}>{t('appli.exSansNumero')}</p>}
       {/* L'adresse : seulement si ni le compte ni le registre ne l'ont (le serveur la reprend du registre quand il la trouve). */}
       {!d.user?.address && !(dejaLu && registre.valid) && (
         <>
@@ -501,14 +558,111 @@ function EcranActivite({ d, f, val, t, token, busy, action, select }) {
       {c.statusType === 'student_independent' && legal.studentParentsCeiling != null && (
         <p className="bv-aide" style={{ marginTop: -4 }}>{t('courierOnboarding.studentParentsInfo', { amount: euros(Number(legal.studentParentsCeiling)) })}</p>
       )}
-      <span className="bv-etiquette" id="dos-tva">{t('appli.exRegimeTva')}</span>
-      {segments('dos-tva', 'vatStatus', ['franchise', 'assujetti'], (v) => t(`appli.exTva_${v}`))}
-      <span className="bv-etiquette" id="dos-nat">{t('appli.exNationalite')}</span>
-      {segments('dos-nat', 'nationalityGroup', NATIONALITES, (v) => t(`appli.exNat_${v}`))}
-      <p className="bv-aide" style={{ marginTop: -4 }}>{f.nationalityGroup === 'THIRD' ? t('conformite.fNationalityThirdHelp') : t('appli.exNationaliteAide')}</p>
+      <span className="bv-etiquette" id="dos-tva">{t('appli.exTvaQuestion')}</span>
+      <div className="bv-segments" role="radiogroup" aria-labelledby="dos-tva">
+        {[['franchise', 'exTvaNon'], ['assujetti', 'exTvaOui'], ['inconnu', 'exTvaInconnu']].map(([v, cle]) => {
+          const on = v === 'inconnu' ? tvaInconnue : !tvaInconnue && f.vatStatus === v;
+          return <button key={v} type="button" role="radio" aria-checked={on} className={on ? 'on' : ''}
+            onClick={() => { setTvaInconnue(v === 'inconnu'); val('vatStatus', v === 'inconnu' ? 'franchise' : v); }}>{t(`appli.${cle}`)}</button>;
+        })}
+      </div>
+      <p className="bv-aide" style={{ marginTop: -4 }}>{t('appli.exTvaAide', { max: maxFranchise })}</p>
       <Champ id="dos-caisse" label={t('courierOnboarding.fSocialInsuranceFund')} aide={t('courierOnboarding.fSocialInsuranceFundHelp')}>
-        {select('dos-caisse', 'socialInsuranceFund', [...CAISSES.map((x) => [x, x]), ...(connue ? [] : [[f.socialInsuranceFund, f.socialInsuranceFund]])])}
+        {select('dos-caisse', 'socialInsuranceFund', [...CAISSES.map((x) => [x, x]), ...(connue ? [] : [[f.socialInsuranceFund, f.socialInsuranceFund]])], t('appli.exCaisseInconnue'))}
       </Champ>
+    </>
+  );
+}
+
+/* « TON STATUT » (2026-11-03, maquettes/dossier-livreur-simple, version A) : la première question du dossier, d'un toucher
+ * chacune. Le statut part tout de suite (POST /couriers/me/status : il décide du contrat à signer) ; la nationalité part avec
+ * « Continuer » (elle décide des pièces : hors EEE, titre de séjour et carte professionnelle). « Lequel choisir ? » ouvre le
+ * comparatif et le guide « devenir indépendant ». */
+function EcranProfil({ c, f, val, t, token, busy, action, legal }) {
+  const [comparer, setComparer] = useState(false);
+  return (
+    <>
+      {STATUTS.map((st) => (
+        <Option key={st} on={c.statusType === st} icone={st === 'student_independent' ? 'guide' : 'mallette'} titre={t(`appli.exStatut_${st}`)} sous={t(`appli.exStatutAide_${st}`)}
+          onClick={() => !busy && st !== c.statusType && action(() => api('/couriers/me/status', { method: 'POST', token, body: { statusType: st } }))} />
+      ))}
+      <button type="button" className="bv-ajout" style={{ marginTop: -2, marginBottom: 12 }} onClick={() => setComparer(true)}>{t('appli.exLequel')}</button>
+      {comparer && (
+        <SousEcran titre={t('courierOnboarding.chooseStatus')} onFermer={() => setComparer(false)}>
+          <div className="ecl-dans-feuille"><ComparaisonStatuts legal={legal} t={t} actuel={c.statusType} /></div>
+        </SousEcran>
+      )}
+      <span className="bv-etiquette" id="dos-nat">{t('appli.exNationalite')}</span>
+      <div className="bv-segments" role="radiogroup" aria-labelledby="dos-nat">
+        {NATIONALITES.map((v) => <button key={v} type="button" role="radio" aria-checked={f.nationalityGroup === v} className={f.nationalityGroup === v ? 'on' : ''} onClick={() => val('nationalityGroup', v)}>{t(`appli.exNat_${v}`)}</button>)}
+      </div>
+      <p className="bv-aide" style={{ marginTop: -4 }}>{f.nationalityGroup === 'THIRD' ? t('conformite.fNationalityThirdHelp') : t('appli.exNationaliteAide')}</p>
+    </>
+  );
+}
+
+/* « PAS ENCORE DE NUMÉRO ? C'EST NORMAL. » (2026-11-03, maquettes/dossier-livreur-simple, version G1 ; Owen : « qu'ils puissent
+ * suivre les étapes dans l'appli »). Celui qui n'a pas de numéro ne sait souvent pas comment l'obtenir. L'écran se suit :
+ *   - le plus simple d'abord : un guichet d'entreprises en ligne fait caisse, BCE et TVA dans un seul dossier (boutons vers leur
+ *     page, navigateur intégré dans l'app ; ordre alphabétique, Fairride n'est lié à aucun guichet ; liens en français, les
+ *     chemins NL / EN n'ont pas été vérifiés) ;
+ *   - ou étape par étape, quatre cases qu'il coche lui-même, gardées dans ce téléphone (GUIDE_CLE, par compte) pour qu'il
+ *     retrouve où il en était ; la TVA a son bouton MyMinfin ;
+ *   - les délais, et « J'ai mon numéro » qui ouvre le champ (même lecture au registre que « Oui, je l'ai »).
+ * Montants et étapes vérifiés le 03/11/2026 (inscription BCE 111,50 € en 2026, tarif officiel, le même dans tous les
+ * guichets). Il continue sans : le numéro viendra (MANQUES_APRES_ENVOI) ; le rappel dans 3 jours est envoyé par le serveur.
+ * L'école d'un étudiant-indépendant se tape ici aussi : elle ne dépend pas du numéro. */
+const GUICHETS = [
+  ['Securex', 'https://www.securex.be/fr/se-lancer-comme-independant/guichet-entreprises/guichet-entreprises-en-ligne'],
+  ['Xerius', 'https://www.xerius.be/fr-be/devenir-independant/se-lancer/guichet-dentreprises-en-ligne']
+];
+const MYMINFIN = 'https://fin.belgium.be/fr/identification-myminfin';
+const GUIDE_CLE = 'fairide_guide_numero';
+function lireGuide(compteId) {
+  try { const s = JSON.parse(localStorage.getItem(GUIDE_CLE) || 'null'); return s && s.compte === compteId ? s.fait || {} : {}; } catch { return {}; }
+}
+function GuideNumero({ c, f, val, t, compteId }) {
+  const [fait, setFait] = useState(() => lireGuide(compteId));
+  const cocher = (n) => setFait((x) => {
+    const suite = { ...x, [n]: !x[n] };
+    try { localStorage.setItem(GUIDE_CLE, JSON.stringify({ compte: compteId, fait: suite })); } catch { /* stockage indisponible : il recochera */ }
+    return suite;
+  });
+  const etudiant = c.statusType === 'student_independent';
+  const voiture = (f.vehicleType || c.vehicleType) === 'voiture';
+  return (
+    <>
+      <div className="ecl-prochaine ecl-guide-simple">
+        <small>{t('appli.exGuideSimpleTitre')}</small>
+        <span>{t('appli.exGuideSimpleTexte')}</span>
+        <div className="ecl-guide-guichets">
+          {GUICHETS.map(([nom, url]) => <button key={nom} type="button" className="btn-outline" onClick={() => ouvrirLienExterne(url)}>{nom}<Icone nom="lien" taille={15} /></button>)}
+        </div>
+        <span>{t('appli.exGuideAussi')}</span>
+        <span className="ecl-guide-neutre">{t('appli.exGuideNeutre')}</span>
+      </div>
+      <span className="bv-etiquette">{t('appli.exGuideEtapes')}</span>
+      {[1, 2, 3, 4].map((n) => (
+        <div key={n}>
+          <Option multi on={!!fait[n]} titre={t(`appli.exGuideE${n}`)}
+            sous={[t(`appli.exGuideE${n}S`), n === 1 && etudiant ? t('appli.exGuideE1Etudiant') : ''].filter(Boolean).join(' ')} onClick={() => cocher(n)} />
+          {n === 3 && (
+            <button type="button" className="btn-outline ecl-guide-myminfin" onClick={() => ouvrirLienExterne(MYMINFIN)}>
+              {t('appli.exGuideMyminfin')}<Icone nom="lien" taille={15} />
+            </button>
+          )}
+        </div>
+      ))}
+      <p className="bv-aide">{t('appli.exGuideColle')}</p>
+      <p className="bv-aide"><b>{t('appli.exGuideDelais')}</b></p>
+      {voiture && <p className="bv-aide">{t('appli.exGuideVoiture')}</p>}
+      <p className="bv-aide">{t('appli.exGuideGestion')}</p>
+      {etudiant && (
+        <div className="bv-rangee">
+          <Champ id="dos-ecole-g" label={t('courierOnboarding.fSchool')}><input id="dos-ecole-g" value={f.schoolName} onChange={(e) => val('schoolName', e.target.value)} /></Champ>
+          <Champ id="dos-annee-g" label={t('courierOnboarding.fAcademicYear')}><input id="dos-annee-g" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" /></Champ>
+        </div>
+      )}
     </>
   );
 }
