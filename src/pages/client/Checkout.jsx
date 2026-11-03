@@ -1244,6 +1244,8 @@ export default function Checkout() {
           <p className="small">{t('verifTel.pourquoi')}</p>
           <VerifTelephone auto repliEmail focusRef={focusCodeTel} onFait={() => { telOk.current = true; setFenetreTel(false); placeOrder(); }} />
           <p className="small vt-unique">{t('verifTel.unique')}</p>
+          {/* Sur le site, pas de feuille à tirer : sans ce bouton, rien ne refermait la fenêtre avant le code vérifié. */}
+          {!APPLI && <div className="modal-pied"><button type="button" className="btn-ghost" onClick={() => setFenetreTel(false)}>{t('common.cancel')}</button></div>}
         </Modale>
       )}
 

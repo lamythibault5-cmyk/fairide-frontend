@@ -784,6 +784,7 @@ export default function Orders() {
         ) : (
           <Modale onFermer={() => setPhotoOuverte(null)} titre={t('orders.photoTitle')}>
             <img className="suivi-photo-grande" src={vignettePhoto(photoOuverte.preparedPhoto.url, 1200, false)} alt={t('orders.photoAlt', { name: photoOuverte.restaurantName })} />
+            <div className="modal-pied"><button type="button" className="btn-outline" onClick={() => setPhotoOuverte(null)}>{t('common.close')}</button></div>
           </Modale>
         )
       )}
