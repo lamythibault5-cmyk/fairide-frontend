@@ -60,12 +60,17 @@ export default async function ouvrirDocument({ url, lien, token, toast, messageE
     } catch (e) { toast?.(e.message || messageErreur || indisponible()); }
     return;
   }
-  const onglet = window.open('', '_blank', 'noopener,noreferrer');
+  /* SANS `noopener` DANS window.open (03/11 : Owen ne voyait ni pièce ni selfie des livreurs). Avec, le navigateur ouvre
+   * bien l'onglet vide mais rend null : l'adresse signée ne pouvait plus y être chargée, et le second window.open, hors
+   * du geste, était bloqué. Restaient un onglet blanc et aucun message. Même parade que ouvrirLienFrais : le lien vers
+   * cette page est coupé à la main avant d'y charger le document. */
+  const onglet = window.open('', '_blank');
+  if (onglet) { try { onglet.opener = null; } catch { /* navigateur qui refuse : l'onglet reste vide jusqu'au lien */ } }
   try {
     const r = await api(lien, { token });
     const sure = urlSure(r?.url);
     if (!sure) throw new Error(messageErreur || indisponible());
-    if (onglet) onglet.location = sure;
+    if (onglet) onglet.location.href = sure;
     else window.open(sure, '_blank', 'noopener,noreferrer'); // onglet bloqué : dernier recours
   } catch (e) {
     // L'onglet vide resterait sinon ouvert sur une page blanche, sans explication.

@@ -1194,7 +1194,7 @@ export default {
     },
     adminCouriers: {
       exValide: 'Dossier goedgekeurd: de koerier kan rijden.',
-      exIdentiteDetail: 'De koerier weigerde de selfie bij Stripe: vergelijk de foto van het identiteitsbewijs met de selfie in Documenten, dan « Identiteit OK ».',
+      exIdentiteDetail: 'De koerier weigerde de selfie bij Stripe: vergelijk de foto van het identiteitsbewijs met de selfie hierboven (klik om te vergroten), dan « Identiteit handmatig geverifieerd ».',
       exSejourDetail: 'Buiten de EER: bekijk de verblijfsvergunning en de beroepskaart (of geef de vrijstelling), en keur ze goed in Documenten.',
       exPieceInconnue: 'niet gelezen door Stripe',
       exPiece_document: 'identiteitsbewijs gelezen door Stripe',
@@ -1215,6 +1215,8 @@ export default {
       exPoint_nationalite: 'Nationaliteit',
       exPoint_bce: 'Ondernemingsnummer',
       exVoirDocuments: 'De documenten bekijken',
+      piecesAgrandir: 'Klik om te vergroten',
+      piecesOuvrir: 'Openen',
       exPhotoARegarder: 'De profielfoto, die klanten zien, is nog niet bekeken.',
       exAutoLe: 'Automatisch goedgekeurd op {date} (alles was groen)',
       exAuto: 'Automatisch goedgekeurd',
