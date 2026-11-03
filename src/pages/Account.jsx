@@ -53,6 +53,7 @@ import '../ecran-compte.css';
 import '../site-compte.css';
 import { telephoneLisible, mdpValide } from '../validation';
 import ErrorCard from '../components/ErrorCard';
+import { CarteCodeAmi } from '../components/CodeAmi';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -868,14 +869,11 @@ export default function Account({ integre = false, milieu = null }) {
       )}
     </>
   );
-  /* Le parrainage du client dit ce qu'il rapporte et montre le code (maquettes/compte, 2026-10-27) : 5 € de crédit quand
-     l'ami reçoit sa première commande de 20 € ou plus (backend referrals.js, REFERRAL_REWARD et REFERRAL_MIN_ORDER_TOTAL). */
+  /* Le code ami du client, ouvert d'office : le code en grand, « Copier », « Partager mon code », ce que les amis ont rapporté
+     et les conditions (fondateur, 2026-11-03, maquettes/parrainage-visible ; CodeAmi.jsx). Il remplace la rangée qui ouvrait
+     une feuille avec « Copier » seulement (maquettes/compte, 2026-10-27). */
   const ligneParrainage = client ? (
-    <LigneCompte icone="cadeau" titre={t('accountUi.referralCardTitle')}
-      sous={<>{t('accountUi.referralCardSub')}{referralStats?.code && <span className="compte-parrain-code">{referralStats.code}</span>}</>}
-      ouverte={ouvertes.has('parrainage')} onClick={() => basculer('parrainage')}>
-      {contenuParrainage}
-    </LigneCompte>
+    <CarteCodeAmi stats={referralStats} />
   ) : (
     <>
     {/* Sans code de parrainage (comptes créés avant que les codes existent, comptes de

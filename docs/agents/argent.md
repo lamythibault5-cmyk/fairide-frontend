@@ -68,6 +68,16 @@ each). The business contract `RESTO-2026.20` still prints « de 1 à 30 km » (`
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
 paid by Fairide like the balance: they lower `orders.total`, never the business's or the courier's share; online
 payment only.
+**Referral, « code ami » (founder, 2026-11-03, `maquettes/parrainage-visible`).** Every customer has a code
+(`users.own_referral_code`). The friend who signs up with it gets **€5 off once**, on an order **paid online with €20 of
+food or more** (subtotal, delivery not counted): applied by the order route by itself (no typing), through the reserved
+promo row `CODE-AMI` of type `order_referral` (backend migration 107, `referrals.CODE_AMI`; typed at checkout it « doesn't
+exist »; the team turns it off in Admin › Promotions). A typed code wins (one code per order) and the code ami waits; paid at
+the shop it doesn't apply, and the quote's `codeAmi` says why so the cart can explain it. The sharer gets **€5 on the
+balance per friend, no cap** (founder: each fake friend needs a real phone and a real paid order), when that friend's first
+qualifying order is handed over, **only if it was paid online** (`maybeAwardClientReferralReward`: a takeaway paid at the
+shop earns Fairride nothing, so it no longer credits anyone). Before GO nothing can be paid online: the screens that promise
+the friend's €5 wait for GO (`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged.
 Subscription: €20/month, first month free, with the « petit mois = pas d'abonnement » guarantee: a month whose orders
 do not exceed **€50** of products (VAT incl., no delivery or tips) is not charged, or refunded
 (`../fairide-backend/garantieAbonnement.js`; threshold `SEUIL_GARANTIE_EUROS` in `formules.js`, read by the contract and the

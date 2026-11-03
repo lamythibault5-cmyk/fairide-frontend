@@ -27,6 +27,8 @@ import '../site-cadre.css';
 const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
 // « Repère ce badge. » une fois, juste après les notifications (EcranBadge.jsx) : client de l'app seulement.
 const EcranBadge = lazy(() => import('./EcranBadge'));
+// Le code ami, une fois, sur la liste : après le badge dans l'app, après la carte des cookies sur le site (CodeAmi.jsx).
+const FeuilleCodeAmi = lazy(() => import('./CodeAmi'));
 // PAS DE RETOUR PAR GLISSEMENT (fondateur, 2026-10-23) : le glissement vers la droite pour reculer (bord gauche, puis de
 // n'importe où) a été retiré — sur la liste, la page partait de côté sur un fond vide « à l'infini ». On recule par les
 // boutons retour / fermer ; Android garde le geste du système.
@@ -254,6 +256,7 @@ export default function Layout() {
         {seesClientCart && <FloatingCart />}
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
         {experienceApp() && role === 'client' && <Suspense fallback={null}><EcranBadge /></Suspense>}
+        {role === 'client' && <Suspense fallback={null}><FeuilleCodeAmi /></Suspense>}
       </>
     );
   }

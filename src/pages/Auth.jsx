@@ -108,7 +108,9 @@ export default function Auth() {
   // servent qu'à présélectionner le bon (demande du fondateur : ne jamais cacher une porte d'entrée).
   const visibleRoles = ROLES;
 
-  const [mode, setMode] = useState(audience ? 'register' : 'login');
+  // Un lien de code ami (?ref=, CodeAmi.jsx) ouvre l'inscription : l'ami qui le reçoit n'a pas encore de compte, il arrivait
+  // sur « Connexion » et devait trouver l'onglet lui-même (fondateur, 2026-11-03, maquettes/parrainage-visible).
+  const [mode, setMode] = useState(audience || searchParams.get('ref') ? 'register' : 'login');
   const [role, setRole] = useState(() => {
     if (ROLES.some((r) => r.value === roleHint)) return roleHint;
     if (audience === 'partner') return 'restaurant';
@@ -513,7 +515,7 @@ export default function Auth() {
     derniereNavigation.current = location.key;
     const a = searchParams.get('audience');
     const r = searchParams.get('role');
-    setMode(a ? 'register' : 'login');
+    setMode(a || searchParams.get('ref') ? 'register' : 'login');
     setRole(ROLES.some((x) => x.value === r) ? r : a === 'partner' ? 'restaurant' : 'client');
     setForgotMode(searchParams.get('oubli') === '1');
     remonterEnHaut();

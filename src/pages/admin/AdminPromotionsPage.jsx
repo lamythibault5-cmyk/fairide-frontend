@@ -103,13 +103,13 @@ export default function AdminPromotionsPage() {
     ]);
   }
 
-  const libelleType = (v) => ({ client_balance: tr('adminPromos.typeClient'), restaurant_trial_months: tr('adminPromos.typeResto'), order_percent: tr('adminPromos.typeOrderPercent'), order_amount: tr('adminPromos.typeOrderAmount'), order_free_delivery: tr('adminPromos.typeOrderFreeDelivery') }[v] || v);
+  const libelleType = (v) => ({ client_balance: tr('adminPromos.typeClient'), restaurant_trial_months: tr('adminPromos.typeResto'), order_percent: tr('adminPromos.typeOrderPercent'), order_amount: tr('adminPromos.typeOrderAmount'), order_free_delivery: tr('adminPromos.typeOrderFreeDelivery'), order_referral: tr('adminPromos.typeOrderReferral') }[v] || v);
   const uniteValeur = (type) => ({ client_balance: '€', order_amount: '€', order_percent: '%' }[type] || tr('adminSettings.months'));
   const etat = (p) => (expire(p) ? <span className="pill texte-erreur">{tr('adminPromos.expired')}</span> : epuise(p) ? <span className="pill texte-erreur">{tr('adminPromos.exhausted')}</span> : p.active ? <span className="pill gold">{tr('adminPromos.active')}</span> : <span className="pill">{tr('adminSettings.disabled')}</span>);
   const colonnes = [
     { key: 'code', label: tr('adminCommon.code'), get: (p) => <b style={{ fontFamily: 'monospace', fontSize: 14 }}>{p.code}</b>, sortValue: (p) => p.code },
     { key: 'type', label: tr('adminCommon.type'), get: (p) => <span className="pill teal">{libelleType(p.type)}</span>, sortValue: (p) => p.type },
-    { key: 'value', label: tr('adminPromos.value'), get: (p) => (p.type === 'client_balance' || p.type === 'order_amount' ? `${p.value} €` : p.type === 'order_percent' ? `${p.value} %` : p.type === 'order_free_delivery' ? tr('adminPromos.typeOrderFreeDelivery') : tr('adminPromos.monthsValue', { n: p.value })), sortValue: (p) => p.value, align: 'right' },
+    { key: 'value', label: tr('adminPromos.value'), get: (p) => (p.type === 'client_balance' || p.type === 'order_amount' || p.type === 'order_referral' ? `${p.value} €` : p.type === 'order_percent' ? `${p.value} %` : p.type === 'order_free_delivery' ? tr('adminPromos.typeOrderFreeDelivery') : tr('adminPromos.monthsValue', { n: p.value })), sortValue: (p) => p.value, align: 'right' },
     { key: 'usesCount', label: tr('adminPromos.uses'), get: (p) => { const part = p.maxUses ? Math.min(100, Math.round((p.usesCount / p.maxUses) * 100)) : null; return <>{p.usesCount}{p.maxUses ? ` / ${p.maxUses}` : ''}{part !== null && <div className="admin-progress"><span style={{ width: `${part}%` }} /></div>}</>; }, sortValue: (p) => p.usesCount, align: 'right', sum: true },
     { key: 'expiresAt', label: tr('adminPromos.expiresAt'), get: (p) => (p.expiresAt ? fmtDate(p.expiresAt) : '-'), sortValue: (p) => p.expiresAt || 9e15 },
     { key: 'createdAt', label: tr('adminPromos.createdOn'), get: (p) => (p.createdAt ? fmtDate(p.createdAt) : '-'), sortValue: (p) => p.createdAt || 0 },
