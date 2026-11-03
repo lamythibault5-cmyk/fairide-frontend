@@ -5142,7 +5142,7 @@ export default {
     // Nouvelle version du contrat, un bouton (RenouvellementContrat.jsx, 2026-11-02).
     renouvellementContrat: {
       titre: "Nieuwe versie van je contract",
-      sous: "Fairride heeft je partnercontract bijgewerkt (versie {version}). Aanvaard ze met één tik om verder te gaan zoals voorheen.",
+      sous: "Fairride heeft je partnercontract bijgewerkt (versie {version}). Er stopt niets in de tussentijd: aanvaard ze met één tik.",
       hausse: "Voor jou: je prijzen op Fairride gaan van +10% naar +{p}%, zodat je na onze commissie je volledige prijs ontvangt. Een gerecht van € 10,00 bij jou wordt {affiche}, en je ontvangt {recu} in plaats van € 9,90.",
       voir: "Bekijk wat er verandert ({n})",
       masquer: "Verbergen",
@@ -6918,10 +6918,8 @@ export default {
       commitmentsBtn: 'Ondertekenen',
       commitmentsDone: 'Verbintenissen ondertekend',
       accountDone: 'Account aangemaakt',
-      contractRenew: "Nieuw contract te aanvaarden vóór {date}",
-      contractRenewSub: "Je fiche blijft online. Zonder je akkoord kun je na die datum geen menuwijzigingen meer valideren, en verdwijnt je fiche van de site op {date}.",
-      contractRenewNow: "Nieuw contract te ondertekenen",
-      contractRenewNowSub: "Je commissie en je abonnement veranderen niet. Onderteken het om bestellingen te ontvangen: één vakje en één knop.",
+      contractRenewNow: "Nieuwe voorwaarden te aanvaarden",
+      contractRenewNowSub: "Er stopt niets: je bestellingen en je kaart lopen door. Aanvaard ze met één tik, bovenaan Bestellingen.",
       payments: 'Stel je betalingen in',
       paymentsSub: 'Bij Stripe, in enkele minuten: je identiteit en IBAN. Uitbetaling elke maandag.',
       paymentsDone: 'Betalingen actief',

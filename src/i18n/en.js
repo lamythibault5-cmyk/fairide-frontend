@@ -5133,7 +5133,7 @@ export default {
     // Nouvelle version du contrat, un bouton (RenouvellementContrat.jsx, 2026-11-02).
     renouvellementContrat: {
       titre: "New version of your contract",
-      sous: "Fairride has updated your partnership contract (version {version}). Accept it in one tap to carry on as before.",
+      sous: "Fairride has updated your partnership contract (version {version}). Nothing stops in the meantime: accept it in one tap.",
       hausse: "For you: your prices on Fairride go from +10% to +{p}%, so you receive your full price after our commission. A €10.00 dish in your shop shows {affiche}, and you receive {recu} instead of €9.90.",
       voir: "See what changes ({n})",
       masquer: "Hide",
@@ -6909,10 +6909,8 @@ export default {
       commitmentsBtn: 'Sign',
       commitmentsDone: 'Commitments signed',
       accountDone: 'Account created',
-      contractRenew: "New contract to accept before {date}",
-      contractRenewSub: "Your page stays online. Without your agreement, you can no longer validate menu changes after that date, and your page leaves the site on {date}.",
-      contractRenewNow: "New contract to sign",
-      contractRenewNowSub: "Your commission and subscription don't change. Sign it to receive orders: one box and one button.",
+      contractRenewNow: "New terms to accept",
+      contractRenewNowSub: "Nothing stops: your orders and your menu carry on. Accept them in one tap, at the top of Orders.",
       payments: 'Set up your payments',
       paymentsSub: 'At Stripe, in a few minutes: your identity and IBAN. Payout every Monday.',
       paymentsDone: 'Payments active',
