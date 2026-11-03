@@ -12,6 +12,7 @@ import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande
 import InfosRetrait from '../../components/client/InfosRetrait';
 import { formatOrderItem, orderTypeLabel } from '../../orderStatus';
 import { euros } from '../../prixPlat';
+import { RappelCodeAmi } from '../../components/CodeAmi';
 
 // Page d'arrivée après le retour du prestataire de paiement.
 //
@@ -239,6 +240,8 @@ function ResultatCommande({ success }) {
             </div>
           )}
           <InfosRetrait order={commande} />
+          {/* Le code ami, une fois par téléphone, au moment où l'on est content (maquettes/parrainage-visible, question 5). */}
+          {commande && <RappelCodeAmi />}
           </div>
           <div className="sc-merci-actions">
           {/* Le bouton dit ce qu'on veut faire juste après avoir payé : suivre CETTE commande (elle s'ouvre en tête de Mes commandes,

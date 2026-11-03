@@ -39,6 +39,8 @@ export default function EcranBadge() {
   const compris = () => {
     try { localStorage.setItem(CLE, 'vu'); } catch { /* stockage indisponible : il reviendra, sans gravité */ }
     setOuvert(false);
+    // La feuille du code ami attend cet écran (CodeAmi.jsx) : elle monte juste après, sur la liste.
+    window.dispatchEvent(new Event('fairide:badge-vu'));
   };
   return (
     <EcranPlein etiquette={t('common.prixComptoir')} classe="bv-iris bv-badge-plein">

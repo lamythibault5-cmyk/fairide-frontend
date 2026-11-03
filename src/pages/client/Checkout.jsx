@@ -40,6 +40,7 @@ import { lireSaisiePaiement, garderSaisiePaiement, oublierSaisiePaiement } from 
 import { defilement, vibrer } from '../../gestes';
 import { groupeACommander } from '../../commandeGroupee';
 import { cheminFiche } from '../../adresseFiche';
+import { CODE_AMI } from '../../components/CodeAmi';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -1023,13 +1024,18 @@ export default function Checkout() {
                   {remiseLivraison > 0 && <LigneTicket libelle={t('checkout.deliveryDiscountLine', { name: restaurant.name })} montant={`−${euros(remiseLivraison)}`} />}
                 </>
               )}
-              {codePromoMontant > 0 && <LigneTicket libelle={t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />}
+              {codePromoMontant > 0 && <LigneTicket libelle={!codePromo?.code && devisValide?.promoCode === CODE_AMI ? t('codeAmi.panier') : t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />}
               {devisValide?.giftVoucherDiscount > 0 && <LigneTicket libelle={t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })} montant={`−${euros(devisValide.giftVoucherDiscount)}`} />}
               {soldeTicket > 0 && <LigneTicket libelle={t('checkout.balanceUsedLine')} montant={`−${euros(soldeTicket)}`} />}
               {pourboireChoisi > 0 && <LigneTicket libelle={t('checkout.tipLine')} montant={euros(pourboireChoisi)} />}
               {/* Sur le site, ce total est celui que l'on regarde (la barre n'y garde que le bouton) : ses chiffres roulent. */}
               <div className="co-t-ligne co-t-total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span className="sc-roulant">{APPLI ? euros(montantDebite) : <ChiffresRoulants valeur={euros(montantDebite)} />}</span></div>
             </div>
+            {/* Le code ami de l'ami parrainé (backend routes/orders.js) : appliqué tout seul ; sinon le devis dit pourquoi, pour
+                que les 5 € promis ne semblent pas perdus (maquettes/parrainage-visible). */}
+            {devisValide?.codeAmi && !devisValide.codeAmi.applique && (
+              <p className="small co-code-ami">{t(devisValide.codeAmi.raison === 'sur_place' ? 'codeAmi.panierSurPlace' : 'codeAmi.panierMinimum')}</p>
+            )}
             {/* Les vendeurs (trois vendeurs, C2) : ce ticket est le dernier écran avant de payer quand le total ne bouge pas, il
                 dit donc à qui le client achète. En une ligne ; le détail (et les frais de système de Fairide, compris dans la
                 livraison, montant seulement) sous « détails ». */}
@@ -1303,7 +1309,7 @@ export default function Checkout() {
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
-              {pendingOrder.promoCodeDiscount > 0 && <div className="line"><span>{t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>}
+              {pendingOrder.promoCodeDiscount > 0 && <div className="line"><span>{pendingOrder.promoCode === CODE_AMI ? t('codeAmi.panier') : t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
               {(() => {
                 // Même règle que confirmAndPay : le pourboire n'est débité qu'en livraison, sur un total non nul.
