@@ -7629,6 +7629,11 @@ export default {
       disableConfirm: 'Disable two-factor authentication',
       removed: 'Two-factor authentication disabled.'
     },
+    miseAJour: {
+      titre: 'Update Fairride',
+      texte: 'A new version is available. Update to continue: it only takes a minute.',
+      bouton: 'Update',
+    },
     common: {
       leaveUnsavedCancel: "Keep editing",
       leaveUnsavedConfirm: "Leave",
@@ -9938,6 +9943,10 @@ export default {
       paramSelfieRateHelp: "0.2 = about one shift start in five. 0 = no selfie requested.",
       paramFloorCap: "Maximum increase of the customer delivery price towards couriers' minimum (cents)",
       paramFloorCapHelp: "When no available courier accepts the grid, the customer pays the cheapest one's minimum, up to this increase (300 = €3). Beyond, the step increase is paid by Fairride.",
+      paramMinAndroid: 'Minimum Android version (versionCode)',
+      paramMinAndroidHelp: 'Below it, the Android app only shows « Update Fairride ». The number is the VERSION_CODE of the « App Android Play Store » workflow (or « Version code » in the Play Console). 0 = nothing forced.',
+      paramMinIos: 'Minimum iPhone version (build)',
+      paramMinIosHelp: 'Below it, the iPhone app only shows « Update Fairride ». The number is the App Store Connect / TestFlight build (for example 258). 0 = nothing forced.',
       paramFlags: 'Flags (pending legal positions)',
       on: 'on',
       off: 'off',

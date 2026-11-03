@@ -391,6 +391,18 @@ export function ParametersTab() {
             <input id={`${id}-cap`} type="number" min="0" max="2000" value={champ('delivery_courier_floor_cap_cents') || '300'} onChange={changer('delivery_courier_floor_cap_cents')} />
             <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramFloorCapHelp')}</p>
           </div>
+          {/* Mise à jour obligatoire des applis (2026-11-03, components/MiseAJourObligatoire.jsx) : sous ce build, l'app ne
+              montre plus qu'« Mets à jour Fairride ». 0 ou vide = rien de forcé. */}
+          <div className="field">
+            <label htmlFor={`${id}-min-android`}>{t('conformite.paramMinAndroid')}</label>
+            <input id={`${id}-min-android`} type="number" min="0" step="1" inputMode="numeric" value={champ('app_min_build_android') || '0'} onChange={changer('app_min_build_android')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramMinAndroidHelp')}</p>
+          </div>
+          <div className="field">
+            <label htmlFor={`${id}-min-ios`}>{t('conformite.paramMinIos')}</label>
+            <input id={`${id}-min-ios`} type="number" min="0" step="1" inputMode="numeric" value={champ('app_min_build_ios') || '0'} onChange={changer('app_min_build_ios')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramMinIosHelp')}</p>
+          </div>
           <button type="button" className="btn-teal" disabled={!age && date === null && !Object.keys(autres).length} onClick={enregistrer}>{t('conformite.save')}</button>
           <h4 style={{ marginTop: 16 }}>{t('conformite.paramFlags')}</h4>
           {/* Ni le GO (il a son bouton dans Aujourd'hui, et la route des drapeaux le refuse ; audit du 19/10, admin-75), ni
