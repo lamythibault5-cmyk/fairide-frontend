@@ -1,0 +1,14 @@
+/* Mise à jour obligatoire (MiseAJourObligatoire.jsx, 2026-11-03) : bandeau iris, vélo lime sur la route en pointillés,
+   feuille blanche à 26 px, un seul bouton lime. Par-dessus tout, onglets compris. */
+.maj-obligatoire { position: fixed; inset: 0; z-index: 5000; display: flex; flex-direction: column; background: var(--iris); }
+.maj-bandeau { padding: calc(28px + env(safe-area-inset-top, 0px)) 24px 56px; color: #fff; }
+.maj-route { position: relative; height: 26px; color: var(--lime); }
+.maj-route::before { content: ''; position: absolute; left: 0; right: 0; bottom: 4px; border-top: 2px dashed rgba(255, 255, 255, .35); }
+.maj-velo { position: absolute; left: 12%; bottom: 6px; line-height: 0; animation: maj-roule 2.4s ease-in-out infinite alternate; }
+@keyframes maj-roule { to { left: 74%; } }
+@media (prefers-reduced-motion: reduce) { .maj-velo { animation: none; } }
+.maj-titre { margin: 28px 0 0; font: 700 32px/1.1 "Inter Tight", Inter, system-ui, sans-serif; letter-spacing: -.01em; color: #fff; }
+.maj-feuille { flex: 1; display: flex; flex-direction: column; margin-top: -26px; padding: 28px 24px calc(28px + env(safe-area-inset-bottom, 0px)); background: #fff; border-radius: 26px 26px 0 0; }
+.maj-texte { margin: 0; font-size: 17px; line-height: 1.45; color: var(--ink-soft); }
+.maj-grandit { flex: 1; }
+.maj-bouton { width: 100%; min-height: 56px; border-radius: 999px; font-size: 18px; font-weight: 700; }

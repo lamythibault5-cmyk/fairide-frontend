@@ -7657,6 +7657,11 @@ export default {
       disableConfirm: 'Désactiver la double authentification',
       removed: 'Double authentification désactivée.'
     },
+    miseAJour: {
+      titre: 'Mets à jour Fairride',
+      texte: 'Une nouvelle version est disponible. Mets à jour pour continuer : ça prend une minute.',
+      bouton: 'Mettre à jour',
+    },
     common: {
       leaveUnsavedCancel: "Continuer à modifier",
       leaveUnsavedConfirm: "Quitter",
@@ -10007,6 +10012,10 @@ export default {
       paramSelfieRateHelp: "0,2 = environ une prise de service sur cinq. 0 = aucun selfie demandé.",
       paramFloorCap: "Hausse maximale du prix de livraison client vers le minimum des livreurs (centimes)",
       paramFloorCapHelp: "Quand aucun livreur disponible n'accepte la grille, le client paie le minimum du moins cher, jusqu'à cette hausse (300 = 3 €). Au-delà, la hausse par paliers est à la charge de Fairride.",
+      paramMinAndroid: 'Version minimale Android (versionCode)',
+      paramMinAndroidHelp: 'En dessous, l\'appli Android n\'affiche plus que « Mets à jour Fairride ». Le numéro est le VERSION_CODE du workflow « App Android Play Store » (ou « Code de version » dans la Play Console). 0 = rien de forcé.',
+      paramMinIos: 'Version minimale iPhone (build)',
+      paramMinIosHelp: 'En dessous, l\'appli iPhone n\'affiche plus que « Mets à jour Fairride ». Le numéro est le build d\'App Store Connect / TestFlight (par exemple 258). 0 = rien de forcé.',
       paramFlags: 'Drapeaux (positions juridiques en attente)',
       on: 'activé',
       off: 'désactivé',

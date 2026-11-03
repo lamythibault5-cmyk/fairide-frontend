@@ -7638,6 +7638,11 @@ export default {
       disableConfirm: 'Tweestapsverificatie uitschakelen',
       removed: 'Tweestapsverificatie uitgeschakeld.'
     },
+    miseAJour: {
+      titre: 'Werk Fairride bij',
+      texte: 'Er is een nieuwe versie. Werk de app bij om verder te gaan: het duurt maar een minuut.',
+      bouton: 'Bijwerken',
+    },
     common: {
       leaveUnsavedCancel: "Verder bewerken",
       leaveUnsavedConfirm: "Weggaan",
@@ -9947,6 +9952,10 @@ export default {
       paramSelfieRateHelp: "0,2 = ongeveer één dienststart op vijf. 0 = geen selfie gevraagd.",
       paramFloorCap: "Maximale verhoging van de bezorgprijs voor de klant tot het minimum van de koeriers (cent)",
       paramFloorCapHelp: "Als geen beschikbare koerier het rooster aanvaardt, betaalt de klant het minimum van de goedkoopste, tot deze verhoging (300 = € 3). Daarboven betaalt Fairride de trapsgewijze verhoging.",
+      paramMinAndroid: 'Minimale Android-versie (versionCode)',
+      paramMinAndroidHelp: 'Daaronder toont de Android-app alleen nog « Werk Fairride bij ». Het nummer is de VERSION_CODE van de workflow « App Android Play Store » (of « Versiecode » in de Play Console). 0 = niets verplicht.',
+      paramMinIos: 'Minimale iPhone-versie (build)',
+      paramMinIosHelp: 'Daaronder toont de iPhone-app alleen nog « Werk Fairride bij ». Het nummer is de build in App Store Connect / TestFlight (bijvoorbeeld 258). 0 = niets verplicht.',
       paramFlags: 'Vlaggen (juridische standpunten in afwachting)',
       on: 'aan',
       off: 'uit',
