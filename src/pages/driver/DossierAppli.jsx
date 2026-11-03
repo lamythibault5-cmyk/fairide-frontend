@@ -276,8 +276,11 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
         ) : ['pending', 'processing'].includes(id.status) && id.provider === 'stripe_identity' ? (
           <Fait icone="horloge" titre={t('appli.exStripeVerifie')} sous={t('appli.exStripeVerifieS')} />
         ) : null}
-        {/* Date de naissance : lue sur la pièce par Stripe ; à taper seulement sans elle (pièce déposée, contrôle en personne). */}
-        {!c.birthDate && id.provider !== 'stripe_identity' && (
+        {/* Date de naissance : lue sur la pièce par Stripe ; à taper seulement sans elle (pièce déposée, contrôle en personne).
+            AUSSI APRÈS STRIPE QUAND ELLE N'EST PAS ARRIVÉE (03/11/2026) : Stripe ne rendait pas la date (résultat « sensible »,
+            backend identityVerification.relireStripeIdentity), et le champ caché laissait le livreur sur « Il manque encore :
+            la date de naissance » sans rien à taper. Pendant que Stripe vérifie encore, on attend sa lecture. */}
+        {!c.birthDate && (id.provider !== 'stripe_identity' || !['pending', 'processing'].includes(id.status)) && (
           <Champ id="dos-naissance" label={t('courierOnboarding.fBirthDate')}>
             <input id="dos-naissance" type="date" value={f.birthDate} onChange={(e) => val('birthDate', e.target.value)} />
           </Champ>
