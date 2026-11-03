@@ -1194,7 +1194,7 @@ export default {
     },
     adminCouriers: {
       exValide: 'File approved: the courier can ride.',
-      exIdentiteDetail: 'The courier refused the Stripe selfie: compare the ID photo with the selfie in Documents, then « Identity OK ».',
+      exIdentiteDetail: 'The courier refused the Stripe selfie: compare the ID photo with the selfie above (click to enlarge), then « Identity verified manually ».',
       exSejourDetail: 'Outside the EEA: check the residence permit and professional card (or grant the exemption), then approve them in Documents.',
       exPieceInconnue: 'not read by Stripe',
       exPiece_document: 'ID read by Stripe',
@@ -1215,6 +1215,8 @@ export default {
       exPoint_nationalite: 'Nationality',
       exPoint_bce: 'Company number',
       exVoirDocuments: 'See the documents',
+      piecesAgrandir: 'Click to enlarge',
+      piecesOuvrir: 'Open',
       exPhotoARegarder: 'The profile photo, shown to customers, has not been checked yet.',
       exAutoLe: 'Approved automatically on {date} (everything was green)',
       exAuto: 'Auto-approved',

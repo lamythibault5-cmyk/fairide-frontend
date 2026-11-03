@@ -1194,7 +1194,7 @@ export default {
     },
     adminCouriers: {
       exValide: 'Dossier validé : le livreur peut rouler.',
-      exIdentiteDetail: 'Le livreur a refusé le selfie chez Stripe : compare la photo de sa pièce à son selfie dans Documents, puis « Identité OK ».',
+      exIdentiteDetail: 'Le livreur a refusé le selfie chez Stripe : compare la photo de sa pièce à son selfie ci-dessus (clic pour agrandir), puis « Identité vérifiée à la main ».',
       exSejourDetail: 'Hors EEE : regarde le titre de séjour et la carte professionnelle (ou accorde la dispense), puis valide-les dans Documents.',
       exPieceInconnue: 'pas lue par Stripe',
       exPiece_document: 'pièce lue par Stripe',
@@ -1215,6 +1215,8 @@ export default {
       exPoint_nationalite: 'Nationalité',
       exPoint_bce: 'Numéro d’entreprise',
       exVoirDocuments: 'Voir les documents',
+      piecesAgrandir: 'Cliquer pour agrandir',
+      piecesOuvrir: 'Ouvrir',
       exPhotoARegarder: 'La photo de profil, montrée aux clients, n’a pas encore été regardée.',
       exAutoLe: 'Validé automatiquement le {date} (tout était vert)',
       exAuto: 'Validé auto',

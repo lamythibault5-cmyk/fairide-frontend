@@ -189,7 +189,46 @@ export default function AdminCouriersPage() {
  * avancerDossier) ; sinon il dit ce que l'équipe doit regarder (d.teamChecks), et seulement ça. Un bouton par point ; quand
  * c'était le dernier, le dossier se valide aussitôt (réponse « validated ») et l'équipe le lit dans un message. Un dossier
  * validé sans personne le dit, avec la photo de profil qui reste à regarder. */
-function ARegarder({ d, tr, token, busy, agir, onDocuments }) {
+/* LES PIÈCES SOUS LES YEUX (Owen, 03/11 : « je ne vois aucune photo pour vérifier », « rends ça facile pour moi »). La
+ * pièce, le titre de séjour, le selfie et la photo de profil, côte à côte en haut de « À regarder » : comparer un visage
+ * se fait d'un coup d'œil, sans ouvrir un onglet par pièce. Pièces privées : chaque image arrive par une adresse signée
+ * de cinq minutes (GET …/documents/:id/lien), relue à l'ouverture du dossier ; un clic l'ouvre en grand avec une adresse
+ * fraîche. Un PDF ne s'affiche pas en image : il reste un lien « Ouvrir ». */
+const PIECES_A_COMPARER = ['identity_card', 'driving_licence', 'residence_permit', 'selfie', 'profile_photo', 'professional_card'];
+function ApercuPieces({ courierId, documents, token, toast, tr }) {
+  const pieces = PIECES_A_COMPARER.flatMap((t) => documents.filter((x) => x.docType === t && !x.rejectedReason));
+  const [adresses, setAdresses] = useState({});
+  const [enPdf, setEnPdf] = useState({});
+  const cle = pieces.map((x) => x.id).join(',');
+  useEffect(() => {
+    let vivant = true;
+    Promise.all(pieces.map((x) => (x.prive
+      ? api(`/admin/couriers/${courierId}/documents/${x.id}/lien`, { token }).then((r) => [x.id, r?.url || null]).catch(() => [x.id, null])
+      : Promise.resolve([x.id, x.fileUrl || null]))))
+      .then((paires) => { if (vivant) setAdresses(Object.fromEntries(paires)); });
+    return () => { vivant = false; };
+  }, [courierId, cle]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (!pieces.length) return null;
+  const ouvrir = (x) => ouvrirDocument({ url: x.prive ? null : x.fileUrl, lien: `/admin/couriers/${courierId}/documents/${x.id}/lien`, token, toast, messageErreur: tr('courierOnboarding.docUnavailable') });
+  return (
+    <div className="row" style={{ gap: 10, flexWrap: 'wrap', margin: '0 0 10px' }}>
+      {pieces.map((x) => (
+        <figure key={x.id} style={{ margin: 0, width: 150 }}>
+          {adresses[x.id] && !enPdf[x.id]
+            ? <button type="button" onClick={() => ouvrir(x)} title={tr('adminCouriers.piecesAgrandir')} style={{ padding: 0, border: '1px solid var(--line)', borderRadius: 'var(--radius-chip)', background: 'var(--surface)', cursor: 'zoom-in', display: 'block' }}>
+                <img src={adresses[x.id]} alt={tr(`courierOnboarding.doc_${x.docType}`)} onError={() => setEnPdf((p) => ({ ...p, [x.id]: true }))} style={{ width: 148, height: 148, objectFit: 'contain', display: 'block', borderRadius: 'var(--radius-chip)' }} />
+              </button>
+            : <div className="small" style={{ width: 148, height: 148, border: '1px solid var(--line)', borderRadius: 'var(--radius-chip)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                {adresses[x.id] === undefined ? '…' : <button type="button" className="btn-outline btn-sm" onClick={() => ouvrir(x)}>{tr('adminCouriers.piecesOuvrir')}</button>}
+              </div>}
+          <figcaption className="small">{tr(`courierOnboarding.doc_${x.docType}`)}{x.side ? ` (${x.side})` : ''}{x.verifiedAt ? ' ✓' : ''}</figcaption>
+        </figure>
+      ))}
+    </div>
+  );
+}
+
+function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onIdentiteOk }) {
   const c = d.courier; const id = c.identity ?? {};
   const points = d.teamChecks ?? [];
   const photo = (d.documents ?? []).find((x) => x.docType === 'profile_photo' && !x.rejectedReason);
@@ -215,6 +254,7 @@ function ARegarder({ d, tr, token, busy, agir, onDocuments }) {
         </div>
       )}
       {points.length > 0 && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
+      {points.some((p) => ['identite', 'nationalite', 'titre_sejour'].includes(p)) && <ApercuPieces courierId={c.id} documents={d.documents ?? []} token={token} toast={toast} tr={tr} />}
       {points.includes('bce') && ligne('bce',
         tr('adminCouriers.exBceDetail', { num: c.independent?.companyNumber || '-', registre: !registre ? tr('adminCouriers.exRegistrePasLu') : registre.valid ? tr('adminCouriers.exRegistreValide', { name: registre.name }) : registre.valid === false ? tr('adminCouriers.exRegistreAbsent') : tr('adminCouriers.exRegistrePasLu'), nom: `${id.firstName || ''} ${id.lastName || ''}`.trim() || '-' }),
         <>
@@ -225,7 +265,11 @@ function ARegarder({ d, tr, token, busy, agir, onDocuments }) {
         tr('adminCouriers.exNatDetail', { declaree: c.nationalityGroup ? tr(`conformite.nationality_${c.nationalityGroup}`) : '-', piece }),
         <button className="btn-teal" disabled={busy} onClick={() => verifier({ nationalityVerified: true }, tr('adminCouriers.exNatToast'))}>{tr('adminCouriers.exNatOk')}</button>)}
       {points.includes('titre_sejour') && ligne('titre_sejour', tr('adminCouriers.exSejourDetail'), <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>)}
-      {points.includes('identite') && ligne('identite', tr('adminCouriers.exIdentiteDetail'), <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>)}
+      {points.includes('identite') && ligne('identite', tr('adminCouriers.exIdentiteDetail'),
+        <>
+          <button className="btn-teal" disabled={busy} onClick={onIdentiteOk}>{tr('adminCouriers.markIdentityOk')}</button>
+          <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>
+        </>)}
     </>
   );
 }
@@ -319,7 +363,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
     <>
       {onglet === 'dossier' && (
         <>
-          <ARegarder d={d} tr={tr} token={token} busy={busy} agir={agir} onDocuments={() => setOnglet('documents')} />
+          <ARegarder d={d} tr={tr} token={token} toast={toast} busy={busy} agir={agir} onDocuments={() => setOnglet('documents')} onIdentiteOk={() => setIdentiteOk(true)} />
           <h4 className="drawer-section-title">{tr('adminCouriers.secStatus')}</h4>
           <DrawerRow label={tr('adminCouriers.colStatus')} value={`${statut(c.statusType)}${c.statusVerifiedAt ? ` · ${tr('adminCouriers.statusVerifiedAt')} ${fmt(c.statusVerifiedAt)}` : ` · ${tr('adminCouriers.statusNotVerified')}`}`} strong />
           <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '-'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '-'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />
