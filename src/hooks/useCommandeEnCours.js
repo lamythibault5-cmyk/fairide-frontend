@@ -2,6 +2,7 @@ import { useEffect, useSyncExternalStore } from 'react';
 import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useRevalidation from '../useRevalidation';
+import { signalerOccupe } from '../miseAJour';
 
 // Les commandes du client pour la bande « commande en cours » (SuiviCommande.jsx), sur tous les écrans sauf Mes commandes.
 //
@@ -28,6 +29,8 @@ function publier(commandes) {
   abonnes.forEach((f) => f());
   // Une commande en cours : relecture toutes les 15 s. Plus aucune : on arrête.
   const enCours = commandes.some(commandeSuivie);
+  // Une commande suivie : la mise à jour de l'app attend la fin (Owen, 2026-11-03, src/miseAJour.js).
+  signalerOccupe('commande', enCours);
   // Pas pendant que l'app est en arrière-plan (tenir la charge, 2026-11-02) : le retour la relit (useRevalidation).
   if (enCours && !minuterie) minuterie = setInterval(() => { if (document.visibilityState === 'visible') relireAvec(jeton); }, 15000);
   if (!enCours && minuterie) { clearInterval(minuterie); minuterie = null; }
@@ -66,6 +69,7 @@ export default function useCommandeEnCours(chemin) {
       clearInterval(minuterie);
       minuterie = null;
       etat = VIDE;
+      signalerOccupe('commande', false);
       abonnes.forEach((f) => f());
     };
   }, [actif, token]);

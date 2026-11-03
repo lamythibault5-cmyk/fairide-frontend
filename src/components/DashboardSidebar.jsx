@@ -14,6 +14,7 @@ import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { useModeEquipe } from '../modeEquipe';
 import { lazyPage } from '../lazyPage';
+import { useMiseAJourDispo } from '../miseAJour';
 
 const NATIF = experienceApp();
 
@@ -183,6 +184,7 @@ export default function DashboardSidebar() {
   const isAdminAccount = !!user?.isAdmin && !NATIF;
   // Messages de Fairide non lus : pastille sur « Mon compte » (0 pour l'admin, le hook se désactive).
   const { unread: nonLus } = useInbox();
+  const majDispo = useMiseAJourDispo();
   // Un restaurateur en mode aperçu voit la nav "client" (favoris, commandes, carte...) au lieu de la
   // sienne, pour explorer l'expérience de bout en bout — voir ProtectedRoute pour l'accès aux pages
   // correspondantes, toujours réservées aux vrais clients côté API.
@@ -222,7 +224,9 @@ export default function DashboardSidebar() {
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}
             {...(NATIF ? ongletAppli(item.to, pathname) : ongletSite(item.to))}>
             {/* Dans l'app, la version pleine par-dessus : elle se montre sur l'onglet où l'on est et sous le doigt (styles.css). */}
-            <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} />{NATIF && <IconePleine nom={item.icon} taille={22} className="dashboard-nav-plein" />}</span>
+            <span className="dashboard-nav-icon"><Icone nom={item.icon} taille={22} />{NATIF && <IconePleine nom={item.icon} taille={22} className="dashboard-nav-plein" />}
+              {/* Une version plus récente de l'app attend : un point iris sur Compte (Owen, 2026-11-03, maquettes/mise-a-jour, E). */}
+              {majDispo && (item.to === '/account' || (item.to === '/dashboard' && etroit)) && <span className="nav-point-maj" aria-hidden="true" />}</span>
             {/* Deux libellés : le complet pour la colonne latérale, le court pour la barre du bas (styles.css choisit). */}
             <span className="dashboard-nav-label"><span className="libelle-long">{item.label}</span>{item.court && <span className="libelle-court">{item.court}</span>}</span>
             {/* Les messages de Fairride : sur Compte, ou sur Commerce quand Mon compte y est monté (téléphone, 2026-10-27). */}
