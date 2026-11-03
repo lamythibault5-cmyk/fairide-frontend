@@ -6690,7 +6690,7 @@ export default {
       dosNumeroSous: 'Zodra je het hebt, plak je het hier',
       dosAjouterNumero: 'Mijn nummer toevoegen',
       feuilleContratTitre: 'Je contract is gewijzigd',
-      feuilleContrat_2026_9: 'Je wordt nu betaald als een zaak een rit annuleert nadat je er bent. Onderteken de nieuwe versie om te blijven rijden.',
+      feuilleContrat_2026_9: 'Annuleert een zaak een rit die je had aanvaard, dan wordt je verplaatsing nu betaald (4,50 €). Onderteken de nieuwe versie om te blijven rijden.',
       feuilleContratAutre: 'Er wacht een nieuwe versie op je. Lees en onderteken ze om te blijven rijden.',
       feuilleTextesTitre: 'Er zijn teksten gewijzigd',
       feuilleTextesSous: 'Lees en aanvaard ze voor je volgende rit.',

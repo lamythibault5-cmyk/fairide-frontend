@@ -6705,7 +6705,7 @@ export default {
       dosNumeroSous: 'Dès que tu l’as, colle-le ici',
       dosAjouterNumero: 'Ajouter mon numéro',
       feuilleContratTitre: 'Ton contrat a changé',
-      feuilleContrat_2026_9: 'Tu es maintenant payé si un commerce annule une course après ton arrivée. Signe la nouvelle version pour continuer à rouler.',
+      feuilleContrat_2026_9: 'Si un commerce annule une course que tu as acceptée, ton déplacement est maintenant payé (4,50 €). Signe la nouvelle version pour continuer à rouler.',
       feuilleContratAutre: 'Une nouvelle version t’attend. Lis-la et signe-la pour continuer à rouler.',
       feuilleTextesTitre: 'Des textes ont changé',
       feuilleTextesSous: 'Relis-les et accepte-les avant ta prochaine course.',

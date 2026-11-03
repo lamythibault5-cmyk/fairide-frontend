@@ -6681,7 +6681,7 @@ export default {
       dosNumeroSous: 'As soon as you have it, paste it here',
       dosAjouterNumero: 'Add my number',
       feuilleContratTitre: 'Your contract has changed',
-      feuilleContrat_2026_9: 'You now get paid if a shop cancels after you arrive. Sign the new version to keep riding.',
+      feuilleContrat_2026_9: 'If a shop cancels a delivery you had accepted, your trip is now paid (€4.50). Sign the new version to keep riding.',
       feuilleContratAutre: 'A new version is waiting for you. Read and sign it to keep riding.',
       feuilleTextesTitre: 'Some texts have changed',
       feuilleTextesSous: 'Read and accept them before your next ride.',
