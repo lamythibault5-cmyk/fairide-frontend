@@ -94,6 +94,28 @@ export function coucheTuiles(L, options = {}) {
   return groupe;
 }
 
+/* LA CARTE PRÊTE AVANT QU'ON L'OUVRE (fondateur, 2026-11-03 : la première ouverture prenait 2,5 s). Quelques secondes
+ * après l'arrivée d'un compte connecté (App.jsx), quand le navigateur n'a plus rien à faire, le moteur de carte (MapLibre,
+ * ~430 Ko) et le style se téléchargent et se préparent en arrière-plan ; ouvrir la carte n'attend plus que ses tuiles.
+ * `pages` : ce que le compte ouvrira (la page Carte et Leaflet pour un client, la carte de course pour un livreur), chargé
+ * au même moment — sans elles, la moitié de l'attente restait (mesuré le 2026-11-03).
+ * Seulement connecté (un visiteur de passage ne paie pas ce téléchargement), une fois par chargement, et jamais en mode
+ * « économie de données ». Le fichier MapLibre reste un an dans le cache : les chargements suivants ne retéléchargent rien. */
+let prechauffage = null;
+export function prechargerCarte(pages = () => null) {
+  if (prechauffage || navigator.connection?.saveData) return prechauffage;
+  const auRepos = (suite) => (typeof window.requestIdleCallback === 'function' ? window.requestIdleCallback(suite, { timeout: 5000 }) : setTimeout(suite, 1000));
+  prechauffage = new Promise((ok) => setTimeout(() => auRepos(ok), 3000))
+    .then(() => Promise.all([Promise.resolve().then(pages).catch(() => null), reglagePret]))
+    .then(async ([, r]) => {
+      if (!r.vecteur || !webglDisponible()) return;
+      const { prechauffer } = await import('./carteVecteur');
+      await prechauffer(r.vecteur.style);
+    })
+    .catch(() => { prechauffage = null; });
+  return prechauffage;
+}
+
 // Itinéraire routier et durée estimée : { latLngs: [[lat, lng], …], duration (s), distance (m) }.
 // Lève si le service ne répond pas : l'appelant garde alors sa ligne droite.
 // `voiture` : l'itinéraire d'une voiture (rocades, tunnels), pas celui d'un scooter (fondateur, 2026-10-23).
