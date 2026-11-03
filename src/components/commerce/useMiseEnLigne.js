@@ -161,7 +161,7 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
     etapes.push(alertes.mobileVerifie
       ? { cle: 'mobile', fait: true, icone: 'telephone', titre: t('miseEnLigne.alertsPhoneDone') }
       : { cle: 'mobile', icone: 'telephone', titre: t('miseEnLigne.alertsPhone'), sous: t('miseEnLigne.alertsPhoneSub'),
-          action: { libelle: t('miseEnLigne.alertsPhoneBtn'), to: '/account?ouvrir=connexion&retour=/dashboard' } });
+          action: { libelle: t('miseEnLigne.alertsPhoneBtn'), to: '/account?ouvrir=connexion&verifier=telephone&retour=/dashboard' } });
   }
   etapes.push(restaurant.adminStatus === 'approved'
     ? { cle: 'verification', fait: true, icone: 'bouclier', titre: t('miseEnLigne.checkDone') }

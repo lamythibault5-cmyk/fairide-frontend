@@ -68,6 +68,12 @@ export function telephonePlausible(v) {
 // CHAMP DU SECOND FACTEUR (audit du 19/10, CROSS-60). Un code de secours (« A1B2C-3D4E5 », totp.js côté serveur) a des
 // lettres et un tiret : le pavé numérique (inputMode numeric) ne permettait pas de le taper sur téléphone. Clavier texte,
 // majuscules d'office, sans correction automatique. Les codes SMS / e-mail, eux, gardent le pavé numérique.
+// Mot de passe : 8 caractères, sans majuscule ni minuscule imposées (fondateur, 2026-11-02, maquettes/inscription-legere,
+// question 5 ; avant : 6 avec une majuscule et une minuscule). La même règle que le serveur (backend motDePasse.js), qui
+// refuse en plus les mots de passe présents dans des fuites connues.
+export const MDP_LONGUEUR = 8;
+export const mdpValide = (v) => String(v || '').length >= MDP_LONGUEUR;
+
 export const CHAMP_CODE_SECOURS = { inputMode: 'text', autoCapitalize: 'characters', autoCorrect: 'off', spellCheck: false };
 
 // ANNÉE ACADÉMIQUE SUR LE PAVÉ NUMÉRIQUE (audit du 19/10, CROSS-64). Le champ ouvre le pavé numérique, qui n'a pas de tiret sur

@@ -41,7 +41,7 @@ welcome flow, the in-app sign-up and the in-app login has an **iris header** (ba
 carries `.bv-bandeau`. Progress is a dashed road the brand bicycle rides along (`Route`). **The road moves fast first, then
 gently** (2026-10-30, version B of the workspace mockup `maquettes/progression/progression.html`): callers pass the share of
 screens done, `Route` shows `courbeRoute` (src/routeProgression.js, also the website sign-up bar); never on a road that states
-a fact (order tracking, « n étapes faites sur N »). **One road from « Tu es… » to the code**: Bienvenue passes
+a fact (order tracking, « n étapes faites sur N »). **One road from « Tu es… » to « Dernière étape »** (no code screen since 2026-11-02): Bienvenue passes
 `faitsAvant` to InscriptionAppli, the road never drops back at sign-up (it went 100 % → 17 %). Waiting screens do the
 opposite (slow then fast: the loading ring `ANNEAU_RECHERCHE`). « Compte créé » / « Inscription » count as a done step in
 the shop's « Avant d'être en ligne » and the courier summary. Main buttons are lime; ticked
@@ -212,7 +212,22 @@ hover title only.
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](../../src/pages/app/InscriptionAppli.jsx)):
 « Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question
-per screen, no scrolling at 375×667, same data and routes as Auth.jsx (change a field rule in both, and in the backend). Only
+per screen, no scrolling at 375×667, same data and routes as Auth.jsx (change a field rule in both, and in the backend).
+**No code at sign-up** (founder, 2026-11-02, workspace mockup `maquettes/inscription-legere`; the SMS code lost 2 shops of 7 and
+1 courier of 3 in production): « Créer mon compte » opens the account for every role, Apple / Google included, and the last
+screen is truly « Dernière étape » (full road). The number is proven once, where it serves, with one component
+([VerifTelephone.jsx](../../src/components/VerifTelephone.jsx): the code leaves on its own when the screen opens for it, six
+digits submit by themselves, « Renvoyer » after 30 s, « Ce n'est pas ton numéro ? Change-le ») — the customer's first order
+(conformite.md, Checkout), the courier dossier's first screen « Ton numéro » (and a card on DossierSuivi), the shop's step
+« Vérifie ton mobile » and restaurant requests (both lead to Mon compte with `?verifier=telephone`). The old code screens
+are gone (ConnexionAppli, Auth.jsx, bienvenue.js `codeEnAttente`); an account left waiting for its code before that date
+opens with its password or Apple / Google. **The address comes from the welcome position**: « Où te livrer ? » shows the
+address found (`GET /restaurants/lookup/reverse`) in a card, « C'est bien ici » in one tap, an optional box field (sent as
+« 120 bte 3 »), « Une autre adresse » for the search and fields (prefilled); without a position, or no house number found,
+the fields. **Password: 8 characters, no upper/lower-case rule** (`mdpValide`, validation.js; the backend still refuses
+leaked passwords). The « Confirme ton adresse e-mail » card of Mes commandes shows only when the server says it serves
+(`user.emailReminder`: newsletter opt-in or a team address). Every welcome and sign-up screen sends one cookieless event,
+`inscription_ecran` with the screen name only (analytics.js), so the next review can see where people stop. Only
 **The app has no website chrome** (2026-10-15, [Layout.jsx](../../src/components/Layout.jsx), `APPLI`): when `experienceApp()`,
 no page shows the site header, footer, legal-links row or cookie card. Signed in, every page — help, legal, « C'est bon » —
 stays in the tab shell with a « ← Retour »; legal links live at the bottom of Mon compte. Signed

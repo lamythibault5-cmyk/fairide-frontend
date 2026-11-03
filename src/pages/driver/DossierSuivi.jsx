@@ -11,6 +11,7 @@ import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAt
 import { STATUTS, ouvrirPdf } from './dossierCommun';
 import { EcranIdentite, EcranPaiement } from './DossierAppli';
 import { API_BASE } from '../../api';
+import VerifTelephone from '../../components/VerifTelephone';
 import '../../ecran-livreur.css';
 
 /* LE DOSSIER ENVOYÉ OU VALIDÉ, DANS L'APPLICATION (deuxième audit design, section 9 « C'est bon, tu peux rouler », approuvé par
@@ -148,6 +149,14 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
             )}
             <PiecesARemplacer d={d} t={t} token={token} busy={busy} action={action} />
             {bceAttendu && <NumeroEntrepriseEnAttente t={t} token={token} busy={busy} action={action} manques={manques} />}
+            {/* Numéro jamais prouvé (compte ouvert sans code depuis le 2026-11-02, ou dossier d'avant) : il se prouve ici. */}
+            {manques.includes('telephone') && (
+              <div className="card">
+                <h3 style={{ margin: '0 0 6px', fontSize: 15 }}>{t('verifTel.dossierTitre')}</h3>
+                <p className="small" style={{ margin: '0 0 10px' }}>{t('verifTel.dossierSous')}</p>
+                <VerifTelephone onFait={() => charger?.()} />
+              </div>
+            )}
 
             {(roule || Number(th.deliveries || 0) > 0) && <Compteurs d={d} t={t} />}
           </div>

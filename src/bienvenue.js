@@ -53,18 +53,3 @@ export function lireParcoursFait() {
 export function ecrireParcoursFait(parcours) {
   ecrireBienvenue({ parcoursFait: parcours });
 }
-
-/* LE CODE ATTENDU (audit du 18/10/2026). Après « Créer mon compte », le code part par e-mail : on quitte l'application
- * pour le lire, et Android la ferme parfois entre-temps. Rouverte, elle repartait d'une inscription VIDE. On retient donc
- * l'adresse à confirmer (jamais le mot de passe), pour rouvrir l'écran du code (InscriptionAppli.jsx). 24 heures au plus ;
- * effacé dès qu'une session est ouverte (effacerReprise). */
-const CODE_MAX_MS = 24 * 3600 * 1000;
-
-export function lireCodeEnAttente() {
-  const c = lireBienvenue().codeEnAttente;
-  return c && c.email && Date.now() - (c.at || 0) < CODE_MAX_MS ? c : null;
-}
-
-export function ecrireCodeEnAttente(attente) {
-  ecrireBienvenue({ codeEnAttente: attente ? { ...attente, at: Date.now() } : null });
-}

@@ -13,9 +13,8 @@ import AddressSearch from '../../components/AddressSearch';
 import EngagementsInscription from '../../components/commerce/EngagementsInscription';
 import ChoixSpecialites from '../../components/commerce/ChoixSpecialites';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
-import { bceValide, raisonBce, codePostalValide } from '../../validation';
-import useDecompte, { DELAI_RENVOI_S, DELAI_CODE_EMAIL_S } from '../../hooks/useDecompte';
-import { lireBienvenue, lireCodeEnAttente, ecrireCodeEnAttente } from '../../bienvenue';
+import { bceValide, raisonBce, codePostalValide, mdpValide, MDP_LONGUEUR } from '../../validation';
+import { lireBienvenue } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
 import { connexionFournisseur } from '../../natif';
 import { suivre } from '../../analytics';
@@ -32,10 +31,12 @@ import { ETAPES } from './etapesInscription';
  * du site, dans <Layout> — en-tête, « Contact », « Aide », une carte de formulaire où l'étape « Ton commerce en
  * détail » d'un restaurateur tenait une dizaine de champs. L'accueil venait de donner l'impression d'une application ;
  * l'inscription redevenait un site. Elle se fait donc ici, avec les écrans de l'accueil (même en-tête, même barre de
- * progression, même animation) : une question par écran, sans défiler, jusqu'au compte ouvert — code compris.
+ * progression, même animation) : une question par écran, sans défiler, jusqu'au compte ouvert. Plus de code à la fin
+ * (fondateur, 2026-11-02, maquettes/inscription-legere) : « Créer mon compte » ouvre le compte, et le numéro se prouve à la
+ * première commande (VerifTelephone.jsx, feuille « Avant de commander » du paiement).
  *
  * MÊMES DONNÉES, MÊMES ROUTES que la page du site (Auth.jsx) : POST /auth/register, ou /auth/google et /auth/apple
- * avec le jeton gardé, puis /auth/verify-email. Les règles de chaque champ sont celles d'Auth.jsx, qui reproduisent
+ * avec le jeton gardé. Les règles de chaque champ sont celles d'Auth.jsx, qui reproduisent
  * celles du serveur (routes/auth.js) — changer une règle, c'est la changer aux trois endroits. Ce qui diffère :
  *   - les horaires se donnent en une fois (jours + heures, un 2e service possible) au lieu de sept lignes ; un jour
  *     différent des autres se règle ensuite dans Mon commerce › Horaires ;
@@ -80,7 +81,7 @@ const ETAPE_DU_CHAMP = {
   email: 'email', password: 'email', firstName: 'nom', lastName: 'nom', phone: 'tel', addressStreet: 'adresse', addressNumber: 'adresse', addressPostalCode: 'adresse', addressCity: 'adresse',
   legalName: 'entreprise', vatNumber: 'entreprise', responsibleName: 'entreprise', cuisine: 'type'
 };
-const MDP_FORME = (v) => v.length >= 6 && /[A-Z]/.test(v) && /[a-z]/.test(v);
+const MDP_FORME = mdpValide;
 
 function decoderJwt(jeton) {
   try { const b = jeton.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'); return JSON.parse(decodeURIComponent(escape(atob(b)))); } catch { return {}; }
@@ -117,7 +118,7 @@ function Segments({ label, valeur, options, onChoix }) {
 // repartir de zéro ; 0 hors de l'accueil (commerce sans fiche, DashboardLayout.jsx).
 export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQuitter, onConnexion, compte = false, onCree, faitsAvant = 0 }) {
   const { t } = useLanguage();
-  const { user, token, register, login, verifyEmail, resendCode, changePendingPhone, loginWithGoogle, loginWithApple } = useAuth();
+  const { user, token, register, loginWithGoogle, loginWithApple } = useAuth();
   const moi = compte ? user || {} : {};
   const toast = useToast();
   const navigate = useNavigate();
@@ -140,6 +141,17 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [addressNumber, setAddressNumber] = useState('');
   const [addressPostalCode, setAddressPostalCode] = useState(role === 'client' ? bienvenue.codePostal || '' : '');
   const [addressCity, setAddressCity] = useState(role === 'client' ? bienvenue.commune || '' : '');
+  /* L'ADRESSE DEPUIS LA POSITION (fondateur, 2026-11-02, maquettes/inscription-legere, question 4, version A). L'accueil vient
+   * de demander la position (« Trouver mes restaurants ») ; « Où te livrer ? » propose l'adresse qu'elle donne dans une carte,
+   * « C'est bien ici » d'un geste, « Une autre adresse » pour l'écran d'avant (recherche et champs, préremplis). Demandée dès
+   * l'ouverture de l'inscription : elle est là quand on arrive à l'écran. Sans position (code postal tapé, GPS refusé), sans
+   * numéro trouvé, ou réponse vide : l'écran d'avant, avec ce qui a été trouvé. `adresseTrouvee` : null tant qu'on ne sait
+   * pas, false si rien, sinon { street, number, postalCode, city }. La boîte (« bte 3 ») rejoint le numéro, comme la
+   * recherche d'adresse le fait (backend geocode.js, separerBoite). */
+  const positionAccueil = role === 'client' && !compte && bienvenue.position?.lat ? bienvenue.position : null;
+  const [adresseTrouvee, setAdresseTrouvee] = useState(positionAccueil ? null : false);
+  const [autreAdresse, setAutreAdresse] = useState(false);
+  const [boite, setBoite] = useState('');
   const [companyNumber, setCompanyNumber] = useState('');
   const [verifSociete, setVerifSociete] = useState(null); // réponse VIES affichée sous le numéro du commerce (shop-2)
   // Commerce
@@ -178,32 +190,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [recule, setRecule] = useState(false);
   const [erreurs, setErreurs] = useState({});
   const [attente, setAttente] = useState(false);
-  // Après l'inscription par e-mail : { email, canal: 'email' | 'sms', telephone } → écran du code. Repris si l'application
-  // a été fermée pendant qu'on allait lire l'e-mail (bienvenue.js, lireCodeEnAttente) : on rouvre sur le code, pas sur un
-  // formulaire vide.
-  const [repriseCode] = useState(() => {
-    const c = fed || compte ? null : lireCodeEnAttente();
-    return c && c.role === role ? c : null;
-  });
-  const [enAttente, setEnAttente] = useState(() => (repriseCode ? { email: repriseCode.email, canal: repriseCode.canal, telephone: repriseCode.telephone } : null));
-  const retourApres = depuis || repriseCode?.depuis || null;
-  useEffect(() => {
-    if (enAttente) ecrireCodeEnAttente({ ...enAttente, role, depuis: retourApres });
-    else if (lireCodeEnAttente()?.role === role) ecrireCodeEnAttente(null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enAttente]);
-  const [code, setCode] = useState('');
-  // « Changer de numéro » depuis l'écran du code (auth-03) : un écran de plus, le temps de taper le bon numéro.
-  const [changerNumero, setChangerNumero] = useState(false);
-  const [nouveauNumero, setNouveauNumero] = useState('');
-  // « Renvoyer le code » attend 30 s après chaque envoi (audit du 19/10, auth-12, voir hooks/useDecompte.js).
-  const [attenteRenvoi, lancerAttenteRenvoi] = useDecompte();
-  const codeAffiche = !!enAttente && !changerNumero;
-  useEffect(() => { if (codeAffiche) lancerAttenteRenvoi(DELAI_RENVOI_S); }, [codeAffiche, lancerAttenteRenvoi]);
-  // « Je n'ai pas reçu le SMS », puis le code par e-mail 30 s plus tard (voir DELAI_CODE_EMAIL_S).
-  const [smsPasRecu, setSmsPasRecu] = useState(false);
-  const [attenteEmail, lancerAttenteEmail] = useDecompte();
-
+  const retourApres = depuis || null;
   // Brouillon (voir CLE_BROUILLON) : les réponses de chaque écran, le mot de passe jamais.
   const champsBrouillon = {
     index: [index, setIndex], email: [email, setEmail], firstName: [firstName, setFirstName], lastName: [lastName, setLastName], phone: [phone, setPhone],
@@ -220,7 +207,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [mdpARetaper, setMdpARetaper] = useState(false);
   useLayoutEffect(() => {
     brouillonActif.current = true;
-    const b = repriseCode ? null : lireBrouillon(roleBrouillon);
+    const b = lireBrouillon(roleBrouillon);
     if (!b) return;
     // Apple / Google : l'e-mail (et le nom quand le fournisseur le donne) viennent du jeton, pas du brouillon.
     const duJeton = (cle) => fed && (cle === 'email' || (nomConnu && (cle === 'firstName' || cle === 'lastName')));
@@ -240,20 +227,19 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   }, []);
   const valeursBrouillon = Object.values(champsBrouillon).map((c) => c[0]);
   useEffect(() => {
-    if (!brouillonActif.current || enAttente) return undefined;
+    if (!brouillonActif.current) return undefined;
     const minuteur = setTimeout(() => {
       try { localStorage.setItem(CLE_BROUILLON, JSON.stringify({ at: Date.now(), role: roleBrouillon, etape: etapes[index], fed: !!fed, champs: Object.fromEntries(Object.entries(champsBrouillon).map(([cle, [valeur]]) => [cle, valeur])) })); } catch { /* stockage plein ou indisponible */ }
     }, 250);
     return () => clearTimeout(minuteur);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [...valeursBrouillon, enAttente]);
-  // Compte créé (le code attendu prend le relais, bienvenue.js) : le brouillon n'a plus rien à reprendre.
-  useEffect(() => { if (enAttente) oublierBrouillon(); }, [enAttente]);
+  }, [...valeursBrouillon]);
 
   const etapes = useMemo(() => ETAPES[role].filter((e) => !(e === 'email' && fed) && !(e === 'nom' && nomConnu) && !(compte && ETAPES_DU_COMPTE.includes(e))), [role, fed, nomConnu, compte]);
-  const etape = enAttente ? (changerNumero ? 'numero' : 'code') : etapes[Math.min(index, etapes.length - 1)];
+  const etape = etapes[Math.min(index, etapes.length - 1)];
   const derniere = index >= etapes.length - 1;
-  const progression = enAttente ? 1 : (faitsAvant + index + 1) / (faitsAvant + etapes.length + 1);
+  // Le dernier écran finit la route : plus d'écran du code après lui (2026-11-02).
+  const progression = (faitsAvant + index + 1) / (faitsAvant + etapes.length);
   const nomResponsable = responsable ?? `${firstName} ${lastName}`.trim();
   const cuisineFinale = specialites[0] || '';
 
@@ -278,6 +264,30 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   }, [companyNumber, role]);
   // Chaque écran s'ouvre en haut (c'est le fond plein écran qui défile, pas la fenêtre ; dans un EcranPlein, c'est lui).
   useEffect(() => { fond.current?.closest('.bv')?.scrollTo?.(0, 0); }, [etape]);
+  // Un événement par écran (fondateur, 2026-11-02, question 8) : le nom de l'écran et le profil, rien d'autre (analytics.js).
+  useEffect(() => { suivre('inscription_ecran', { ecran: `inscription-${etape}`, role: compte ? `${role}-compte` : role, support: 'appli' }); }, [etape, role, compte]);
+  // L'adresse de la position (voir positionAccueil). Une adresse déjà là (brouillon repris) n'est pas remplacée.
+  useEffect(() => {
+    if (!positionAccueil) return undefined;
+    let annule = false;
+    api(`/restaurants/lookup/reverse?lat=${positionAccueil.lat}&lng=${positionAccueil.lng}`).then((r) => {
+      if (annule) return;
+      if (!r?.found) { setAdresseTrouvee(false); return; }
+      const dejaTapee = addressStreet.trim() || addressNumber.trim();
+      if (!dejaTapee) {
+        setAddressStreet(r.street); setAddressNumber(r.number || '');
+        if (r.postalCode) setAddressPostalCode(r.postalCode);
+        if (r.city) setAddressCity(r.city);
+      }
+      // Sans numéro, ou une autre adresse déjà tapée : l'écran d'avant, prérempli, le numéro à taper.
+      setAdresseTrouvee(r.number && !dejaTapee ? r : false);
+    }).catch(() => { if (!annule) setAdresseTrouvee(false); });
+    return () => { annule = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  // Adresse prise de la carte (pas de « Une autre adresse ») : la boîte tapée sous la carte rejoint le numéro, jusqu'au compte.
+  const adresseParCarte = !!adresseTrouvee && !autreAdresse;
+  const carteAdresse = etape === 'adresse' && adresseParCarte;
 
   function messageBce() {
     const why = raisonBce(companyNumber);
@@ -327,11 +337,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     }
     if (cle === 'fin' && role === 'client' && !accepteCgu) e.cgu = t('conformite.toastTermsRequired');
     if (cle === 'fin' && role === 'restaurant' && !accepteEngagements) e.engagements = t('auth.engagementsRequired');
-    if (cle === 'code' && !code.trim()) e.code = t('auth.errCodeRequired');
-    if (cle === 'numero') {
-      if (!nouveauNumero.trim()) e.phone = requis;
-      if (!fed && !password) e.password = requis;
-    }
     return e;
   }
 
@@ -362,8 +367,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     let e = erreursDe(etape);
     setErreurs(e);
     if (Object.keys(e).length) return;
-    if (etape === 'code') { confirmerCode(); return; }
-    if (etape === 'numero') { envoyerNumero(); return; }
     if (derniere) { creerCompte(); return; }
     if (etape === 'email' || etape === 'tel') {
       setAttente(true);
@@ -378,9 +381,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   function reculer() {
     setErreurs({});
     setRecule(true);
-    if (changerNumero) { setChangerNumero(false); return; }
-    // Depuis l'écran du code repris après fermeture : le formulaire n'est plus là, on repart de l'accueil du compte.
-    if (enAttente) { setEnAttente(null); setCode(''); if (repriseCode) onQuitter(); return; }
     if (index === 0) { onQuitter(); return; }
     setIndex((i) => i - 1);
   }
@@ -425,6 +425,11 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     const chiffres = companyNumber.replace(/\D/g, '');
     return chiffres.length === 10 ? `BE${chiffres}` : '';
   }
+  // Le numéro, et la boîte tapée sous la carte de l'adresse (« 120 bte 3 »).
+  function numeroAvecBoite() {
+    const b = boite.trim().replace(/^(bte|boîte|boite|bus|bt)\.?\s*/i, '');
+    return adresseParCarte && b ? `${addressNumber.trim()} bte ${b}` : addressNumber.trim();
+  }
   async function creerCompte() {
     if (compte) { creerCommerce(); return; }
     const extra = {
@@ -433,7 +438,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       ...(role === 'restaurant' ? {
         legalName: legalName.trim(), companyNumber: companyNumber.trim(), vatNumber: tva(), responsibleName: nomResponsable, cuisine: cuisineFinale,
         business: commerce()
-      } : role === 'client' ? { addressStreet: addressStreet.trim(), addressNumber: addressNumber.trim(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() } : {}),
+      } : role === 'client' ? { addressStreet: addressStreet.trim(), addressNumber: numeroAvecBoite(), addressPostalCode: addressPostalCode.trim(), addressCity: addressCity.trim() } : {}),
       ...(accepteCgu ? { acceptTerms: true, termsVersion: versionCgu || undefined } : {}),
       ...(role === 'client' ? { marketingConsent: nouvellesOui } : refusNouvelles ? { marketingOptOut: true } : {}),
       // Apple / Google : le prénom et le nom de l'écran « nom » (ou ceux du fournisseur, préremplis) font foi. Avant, le
@@ -449,25 +454,14 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
           ? await loginWithApple(jetonFed.jeton, role, { givenName: firstName.trim() || undefined, familyName: lastName.trim() || undefined, ...extra })
           : await loginWithGoogle(jetonFed.jeton, role, extra);
         suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
-        // Le téléphone se prouve par SMS, Apple et Google compris (fondateur, 18/10/2026) : écran du code, comme au mot de passe.
-        if (data.needsVerification) {
-          setRecule(false);
-          setEnAttente({ email: data.email, canal: data.channel === 'sms' ? 'sms' : 'email', telephone: data.phoneMasked || phone.trim() });
-          return;
-        }
         reussi = true;
         await arriver(data.user);
         return;
       }
       const data = await register({ firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), password, role, website: siteWeb, ...extra });
       suivre(role === 'restaurant' ? 'inscription_restaurant' : role === 'driver' ? 'candidature_livreur' : 'inscription_client');
-      if (data.needsVerification) {
-        setRecule(false);
-        setEnAttente({ email: data.email, canal: data.channel === 'sms' ? 'sms' : 'email', telephone: data.phoneMasked || phone.trim() });
-      } else if (data.token) {
-        reussi = true;
-        await arriver(data.user);
-      }
+      reussi = true;
+      await arriver(data.user);
     } catch (err) {
       const champ = err.field || err.data?.field;
       if (fed && err.message !== 'INCOMPLETE_PROFILE' && /google|apple|token|jeton|expir/i.test(err.message || '')) {
@@ -521,80 +515,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     }
   }
 
-  // « Changer de numéro » sur l'écran du code (audit du 19/10, auth-03) : un code part au bon numéro, l'ancien ne vaut plus.
-  // Preuve du compte : le mot de passe tapé, ou le jeton Apple / Google ; après une réouverture de l'application, ni l'un ni
-  // l'autre n'est en mémoire et le mot de passe est demandé.
-  async function envoyerNumero() {
-    setAttente(true);
-    const preuve = fed ? { fournisseur: jetonFed.fournisseur, jeton: jetonFed.jeton } : null;
-    try {
-      const r = await changePendingPhone(enAttente.email, nouveauNumero.trim(), { password, preuve });
-      const canal = r?.channel === 'sms' ? 'sms' : 'email';
-      setEnAttente((p) => ({ ...p, canal, telephone: r?.phoneMasked || nouveauNumero.trim() }));
-      setPhone(nouveauNumero.trim());
-      setCode(''); setErreurs({}); setRecule(true); setChangerNumero(false);
-      toast(t(canal === 'sms' ? 'auth.errVerificationSentSms' : 'auth.errVerificationSent'));
-    } catch (err) {
-      const MESSAGES = { PHONE_TAKEN: 'auth.errPhoneTaken', PHONE_INVALID: 'auth.errPhoneInvalid', PHONE_DOUBLE_PREFIX: 'auth.errPhoneDoublePrefix' };
-      if (err.code === 'ALREADY_VERIFIED') await compteDejaConfirme(err);
-      else if (err.field === 'phone') setErreurs({ phone: MESSAGES[err.code] ? t(MESSAGES[err.code]) : err.message });
-      else if (err.code === 'BAD_CREDENTIALS' && !preuve) setErreurs({ password: err.message });
-      else if (preuve && /google|apple|jeton|token/i.test(err.message || '')) await rafraichirJetonFed();
-      else toast(err.message, 'erreur');
-    } finally {
-      setAttente(false);
-    }
-  }
-
-  /* COMPTE DÉJÀ CONFIRMÉ AILLEURS (revue du 24/10). Le code a été tapé sur le site, sur un autre téléphone, ou un premier
-   * envoi est passé sans réponse (réseau coupé) : le serveur répond ALREADY_VERIFIED à chaque code, et l'écran repris
-   * (lireCodeEnAttente) restait bloqué jusqu'à 24 h. C'est une réussite : on ouvre la session avec ce qu'on a encore
-   * en mémoire (mot de passe tapé, jeton Apple / Google), sinon on oublie l'attente et on passe à la connexion, adresse
-   * remplie, avec le message du serveur (« déjà confirmé, connecte-toi »). */
-  async function compteDejaConfirme(err) {
-    const adresse = enAttente?.email || email.trim();
-    try {
-      let data = null;
-      if (fed && jetonFed?.jeton) {
-        data = jetonFed.fournisseur === 'apple'
-          ? await loginWithApple(jetonFed.jeton, role, {})
-          : await loginWithGoogle(jetonFed.jeton, role, {});
-      } else if (password && adresse) data = await login(adresse, password);
-      if (data?.user) { setEnAttente(null); await arriver(data.user); return; }
-    } catch { /* second facteur, jeton expiré, mot de passe changé : l'écran de connexion sait faire */ }
-    setEnAttente(null); setCode('');
-    toast(err.message);
-    navigate('/login', { replace: true, state: { email: adresse, ...(retourApres ? { from: retourApres } : {}) } });
-  }
-
-  async function confirmerCode() {
-    setAttente(true);
-    try {
-      const data = await verifyEmail(enAttente.email, code.trim());
-      await arriver(data.user);
-    } catch (err) {
-      if (err.code === 'ALREADY_VERIFIED') { await compteDejaConfirme(err); setAttente(false); return; }
-      setErreurs({ code: err.message });
-      setAttente(false);
-    }
-  }
-
-  // canal 'email' : « Recevoir le code par e-mail », quand le SMS n'arrive pas (22/10/2026).
-  async function renvoyer(canal) {
-    setAttente(true);
-    try {
-      const r = await resendCode(enAttente.email, canal);
-      if (r?.channel) setEnAttente((p) => ({ ...p, canal: r.channel === 'sms' ? 'sms' : 'email', telephone: r.phoneMasked || p.telephone }));
-      setCode(''); setErreurs({});
-      lancerAttenteRenvoi(DELAI_RENVOI_S);
-      toast(t(r?.channel === 'sms' ? 'auth.errVerificationSentSms' : r?.channel === 'email' ? 'auth.errVerificationSent' : 'auth.newCodeSent'));
-    } catch (err) {
-      toast(err.message, 'erreur');
-    } finally {
-      setAttente(false);
-    }
-  }
-
   const titre = (texte, sous) => <><h1 className="bv-titre bv-titre-form">{texte}</h1>{sous && <p className="bv-sous">{sous}</p>}</>;
   const basculerJour = (d) => { setJours((l) => (l.includes(d) ? l.filter((x) => x !== d) : [...l, d])); setErreurs({}); };
   const changerCreneau = (i, champ, v) => setCreneaux((l) => l.map((c, j) => (j === i ? { ...c, [champ]: v } : c)));
@@ -618,9 +538,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
               onChange={(e) => { setPassword(e.target.value); if (erreurs.password) setErreurs(({ password: _p, ...reste }) => reste); }} />
             {!erreurs.password && (
               <ul className="mdp-criteres" aria-live="polite">
-                {[['mdpLongueur', password.length >= 6], ['mdpMajuscule', /[A-Z]/.test(password)], ['mdpMinuscule', /[a-z]/.test(password)]].map(([cle, ok]) => (
-                  <li key={cle} className={ok ? 'ok' : ''}><span aria-hidden="true">{ok ? '✓' : '○'}</span> {t(`auth.${cle}`)}</li>
-                ))}
+                <li className={password.length >= MDP_LONGUEUR ? 'ok' : ''}><span aria-hidden="true">{password.length >= MDP_LONGUEUR ? '✓' : '○'}</span> {t('auth.mdpLongueur')}</li>
               </ul>
             )}
           </Champ>
@@ -765,6 +683,26 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     case 'adresse':
       entete = titre(role === 'restaurant' ? t('auth.stepAddressTitleRestaurant') : role === 'client' ? t('appli.insAdresseClient') : t('auth.stepAddressTitle'),
         role === 'client' ? t('auth.stepAddressSubClient') : null);
+      // L'adresse trouvée avec la position : une carte, « C'est bien ici » (voir positionAccueil).
+      if (carteAdresse) {
+        bouton = t('appli.insAdresseOk');
+        contenu = (
+          <>
+            <div className="bv-carte bv-adresse-trouvee">
+              <Icone nom="position" taille={26} />
+              <div>
+                <b>{`${addressStreet} ${addressNumber}`.trim()}</b>
+                <span>{`${addressPostalCode} ${addressCity}`.trim()}</span>
+                <small>{t('appli.insAdresseTrouvee')}</small>
+              </div>
+            </div>
+            <Champ id="bv-i-boite" label={t('appli.insAdresseBoite')}>
+              <input id="bv-i-boite" autoComplete="off" value={boite} onChange={(e) => setBoite(e.target.value)} />
+            </Champ>
+          </>
+        );
+        break;
+      }
       contenu = (
         <>
           <div className="bv-champ">
@@ -806,8 +744,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
         break;
       }
       bouton = t('auth.createAccount');
-      // « Presque fini », pas « Dernière étape » : l'écran du code vient encore après (fondateur, 2026-10-30, maquettes/progression).
-      entete = titre(t('appli.insFinPresque'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
+      // « Dernière étape », et c'est vrai depuis que le compte s'ouvre sans code (2026-11-02, maquettes/inscription-legere).
+      entete = titre(t('appli.insFinTitre'), t(role === 'restaurant' ? 'appli.insFinCommerce' : role === 'driver' ? 'appli.insFinLivreur' : 'appli.insFinClient'));
       contenu = (
         <>
           {/* Brouillon repris : le mot de passe, jamais gardé, se retape ici (CROSS-63). */}
@@ -859,51 +797,6 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
         </>
       );
       break;
-    case 'code':
-      bouton = t('auth.confirm');
-      entete = titre(t(enAttente.canal === 'sms' ? 'auth.verifyTitleSms' : 'auth.verifyTitle'),
-        enAttente.canal === 'sms' ? t('auth.verifyTextSms', { phone: enAttente.telephone }) : t('auth.verifyText', { email: enAttente.email }));
-      contenu = (
-        <>
-          <label htmlFor="bv-i-code" className="sr-only">{t('auth.verifyCodeLabel')}</label>
-          <input id="bv-i-code" className={`bv-saisie${erreurs.code ? ' input-invalid' : ''}`} inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*" maxLength={6}
-            placeholder="123456" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))} />
-          {erreurs.code && <p className="field-error bv-centre" role="alert">{erreurs.code}</p>}
-          <button type="button" className="bv-lien" disabled={attente || attenteRenvoi > 0} onClick={() => renvoyer()}>{attenteRenvoi > 0 ? t('auth.resendIn', { s: attenteRenvoi }) : t('auth.resendCode')}</button>
-          {/* Le SMS peut se perdre après le fournisseur, sans erreur pour nous (22/10/2026). Dernier recours, en deux temps
-              (fondateur) : « Je n'ai pas reçu le SMS », puis le code par e-mail après un décompte visible (DELAI_CODE_EMAIL_S). */}
-          {enAttente.canal === 'sms' && (!smsPasRecu ? (
-            <button type="button" className="bv-lien" disabled={attente} onClick={() => { setSmsPasRecu(true); lancerAttenteEmail(DELAI_CODE_EMAIL_S); }}>{t('auth.smsPasRecu')}</button>
-          ) : (
-            <>
-              <p className="bv-aide bv-centre">{t('auth.smsPasRecuAide')}</p>
-              <button type="button" className="bv-lien" disabled={attente || attenteEmail > 0} onClick={() => renvoyer('email')}>
-                {attenteEmail > 0 ? t('auth.codeByEmailIn', { s: attenteEmail }) : t('auth.codeByEmail')}
-              </button>
-            </>
-          ))}
-          <button type="button" className="bv-lien" disabled={attente}
-            onClick={() => { setNouveauNumero(phone); setErreurs({}); setRecule(false); setChangerNumero(true); }}>{t('auth.changePhone')}</button>
-        </>
-      );
-      break;
-    case 'numero':
-      bouton = t('auth.changePhoneSend');
-      entete = titre(t('auth.changePhoneTitle'), t('auth.changePhoneText'));
-      contenu = (
-        <>
-          <Champ id="bv-i-nouveau-tel" label={t('auth.phone')} erreur={erreurs.phone}>
-            <PhoneInput id="bv-i-nouveau-tel" value={nouveauNumero} onChange={setNouveauNumero} invalid={!!erreurs.phone} />
-          </Champ>
-          {/* Prérempli quand il vient d'être tapé ; vide après une réouverture de l'application. */}
-          {!fed && (
-            <Champ id="bv-i-tel-mdp" label={t('auth.changePhonePassword')} erreur={erreurs.password}>
-              <PasswordInput id="bv-i-tel-mdp" value={password} invalid={!!erreurs.password} autoComplete="current-password" onChange={(e) => setPassword(e.target.value)} />
-            </Champ>
-          )}
-        </>
-      );
-      break;
     default:
   }
 
@@ -914,10 +807,10 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
         <form className="bv-form bv-feuille" onSubmit={avancer} noValidate>
           {contenu}
           <div className="bv-grandit" />
-          {/* Six chiffres avant d'envoyer le code (audit du 19/10, LIVE-28). */}
-          <button type="submit" className="bv-btn btn-gold" disabled={attente || (etape === 'code' && code.length !== 6)}>
+          <button type="submit" className="bv-btn btn-gold" disabled={attente}>
             {attente ? t('common.loading') : bouton}
           </button>
+          {carteAdresse && <button type="button" className="bv-lien" onClick={() => { setAutreAdresse(true); setRecule(false); }}>{t('appli.insAdresseAutre')}</button>}
         </form>
       </main>
   );

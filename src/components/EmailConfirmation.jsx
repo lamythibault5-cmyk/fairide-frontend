@@ -51,7 +51,7 @@ function useConfirmationEmail({ toastEnvoi = true } = {}) {
   return { user, etape, code, saisir, occupe, demander, confirmer, annuler, aConfirmer: !!user?.email && user.emailConfirmed === false };
 }
 
-// Mon compte : sous l'adresse, comme la vérification du téléphone (PhoneVerification.jsx) juste en dessous.
+// Mon compte : sous l'adresse, comme la vérification du téléphone (VerifTelephone.jsx) juste en dessous.
 export default function EmailConfirmation() {
   const { t } = useLanguage();
   const { user, etape, code, saisir, occupe, demander, confirmer, annuler, aConfirmer } = useConfirmationEmail();
@@ -85,12 +85,16 @@ export default function EmailConfirmation() {
 
 /* Mes commandes : la carte de rappel. Même famille que les encarts d'information de la fiche (fond iris très clair, pastille
  * iris à l'icône blanche). « Plus tard » la range pour cette visite seulement : rien n'est gardé sur l'appareil, elle
- * revient à la prochaine visite tant que l'adresse n'est pas confirmée. */
+ * revient à la prochaine visite tant que l'adresse n'est pas confirmée.
+ * SEULEMENT QUAND ELLE SERT (fondateur, 2026-11-02, maquettes/inscription-legere, question 7) : les nouveautés par e-mail
+ * (qui ne partent qu'aux adresses confirmées) ou une adresse d'équipe (ses droits l'attendent) — `emailReminder` du serveur
+ * (backend routes/auth.js, publicUser). Les autres confirment quand ils veulent dans Mon compte ; « Mot de passe oublié »
+ * marche sans. */
 export function RappelEmail() {
   const { t } = useLanguage();
   const { user, etape, code, saisir, occupe, demander, confirmer, aConfirmer } = useConfirmationEmail({ toastEnvoi: false });
   const [range, setRange] = useState(false);
-  if (!aConfirmer || range) return null;
+  if (!aConfirmer || !user?.emailReminder || range) return null;
 
   return (
     <section className="rappel-email" aria-labelledby="rappel-email-titre">

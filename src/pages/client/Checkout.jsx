@@ -26,6 +26,7 @@ import ChoixPastilles from '../../components/ChoixPastilles';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
 import { BandeauCommande, BarreCommande, FeuilleCommande, OptionCommande, RouteCommande, RouteEtapes } from '../../components/EcranCommande';
 import SousEcran from '../../components/SousEcran';
+import VerifTelephone, { telephoneAVerifier } from '../../components/VerifTelephone';
 import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
 import useLoinDeLAdresse from '../../hooks/useLoinDeLAdresse';
@@ -126,6 +127,18 @@ export default function Checkout() {
   const [fulfillmentType, setFulfillmentType] = useState('delivery');
   // Sous-ecran ouvert par-dessus le paiement : 'adresse', 'remise', ou null.
   const [sousEcran, setSousEcran] = useState(null);
+  /* LE NUMÉRO À LA PREMIÈRE COMMANDE (fondateur, 2026-11-02, maquettes/inscription-legere, question 1). Le compte s'ouvre sans
+   * code ; le bouton de paiement demande le code SMS une seule fois (VerifTelephone.jsx) : dans l'app, en tête de la feuille
+   * « Avant de commander » (au-dessus des cases âge et CGU quand il y en a) ; sur le site, dans une fenêtre. Le code tapé, la
+   * commande part d'elle-même quand rien d'autre n'est à cocher : le client a déjà touché « Commander ». Le serveur refuse
+   * aussi (PHONE_VERIFICATION_REQUIRED, routes/orders.js), et ce refus rouvre le même écran. `telOk` : prouvé à l'instant,
+   * avant que la session relue arrive dans ce rendu. `casesAvant` : la feuille a aussi des cases à cocher. */
+  const [fenetreTel, setFenetreTel] = useState(false);
+  const [casesAvant, setCasesAvant] = useState(false);
+  const telOk = useRef(false);
+  const focusCodeTel = useRef(null);
+  // Lu à l'appel (pas au rendu) : la commande relancée juste après le code part d'une fermeture d'avant la session relue.
+  const telAVerifier = () => telephoneAVerifier(user) && !telOk.current;
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
@@ -490,7 +503,8 @@ export default function Checkout() {
       return;
     }
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
-    if (manque && APPLI) { setSousEcran('avantCommande'); return; }
+    if ((manque || telAVerifier()) && APPLI) { setCasesAvant(!!manque); setSousEcran('avantCommande'); return; }
+    if (telAVerifier()) { setFenetreTel(true); return; }
     if (manque) {
       toast(manque);
       // Sur téléphone, la case à cocher est tout en bas, loin du bouton : on y amène le client au lieu de le laisser chercher.
@@ -551,6 +565,13 @@ export default function Checkout() {
       if (e.code === 'ORDER_ALREADY_PLACED') { commandeTermineeRef.current = true; oublierSaisiePaiement(restaurantId); cart.clear(); toast(e.message); navigate('/orders'); return; }
       // Pas de téléphone sur le compte : on y envoie le client, le panier l'attend.
       if (e.code === 'PHONE_REQUIRED') { toast(e.message, 'erreur'); navigate('/account?ouvrir=connexion&retour=/checkout'); return; }
+      // Numéro pas encore prouvé (session relue d'avant) : le même écran que le bouton aurait ouvert.
+      if (e.code === 'PHONE_VERIFICATION_REQUIRED') {
+        telOk.current = false;
+        refreshUser().catch(() => {});
+        if (APPLI) { setCasesAvant(false); setSousEcran('avantCommande'); } else setFenetreTel(true);
+        return;
+      }
       toast(e.message, 'erreur');
     } finally {
       setPlacing(false);
@@ -1191,14 +1212,39 @@ export default function Checkout() {
       {sousEcran === 'avantCommande' && (
         <SousEcran titre={t('appli.coAvantTitre')} onFermer={() => setSousEcran(null)} pied={
           <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} disabled={placing || paying} onClick={() => {
+            // Le code d'abord : le bouton n'est jamais grisé (design.md), il ramène au champ.
+            if (telAVerifier()) { toast(t('verifTel.aSaisir')); focusCodeTel.current?.(); return; }
             const reste = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
             if (reste) { toast(reste); return; }
             setSousEcran(null); placeOrder();
           }}>{surPlaceChoisi ? t('checkout.confirmOnSite') : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}</button>
         }>
-          <p className="small" style={{ margin: '0 0 12px' }}>{t('appli.coAvantSous')}</p>
-          <CheckoutConformite partie="cases" charger={false} restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
+          {(telAVerifier() || telOk.current) && (
+            <div className="co-telephone">
+              <h3>{t('verifTel.titre')}</h3>
+              <p className="small">{t('verifTel.pourquoi')}</p>
+              <VerifTelephone auto repliEmail focusRef={focusCodeTel} onFait={() => {
+                telOk.current = true;
+                // Rien d'autre à cocher : la commande part, le client a déjà touché « Commander ».
+                if (!casesAvant) { setSousEcran(null); placeOrder(); }
+              }} />
+              <p className="small vt-unique">{t('verifTel.unique')}</p>
+            </div>
+          )}
+          {casesAvant && (
+            <>
+              <p className="small" style={{ margin: '0 0 12px' }}>{t('appli.coAvantSous')}</p>
+              <CheckoutConformite partie="cases" charger={false} restaurant={restaurant} lignes={Object.values(cart.lines)} typeCommande={fulfillmentType} valeur={conformite} onChange={setConformite} />
+            </>
+          )}
         </SousEcran>
+      )}
+      {fenetreTel && (
+        <Modale titre={t('verifTel.titre')} onFermer={() => setFenetreTel(false)} classeBoite="co-telephone-fenetre">
+          <p className="small">{t('verifTel.pourquoi')}</p>
+          <VerifTelephone auto repliEmail focusRef={focusCodeTel} onFait={() => { telOk.current = true; setFenetreTel(false); placeOrder(); }} />
+          <p className="small vt-unique">{t('verifTel.unique')}</p>
+        </Modale>
       )}
 
       {pendingOrder && (

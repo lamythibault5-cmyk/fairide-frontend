@@ -52,7 +52,7 @@ export default function useMoiAussi() {
 
   const dialogue = (
     <ConfirmDialog open={telephone} icone="telephone" title={t('demandes.telTitre')} message={t('demandes.telTexte')}
-      confirmLabel={t('demandes.telBouton')} onConfirm={() => { setTelephone(false); navigate(CHEMIN_VERIFIER_TELEPHONE); }}
+      confirmLabel={t('demandes.telBouton')} onConfirm={() => { setTelephone(false); navigate(`${CHEMIN_VERIFIER_TELEPHONE}&retour=${location.pathname}`); }}
       onCancel={() => setTelephone(false)} />
   );
   return { basculer, dialogue, occupe: (id) => enCours.has(id) };

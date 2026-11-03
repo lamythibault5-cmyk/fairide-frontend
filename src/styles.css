@@ -5835,3 +5835,30 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
 .reclamation-honneur input { margin-top: 3px; accent-color: var(--iris); width: 18px; height: 18px; flex: 0 0 auto; }
 .reclamation-resume { background: var(--cream-dim); border-radius: 14px; padding: 10px 12px; font-size: 13.5px; margin: 0 0 12px; }
 .reclamation-envoyer { width: 100%; }
+/* ─── LE NUMÉRO, UNE SEULE FOIS (VerifTelephone.jsx, 2026-11-02, maquettes/inscription-legere) ───────────────────────────────
+   Feuille « Avant de commander » (app), fenêtre du paiement (site), Mon compte, dossier livreur : le même bloc. Le champ du
+   code en grand et centré, comme l'écran du code de l'inscription d'avant ; les liens en iris sous le champ. */
+.vt { display: flex; flex-direction: column; gap: 8px; }
+.vt-texte { margin: 0; font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+.vt-texte .icone-texte { color: var(--iris); }
+.vt-petit { font-size: 13px; }
+.vt-champ { margin: 2px 0 0; }
+.vt-code { width: 100%; text-align: center; font-size: 24px; font-weight: 700; letter-spacing: .35em; padding: 12px 10px; }
+.vt-liens { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 4px 14px; }
+.vt-lien { font-size: 14px; font-weight: 600; text-decoration: none; padding: 6px 0; text-align: left; }
+.vt-lien:disabled { color: var(--ink-faint); cursor: default; }
+.vt-repli { display: flex; flex-direction: column; gap: 2px; }
+.vt-recevoir { align-self: flex-start; }
+.vt-envoyer { width: 100%; min-height: 46px; }
+.vt-fait { margin: 0; display: inline-flex; align-items: center; gap: 6px; font-weight: 600; color: var(--iris); }
+.vt-unique { margin: 10px 0 0; color: var(--ink-faint); }
+.co-telephone { margin: 0 0 18px; }
+.co-telephone h3 { margin: 0 0 4px; font-size: 18px; }
+.co-telephone > .small { margin: 0 0 12px; }
+.co-telephone-fenetre .vt { margin-top: 10px; }
+/* « Où te livrer ? » : l'adresse trouvée avec la position, à confirmer d'un geste (InscriptionAppli.jsx, carteAdresse). */
+.bv-adresse-trouvee { display: flex; gap: 12px; align-items: flex-start; }
+.bv-adresse-trouvee > svg { flex: none; color: var(--iris); margin-top: 2px; }
+.bv-adresse-trouvee b { display: block; font-size: 17px; line-height: 1.3; }
+.bv-adresse-trouvee span { display: block; color: var(--ink-soft); }
+.bv-adresse-trouvee small { display: block; margin-top: 6px; font-size: 13px; color: var(--ink-faint); }

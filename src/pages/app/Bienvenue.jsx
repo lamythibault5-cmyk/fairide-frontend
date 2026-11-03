@@ -18,6 +18,7 @@ import {
 } from './EcransBienvenue';
 import InscriptionAppli from './InscriptionAppli';
 import { ecransInscription } from './etapesInscription';
+import { suivre } from '../../analytics';
 
 /* ACCUEIL DE L'APPLICATION iOS / ANDROID — /bienvenue, premier lancement seulement.
  *
@@ -212,6 +213,14 @@ export default function Bienvenue() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ecran, role, choix, envies, position, cp, fed]);
 
+  // Un événement par écran (fondateur, 2026-11-02, maquettes/inscription-legere, question 8) : le nom de l'écran et le
+  // profil, rien d'autre (analytics.js). L'inscription envoie les siens (InscriptionAppli.jsx).
+  useEffect(() => {
+    if (user || ecran === 'inscription') return;
+    suivre('inscription_ecran', { ecran: `accueil-${ecran}`, role: role || 'aucun', support: 'appli' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ecran]);
+
   // Arrivé à l'écran du compte (ou à l'inscription par Apple / Google) : l'accueil est fait, il ne sera pas rejoué.
   useEffect(() => {
     if ((ecran === 'compte' || ecran === 'inscription') && role) ecrireParcoursFait({ role, familles: envies, position, cp });
@@ -345,9 +354,6 @@ export default function Bienvenue() {
         else await loginWithGoogle(jeton.jeton, role, {});
       } catch (err) {
         if (err.message === 'INCOMPLETE_PROFILE') { setFed(jeton); aller('inscription'); return; }
-        // Inscription déjà faite, code SMS jamais saisi : on le demande (connexion, écran du code ; « Renvoyer » y est).
-        // Le jeton suit (preuve) : il prouve le compte si le numéro est à changer (auth-03) ; `from` aussi (auth-07).
-        if (err.message === 'PHONE_NOT_VERIFIED') { navigate('/login', { state: { from: depuis || undefined, attenteCode: { email: err.data?.email, canal: 'sms', telephone: err.data?.phoneMasked, preuve: { fournisseur: jeton.fournisseur, jeton: jeton.jeton } } } }); return; }
         if (err.code === 'TOTP_REQUIRED') { navigate('/login', { state: { from: depuis || undefined, fed: jeton } }); return; }
         toast(err.message, 'erreur');
       }

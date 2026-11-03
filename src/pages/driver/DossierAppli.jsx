@@ -22,6 +22,7 @@ import { AvantDeCommencer } from './dossierBlocs';
 import '../../ecran-livreur.css';
 import '../../ecran-general.css'; // le rond du retour (.gn-rond) de la fin express
 import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
+import VerifTelephone from '../../components/VerifTelephone';
 
 /* UN SEUL DOSSIER, SUR LE SITE COMME DANS L'APP (fondateur, 2026-10-25). Le site avait son propre dossier en six étapes
  * (Onboarding.jsx) : le livreur qui commençait sur le site et continuait dans l'app (ou l'inverse) tombait sur un autre écran,
@@ -89,7 +90,9 @@ function ecranDuManque(m) {
     statut: 'activite', identite: 'identite', nationalite: 'activite', date_naissance: 'registre', registre_national: 'registre', age_minimum: 'registre',
     zone: 'courses', vehicule: 'courses', permis_immatriculation: 'courses', ecole: 'activite', bce: 'activite', tva: 'activite', tva_numero: 'activite',
     caisse: 'activite', siege: 'activite',
-    titre_sejour: 'doc:residence_permit', carte_professionnelle: 'doc:professional_card'
+    titre_sejour: 'doc:residence_permit', carte_professionnelle: 'doc:professional_card',
+    // Le numéro se prouve ici depuis que le compte s'ouvre sans code (fondateur, 2026-11-02, maquettes/inscription-legere).
+    telephone: 'telephone'
   };
   if (table[m]) return table[m];
   if ([...AVANT_COURSE, 'contrat'].includes(m)) return 'engagements';
@@ -122,7 +125,11 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
   const docs = documentsRequis(d, { statusType: c.statusType, motorise, horsEee });
   // Hors EEE, les deux pièces juste après « Tes courses » ; la photo (et les pièces d'un véhicule motorisé) après le versement.
   const docsSejour = docs.filter((x) => ['residence_permit', 'professional_card'].includes(x));
-  const ecrans = ['activite', 'courses', ...docsSejour.map((x) => `doc:${x}`), 'identite', 'registre', 'paiement',
+  /* « TON NUMÉRO » D'ABORD (fondateur, 2026-11-02, maquettes/inscription-legere, question 3) : le compte s'ouvre sans code, le
+   * numéro se prouve ici, avant l'envoi (backend routes/couriers.js, manque « telephone »). Écran présent seulement pour qui
+   * ne l'a pas encore prouvé en ouvrant le dossier ; fixé à l'ouverture pour que la route ne bouge pas une fois le code tapé. */
+  const [avecTelephone] = useState(() => manques.includes('telephone'));
+  const ecrans = [...(avecTelephone ? ['telephone'] : []), 'activite', 'courses', ...docsSejour.map((x) => `doc:${x}`), 'identite', 'registre', 'paiement',
     ...docs.filter((x) => !docsSejour.includes(x)).map((x) => `doc:${x}`), 'engagements'];
   const aFaire = (e) => manques.some((m) => ecranDuManque(m, c.statusType) === e);
 
@@ -182,7 +189,12 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     </select>
   );
 
-  if (ouvert === 'activite') {
+  if (ouvert === 'telephone') {
+    titre = t('verifTel.dossierTitre'); sous = t('verifTel.dossierSous');
+    // Le code part à l'ouverture et se valide tout seul à six chiffres ; prouvé, on passe à « Ton activité ».
+    contenu = <VerifTelephone auto onFait={() => { charger(); refreshUser?.(); suivant(); }} />;
+    pied = manques.includes('telephone') ? null : continuer();
+  } else if (ouvert === 'activite') {
     titre = t('appli.exActiviteTitre'); sous = t('appli.exActiviteSous');
     contenu = <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} select={select} />;
     pied = continuer(async () => {
@@ -292,6 +304,7 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
  * dossier refusé que plus rien ne retient : son bouton lime le renvoie à l'équipe ; « Avant de commencer » en bas, comme sur
  * le dossier envoyé (DossierSuivi). */
 const ETAPES_SOMMAIRE = [
+  ['telephone', ['telephone']], // seulement tant que le numéro n'était pas prouvé à l'ouverture (voir avecTelephone)
   ['activite', ['activite']],
   ['courses', ['courses']],
   ['identite', ['identite', 'registre']],
@@ -331,6 +344,7 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
     if (e.cle === 'courses') return [c.vehicleType && t(`courierOnboarding.vehicle_${c.vehicleType}`), c.zone].filter(Boolean).join(' · ') || null;
     if (e.cle === 'paiement') return t('courierOnboarding.paymentActive');
     if (e.cle === 'inscription') return d.user?.email || user?.email || null;
+    if (e.cle === 'telephone') return d.user?.phone || user?.phone || null;
     return null;
   };
   const ligne = (e) => {
