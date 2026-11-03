@@ -3958,6 +3958,9 @@ button.recherche-pastille { font: inherit; font-size: 13px; font-weight: 500; cu
 .address-search-list li { display: flex; flex-direction: column; gap: 1px; padding: 8px 10px; border-radius: var(--radius-field); cursor: pointer; }
 .address-search-list li:hover, .address-search-list li.active { background: rgba(59,47,181,0.08); }
 .address-search-list li.address-search-empty { cursor: default; opacity: 0.75; font-size: 13px; }
+/* « Google Maps » sous ses suggestions d'adresse (règles d'attribution de Google, AddressSearch.jsx) : ni survol, ni clic. */
+.address-search-list li.address-search-attribution { cursor: default; pointer-events: none; padding: 2px 10px 4px; align-items: flex-end; }
+.address-search-list li.address-search-attribution .attribution-google { margin: 0; }
 .address-reco-confirm { display: flex; gap: 8px; align-items: flex-start; margin-top: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
 .address-reco-confirm input { margin-top: 2px; }
 
