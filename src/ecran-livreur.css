@@ -377,6 +377,27 @@ html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factur
 }
 /* « Avant de commencer », sous le sommaire du brouillon (DossierAppli.jsx, 2026-10-25) : une ligne à part, sans rond. */
 .ecl-etapes-annexe { margin-top: 18px; border-top: 1px solid var(--line); }
+/* « Prochaine étape » du sommaire et du dossier envoyé (2026-11-03, maquettes/dossier-livreur-simple, versions A et RA) : une
+   carte à filet lime au-dessus de la liste, toute touchable ; le bouton lime en dessous mène au même écran. */
+.ecl-prochaine { display: flex; flex-direction: column; gap: 2px; width: 100%; margin: 0 0 16px; padding: 14px 16px; border: 2px solid var(--lime);
+  border-radius: 20px; background: #FBFEE9; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+.ecl-prochaine small { font-size: 12px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.ecl-prochaine b { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.ecl-prochaine span { font-size: 14px; color: var(--ink-soft); }
+.ecl-prochaine:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+/* « Comment l'obtenir ? » sous « Ajouter mon numéro » (Presque prêt), et les trois étapes numérotées du guide. */
+.ecl-lien-centre { display: block; margin: 0 auto 6px; }
+.ecl-guide-numero { margin-bottom: 10px; }
+.ecl-guide-numero .ecl-etape { cursor: default; }
+.ecl-guide-numero .ecl-rond-etape { font-size: 13px; font-weight: 700; color: var(--iris); }
+/* Le guide « Pas encore de numéro » qui se suit (2026-11-03) : la carte « Le plus simple » (filet lime, pas touchable),
+   les boutons des guichets en ligne, le bouton MyMinfin sous l'étape TVA. */
+.ecl-guide-simple { cursor: default; gap: 6px; }
+.ecl-guide-simple > span { font-size: 14px; line-height: 1.45; color: var(--ink); }
+.ecl-guide-simple .ecl-guide-neutre { font-size: 12.5px; color: var(--ink-soft); }
+.ecl-guide-guichets { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 2px; }
+.ecl-guide-guichets .btn-outline, .ecl-guide-myminfin { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 8px 16px; }
+.ecl-guide-myminfin { margin: -2px 0 12px; }
 
 /* ---------- Le dossier envoyé ou validé, dans l'app (DossierSuivi.jsx, deuxième audit design, section 9, 2026-10-19) ----------
    Bandeau : « Livreur · prénom » et le statut en pastille claire ; feuille : un seul lime (« Voir les courses », validé
