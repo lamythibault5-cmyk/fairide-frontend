@@ -56,6 +56,12 @@ export function lancementGo() { return etat.go; }
 
 export function emporterOuvert() { return etat.emporter; }
 
+// Paiement de l'à emporter proposé à l'inscription d'un commerce (Owen, 2026-11-04 : la peur du client qui commande, ne vient
+// pas et ne paie pas). Après GO, « En ligne uniquement » : la commande est payée d'avance. Avant GO, le paiement en ligne
+// n'existe pas encore : « Au choix du client », pour que le commerce vende déjà sur place et passe en ligne au GO sans rien
+// changer. Le commerce garde son choix (contrat, « Formules et calendrier »).
+export function modeEmporterParDefaut() { return etat.go ? 'online' : 'both'; }
+
 // Admin, compte de test posé par l'équipe (users.is_test) et simulation : mêmes exemptions que le serveur (compteExempte).
 const exempte = (user) => !!user?.isAdmin || !!user?.isTest || !!user?.simulation;
 export const exempteLancement = exempte;

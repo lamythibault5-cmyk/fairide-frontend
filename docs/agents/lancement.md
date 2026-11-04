@@ -44,6 +44,14 @@ ignored since, and can be deleted.
   `NO_COURIER_AVAILABLE` (409), except for a shop that delivers with its own employees (`livraisonCommerce.livreParCommerce`,
   `lancement.livraisonPossible`, 2026-11-02): it waits for no courier, but still only after GO. It only COUNTS couriers: never add ratings, rankings or acceptance history to it
   (employment-presumption rule, see `notifLivreurs.js`). Scheduled orders are judged like immediate ones.
+- **Takeaway payment: « Au choix du client » before GO, « En ligne uniquement » after (founder, 2026-11-04).** The fear: a
+  customer orders, never comes and never pays. Before GO online payment does not exist, so « En ligne uniquement » would
+  sell nothing: shops stay on `both` (8 shops left on the database default `online` were switched to `both` on 04/11).
+  Sign-up proposes `modeEmporterParDefaut()` ([src/launch.js](../../src/launch.js)): `both` before GO, `online` after.
+  **At GO** the team switches every shop to `online` (`PATCH /api/:id/services`, the morning digest lists who is left) and
+  tells each one; the contract lets the shop change it back in Mon compte (« Formules et calendrier »). A shop that chose
+  « Sur place uniquement » itself (Café Joyeux, La Signare on 04/11) is asked first, with the reason. Until then the
+  existing guard holds: one « Client pas venu » closes pay-at-shop to that customer at every shop (`routes/orders.js`).
 - **Website** ([src/launch.js](../../src/launch.js)): reads `GET /orders/launch` (`go`, `goAt`, `pickupOpen`) at start, every
   minute while visible and on return to the tab; the last answer is kept in `localStorage` (`fairide_lancement`). Components that depend
   on it call `useLancement()` to re-render. `livraisonDisponible(id)` reads `GET /orders/delivery-available/:id`
