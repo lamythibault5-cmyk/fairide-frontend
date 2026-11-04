@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { modeEmporterParDefaut } from '../../launch';
 import LienCgv, { LienConfidentialite } from '../../components/CgvEnFeuille';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -166,7 +167,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [responsable, setResponsable] = useState(null); // null : la personne qui s'inscrit
   const [jours, setJours] = useState([]);
   const [creneaux, setCreneaux] = useState([{ open: '11:00', close: '22:00' }]);
-  const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: 'on_site' });
+  const [services, setServices] = useState(() => ({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: modeEmporterParDefaut() }));
   // Dernier écran
   const [accepteCgu, setAccepteCgu] = useState(false);
   const [accepteEngagements, setAccepteEngagements] = useState(false);

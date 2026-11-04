@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import EngagementsInscription from '../components/commerce/EngagementsInscription';
+import { modeEmporterParDefaut } from '../launch';
 import { remonterEnHaut } from '../remonter';
 import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
@@ -145,7 +146,8 @@ export default function Auth() {
   const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — affiché sous le numéro (VerifSociete, shop-2)
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
   // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' — l'à emporter relève toujours de la version complète, voir OffreFormules.
-  const [services, setServices] = useState({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: 'on_site' });
+  // Proposé par défaut : « Au choix du client » avant GO, « En ligne uniquement » après (launch.js › modeEmporterParDefaut).
+  const [services, setServices] = useState(() => ({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: modeEmporterParDefaut() }));
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
   // Ce que le commerce vend (ChoixSpecialites.jsx, fondateur, 2026-10-22) : jusqu'à 7 spécialités, la première est son type
