@@ -87,6 +87,7 @@ const AdminDriversPage = lazyPage(() => import('./pages/admin/AdminDriversPage')
 const AdminCouriersPage = lazyPage(() => import('./pages/admin/AdminCouriersPage'));
 const AdminClientsPage = lazyPage(() => import('./pages/admin/AdminClientsPage'));
 const AdminFinancePage = lazyPage(() => import('./pages/admin/AdminFinancePage'));
+const AdminRentabilitePage = lazyPage(() => import('./pages/admin/AdminRentabilitePage'));
 const AdminPaymentsPage = lazyPage(() => import('./pages/admin/AdminPaymentsPage'));
 const AdminSupportPage = lazyPage(() => import('./pages/admin/AdminSupportPage'));
 const AdminDocumentsPage = lazyPage(() => import('./pages/admin/AdminDocumentsPage'));
@@ -290,6 +291,7 @@ export default function App() {
           <Route path="couriers" element={<AdminCouriersPage />} />
           <Route path="clients" element={<AdminClientsPage />} />
           <Route path="finance" element={<AdminFinancePage />} />
+          <Route path="rentabilite" element={<AdminRentabilitePage />} />
           <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="support" element={<AdminSupportPage />} />
           <Route path="documents" element={<AdminDocumentsPage />} />
