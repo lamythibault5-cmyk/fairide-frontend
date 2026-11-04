@@ -163,6 +163,15 @@ jobs:
           status: completed
           whatsNewDirectory: ${{ runner.temp }}/notes
 
+      # Les décisions de mise à jour (mises-a-jour/*.json) partent au serveur avec ce numéro de build ; il ne les applique
+      # qu'une fois une version au moins aussi récente en ligne sur Google Play (fairide-backend/versionsApplis.js).
+      # Sans le secret APP_BUILDS_TOKEN ou si le serveur ne répond pas : un avertissement, jamais un échec.
+      - name: Décisions de mise à jour envoyées au serveur
+        if: steps.play.outputs.ok == 'true' && inputs.envoi != 'partage-interne'
+        env:
+          APP_BUILDS_TOKEN: ${{ secrets.APP_BUILDS_TOKEN }}
+        run: node scripts/mises-a-jour.mjs envoyer android ${{ github.run_number }}
+
       - name: Envoi en partage interne (lien d'installation)
         id: partage
         if: steps.play.outputs.ok == 'true' && inputs.envoi == 'partage-interne'

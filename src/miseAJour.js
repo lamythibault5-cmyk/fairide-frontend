@@ -12,6 +12,11 @@ import { estNatif, plateforme } from './natif';
  *     rangée en tête de Mon compte et un point sur l'onglet Compte (E) tant que l'app n'est pas à jour.
  * Le site n'est jamais concerné (il est toujours à jour).
  *
+ * PERSONNE NE RÈGLE RIEN (Owen, 2026-11-04) : Claude décide dans la proposition de fusion (mises-a-jour/<id>.json :
+ * conseillée ou obligatoire, trois lignes), le build l'envoie au serveur, et le serveur ne l'applique qu'une fois la version
+ * en ligne dans le store (fairide-backend/versionsApplis.js). La conseillée n'arrive qu'aux applis qui ont 7 jours de
+ * retard ; sans conseil ni minimum, une version plus récente en ligne (« disponible ») ne montre que la rangée de Mon compte.
+ *
  * JAMAIS AU MILIEU DE QUELQUE CHOSE (réponse 7, « obligatoire compris ») : tant qu'une commande du client est en cours, qu'un
  * livreur a une course en main ou qu'une commande attend d'être acceptée au commerce, rien ne s'affiche ; l'écran vient
  * après. Les écrans concernés le disent eux-mêmes avec signalerOccupe(cle, oui).
@@ -23,10 +28,11 @@ const STORE_PAR_DEFAUT = {
   ios: 'https://apps.apple.com/be/app/id6826197340'
 };
 
-// « Plus tard » (réponse 4) : la notification revient une fois, 3 jours après ; au second « Plus tard », plus pour cette
-// version (la rangée de Mon compte reste). Mémorisé sur l'appareil, par build conseillé : une version plus récente repart de zéro.
+// « Plus tard » (réponse 4) : la notification revient une fois, 3 jours après ; au second « Plus tard », une semaine de
+// calme, puis le cycle reprend. Compté par date et non par version (Owen, 2026-11-04 : des versions toutes les deux heures
+// au début ne doivent pas la faire revenir à chaque fois). La rangée de Mon compte reste. Mémorisé sur l'appareil.
 const PLUS_TARD = 'fairide_maj_plus_tard';
-const TROIS_JOURS = 3 * 24 * 3600 * 1000;
+const JOUR = 24 * 3600 * 1000;
 
 const VIDE = { niveau: null, store: null, os: null, cible: 0, nouveautes: {}, occupe: false, reportee: false };
 let etat = VIDE;
@@ -42,17 +48,17 @@ function publier(suite) {
 function lirePlusTard() {
   try { return JSON.parse(localStorage.getItem(PLUS_TARD) || 'null'); } catch { return null; }
 }
-function estReportee(cible) {
+function estReportee() {
   const p = lirePlusTard();
-  if (!p || p.build !== cible) return false;
-  return p.fois >= 2 || Date.now() - p.at < TROIS_JOURS;
+  if (!p || !p.at) return false;
+  return Date.now() - p.at < (p.fois >= 2 ? 7 : 3) * JOUR;
 }
 
 // « Plus tard » sur la notification conseillée.
 export function reporterMiseAJour() {
   const p = lirePlusTard();
-  const fois = p && p.build === etat.cible ? p.fois + 1 : 1;
-  try { localStorage.setItem(PLUS_TARD, JSON.stringify({ build: etat.cible, fois, at: Date.now() })); } catch { /* stockage indisponible : elle reviendra à la prochaine ouverture */ }
+  const fois = p?.fois === 1 ? 2 : 1;
+  try { localStorage.setItem(PLUS_TARD, JSON.stringify({ fois, at: Date.now() })); } catch { /* stockage indisponible : elle reviendra à la prochaine ouverture */ }
   publier({ reportee: true });
 }
 
@@ -75,14 +81,18 @@ async function verifier() {
   if (document.visibilityState === 'hidden') return;
   const os = etat.os;
   try {
-    const [build, reponse] = await Promise.all([buildInstalle(), api('/app/min-version', { logoutOn401: false })]);
+    const build = await buildInstalle();
     if (!build) return;
+    // Le build envoyé : « ce qui change » ne liste que ce que cette appli n'a pas encore.
+    const reponse = await api(`/app/min-version?os=${os}&build=${build}`, { logoutOn401: false });
     const minimum = Number(reponse?.[os]) || 0;
     const conseille = Number(reponse?.conseille?.[os]) || 0;
+    const dernier = Number(reponse?.dernier?.[os]) || 0;
     const store = reponse?.storeUrls?.[os] || STORE_PAR_DEFAUT[os];
     const nouveautes = reponse?.nouveautes || {};
     if (minimum && build < minimum) return publier({ niveau: 'obligatoire', store, cible: minimum, nouveautes, reportee: false });
-    if (conseille && build < conseille) return publier({ niveau: 'conseillee', store, cible: conseille, nouveautes, reportee: estReportee(conseille) });
+    if (conseille && build < conseille) return publier({ niveau: 'conseillee', store, cible: conseille, nouveautes, reportee: estReportee() });
+    if (dernier && build < dernier) return publier({ niveau: 'disponible', store, cible: dernier, nouveautes, reportee: false });
     publier({ niveau: null, store: null, cible: 0, nouveautes: {}, reportee: false });
   } catch { /* serveur muet : rien ne s'affiche */ }
 }
@@ -109,7 +119,9 @@ export default function useMiseAJour() {
   return useSyncExternalStore(sAbonner, lire, lire);
 }
 
-// Le point sur l'onglet Compte (DashboardSidebar), tant qu'une version plus récente attend.
+// Le point sur l'onglet Compte (DashboardSidebar) : seulement quand la mise à jour est conseillée ou obligatoire, pas pour
+// une simple version plus récente (« disponible »), qui sinon s'allumerait après chaque sortie.
 export function useMiseAJourDispo() {
-  return !!useMiseAJour().niveau;
+  const { niveau } = useMiseAJour();
+  return niveau === 'conseillee' || niveau === 'obligatoire';
 }

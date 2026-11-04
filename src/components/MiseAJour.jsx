@@ -140,11 +140,12 @@ export default function MiseAJour() {
 
   if (!m.niveau || m.occupe || commencePar(pathname, PAUSE_PAIEMENT)) return null;
   if (m.niveau === 'obligatoire') return <Obligatoire m={m} />;
-  if (m.reportee || fermee || commencePar(pathname, PAUSE_NOTIF)) return null;
+  if (m.niveau !== 'conseillee' || m.reportee || fermee || commencePar(pathname, PAUSE_NOTIF)) return null;
   return <Notification key={m.cible} m={m} onFermer={() => setFermee(true)} />;
 }
 
-// E : en tête de Mon compte tant que l'app n'est pas à jour, « Plus tard » ou pas (réponse 5).
+// E : en tête de Mon compte tant que l'app n'est pas à jour, « Plus tard » ou pas (réponse 5), et aussi pour une simple
+// version plus récente en ligne (« disponible ») : discrète, elle ne s'impose pas.
 export function RangeeMiseAJour() {
   const { t } = useLanguage();
   const m = useMiseAJour();

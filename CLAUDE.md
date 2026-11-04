@@ -87,6 +87,11 @@ read that doc before working near it.
 - The bottom tab bar sits on the bottom edge (`bottom: 0` + padding `max(6px, var(--bas-ecran))`, the system inset minus 12 px),
   never a fixed offset. *(appli.md)*
 - Stripe pages open through `allerAuPaiement`, never `window.location.href` (it leaves the app). *(appli.md)*
+- A PR that changes what the app ships (`src/`, `public/`, `android/`, `ios/`) decides whether people should update: no
+  file (most changes), or `mises-a-jour/<date>-<topic>.json` with `conseillee` (something people will notice and want) or
+  `obligatoire` (rare: the old app would break an order, payment, sign-up or login, or a legal text), said in plain words
+  in the PR description. Nobody sets versions in Admin (Owen, 2026-11-04). Rules in
+  [mises-a-jour/LISEZMOI.md](mises-a-jour/LISEZMOI.md). *(appli.md)*
 
 **Look and feel**
 - Two brand colours: iris `#3B2FB5` and lime `#C8F03C`. Lime only on iris, or as a filled block with ink text; backgrounds
