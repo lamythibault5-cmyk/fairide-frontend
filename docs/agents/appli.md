@@ -14,6 +14,28 @@ everything native goes through `src/natif.js` and `src/pushNatif.js` — see
 Store* › *Run workflow*, which uploads to Internal testing itself).
 **Releasing the iPhone app**: nothing to do — every merge to `main` builds it on GitHub's Macs and sends it to TestFlight
 (`app-ios-testflight.yml`, since 2026-10-23); its signing expires 2027-10-23 (see « Sortir une version iPhone »).
+**Asking people to update (Owen, 2026-11-03, answers to the workspace mockup `maquettes/mise-a-jour/mise-a-jour.html`)**: the
+app ships a frozen copy of the screens, so an old install keeps calling today's server with yesterday's screens. At start-up
+and on every return to the foreground, [src/miseAJour.js](../../src/miseAJour.js) compares the installed build
+(`App.getInfo`) with `GET /app/min-version?os=&build=` (backend `routes/versionAppli.js`). Two levels, drawn by [MiseAJour.jsx](../../src/components/MiseAJour.jsx): under the **recommended** build, a
+glass banner drops from the top like an iPhone notification (tap = « ce qui change », up to three lines per language, « Plus tard » and a lime « Mettre à jour »; swiped up = « Plus tard »). « Plus tard » brings it back
+once after 3 days, then a quiet week, counted by date and not by build; meanwhile a « Nouvelle version prête » row heads Mon compte and an iris dot
+sits on the Compte tab. Under the **minimum** build (rare: only when the old build would break an order, a payment or
+sign-up, or for a legal text), a full screen with no way out: the app blurred under an iris veil, the bike riding, one
+lime button to the store. **Never in the middle of something**, the required screen included: nothing shows while the
+customer has an order in progress, the courier a ride in hand or the shop an order waiting to be accepted (each screen
+calls `signalerOccupe`), nor on checkout and its result pages. Native apps only, shops and couriers alike; the website is
+always up to date. Fail open: no answer, no readable build, nothing shows. Only builds that contain this check can be
+asked: older installs need a push or an e-mail.
+**Nobody sets the versions (Owen, 2026-11-04).** Each PR that changes the app decides: no file, or
+[mises-a-jour/](../../mises-a-jour/LISEZMOI.md)`<date>-<topic>.json` with `conseillee` or `obligatoire` and three lines per
+language. The iPhone and Android build workflows send those files to the server with their build number
+(`scripts/mises-a-jour.mjs envoyer`, secret `APP_BUILDS_TOKEN`); every 6 hours the server reads which build is really live
+on the App Store (« Ready for Sale ») and Google Play (production track, finished rollout only) and applies a decision
+only once a build carrying it is live (backend `versionsApplis.js`): required at once, recommended once that build has
+been live 7 days (phones mostly update themselves; the banner is for those a week behind). A newer live build with no
+decision only shows the Mon compte row (« disponible », no dot). Admin › Conformité › Paramètres stays as a manual
+override (the higher value wins). Without store keys on the server, nothing automatic happens.
 **The app icon** comes from [scripts/app-assets.mjs](../../scripts/app-assets.mjs) (`npm run app:assets`, then `app:assets:ios`):
 the bike covers 72 % of the tile since 2026-10-25 (founder: 82 % touched the edges). On iOS 26 a one-image icon
 (`AppIcon.appiconset`) gets an automatic Liquid Glass coat that greys the lime (#C8F03C shows as ~#B4D44F); the website

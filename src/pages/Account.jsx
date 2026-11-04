@@ -54,6 +54,7 @@ import '../site-compte.css';
 import { telephoneLisible, mdpValide } from '../validation';
 import ErrorCard from '../components/ErrorCard';
 import { CarteCodeAmi } from '../components/CodeAmi';
+import { RangeeMiseAJour } from '../components/MiseAJour';
 
 // La page Mon compte : un menu de rangées (icône, titre, sous-titre, chevron) groupées en cartes, du
 // même dessin partout. Une rangée mène soit à une page (lien), soit à une action (bouton), soit se
@@ -1011,6 +1012,9 @@ export default function Account({ integre = false, milieu = null }) {
       <MesDecisions />
       </RubriqueCompte>
       )}
+
+      {/* Une version plus récente de l'app attend (Owen, 2026-11-03, maquettes/mise-a-jour, E) : en tête, app seulement. */}
+      <RangeeMiseAJour />
 
       {/* ——— Gérer mon compte : tout ce qui décrit la personne et son accès, en une rangée qui ouvre ses réglages dans une
           feuille ; sur le site large, la rubrique les montre directement. ——— */}

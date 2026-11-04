@@ -50,6 +50,11 @@ jobs:
       - name: Greffons de l'app Android
         run: npm run check:greffons
 
+      # Les décisions de mise à jour des applis (mises-a-jour/*.json, LISEZMOI.md) : un fichier mal formé serait ignoré
+      # au build sans que personne le voie ; ici il fait échouer la proposition de fusion.
+      - name: Décisions de mise à jour des applis
+        run: npm run check:mises-a-jour
+
       # Le build inclut le pré-rendu (scripts/prerender.mjs), qui écrit une page statique par page
       # publique et par langue. Il échoue si une table de traduction manque.
       - name: Build de production

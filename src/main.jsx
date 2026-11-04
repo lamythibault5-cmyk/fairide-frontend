@@ -13,7 +13,7 @@ import { demarrerSentry, arreterSentry } from './sentry';
 import App from './App.jsx';
 import AppErrorBoundary from './components/AppErrorBoundary';
 import BandeauHorsLigne from './components/BandeauHorsLigne';
-import MiseAJourObligatoire from './components/MiseAJourObligatoire';
+import MiseAJour from './components/MiseAJour';
 import { AuthProvider } from './context/AuthContext';
 import { CartProvider } from './context/CartContext';
 import { ToastProvider } from './context/ToastContext';
@@ -195,7 +195,7 @@ createRoot(document.getElementById('root')).render(
               <PreviewModeProvider>
                 <CartProvider>
                   <BandeauHorsLigne />
-                  <MiseAJourObligatoire />
+                  <MiseAJour />
                   <App />
                 </CartProvider>
               </PreviewModeProvider>

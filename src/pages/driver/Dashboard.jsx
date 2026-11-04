@@ -41,6 +41,7 @@ import '../../ecran-livreur.css';
 import '../../site-livreur.css';
 import { telephoneLisible } from '../../validation';
 import { haversineDistanceKm } from '../../menuCategories';
+import { signalerOccupe } from '../../miseAJour';
 
 /* LA TOURNÉE DU LIVREUR (fondateur, 2026-10-30, maquettes/tournee-livreur : toutes les recommandations). Les chiffres viennent
    de sources publiées (backend docs/delais.md) : vol d'oiseau ×1,3 pour les rues, 16 km/h à vélo, 19 à vélo électrique,
@@ -404,6 +405,10 @@ export default function DriverDashboard() {
   // 15/10/2026 (natif.js suivrePositionCourse, service au premier plan avec sa notification) : le suivi reprend quand
   // `enLivraison` change. L'horodatage renvoyé au client reste : une carte figée doit se lire comme telle.
   const enLivraison = mine.some((o) => o.status === 'livraison');
+  // Une course en main (à récupérer ou en route) : la mise à jour de l'app attend qu'elle soit livrée (Owen, 2026-11-03,
+  // src/miseAJour.js). Pas remis à zéro en quittant l'écran : Mon compte pendant une course ne doit pas l'ouvrir.
+  const courseEnMain = mine.some((o) => ['preparation', 'pret', 'livraison'].includes(o.status));
+  useEffect(() => { signalerOccupe('course', courseEnMain); }, [courseEnMain]);
   /* LA POSITION N'EST DEMANDÉE QUE QUAND ELLE SERT (audit du 19/10, courier-14). Le suivi démarrait à l'ouverture de
    * « Courses » pour tout livreur : le navigateur demandait la position à un nouvel inscrit dont le dossier n'était même pas
    * envoyé, contre la promesse de l'inscription (driverGeoNotice : « que lorsque tu voudras recevoir des courses »). Il

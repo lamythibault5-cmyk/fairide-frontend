@@ -403,6 +403,25 @@ export function ParametersTab() {
             <input id={`${id}-min-ios`} type="number" min="0" step="1" inputMode="numeric" value={champ('app_min_build_ios') || '0'} onChange={changer('app_min_build_ios')} />
             <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramMinIosHelp')}</p>
           </div>
+          {/* Version CONSEILLÉE (Owen, 2026-11-03, maquettes/mise-a-jour) : sous ce build, la notification refusable qui descend
+              du haut, et la rangée de Mon compte. Avec « ce qui change », une ligne par nouveauté, trois au plus, par langue. */}
+          <div className="field">
+            <label htmlFor={`${id}-reco-android`}>{t('conformite.paramRecoAndroid')}</label>
+            <input id={`${id}-reco-android`} type="number" min="0" step="1" inputMode="numeric" value={champ('app_reco_build_android') || '0'} onChange={changer('app_reco_build_android')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramRecoAndroidHelp')}</p>
+          </div>
+          <div className="field">
+            <label htmlFor={`${id}-reco-ios`}>{t('conformite.paramRecoIos')}</label>
+            <input id={`${id}-reco-ios`} type="number" min="0" step="1" inputMode="numeric" value={champ('app_reco_build_ios') || '0'} onChange={changer('app_reco_build_ios')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramRecoIosHelp')}</p>
+          </div>
+          {['Fr', 'Nl', 'En'].map((l) => (
+            <div className="field" key={l}>
+              <label htmlFor={`${id}-nouveautes-${l}`}>{t(`conformite.paramNouveautes${l}`)}</label>
+              <textarea id={`${id}-nouveautes-${l}`} rows={3} value={champ(`app_nouveautes_${l.toLowerCase()}`) || ''} onChange={changer(`app_nouveautes_${l.toLowerCase()}`)} />
+            </div>
+          ))}
+          <p className="small" style={{ margin: '-4px 0 12px' }}>{t('conformite.paramNouveautesHelp')}</p>
           <button type="button" className="btn-teal" disabled={!age && date === null && !Object.keys(autres).length} onClick={enregistrer}>{t('conformite.save')}</button>
           <h4 style={{ marginTop: 16 }}>{t('conformite.paramFlags')}</h4>
           {/* Ni le GO (il a son bouton dans Aujourd'hui, et la route des drapeaux le refuse ; audit du 19/10, admin-75), ni

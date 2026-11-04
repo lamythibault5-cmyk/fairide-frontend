@@ -21,6 +21,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import { demarrerTerminalNavigateur, EVENEMENT_COMMANDE } from '../../terminalNavigateur';
+import { signalerOccupe } from '../../miseAJour';
 import Icone from '../../components/Icone';
 import '../../site-pro.css';
 
@@ -92,6 +93,10 @@ export default function DashboardLayout() {
   const [erreurChargement, setErreurChargement] = useState(null);
   const tentatives = useRef(0);
   const orderAlert = useNewOrderAlert(orders, ordersLoaded);
+  // Une commande attend d'être acceptée : la mise à jour de l'app attend qu'elle le soit (Owen, 2026-11-03, src/miseAJour.js),
+  // le téléphone de cuisine ne perd jamais une commande à cause d'une fenêtre.
+  const commandeAAccepter = orders.some((o) => o.status === 'nouveau' && o.paid);
+  useEffect(() => { signalerOccupe('a-accepter', commandeAAccepter); }, [commandeAAccepter]);
   // La feuille « Nouvelle commande » (NouvelleCommandeModale) : l'identifiant de la commande qu'elle montre. Elle s'ouvre
   // d'elle-même à l'arrivée d'une commande, ou quand on touche « 1 commande à traiter » sur l'accueil (audit design 2).
   const [feuilleCommande, setFeuilleCommande] = useState(null);

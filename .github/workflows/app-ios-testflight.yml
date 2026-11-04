@@ -171,6 +171,14 @@ jobs:
             -authenticationKeyID "$ASC_KEY_ID" -authenticationKeyIssuerID "$ASC_ISSUER_ID" | tail -30
           echo "Build $NUMERO_BUILD envoyé : App Store Connect › Fairide › TestFlight (10 à 30 min de traitement chez Apple)."
 
+      # Les décisions de mise à jour (mises-a-jour/*.json) partent au serveur avec ce numéro de build ; il ne les applique
+      # qu'une fois une version au moins aussi récente en ligne sur l'App Store (fairide-backend/versionsApplis.js).
+      # Sans le secret APP_BUILDS_TOKEN ou si le serveur ne répond pas : un avertissement, jamais un échec.
+      - name: Décisions de mise à jour envoyées au serveur
+        env:
+          APP_BUILDS_TOKEN: ${{ secrets.APP_BUILDS_TOKEN }}
+        run: node scripts/mises-a-jour.mjs envoyer ios "$NUMERO_BUILD"
+
       - name: Nettoyage
         if: always()
         run: |
