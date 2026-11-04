@@ -25,7 +25,7 @@ export const ADMIN_HUBS = [
   { key: 'couriers', icon: 'scooter', modules: ['drivers', 'couriers', 'logistics'] },
   { key: 'customers', icon: 'personnes', modules: ['clients', 'promotions', 'marketing'] },
   { key: 'inbox', icon: 'bulle', modules: ['support', 'messages', 'tasks'] },
-  { key: 'money', icon: 'euro', modules: ['dashboard', 'finance', 'payments', 'invoices', 'accounting', 'reports'] },
+  { key: 'money', icon: 'euro', modules: ['dashboard', 'finance', 'rentabilite', 'payments', 'invoices', 'accounting', 'reports'] },
   // Documents vit ici et pas sous Commerces : il couvre aussi les livreurs. Ses urgences (pièce
   // expirée, à vérifier) remontent de toute façon sur l'accueil, qui pointe directement dessus.
   { key: 'settings', icon: 'reglages', modules: ['settings', 'team', 'documents', 'compliance', 'sponsors', 'automations'] },
@@ -55,6 +55,8 @@ export const ADMIN_MODULES = [
   // peu, si le serveur la fournit) mérite une pastille.
   { key: 'promotions', path: '/admin/promotions', icon: 'etiquette', hub: 'customers', badge: (o) => pastille(n(o.promotions?.expiringSoon)) },
   { key: 'finance', path: '/admin/finance', icon: 'euro', hub: 'money', badge: aucun },
+  // Coûts et rentabilité (Owen, 2026-11-04) : coûts fixes et de départ, mois par mois, simulation et point mort.
+  { key: 'rentabilite', path: '/admin/rentabilite', icon: 'tendance', hub: 'money', badge: aucun },
   { key: 'payments', path: '/admin/payments', icon: 'carteBancaire', hub: 'money', badge: (o) => (o.payments?.failedToday !== undefined ? pastille(n(o.payments?.failedToday), 'danger') : null) },
   { key: 'invoices', path: '/admin/invoices', icon: 'document', hub: 'money', badge: (o) => pastille(n(o.invoices?.unpaid), n(o.invoices?.overdue) > 0 ? 'danger' : 'warn') },
   { key: 'accounting', path: '/admin/accounting', icon: 'guide', hub: 'money', hidden: true, badge: (o) => pastille(n(o.accounting?.unbalancedGroups) + n(o.accounting?.flaggedEntries) + n(o.accounting?.openPeriodsBehind), 'warn') },
@@ -89,7 +91,7 @@ export const ADMIN_MODULES = [
 // Rôles autorisés par application (Équipe & accès) : absent = tous les membres. Le serveur applique la même
 // règle par préfixe d'adresse dans middleware/auth.js (requireAdmin) ; ici on ne fait que masquer la barre latérale.
 export const MODULE_ROLES = {
-  finance: ['owner', 'admin', 'finance'], payments: ['owner', 'admin', 'finance'], invoices: ['owner', 'admin', 'finance'], accounting: ['owner', 'admin', 'finance'],
+  finance: ['owner', 'admin', 'finance'], rentabilite: ['owner', 'admin', 'finance'], payments: ['owner', 'admin', 'finance'], invoices: ['owner', 'admin', 'finance'], accounting: ['owner', 'admin', 'finance'],
   settings: ['owner', 'admin'], automations: ['owner', 'admin'],
   marketing: ['owner', 'admin', 'ops'],
   logistics: ['owner', 'admin', 'ops', 'support'],

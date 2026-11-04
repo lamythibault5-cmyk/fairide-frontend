@@ -160,6 +160,21 @@ the phone, with location already allowed (never asked for this), is more than 1 
   `contract_version === VERSION` (e.g. silence-as-yes on missing items needs 2026.21, the 11.11 % cap needs 2026.22).
   New version = bump `VERSION`, add it to `VERSIONS_VALABLES`, write `CHANGEMENTS` and the clauses; nothing else.
 
+## Costs and break-even screen (founder, 2026-11-04)
+
+Admin › Finances › **Coûts et rentabilité** (`/admin/rentabilite`, owner / admin / finance): the company's fixed costs
+(per month, quarter or year, with a start and an optional end), its start-up costs, the real result month by month, and a
+« Et si… ? » simulation that gives the month's result and the break-even number of orders. It is a **management view, not
+accounting**: the amounts are typed by the team (rounded, from memory) in their own tables (`couts_fixes`, `couts_depart`,
+backend migration 110, which seeded the founder's figures of 2026-11-04), and real invoices stay in Comptabilité › Dépenses.
+- Real side (backend `rentabilite.js`): revenue = commission + system fee of orders paid through Fairride, with the Finance
+  page's definitions (`chiffresArgent.js`); Stripe fees = the `stripe_fee` entries really booked (656); Stripe Connect is
+  **estimated** (2 € per shop or courier paid in the month, 0,10 € per weekly payout, 0,25 % of what is paid out).
+- Simulation (front `src/pages/admin/rentabilite/calcul.js`): per order, delivery keeps 10 % of the food + 10 % of the
+  delivery fee, takeaway paid online 10 % of the food, takeaway paid at the shop **nothing**; minus Stripe (Bancontact
+  fixed, card % + fixed, mix chosen on screen) and a few cents of SMS. Paid Connect accounts never exceed the orders that
+  pay them. Stripe's prices live once, in `rentabilite.TARIFS` (read 2026-11-04 on stripe.com/en-be): update them there.
+
 ## Three sellers per order (decided 2026-09-23)
 
 The customer buys the food from the business, the **delivery from the independent courier** who accepts
