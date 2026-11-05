@@ -7278,7 +7278,9 @@ export default {
       credite: 'Ton code promo est crédité : {montant}.',
       aSaisir: 'Entre le code reçu par SMS pour commander.',
       dossierTitre: 'Ton numéro',
-      dossierSous: 'Le client, le commerce et l’équipe doivent pouvoir te joindre. Un code par SMS, une seule fois.'
+      dossierSous: 'Le client, le commerce et l’équipe doivent pouvoir te joindre. Un code par SMS, une seule fois.',
+      murTitre: 'Confirme ton numéro',
+      murSousCommerce: 'Quand une commande t’attend, on te prévient par SMS à ce numéro. Un code, une seule fois.'
     },
     accountUi: {
       moneyAndTools: 'Argent, contrat et outils',

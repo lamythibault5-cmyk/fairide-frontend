@@ -45,13 +45,15 @@ const COMMERCE_PANIER = {
 };
 const UTILISATEURS = {
   client: { id: 11, name: 'Cléa Client', firstName: 'Cléa', lastName: 'Client', email: 'client@exemple.be', role: 'client', roles: ['client'], phone: '+32 470 00 00 01' },
-  driver: { id: 12, name: 'Lou Livreur', firstName: 'Lou', lastName: 'Livreur', email: 'livreur@exemple.be', role: 'driver', roles: ['driver'], phone: '+32 470 00 00 02' },
-  restaurant: { id: 13, name: 'Rémi Resto', firstName: 'Rémi', lastName: 'Resto', email: 'resto@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 03', restaurantId: 1 },
+  driver: { id: 12, name: 'Lou Livreur', firstName: 'Lou', lastName: 'Livreur', email: 'livreur@exemple.be', role: 'driver', roles: ['driver'], phone: '+32 470 00 00 02', phoneVerified: true },
+  restaurant: { id: 13, name: 'Rémi Resto', firstName: 'Rémi', lastName: 'Resto', email: 'resto@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 03', phoneVerified: true, restaurantId: 1 },
+  // Commerce au numéro pas encore prouvé : le mur du numéro (MurTelephone.jsx, 2026-11-05) au lieu du tableau de bord.
+  murNumero: { id: 17, name: 'Noa Neuf', firstName: 'Noa', lastName: 'Neuf', email: 'noa@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 07', restaurantId: 1 },
   // Compte de l'équipe : la console n'existe pas dans l'application (Owen, 2026-10-20), /admin… y montre AdminSurLeSite.
   admin: { id: 14, name: 'Équipe Fairride', firstName: 'Équipe', lastName: 'Fairride', email: 'contact@fairride.be', role: 'client', roles: ['client'], isAdmin: true, phone: '+32 470 00 00 04' },
   // Client qui a pris la casquette « commerce » sans avoir encore de commerce (Mes casquettes) : vérifié à part, plus bas.
-  sansCommerce: { id: 15, name: 'Sam Test', firstName: 'Sam', lastName: 'Test', email: 'sam@exemple.be', role: 'restaurant', roles: ['client', 'restaurant'], phone: '+32 470 00 00 05' },
-  sansCommerceSeul: { id: 16, name: 'Alix Test', firstName: 'Alix', lastName: 'Test', email: 'alix@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 06' }
+  sansCommerce: { id: 15, name: 'Sam Test', firstName: 'Sam', lastName: 'Test', email: 'sam@exemple.be', role: 'restaurant', roles: ['client', 'restaurant'], phone: '+32 470 00 00 05', phoneVerified: true },
+  sansCommerceSeul: { id: 16, name: 'Alix Test', firstName: 'Alix', lastName: 'Test', email: 'alix@exemple.be', role: 'restaurant', roles: ['restaurant'], phone: '+32 470 00 00 06', phoneVerified: true }
 };
 
 // Pages ouvertes pour chaque profil. Les pages du site (aide, légales, « C'est bon »…) y sont exprès : dans l'app, elles
@@ -199,7 +201,7 @@ async function ouvrir(navigateur, base, { profil, appli = true, consentement = '
     localStorage.setItem('fairide_bienvenue', JSON.stringify({ vu: true, role: role || 'client', commune: 'Ixelles' }));
     if (consentement) { localStorage.setItem('fairide_cookie_consent', consentement); localStorage.setItem('fairide_cookie_consent_at', String(Date.now())); }
     if (session) localStorage.setItem('fairide_session', JSON.stringify(session));
-  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil.startsWith('sansCommerce') ? 'restaurant' : profil });
+  }, { appli, consentement, session: profil === 'visiteur' ? null : { token: `jeton-${profil}`, user: UTILISATEURS[profil] }, role: profil === 'visiteur' ? null : profil.startsWith('sansCommerce') || profil === 'murNumero' ? 'restaurant' : profil });
   const page = await ctx.newPage();
   const origine = new URL(base).origin;
   await page.route('**/*', (route) => {
@@ -380,6 +382,19 @@ try {
     } catch (e) { r2.problemes.push(`carte sans commerce incomplète (${e.message.split('\n')[0]})`); }
     resultats.push({ profil: 'sansCommerceSeul', page: '/dashboard/menu (sans commerce)', ...r2 });
     await deux.ctx.close();
+  }
+  // Commerce au numéro pas encore prouvé (fondateur, 2026-11-05) : le mur du numéro, en écran plein de l'app, à la place du
+  // tableau de bord ; il garde une sortie (« Se déconnecter »).
+  {
+    const { ctx, page } = await ouvrir(navigateur, base, { profil: 'murNumero' });
+    await page.goto(`${base}/dashboard/orders`);
+    await page.locator('.bv-plein .bv-titre').waitFor({ timeout: 8000 }).catch(() => {});
+    const r = await examiner(page, { profil: 'murNumero', appli: true });
+    const titre = await page.locator('.bv-plein .bv-titre').textContent().catch(() => '');
+    if (titre !== 'Confirme ton numéro') r.problemes.push(`mur du numéro absent (titre : « ${titre || 'aucun'} »)`);
+    if (!(await page.locator('.bv-plein').getByRole('button', { name: 'Se déconnecter' }).count())) r.problemes.push('mur du numéro sans « Se déconnecter »');
+    resultats.push({ profil: 'murNumero', page: '/dashboard/orders (numéro à prouver)', ...r });
+    await ctx.close();
   }
   // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
   // (fondateur, 2026-10-16 : la question se pose par une case à l'inscription, au moment d'une panne et dans Mon compte).

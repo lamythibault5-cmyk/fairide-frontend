@@ -7250,7 +7250,9 @@ export default {
       credite: 'Your promo code has been credited: {montant}.',
       aSaisir: 'Enter the code from the text to order.',
       dossierTitre: 'Your number',
-      dossierSous: 'Customers, shops and the team need to be able to reach you. One code by text, just once.'
+      dossierSous: 'Customers, shops and the team need to be able to reach you. One code by text, just once.',
+      murTitre: 'Confirm your number',
+      murSousCommerce: 'When an order is waiting for you, we text you at this number. One code, just once.'
     },
     accountUi: {
       moneyAndTools: 'Money, contract and tools',

@@ -26,7 +26,8 @@ export function Drapeau() {
   return <span className="bv-drapeau" aria-hidden="true"><i /><i /><i /></span>;
 }
 
-function Langues() {
+// Aussi en haut du mur du numéro (MurTelephone.jsx), qui n'a pas de bouton retour.
+export function Langues() {
   const { language, setLanguage, languages } = useLanguage();
   return (
     <div className="bv-langues" role="group" aria-label="Langue / Taal / Language">

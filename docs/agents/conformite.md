@@ -21,6 +21,14 @@ components live in [src/components/conformite/](../../src/components/conformite/
   otherwise (`PHONE_VERIFICATION_REQUIRED`, routes/orders.js; the quote passes). « Je n'ai pas reçu le SMS » gives an e-mail
   code after 30 s that lets the order through without proving the number (`users.phone_email_fallback_at`); the sign-up
   promo code is credited only when the number is proven by SMS (one account per number).
+  **Shops and couriers prove their number at sign-up** (founder, 2026-11-05: « only the client can wait until he has to
+  order »): [ProtectedRoute](../../src/components/ProtectedRoute.jsx) puts [MurTelephone](../../src/components/MurTelephone.jsx)
+  in front of every `/dashboard` and `/driver` page while the number is unproven (no « later », only « Se déconnecter »).
+  Existing accounts get it at their next opening too (22 of 30 approved shops had no proven number on 2026-11-05). The
+  same e-mail fallback lets them in (an SMS outage must not lose sign-ups, as on 22/10), but the number stays unproven:
+  the shop's « Vérifie ton mobile » step stays and the courier dossier still can't be sent. Not for the team acting for an
+  account, test accounts (`is_test`, store reviewers) or simulation. Front only: the backend opens the account as before,
+  and app versions built before it don't show the wall.
 - **Restaurant page**: seller block visible without a click ([FicheVendeur](../../src/components/conformite/FicheVendeur.jsx)),
   allergens and an 18+ badge on each dish, a « Signaler » link to [/signaler](../../src/pages/legal/ReportPage.jsx).
   [/classement](../../src/pages/legal/RankingPage.jsx) describes the ranking **as the code does it** — if you
@@ -51,8 +59,9 @@ components live in [src/components/conformite/](../../src/components/conformite/
   is status + company number + vehicle only; bag and « another platform? » are in the profile's Infos step, the
   municipality comes from the address. The courier profile opens on a « Prochaine étape » card.
   **Express courier signup since 2026-10-22** (founder, version A of `maquettes/inscription-livreur/inscription-livreur.html`):
-  the app signup asks the account only (e-mail, name, phone, last screen; no code since 2026-11-02: the number is proven on
-  the dossier's first screen « Ton numéro », a `telephone` missing item that blocks the sending; no status, company number, vehicle or
+  the app signup asks the account only (e-mail, name, phone, last screen; no code inside the sign-up since 2026-11-02: the
+  number is proven right after, on the phone wall (2026-11-05, above), and the dossier's first screen « Ton numéro » keeps a
+  `telephone` missing item that blocks the sending until it is proven by SMS; no status, company number, vehicle or
   address — the backend accepts a courier without them). The dossier then asks « Ton activité » (status, company number read
   at the EU VAT register VIES, which fills legal name, seat, address and zone; the address typed only when nobody gives it;
   school, VAT regime, nationality declared in one tap, social insurance fund), « Tes courses » (vehicle, zone, other

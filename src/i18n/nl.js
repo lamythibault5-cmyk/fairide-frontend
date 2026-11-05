@@ -7259,7 +7259,9 @@ export default {
       credite: 'Je promocode is gecrediteerd: {montant}.',
       aSaisir: 'Vul de code uit de sms in om te bestellen.',
       dossierTitre: 'Je nummer',
-      dossierSous: 'Klanten, zaken en het team moeten je kunnen bereiken. Eén code per sms, één keer.'
+      dossierSous: 'Klanten, zaken en het team moeten je kunnen bereiken. Eén code per sms, één keer.',
+      murTitre: 'Bevestig je nummer',
+      murSousCommerce: 'Wacht er een bestelling op je, dan sturen we een sms naar dit nummer. Eén code, één keer.'
     },
     accountUi: {
       moneyAndTools: 'Geld, contract en tools',

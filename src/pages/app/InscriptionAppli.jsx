@@ -33,8 +33,9 @@ import { ETAPES } from './etapesInscription';
  * détail » d'un restaurateur tenait une dizaine de champs. L'accueil venait de donner l'impression d'une application ;
  * l'inscription redevenait un site. Elle se fait donc ici, avec les écrans de l'accueil (même en-tête, même barre de
  * progression, même animation) : une question par écran, sans défiler, jusqu'au compte ouvert. Plus de code à la fin
- * (fondateur, 2026-11-02, maquettes/inscription-legere) : « Créer mon compte » ouvre le compte, et le numéro se prouve à la
- * première commande (VerifTelephone.jsx, feuille « Avant de commander » du paiement).
+ * (fondateur, 2026-11-02, maquettes/inscription-legere) : « Créer mon compte » ouvre le compte. Le client prouve son numéro à
+ * sa première commande (VerifTelephone.jsx, feuille « Avant de commander » du paiement) ; un commerce ou un livreur, juste
+ * après, sur le mur du numéro qui garde son espace (MurTelephone.jsx, fondateur, 2026-11-05).
  *
  * MÊMES DONNÉES, MÊMES ROUTES que la page du site (Auth.jsx) : POST /auth/register, ou /auth/google et /auth/apple
  * avec le jeton gardé. Les règles de chaque champ sont celles d'Auth.jsx, qui reproduisent

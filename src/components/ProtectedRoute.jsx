@@ -2,9 +2,19 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import RedirectionRole from './RedirectionRole';
+import { lazyPage } from '../lazyPage';
+
+// Commerce et livreur : numéro prouvé avant d'entrer (fondateur, 2026-11-05, voir MurTelephone.jsx). Le client, lui, le prouve à
+// sa première commande. Code reçu par e-mail après un SMS perdu (phoneEmailFallback) : il entre. Ni l'équipe qui agit pour le
+// compte, ni un compte de test, ni la simulation.
+const MurTelephone = lazyPage(() => import('./MurTelephone'));
+function murTelephone(user, role, actingAdminEmail) {
+  return (role === 'restaurant' || role === 'driver') && !user.phoneVerified && !user.phoneEmailFallback
+    && !user.simulation && !user.isTest && !user.isAdmin && !actingAdminEmail;
+}
 
 export default function ProtectedRoute({ role, admin, children }) {
-  const { user, role: userRole, roles, deconnexionVoulue } = useAuth();
+  const { user, role: userRole, roles, deconnexionVoulue, actingAdminEmail } = useAuth();
   const { previewMode } = usePreviewMode();
   const location = useLocation();
   // On retient la page demandée : après une session expirée au checkout, la reconnexion ramène au checkout (panier
@@ -25,5 +35,6 @@ export default function ProtectedRoute({ role, admin, children }) {
   // Page d'un autre rôle (audit du 19/10, auth-17) : on le dit, et « Mes casquettes » (Mon compte) permet d'ajouter ce rôle.
   if (!roleOk) return ['client', 'restaurant', 'driver'].includes(role) ? <RedirectionRole role={role} /> : <Navigate to="/" replace />;
   if (admin && !user.isAdmin) return <Navigate to="/" replace />;
+  if (murTelephone(user, role, actingAdminEmail)) return <MurTelephone role={role} />;
   return children;
 }
