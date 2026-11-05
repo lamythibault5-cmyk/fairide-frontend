@@ -55,13 +55,17 @@ export default function EnvoiCarteAppli({ restoId, urlSuggeree = '', onEnvoyee, 
 
   async function envoyer() {
     // Même règle que la version du site : sans carte en ligne, il faut un lien, une photo / un PDF ou une précision.
-    if (!enLigne && !url.trim() && !fichiers.length && !notes.trim()) { setErreur(t('menuConcierge.errNeedSource')); return; }
+    // N'est envoyé que ce que l'écran montre : le lien pour une carte en ligne, les fichiers pour « Autre ». Avant, des
+    // fichiers choisis sous « Autre » partaient encore après être revenu à Uber Eats (comparaison site / app, 2026-11-05).
+    const lien = enLigne ? url.trim() : '';
+    const envoyes = enLigne ? [] : fichiers;
+    if (!enLigne && !envoyes.length && !notes.trim()) { setErreur(t('menuConcierge.errNeedSource')); return; }
     setBusy(true);
     try {
       const photos = enLigne ? true : wantsPhotos;
-      const r = fichiers.length
-        ? await apiUpload(`/restaurants/${restoId}/menu/concierge`, { files: fichiers, token, fieldName: 'files', fields: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos: photos ? 'true' : 'false' } })
-        : await api(`/restaurants/${restoId}/menu/concierge`, { method: 'POST', token, body: { platform, url: url.trim(), notes: notes.trim(), wantsPhotos: photos } });
+      const r = envoyes.length
+        ? await apiUpload(`/restaurants/${restoId}/menu/concierge`, { files: envoyes, token, fieldName: 'files', fields: { platform, url: lien, notes: notes.trim(), wantsPhotos: photos ? 'true' : 'false' } })
+        : await api(`/restaurants/${restoId}/menu/concierge`, { method: 'POST', token, body: { platform, url: lien, notes: notes.trim(), wantsPhotos: photos } });
       setDemande(r.request);
       setRecule(false); setEcran('envoye');
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }

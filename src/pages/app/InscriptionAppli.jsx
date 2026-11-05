@@ -164,6 +164,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [regimes, setRegimes] = useState(() => regimesDe(null));
   const [legalName, setLegalName] = useState('');
   const [vatNumber, setVatNumber] = useState('');
+  const raisonSocialeBce = useRef(''); // dernière raison sociale remplie par la BCE, remplaçable par la suivante (shop-1)
   const [responsable, setResponsable] = useState(null); // null : la personne qui s'inscrit
   const [jours, setJours] = useState([]);
   const [creneaux, setCreneaux] = useState([{ open: '11:00', close: '22:00' }]);
@@ -261,8 +262,16 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       api(`/restaurants/lookup/company?number=${chiffres}`).then((r) => {
         if (annule) return;
         setVerifSociete(r);
-        if (r.vatNumber) setVatNumber(r.vatNumber);
-        if (r.valid && r.legalName) setLegalName((v) => v || r.legalName);
+        // TVA et raison sociale suivent chaque numéro trouvé, comme sur le site (Auth.jsx, shop-1) : la raison sociale tapée
+        // à la main reste, celle que la BCE avait mise pour un numéro mal tapé est remplacée.
+        setVatNumber(r.vatNumber || '');
+        if (r.valid && r.legalName) {
+          setLegalName((v) => {
+            if (v.trim() && v !== raisonSocialeBce.current) return v;
+            raisonSocialeBce.current = r.legalName;
+            return r.legalName;
+          });
+        }
       }).catch(() => { if (!annule) setVerifSociete({ valid: null, error: 'indisponible' }); });
     }, 600);
     return () => { annule = true; clearTimeout(minuteur); };
@@ -425,10 +434,12 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       ...regimes
     };
   }
+  // TOUJOURS déduite du numéro envoyé, comme Auth.jsx (tvaInscription, audit du 19/10, shop-1) : la TVA trouvée pour un
+  // premier numéro mal tapé restait ici après correction (comparaison site / app, 2026-11-05), et « Configurer mes
+  // paiements » refusait plus tard la discordance.
   function tva() {
-    if (vatNumber.trim()) return vatNumber.trim();
     const chiffres = companyNumber.replace(/\D/g, '');
-    return chiffres.length === 10 ? `BE${chiffres}` : '';
+    return chiffres.length === 10 ? `BE${chiffres}` : vatNumber.trim();
   }
   // Le numéro, et la boîte tapée sous la carte de l'adresse (« 120 bte 3 »).
   function numeroAvecBoite() {

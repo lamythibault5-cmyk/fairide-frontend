@@ -563,6 +563,8 @@ export default function OrdersPage() {
         {o.orderNumber ? <span className="commande-numero">{numeroCommande(o)}</span> : <span className={`status-badge status-${o.status}`}>{statusLabel(o.status, o.orderType, t)}</span>}
       </div>
       <p className="ec-cmd-sous">{sousTitre(o)}</p>
+      {/* Adresse changée par le client (2026-10-27) : la vue large du site le disait, pas l'app (comparaison site / app, 2026-11-05). */}
+      {o.orderType === 'delivery' && o.addressChangedAt && <p className="small sp-cmd-info">{t('dashDriver.addressChanged')}</p>}
       <BadgeEquipe order={o} t={t} />
       {/* Paiement sur place : encadré, c'est de l'argent à encaisser (fondateur, 2026-10-07). */}
       {o.paymentMode === 'on_site' && (!rienAEncaisser(o) || o.pickupNoShow) && (
@@ -674,6 +676,7 @@ export default function OrdersPage() {
               <div className="divider" />
               <h4 style={{ margin: '0 0 6px' }}>{selectedOrder.orderType === 'pickup' ? t('ordersResto.takeaway') : t('ordersResto.delivery')}</h4>
               {selectedOrder.orderType === 'delivery' && <p className="small" style={{ margin: '4px 0' }}><Icone nom="position" taille={16} className="icone-texte" />{' '}{selectedOrder.address}</p>}
+              {selectedOrder.orderType === 'delivery' && selectedOrder.addressChangedAt && <p className="small" style={{ margin: '4px 0', fontWeight: 700 }}>{t('dashDriver.addressChanged')}</p>}
               {selectedOrder.orderType === 'pickup' && <p className="small" style={{ margin: '4px 0' }}>{t('ordersResto.pickupInfo')}</p>}
               {selectedOrder.clientPhone && <p className="small" style={{ margin: '4px 0' }}><a href={`tel:${selectedOrder.clientPhone}`}><Icone nom="telephone" taille={16} className="icone-texte" />{' '}{telephoneLisible(selectedOrder.clientPhone)}</a></p>}
               <BandeauAllergie order={selectedOrder} />
