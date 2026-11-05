@@ -40,7 +40,7 @@ import { ETAPES } from './etapesInscription';
  * avec le jeton gardé. Les règles de chaque champ sont celles d'Auth.jsx, qui reproduisent
  * celles du serveur (routes/auth.js) — changer une règle, c'est la changer aux trois endroits. Ce qui diffère :
  *   - les horaires se donnent en une fois (jours + heures, un 2e service possible) au lieu de sept lignes ; un jour
- *     différent des autres se règle ensuite dans Mon commerce › Horaires ;
+ *     différent des autres s'ajoute en dessous (« Un jour avec d'autres heures », 2026-11-05) ;
  *   - ce qui est facultatif n'est pas demandé : autres responsables, second numéro ou e-mail du
  *     commerce, numéro masqué au public — tout se règle dans Mon commerce ;
  *   - pas de recherche automatique des horaires sur le web, donc pas de case « j'ai vérifié le préremplissage » ;
@@ -167,6 +167,10 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [responsable, setResponsable] = useState(null); // null : la personne qui s'inscrit
   const [jours, setJours] = useState([]);
   const [creneaux, setCreneaux] = useState([{ open: '11:00', close: '22:00' }]);
+  // Les jours qui ont leurs propres heures ({ sat: [{ open, close }] }) ; les autres jours choisis prennent `creneaux`.
+  const [autresHeures, setAutresHeures] = useState({});
+  const [choixJour, setChoixJour] = useState(false);
+  const creneauxDuJour = (d) => autresHeures[d] || creneaux;
   const [services, setServices] = useState(() => ({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: modeEmporterParDefaut() }));
   // Dernier écran
   const [accepteCgu, setAccepteCgu] = useState(false);
@@ -198,7 +202,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     addressStreet: [addressStreet, setAddressStreet], addressNumber: [addressNumber, setAddressNumber], addressPostalCode: [addressPostalCode, setAddressPostalCode], addressCity: [addressCity, setAddressCity],
     companyNumber: [companyNumber, setCompanyNumber],
     nomCommerce: [nomCommerce, setNomCommerce], restoPhone: [restoPhone, setRestoPhone], specialites: [specialites, setSpecialites], regimes: [regimes, setRegimes],
-    legalName: [legalName, setLegalName], vatNumber: [vatNumber, setVatNumber], responsable: [responsable, setResponsable], jours: [jours, setJours], creneaux: [creneaux, setCreneaux], services: [services, setServices],
+    legalName: [legalName, setLegalName], vatNumber: [vatNumber, setVatNumber], responsable: [responsable, setResponsable], jours: [jours, setJours], creneaux: [creneaux, setCreneaux], autresHeures: [autresHeures, setAutresHeures], services: [services, setServices],
     referralCode: [referralCode, setReferralCode], referralOuvert: [referralOuvert, setReferralOuvert]
   };
   const brouillonActif = useRef(false);
@@ -323,7 +327,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       if (!legalName.trim()) e.legalName = requis;
       if (!nomResponsable) e.responsibleName = requis;
     }
-    if (cle === 'horaires' && (!jours.length || creneaux.some((c) => !c.open || !c.close))) e.hours = t('auth.errHours');
+    if (cle === 'horaires' && (!jours.length || jours.some((d) => creneauxDuJour(d).some((c) => !c.open || !c.close)))) e.hours = t('auth.errHours');
     if (cle === 'services' && !services.delivery && !services.pickup) e.services = t('auth.errServices');
     if (cle === 'adresse') {
       if (!addressStreet.trim()) e.addressStreet = requis;
@@ -403,7 +407,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   }
 
   function horaires() {
-    return Object.fromEntries(DAY_ORDER.map((d) => [d, jours.includes(d) ? creneaux.map((c) => ({ ...c })) : []]));
+    return Object.fromEntries(DAY_ORDER.map((d) => [d, jours.includes(d) ? creneauxDuJour(d).map((c) => ({ ...c })) : []]));
   }
   // Le commerce tel qu'Auth.jsx l'envoie (construireCommerce), avec les réglages facultatifs à leur valeur par défaut.
   function commerce() {
@@ -517,8 +521,46 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   }
 
   const titre = (texte, sous) => <><h1 className="bv-titre bv-titre-form">{texte}</h1>{sous && <p className="bv-sous">{sous}</p>}</>;
-  const basculerJour = (d) => { setJours((l) => (l.includes(d) ? l.filter((x) => x !== d) : [...l, d])); setErreurs({}); };
-  const changerCreneau = (i, champ, v) => setCreneaux((l) => l.map((c, j) => (j === i ? { ...c, [champ]: v } : c)));
+  const basculerJour = (d) => {
+    // Un jour retiré perd aussi ses propres heures : recoché, il reprend celles des autres jours.
+    if (jours.includes(d)) setAutresHeures(({ [d]: _retire, ...reste }) => reste);
+    setJours((l) => (l.includes(d) ? l.filter((x) => x !== d) : [...l, d]));
+    setErreurs({});
+  };
+  // Un jour à part commence avec les heures des autres jours : on ne change que ce qui diffère.
+  const ajouterJourAPart = (d) => { setAutresHeures((a) => ({ ...a, [d]: creneaux.map((c) => ({ ...c })) })); setChoixJour(false); setErreurs({}); };
+  const changerJourAPart = (d, liste) => setAutresHeures((a) => ({ ...a, [d]: liste }));
+  const joursAPart = DAY_ORDER.filter((d) => jours.includes(d) && autresHeures[d]);
+  // « Un jour avec d'autres heures » : seulement s'il reste au moins deux jours aux heures communes (sinon, il n'y a pas
+  // d'« autres jours »).
+  const joursCommuns = jours.filter((d) => !autresHeures[d]);
+  /* Les heures d'une liste de services (les heures communes ou celles d'un jour à part) : deux services au plus, comme
+     avant ; un jour qui en veut plus se règle dans Mon commerce › Horaires (cinq par jour). */
+  const lignesCreneaux = (liste, onListe, jour) => (
+    <>
+      {liste.map((c, i) => (
+        <div key={i} className="bv-creneau">
+          <input type="time" value={c.open} aria-label={jour ? t('hoursEditor.openTime', { day: dayLabel(jour, t), n: i + 1 }) : t('appli.insOuvre')}
+            onChange={(e) => onListe(liste.map((x, j) => (j === i ? { ...x, open: e.target.value } : x)))} />
+          <span aria-hidden="true">–</span>
+          <input type="time" value={c.close} aria-label={jour ? t('hoursEditor.closeTime', { day: dayLabel(jour, t), n: i + 1 }) : t('appli.insFerme')}
+            onChange={(e) => onListe(liste.map((x, j) => (j === i ? { ...x, close: e.target.value } : x)))} />
+          {i > 0 && (
+            <button type="button" className="bv-rond" aria-label={jour ? t('hoursEditor.removeServiceDay', { day: dayLabel(jour, t), n: i + 1 }) : t('hoursEditor.removeService')}
+              onClick={() => onListe(liste.filter((_, j) => j !== i))}>
+              <Icone nom="croix" taille={16} />
+            </button>
+          )}
+        </div>
+      ))}
+      {liste.length < 2 && (
+        <button type="button" className="bv-ajout" onClick={() => onListe([...liste, { open: '18:00', close: '22:00' }])}>
+          {/* Dans la carte d'un jour, le libellé court : le long passait sur deux lignes à 375 px. */}
+          ＋ {jour ? t('hoursEditor.addService').replace(/^\+\s*/, '') : t('appli.insDeuxiemeService')}
+        </button>
+      )}
+    </>
+  );
 
   let entete = null; // titre et sous-titre de l'étape : sur le bandeau iris, au-dessus de la feuille
   let contenu = null;
@@ -640,22 +682,37 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
               </button>
             ))}
           </div>
-          <span className="bv-etiquette">{t('appli.insHeures')}</span>
-          {creneaux.map((c, i) => (
-            <div key={i} className="bv-creneau">
-              <input type="time" value={c.open} aria-label={t('appli.insOuvre')} onChange={(e) => changerCreneau(i, 'open', e.target.value)} />
-              <span aria-hidden="true">–</span>
-              <input type="time" value={c.close} aria-label={t('appli.insFerme')} onChange={(e) => changerCreneau(i, 'close', e.target.value)} />
-              {i > 0 && (
-                <button type="button" className="bv-rond" aria-label={t('hoursEditor.removeService')} onClick={() => setCreneaux((l) => l.filter((_, j) => j !== i))}>
+          <span className="bv-etiquette">{t(joursAPart.length ? 'appli.insHeuresAutres' : 'appli.insHeures')}</span>
+          {lignesCreneaux(creneaux, setCreneaux)}
+          {/* UN JOUR AVEC D'AUTRES HEURES (fondateur, 2026-11-05) : avant, « tu le régleras ensuite dans Mon commerce », et
+              rien sur cet écran ne le permettait — un commerce fermé plus tôt le dimanche s'inscrivait avec de fausses heures.
+              Chaque jour à part a sa carte (ses heures, un 2e service, ✕ pour reprendre les heures des autres jours). */}
+          {joursAPart.map((d) => (
+            <div key={d} className="bv-jour-a-part">
+              <div className="bv-jour-a-part-tete">
+                <b>{dayLabel(d, t)}</b>
+                <button type="button" className="bv-rond" aria-label={t('appli.insJourCommeAutres', { day: dayLabel(d, t) })}
+                  onClick={() => setAutresHeures(({ [d]: _retire, ...reste }) => reste)}>
                   <Icone nom="croix" taille={16} />
                 </button>
-              )}
+              </div>
+              {lignesCreneaux(autresHeures[d], (liste) => changerJourAPart(d, liste), d)}
             </div>
           ))}
-          {creneaux.length < 2 && (
-            <button type="button" className="bv-ajout" onClick={() => setCreneaux((l) => [...l, { open: '18:00', close: '22:00' }])}>＋ {t('appli.insDeuxiemeService')}</button>
-          )}
+          {joursCommuns.length >= 2 && (choixJour ? (
+            <>
+              <span className="bv-etiquette" id="bv-i-jour-a-part">{t('appli.insQuelJour')}</span>
+              <div className="bv-jours bv-jours-choix" role="group" aria-labelledby="bv-i-jour-a-part">
+                {DAY_ORDER.map((d) => (
+                  <button key={d} type="button" disabled={!joursCommuns.includes(d)} aria-label={dayLabel(d, t)} onClick={() => ajouterJourAPart(d)}>
+                    {dayLabel(d, t).slice(0, 2)}
+                  </button>
+                ))}
+              </div>
+            </>
+          ) : (
+            <button type="button" className="bv-ajout" onClick={() => setChoixJour(true)}>＋ {t('appli.insJourDifferent')}</button>
+          ))}
           {erreurs.hours && <p className="field-error" role="alert">{erreurs.hours}</p>}
         </>
       );
