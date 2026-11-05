@@ -15,16 +15,19 @@ import { telephoneLisible } from '../validation';
  * Le compte s'ouvre sans code (backend POST /auth/register) ; le numéro se prouve là où il sert, avec ce seul composant :
  *   - la feuille « Avant de commander » du paiement, à la première commande d'un client (Checkout.jsx ; `auto`, `repliEmail`) ;
  *   - Mon compte, sous le numéro (Account.jsx) — c'est là que mène l'étape « Vérifie ton mobile » d'un commerce ;
- *   - l'écran « Ton numéro » du dossier livreur (DossierAppli.jsx ; `auto`).
+ *   - l'écran « Ton numéro » du dossier livreur (DossierAppli.jsx ; `auto`) ;
+ *   - le mur devant l'espace commerce et livreur (MurTelephone.jsx ; `auto`, `repliEmail`) : commerces et livreurs le prouvent
+ *     dès l'inscription (fondateur, 2026-11-05), seul le client attend sa première commande.
  * Le code part par SMS (backend /auth/me/phone/request-verification), par e-mail quand ce numéro ne peut pas en recevoir.
  * Six chiffres tapés : il part tout seul (pas de bouton à chercher sous le clavier). Autour du champ :
  *   - « Renvoyer le code », après 30 s (chaque SMS est payé ; le serveur renvoie le même code tant qu'il vaut) ;
  *   - « Ce n'est pas ton numéro ? Change-le » : le bon numéro, un code y part, et le confirmer le prouve
  *     (/auth/me/request-contact-change, puis confirm-contact-change) ;
- *   - `repliEmail` (paiement seulement) : « Je n'ai pas reçu le SMS », puis le code par e-mail après un décompte visible, comme
- *     l'écran du code de l'inscription d'avant (fondateurs, 22/10/2026). Ce code-là laisse commander sans prouver le numéro
- *     (backend phone_email_fallback_at) : un SMS perdu ne bloque pas une commande. Pas pour un commerce ni un livreur, dont le
- *     numéro doit vraiment être prouvé.
+ *   - `repliEmail` (paiement et mur du numéro) : « Je n'ai pas reçu le SMS », puis le code par e-mail après un décompte
+ *     visible, comme l'écran du code de l'inscription d'avant (fondateurs, 22/10/2026). Ce code-là laisse commander, ou entrer
+ *     dans l'espace commerce ou livreur, sans prouver le numéro (backend phone_email_fallback_at) : un SMS perdu ne bloque ni
+ *     une commande ni une inscription. Pas dans Mon compte ni dans le dossier livreur : là, le numéro doit vraiment être
+ *     prouvé (l'étape « Vérifie ton mobile » du commerce, l'envoi du dossier).
  * `onFait(user, { credited })` une fois le compte à jour ; `credited` : le code promo de l'inscription, crédité à cette preuve. */
 
 // Encore à prouver pour COMMANDER : ni numéro prouvé, ni code reçu par e-mail après un SMS perdu (backend routes/orders.js).
@@ -32,12 +35,25 @@ export function telephoneAVerifier(user) {
   return !!user && !user.simulation && !user.phoneVerified && !user.phoneEmailFallback;
 }
 
+/* UN CODE DÉJÀ PARTI N'EST PAS RENVOYÉ À CHAQUE AFFICHAGE (2026-11-05). `auto` envoie le code au montage ; or le composant se
+ * remonte : le mur du numéro à chaque page livreur du site (une ProtectedRoute par page), la feuille « Avant de commander »
+ * refermée puis rouverte. Chaque montage repartait au serveur, qui renvoyait le même code par un nouveau SMS (payé), et le
+ * sixième en une heure tombait sur « Trop de demandes » (vu en essai : quatre pages livreur, quatre SMS). Le dernier envoi est
+ * donc gardé ici, le temps de la page : remonté dans les 10 minutes (le code en vaut 15), le champ revient tout de suite, avec
+ * ce qui reste du décompte de « Renvoyer le code ». Un rechargement de la page renvoie, comme avant. */
+const CODE_RECENT_MS = 10 * 60 * 1000;
+let dernierEnvoi = null;
+function envoiRecent(user) {
+  return dernierEnvoi && user && dernierEnvoi.userId === user.id && Date.now() - dernierEnvoi.at < CODE_RECENT_MS ? dernierEnvoi : null;
+}
+
 export default function VerifTelephone({ auto = false, repliEmail = false, onFait, focusRef }) {
   const { user, token, refreshUser, requestContactChange, confirmContactChange } = useAuth();
   const { t } = useLanguage();
   const toast = useToast();
+  const [repris] = useState(() => (auto ? envoiRecent(user) : null));
   // repos → envoi → saisie (→ numero → saisie) ; « fait » une fois prouvé.
-  const [etape, setEtape] = useState(auto ? 'envoi' : 'repos');
+  const [etape, setEtape] = useState(repris ? (repris.attente ? 'envoi' : 'saisie') : auto ? 'envoi' : 'repos');
   const [canal, setCanal] = useState('sms');
   const [masque, setMasque] = useState('');
   const [code, setCode] = useState('');
@@ -52,17 +68,28 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
   const champ = useRef(null);
   const lance = useRef(false);
 
+  // Le code est parti : le champ, et le décompte de « Renvoyer le code » (`ecoule` : secondes déjà passées depuis l'envoi).
+  function codeParti(r, ecoule = 0) {
+    // Le numéro EN ENTIER : la personne est connectée, c'est le sien, et le lire en entier est ce qui fait voir une faute de frappe.
+    setCanal(r.canal === 'sms' ? 'sms' : 'email'); setMasque(user?.phone || r.phoneMasked || '');
+    setNumeroEnCours(''); setCode(''); setEtape('saisie');
+    lancerAttenteRenvoi(Math.max(0, DELAI_RENVOI_S - ecoule));
+  }
+
   async function demander({ parEmail = false } = {}) {
     setOccupe(true); setErreur('');
+    let requete = null;
     try {
-      const r = await api('/auth/me/phone/request-verification', { method: 'POST', token, body: parEmail ? { canal: 'email' } : {} });
+      requete = api('/auth/me/phone/request-verification', { method: 'POST', token, body: parEmail ? { canal: 'email' } : {} });
+      // Gardé dès le départ : un remontage pendant la requête (une page qui redirige aussitôt) attend sa réponse.
+      dernierEnvoi = { userId: user?.id, at: Date.now(), attente: requete };
+      const r = await requete;
       if (r.alreadyVerified) { await finir(await refreshUser()); return; }
-      // Le numéro EN ENTIER : la personne est connectée, c'est le sien, et le lire en entier est ce qui fait voir une faute de frappe.
-      setCanal(r.canal === 'sms' ? 'sms' : 'email'); setMasque(user?.phone || r.phoneMasked || '');
-      setNumeroEnCours(''); setCode(''); setEtape('saisie');
-      lancerAttenteRenvoi(DELAI_RENVOI_S);
+      dernierEnvoi = { userId: user?.id, at: Date.now(), canal: r.canal, phoneMasked: r.phoneMasked };
+      codeParti(r);
       if (parEmail) setSmsPasRecu(false);
     } catch (e) {
+      if (dernierEnvoi?.attente === requete) dernierEnvoi = null;
       // Pas encore de code : on reste où l'on était, avec la raison (plafond, numéro invalide…).
       setEtape((x) => (x === 'envoi' ? 'repos' : x));
       setErreur(e.message);
@@ -75,6 +102,11 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
     if (!auto || lance.current || !user) return;
     lance.current = true;
     suivre('inscription_ecran', { ecran: 'telephone-code', role: user.role, support: 'commun' });
+    if (repris?.attente) {
+      repris.attente.then((r) => { if (!r.alreadyVerified) codeParti(r); }).catch((e) => { setEtape('repos'); setErreur(e.message); });
+      return;
+    }
+    if (repris) { codeParti(repris, Math.floor((Date.now() - repris.at) / 1000)); return; }
     demander();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auto, user]);
@@ -83,6 +115,7 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
   if (focusRef) focusRef.current = () => { champ.current?.focus(); champ.current?.scrollIntoView?.({ block: 'center' }); };
 
   async function finir(maj, credited) {
+    dernierEnvoi = null;
     setEtape('fait'); setCode('');
     suivre('telephone_prouve', { support: 'commun' });
     if (credited) toast(t('verifTel.credite', { montant: euros(credited) }), 'succes');
@@ -114,6 +147,8 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
     setOccupe(true); setErreur('');
     try {
       const r = await requestContactChange('phone', nouveau.trim());
+      // Ce code-là va au nouveau numéro, pas à celui du compte : un remontage redemandera celui du compte.
+      dernierEnvoi = null;
       setCanal(r.canal === 'sms' ? 'sms' : 'email'); setMasque(nouveau.trim());
       setNumeroEnCours(nouveau.trim()); setCode(''); setSmsPasRecu(false); setEtape('saisie');
       lancerAttenteRenvoi(DELAI_RENVOI_S);

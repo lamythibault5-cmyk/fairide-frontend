@@ -5850,6 +5850,12 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
 .co-telephone h3 { margin: 0 0 4px; font-size: 18px; }
 .co-telephone > .small { margin: 0 0 12px; }
 .co-telephone-fenetre .vt { margin-top: 10px; }
+/* Le mur du numéro sur le site (MurTelephone.jsx, 2026-11-05) : une carte étroite au milieu, comme la connexion. Dans l'app,
+   ce sont les écrans .bv de l'inscription. */
+.mur-tel { max-width: 460px; padding-top: 32px; padding-bottom: 48px; }
+.mur-tel h1 { margin: 0 0 6px; font-size: 24px; }
+.mur-tel-sous { margin: 0 0 16px; color: var(--ink-soft); }
+.mur-tel-quitter { margin-top: 18px; font-size: 14px; color: var(--ink-soft); }
 /* « Où te livrer ? » : l'adresse trouvée avec la position, à confirmer d'un geste (InscriptionAppli.jsx, carteAdresse). */
 .bv-adresse-trouvee { display: flex; gap: 12px; align-items: flex-start; }
 .bv-adresse-trouvee > svg { flex: none; color: var(--iris); margin-top: 2px; }
