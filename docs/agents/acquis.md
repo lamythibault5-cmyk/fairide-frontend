@@ -59,7 +59,7 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   fraud, serious misconduct or legal obligation; random check selfie at shift start, only when the courier is really available (not paused, Stripe active, after GO), with 60 min to take it while jobs keep coming (`DELAI_SELFIE_MIN`, Owen 2026-10-21; `controleSelfie.js`); grid of the 8
   criteria of art. 337/3 in Admin › Conformité. Never add a rating, ranking or penalty — that is criterion 6°/7°.
 - **Accounting**: monthly export (`comptaMensuelle.js`) separates Fairide sales from third-party funds and is emailed once to
-  the archive address; subscription invoices are Fairide's own (`FAIRIDE-ABO-…`) and go through Peppol. The courier price
+  the archive address; the shop subscription and its invoices (`FAIRIDE-ABO-…`) are gone since 2026-11-04 (none was ever issued). The courier price
   increase Fairide pays (`order_delivery_bonus`) is a COST on `613-HAUSSE` (PCMN 613100), never on revenue 701 (founder,
   2026-10-21; backend migration 081 moved older entries): the VAT-franchise counter and the export's sales column ignore it,
   the export has its own « Hausses de course » column.

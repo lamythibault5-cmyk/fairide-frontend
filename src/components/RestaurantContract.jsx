@@ -15,7 +15,7 @@ import { useLanguage, getLocale } from '../context/LanguageContext';
 // générales (données, confidentialité, durée, responsabilité, droit applicable).
 const GROUPES = ['fairide', 'commerce', 'argent', 'cadre', 'general'];
 
-// onAccepte : prévenir la page (Mon compte) pour qu'elle recharge le commerce — visibilité et abonnement en dépendent.
+// onAccepte : prévenir la page (Mon compte) pour qu'elle recharge le commerce — sa visibilité en dépend.
 export default function RestaurantContract({ restoId, onAccepte }) {
   const { t } = useLanguage();
   const { token, user } = useAuth();
@@ -56,7 +56,9 @@ export default function RestaurantContract({ restoId, onAccepte }) {
       {/* Les chiffres qui comptent, en un coup d'œil */}
       <div className="stat-grid" style={{ marginBottom: 12 }}>
         <div className="stat-card"><div className="num">{d.summary.commissionPct} %</div><div className="label">{t('restoContract.kCommission')}</div></div>
-        <div className="stat-card"><div className="num">{d.summary.subscription} €</div><div className="label">{t('restoContract.kSubscription')}</div></div>
+        {/* Plus d'abonnement (fondateur, 2026-11-04) : écrit en clair, sans lire summary.subscription (laissé à 0 pour les
+            applis déjà installées). */}
+        <div className="stat-card"><div className="num">0 €</div><div className="label">{t('restoContract.kSubscription')}</div></div>
         <div className="stat-card highlight"><div className="num">{t('restoContract.kMonday')}</div><div className="label">{t('restoContract.kPayout')}</div></div>
         <div className="stat-card"><div className="num">0 %</div><div className="label">{t('restoContract.kDelivery')}</div></div>
       </div>

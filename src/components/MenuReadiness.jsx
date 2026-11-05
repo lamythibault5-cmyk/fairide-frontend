@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom';
 import { api } from '../api';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
-import { abonnementOuvert, dateOuvertureAbonnement } from '../launch';
 import Icone from './Icone';
 import AvecMarque from './AvecMarque';
 
@@ -27,7 +26,7 @@ function Etape({ fait, children }) {
 }
 
 export default function MenuReadiness({ restaurant, restoId, token, onConfirmed, modeAdmin = false }) {
-  const { t, locale } = useLanguage();
+  const { t } = useLanguage();
   const toast = useToast();
   const [confirmation, setConfirmation] = useState(false);
   const o = restaurant?.onboarding;
@@ -90,20 +89,7 @@ export default function MenuReadiness({ restaurant, restoId, token, onConfirmed,
                 {t('menuPage.readyStepPayments')} {!o.paymentsReady && <Link to="/account?ouvrir=paiement">{t('menuPage.readyGoPayments')}</Link>}
               </Etape>
             )}
-            {/* Avant le 6 octobre, l'abonnement ne s'active NULLE PART : ni ici, ni dans Mon compte
-                (le bouton n'y est rendu qu'une fois la date passée), ni côté serveur, qui le refuse.
-                Annoncer « Activer la formule complète » avec un lien envoyait donc le restaurateur
-                vers un écran où il n'y avait rien à faire. Tant que la date n'est pas là, l'étape dit
-                à partir de quand elle s'ouvre et ne prétend plus être une action à faire tout de suite. */}
-            {o.plan === 'complete' && (
-              <Etape fait={o.subscriptionActive || o.subscriptionWaived}>
-                {o.subscriptionActive || abonnementOuvert()
-                  ? t('menuPage.readyStepSubscription')
-                  : t('menuPage.readyStepSubscriptionSoon', { date: dateOuvertureAbonnement(locale) })}
-                {' '}
-                {!o.subscriptionActive && <Link to="/account?ouvrir=abonnement">{t(abonnementOuvert() ? 'menuPage.readyGoSubscription' : 'menuPage.readySeeSubscription')}</Link>}
-              </Etape>
-            )}
+            {/* Plus d'étape « Activer la version complète » : il n'y a plus d'abonnement (fondateur, 2026-11-04). */}
             <Etape fait={o.contractAccepted}>
               {t('menuPage.readyStepContract')} {!o.contractAccepted && <Link to="/dashboard/engagements">{t('menuPage.readyGoContract')}</Link>}
             </Etape>

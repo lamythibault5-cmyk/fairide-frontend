@@ -22,7 +22,7 @@ import ConfirmDialog from './ConfirmDialog';
  * Ce qu'une casquette ne donne pas, et il faut le dire ici pour ne pas le laisser croire :
  * « livreur » n'ouvre que le dossier, la validation par l'équipe et les documents restent exigés ;
  * « commerce » ne fait apparaître aucun commerce et surtout aucun encaissement, qui dépend de
- * l'approbation, de l'abonnement et de la vérification Stripe. Les libellés le disent en clair
+ * l'approbation et de la vérification Stripe. Les libellés le disent en clair
  * plutôt que de laisser la déception venir après le clic. */
 
 const ICONES = { client: 'sac', restaurant: 'commerce', driver: 'velo' };

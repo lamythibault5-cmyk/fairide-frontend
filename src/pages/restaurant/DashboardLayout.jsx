@@ -3,7 +3,7 @@ import { useSiteLarge } from '../../hooks/useSiteLarge';
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { definirModeEquipe } from '../../modeEquipe';
 import { api } from '../../api';
-import { experienceApp, achatsCommerceAutorises } from '../../natif';
+import { experienceApp } from '../../natif';
 import { ouvrirStripe } from '../../ouvrirStripe';
 import { useAuth } from '../../context/AuthContext';
 import usePushNotifications from '../../hooks/usePushNotifications';
@@ -17,7 +17,7 @@ import SonTerminal from '../../components/commerce/SonTerminal';
 import LigneCompte from '../../components/LigneCompte';
 import useNewOrderAlert from '../../hooks/useNewOrderAlert';
 import useRevalidation from '../../useRevalidation';
-import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { useLanguage } from '../../context/LanguageContext';
 import BandeauOuverture from '../../components/BandeauOuverture';
 import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import { demarrerTerminalNavigateur, EVENEMENT_COMMANDE } from '../../terminalNavigateur';
@@ -28,7 +28,7 @@ import '../../site-pro.css';
 // Charge une seule fois restaurant/orders et les partage aux sous-pages via
 // l'outlet context, plutôt que de dupliquer ce chargement dans chacune. Porte aussi tout ce qui est
 // commun à toutes les sous-pages : création du commerce quand le compte n'en a pas (les écrans de l'inscription,
-// pages/app/InscriptionAppli.jsx) et bannières (validation/abonnement/Stripe).
+// pages/app/InscriptionAppli.jsx) et bannières (validation/Stripe).
 // Les écrans de l'inscription ne servent qu'à un compte sans commerce : chargés à la demande.
 const InscriptionAppli = lazy(() => import('../app/InscriptionAppli'));
 // Promotions et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
@@ -379,31 +379,10 @@ export default function DashboardLayout() {
   // La commande qui attend depuis le plus longtemps (échéance la plus proche) : celle que « 1 commande à traiter » ouvre.
   const premiereNouvelle = orders.filter((o) => o.status === 'nouveau' && o.paid)
     .sort((a, b) => new Date(a.acceptDeadline || a.createdAt).getTime() - new Date(b.acceptDeadline || b.createdAt).getTime())[0] || null;
-  const abonnementBloque = !!restaurant && !restaurant.isDemo && !!restaurant.subscriptionRequired && (!!restaurant.wantsDelivery || !!restaurant.wantsPickup);
   const communs = restaurant && (
     <>
       {/* Deux alertes qui ne sont pas des étapes : le blocage par l'équipe, la livraison coupée dans la zone. */}
-      {/* Abonnement facturé mais pas souscrit (audit du 19/10, admin-26) : plus aucune commande, et le commerce ne le voyait
-          nulle part. Sur le site, la ligne dit où souscrire ; dans l'app (achats interdits par les magasins d'applications,
-          natif.js), elle dit seulement ce qui se passe, sans bouton ni renvoi vers un paiement. */}
-      {abonnementBloque && (
-        <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
-          <LigneCompte accent="danger" icone="carteBancaire" titre={t('dashResto.subRequiredTitle')}
-            sous={achatsCommerceAutorises() ? t('dashResto.subRequiredWeb') : t('dashResto.subRequiredApp')}
-            to={achatsCommerceAutorises() ? '/account?ouvrir=abonnement' : undefined} />
-        </div>
-      )}
-      {/* Délai de grâce (fondateur, 2026-10-21) : facturation activée, pas encore souscrit, les commandes continuent jusqu'à
-          la date. Sur le site, la ligne dit où souscrire ; dans l'app, seulement la date (ni bouton, ni renvoi vers un
-          paiement : achatsCommerceAutorises, natif.js). */}
-      {!abonnementBloque && !!restaurant.subscriptionGraceUntil && (
-        <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
-          <LigneCompte accent="warn" icone="carteBancaire"
-            titre={t('dashResto.subGraceTitle', { date: new Date(restaurant.subscriptionGraceUntil).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long' }) })}
-            sous={achatsCommerceAutorises() ? t('dashResto.subGraceWeb') : t('dashResto.subGraceApp')}
-            to={achatsCommerceAutorises() ? '/account?ouvrir=abonnement' : undefined} />
-        </div>
-      )}
+      {/* Les bandeaux « abonnement à souscrire » et « délai de grâce » sont partis avec l'abonnement (fondateur, 2026-11-04). */}
       {(restaurant.adminStatus === 'blocked' || restaurant.fairideDeliveryDisabled) && (
         <div className="card account-groupe" aria-label={t('dashResto.ariaStatus')}>
           {restaurant.adminStatus === 'blocked' && (

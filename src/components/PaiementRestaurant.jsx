@@ -122,7 +122,7 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
   return (
     <div className="paiement-resto">
       {/* L'ACTION D'ABORD, LES EXPLICATIONS REPLIÉES (test au téléphone, 12 oct. 2026). Le formulaire arrivait après deux
-          écrans de texte (comment tu es payé, abonnement, Stripe) : le restaurateur venu « configurer ses paiements »
+          écrans de texte (comment tu es payé, Stripe) : le restaurateur venu « configurer ses paiements »
           devait tout dérouler pour trouver où taper son numéro. Les textes restent, à un geste, sous « Comment tu es payé ? ». */}
       {/* UN GESTE JUSQU'À STRIPE : quand les paiements sont ouverts, « Enregistrer et activer » garde les numéros puis ouvre
           directement l'inscription Stripe. */}
@@ -154,10 +154,6 @@ export default function PaiementRestaurant({ restaurant, orders, onRestaurantCha
           <li>{t('paiementResto.step2')}</li>
           <li>{t('paiementResto.step3')}</li>
         </ol>
-        <div className="paiement-encart">
-          <b>{t('paiementResto.subscriptionTitle')}</b>
-          <p className="small" style={{ margin: '4px 0 0' }}>{t('paiementResto.subscriptionText')}</p>
-        </div>
         <h4 className="paiement-titre">{t('paiementResto.stripeTitle')}</h4>
         <p className="small" style={{ margin: '0 0 8px' }}>{t('paiementResto.stripeWhat')}</p>
         <p className="small" style={{ margin: 0 }}><b>{t('paiementResto.noBankTitle')}</b> {t('paiementResto.noBankText')}</p>

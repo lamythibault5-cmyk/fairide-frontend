@@ -31,7 +31,7 @@ export function estNatif() {
   try { return Capacitor.isNativePlatform(); } catch { return false; }
 }
 
-// Ce qu'un COMMERCE achète à Fairide (abonnement, portail de facturation Stripe, mise en avant payante) ne s'achète pas
+// Ce qu'un COMMERCE achète à Fairide (mise en avant payante ; l'abonnement n'existe plus depuis le 04/11/2026) ne s'achète pas
 // dans l'application des magasins (fondateur, 2026-10-17, confirmé le 2026-10-20). Les règles de Google Play (« Payments »)
 // imposent la facturation Google Play pour un abonnement ou un service numérique vendu dans l'app, et interdisent d'y
 // renvoyer vers un autre moyen de paiement ; Apple dit la même chose (App Store 3.1.1). Les commandes des clients (repas,
@@ -106,7 +106,7 @@ export function garderLesLiensDansLApp(historique) {
   }, true);
 }
 
-// Page de paiement Stripe (commande, pourboire, abonnement). `retour` : où aller dans l'application quand
+// Page de paiement Stripe (commande, pourboire, mise en avant). `retour` : où aller dans l'application quand
 // le navigateur intégré se ferme sans que le lien universel ait pris le relais (paiement abandonné, ou
 // association de domaine pas encore vérifiée par le téléphone).
 export async function allerAuPaiement(url, { retour = '/orders' } = {}) {

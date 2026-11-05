@@ -1,4 +1,4 @@
-# Money: pricing, commission, fees, subscription, three sellers
+# Money: pricing, commission, fees, no subscription, three sellers
 
 Moved out of `CLAUDE.md` on 2026-10-22, word for word, so the guide every session loads stays short. Read it before touching a price, a fee, a share, a promo code, invoicing or dispatch.
 The always-on rules are still in `CLAUDE.md` › « Rules that are never broken ». If you change what this file
@@ -7,7 +7,7 @@ describes, change this file in the same commit: a stale guide gets believed.
 ## Pricing model (2026-09-23 evening; Fairide a VAT franchisé since 2026-10-12)
 
 **Fairide SRL is under the Belgian small-business VAT franchise** (art. 56bis CTVA — SPF Finances letter of 2026-10-12,
-effective 2026-09-07): it charges **no VAT** on anything it sells (commission, system fee, subscription, placements), files
+effective 2026-09-07): it charges **no VAT** on anything it sells (commission, system fee, placements), files
 no periodic VAT return and deducts nothing. Switch: `FAIRIDE_VAT_REGIME` on the backend (`franchise` by default, `assujetti`
 to leave it), read by `fairideCompanyInfo.js`; `getPricing()` then returns `vatRateCommission` / `vatRateServiceFee` = 0 and
 keeps the saved rates under `*Assujetti`. The franchise ends **with the transaction that takes Fairide's yearly turnover over
@@ -78,20 +78,17 @@ balance per friend, no cap** (founder: each fake friend needs a real phone and a
 qualifying order is handed over, **only if it was paid online** (`maybeAwardClientReferralReward`: a takeaway paid at the
 shop earns Fairride nothing, so it no longer credits anyone). Before GO nothing can be paid online: the screens that promise
 the friend's €5 wait for GO (`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged.
-Subscription: €20/month, first month free, with the « petit mois = pas d'abonnement » guarantee: a month whose orders
-do not exceed **€50** of products (VAT incl., no delivery or tips) is not charged, or refunded
-(`../fairide-backend/garantieAbonnement.js`; threshold `SEUIL_GARANTIE_EUROS` in `formules.js`, read by the contract and the
-emails — since 2026-10-11, contract `RESTO-2026.18`; it was « zéro commande » from 2026-10-02). The front texts say « 50 € » in
-full (i18n): change them with the constant. Paid **mises en avant** have their own, separate « zero orders = refunded » rule.
-**Offered by default during the launch (founder, 2026-10-07)**: the only automatic charge is the 10% commission on orders paid online.
-A business sells without any subscription until the team turns billing on for it (Admin › Commerces › « Facturer
-l'abonnement », `restaurants.subscription_billing_enabled`, false by default — see `formules.abonnementOffert`). Its
-account page then shows « offert pendant le lancement » and the Stripe checkout refuses (`SUBSCRIPTION_WAIVED`).
-**Grace period (founder, 2026-10-21)**: turning billing on for a shop without an active subscription keeps its orders open for
-14 days (`DELAI_GRACE_ABONNEMENT_JOURS`, `formules.enDelaiGrace`, `restaurants.subscription_grace_*`): an e-mail with the date at
-the start, reminders on day 7 and day 12 (`delaiGraceAbonnement.js`, every 6 h), and a dashboard band « Tes commandes continuent
-jusqu'au … » (DashboardLayout, `subscriptionGraceUntil`; on the website it says where to subscribe, in the app only the date).
-Orders stop at the deadline. The front texts say « 14 jours » in full: change them with the constant.
+**No subscription (founder, 2026-11-04: « on retire les 20 € par mois ; ça bloque les inscriptions »).** A shop pays
+nothing each month: Fairride earns only the 10 % commission on orders paid online and the system fee inside the delivery fee.
+Gone with it: the €20/month plan and its first free month, the « petit mois » guarantee (€50), the « offert pendant le
+lancement » waiver and the team's « Facturer l'abonnement » button, the 14-day grace period, the Stripe checkout, portal,
+pause and cancel, the subscription invoices (`FAIRIDE-ABO`, account 703-ABO kept for the ledger's history) and the
+shop free-months promo type (`restaurant_trial_months`, old codes kept for history). Contract `RESTO-2026.24` drops the
+« Abonnement » clause; the customer T&Cs drop the « 20 € par mois » sentence (new CGU version of 2026-11-04). Before that
+date no real shop ever had billing on, a Stripe subscription or a subscription invoice. For apps already installed the
+shop record still says `subscriptionWaived: true` / `subscriptionRequired: false` (and the contract summary
+`subscription: 0`); the current front never reads them. Paid **mises en avant** keep their own « zero orders = refunded »
+rule.
 
 - server: `commissionFairide` and `fraisService` in `../fairide-backend/pricing.js`, called by `routes/orders.js`;
   `service_fee` stores the system fee excl. VAT, `service_fee_vat` its VAT (0 under the franchise) — both already inside
@@ -100,7 +97,7 @@ Orders stop at the deadline. The front texts say « 14 jours » in full: change 
 - cards are built at the business's in-store prices (`../fairide-backend/scripts/prix.js` corrects platform-priced cards);
   no ×1.10 any more. Since 2026-10-01 the business can no longer edit dishes or prices itself
   (`MENU_LOCKED`) — it asks, and the team applies;
-- legal texts: contract `RESTO-2026.19` (in force 1 Nov 2026; 2026.18 widens the subscription guarantee, 2026.19 says Fairide charges no VAT and, revised before publication on 2026-10-13, the own-prices model; courier contracts `*-2026.8`), T&Cs `CGU-2026-10-13-b` (commission = 10 % of the price paid; says the subscription is 20 € with no VAT and that Fairide's system fee carries none), privacy
+- legal texts: contract `RESTO-2026.24` since 2026-11-04 (no subscription; 2026.19 said Fairide charges no VAT and the own-prices model; courier contracts `*-2026.9`), T&Cs of 2026-11-04 (commission = 10 % of the price paid, no shop subscription; 2026-10-13 had added that Fairide's system fee carries no VAT), privacy
   `CONF-2026-10-17` (since 10-15: door-drop photo 30 days, courier position with the screen locked, courier SOS; 10-16-b: business staff
   accounts and group orders; 10-17: GatewayAPI as the SMS processor; they tell customers prices may be higher than on site). Never write « le prix du commerce » or « 100 % au
   restaurant » in customer-facing copy, and never « majoration » — it is « la commission de Fairide » (CODE-3).

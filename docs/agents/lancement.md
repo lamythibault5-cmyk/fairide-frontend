@@ -35,9 +35,8 @@ ignored since, and can be deleted.
   (`lancement.annoncerEmporter`, report in a task), not couriers. The card shows couriers/businesses ready (same checks as
   `pretLancement.js`) and couriers free right now, which is what the decision rests on.
 - **First GO only**: an e-mail to approved real businesses and couriers (`annoncerOuverture`; the contract says the
-  date is « announced by e-mail »), and every subscription still on trial gets its trial end pushed back by the time
-  between activation and GO (`prolongerEssais`: the free month counts from the opening). A Stripe failure opens an
-  admin task instead of blocking.
+  date is « announced by e-mail »). It used to push back the trial end of every shop subscription (`prolongerEssais`):
+  gone with the subscription on 2026-11-04.
 - **After GO, no courier = no delivery.** `lancement.livreursDisponibles` counts couriers who could take the job now:
   approved, Stripe active, status verified, not paused, not test, no job in hand, no selfie check past its 60-min deadline
   and bikes only within `VELO_MAX_KM`. Zero → order and quote refused with

@@ -28,7 +28,7 @@ import { suivre } from '../../analytics';
  * avec ?apercu, pour pouvoir le relire dans un navigateur (npm run dev).
  *
  * CE QUI A ÉTÉ ADAPTÉ DU CADRE DU SKILL, ET POURQUOI
- *   - Pas de paywall : le client ne paie pas l'application ; l'abonnement commerce est offert au lancement.
+ *   - Pas de paywall : le client ne paie pas l'application, et les commerces n'ont pas d'abonnement (04/11/2026).
  *   - Pas d'avis inventés ni de chiffres de démonstration : seulement des faits vérifiables (voir EcransBienvenue).
  *   - Trois parcours après « Tu es… » : le client a tout ; livreur et commerce ont un écran de promesses puis le
  *     compte — leur vrai parcours (dossier livreur, fiche commerce) existe déjà après l'inscription.

@@ -123,7 +123,7 @@ export default function EngagementsPage() {
   const textes = {
     contrat: {
       icone: 'contrat', titre: t('engagementsCommerce.contrat'),
-      resume: s ? t('engagementsCommerce.contratResume', { pct: s.commissionPct, abo: s.subscription }) : '',
+      resume: s ? t('engagementsCommerce.contratResume', { pct: s.commissionPct }) : '',
       note: contrat?.acceptedVersion && contrat.acceptedVersion !== contrat.version ? t('engagementsCommerce.contratNouveau', { version: contrat.version }) : '',
       lire: (
         <>

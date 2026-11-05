@@ -271,7 +271,6 @@
    "hasPromo": false,
    "activeCartPromo": null,
    "fairideAdvantage": null,
-   "subscriptionStatus": "inactive",
    "stripeConnectStatus": "not_started",
    "adminStatus": "pending",
    "publicListed": false,
@@ -293,8 +292,6 @@
     "adminApproved": false,
     "publicListed": false
    },
-   "subscriptionCurrentPeriodEnd": null,
-   "freeTrialMonths": 1,
    "deliveryMode": "fairide",
    "fairideDeliveryDisabled": false,
    "fairideDeliveryDisabledReason": "",

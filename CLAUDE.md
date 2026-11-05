@@ -141,7 +141,7 @@ read that doc before working near it.
 |---|---|
 | Anything the app shows: `src/pages/app/`, `experienceApp()`, `html.appli`, natif.js, push, sign-up in the app | [docs/agents/appli.md](docs/agents/appli.md), then [docs/application-mobile.md](docs/application-mobile.md) for builds and stores |
 | CSS, a screen's look, buttons, fields, icons, fonts, the website shell, the admin console | [docs/agents/design.md](docs/agents/design.md) |
-| A price, a fee, a share, a promo code, the subscription, invoicing, the three sellers, dispatch | [docs/agents/argent.md](docs/agents/argent.md) |
+| A price, a fee, a share, a promo code, invoicing (no shop subscription since 2026-11-04), the three sellers, dispatch | [docs/agents/argent.md](docs/agents/argent.md) |
 | Checkout, signup, the courier dossier, admin decisions, DSA reports, DAC7, any legal text | [docs/agents/conformite.md](docs/agents/conformite.md) |
 | A restaurant's menu: import, prices, « C'est bon », dishes without photos | [docs/agents/cartes.md](docs/agents/cartes.md) and the workspace skill `fairide-menu` |
 | Delivery or online payment opening, the GO button | [docs/agents/lancement.md](docs/agents/lancement.md) |

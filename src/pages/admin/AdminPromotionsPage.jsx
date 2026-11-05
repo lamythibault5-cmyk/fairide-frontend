@@ -14,12 +14,15 @@ import { fmtDate, fmtDateTime, money, filterBySearch, downloadCsv } from './admi
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 
-// Application Promotions : codes promo (solde offert au client, mois d'essai restaurateur), leur
+// Application Promotions : codes promo (solde offert au client, remises sur commande), leur
 // usage et leur activation. Liste triable (AdminDataTable), fiche dans le tiroir commun (édition de la
 // valeur / du plafond / de l'expiration, commandes qui ont utilisé le code), activation et suppression
 // confirmées.
 // Codes de commande (MON-6, codesPromo.js côté serveur) : remise payée par Fairide sur une commande payée en ligne.
 const TYPES = ['client_balance', 'restaurant_trial_months', 'order_percent', 'order_amount', 'order_free_delivery'];
+// Plus de mois d'abonnement offerts à créer (fondateur, 2026-11-04 : plus d'abonnement) ; les anciens codes RESTO1MOIS et
+// RESTO2MOIS restent dans la liste et dans le filtre, pour l'historique.
+const TYPES_A_CREER = TYPES.filter((v) => v !== 'restaurant_trial_months');
 const TYPES_COMMANDE = ['order_percent', 'order_amount', 'order_free_delivery'];
 const FORM_VIDE = { code: '', type: 'client_balance', value: '', maxUses: '', expiresAt: '', minSubtotal: '', firstOrderOnly: false, perUserLimit: '1', maxDiscount: '' };
 const epuise = (p) => !!(p.maxUses && p.usesCount >= p.maxUses);
@@ -149,7 +152,7 @@ export default function AdminPromotionsPage() {
             <div className="field" style={{ flex: 1 }}>
               <label htmlFor="promo-type">{tr('adminCommon.type')}</label>
               <select id="promo-type" value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
-                {TYPES.map((v) => <option key={v} value={v}>{libelleType(v)}</option>)}
+                {TYPES_A_CREER.map((v) => <option key={v} value={v}>{libelleType(v)}</option>)}
               </select>
             </div>
           </div>
