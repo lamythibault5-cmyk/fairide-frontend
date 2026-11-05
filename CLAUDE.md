@@ -69,7 +69,8 @@ without a `.env.local` your dev server edits live data. Local backend on a Neon 
 
 | Variable | Purpose |
 |---|---|
-| `VITE_API_BASE` | Overrides the Railway backend URL in [src/api.js](src/api.js) |
+| `VITE_API_BASE` | Overrides the Railway backend URL in [src/api.js](src/api.js) (not on fairride.be: there the site calls `fairride.be/api`, relayed to Railway by [middleware.js](middleware.js) since 2026-11-05, when networks blocked Railway's addresses; the app keeps this URL) |
+| `RELAIS_SECRET` / `RELAIS_CIBLE` | Vercel only, read by [middleware.js](middleware.js): secret shared with the backend (`relaisSite.js`) so it trusts the visitor's address the relay sends; target defaults to the production Railway backend |
 | `VITE_GOOGLE_CLIENT_ID` | Google Sign-In (script loaded in [index.html](index.html)) |
 | `VITE_SENTRY_DSN` | Enables Sentry — on the website only *after* cookie consent, see [src/main.jsx](src/main.jsx); in the app on by default (`docs/agents/appli.md`) |
 | `VITE_STOCK_DISH_PHOTOS` | `on` (code default) fills photo-less dishes from a stock-image table; `off` disables it. **Production is `off`** (Vercel since 2026-10-20, and the Play build): keep it off wherever real shops are shown — see [src/menuCategories.js](src/menuCategories.js) |
