@@ -4496,7 +4496,7 @@ export default {
       draftWarning: 'Version of 6 October 2026.',
       title: 'Legal notice',
       publisherTitle: 'Site publisher',
-      publisher: 'FAIRIDE SRL\nPrivate limited company (SRL/BV) under Belgian law\nCompany number (CBE): 1042.169.780 · VAT: BE 1042.169.780 · RLE Brussels\nRegistered office: Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgium\nLegal representative and publishing director: Thibault Lamy, director\nE-mail: contact@fairride.be · Phone: +32 474 20 07 13',
+      publisher: 'FAIRIDE SRL\nPrivate limited company (SRL/BV) under Belgian law\nCompany number (CBE): 1042.169.780 · VAT: BE 1042.169.780 · RLE Brussels\nRegistered office: Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgium\nE-mail: contact@fairride.be · Phone: +32 474 20 07 13',
       hostingTitle: 'Hosting',
       hosting: 'Website (fairride.be): Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, USA.\nServer and database: Railway Corp., 548 Market St PMB 68956, San Francisco, CA 94104, USA.\nPayments: Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin 2, Ireland.',
       ipTitle: 'Intellectual property',

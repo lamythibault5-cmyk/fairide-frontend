@@ -2729,7 +2729,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
 }
 /* Le lien de déconnexion vit maintenant dans cette colonne (pas à côté du nom) : le nom a toute la
    largeur disponible face au seul avatar, au lieu de se faire écraser par un bouton texte de largeur
-   fixe sur la même ligne — c'est ce qui causait la troncature ("Thib…" pour "Thibault") à la largeur
+   fixe sur la même ligne — c'est ce qui causait la troncature ("Alexan…" pour "Alexandre") à la largeur
    de la sidebar (240px). */
 .dashboard-profile-info { display: flex; flex-direction: column; min-width: 0; flex: 1; gap: 1px; }
 .dashboard-profile-name { font-weight: 700; font-size: 13px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

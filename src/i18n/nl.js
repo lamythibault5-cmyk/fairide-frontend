@@ -4505,7 +4505,7 @@ export default {
       draftWarning: 'Versie van 6 oktober 2026.',
       title: 'Wettelijke vermeldingen',
       publisherTitle: 'Uitgever van de site',
-      publisher: 'FAIRIDE SRL\nBesloten vennootschap (BV) naar Belgisch recht\nOndernemingsnummer (KBO): 1042.169.780 · btw: BE 1042.169.780 · RPR Brussel\nMaatschappelijke zetel: Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, België\nWettelijk vertegenwoordiger en verantwoordelijke uitgever: Thibault Lamy, bestuurder\nE-mail: contact@fairride.be · Telefoon: +32 474 20 07 13',
+      publisher: 'FAIRIDE SRL\nBesloten vennootschap (BV) naar Belgisch recht\nOndernemingsnummer (KBO): 1042.169.780 · btw: BE 1042.169.780 · RPR Brussel\nMaatschappelijke zetel: Avenue du Castel 30, 1200 Sint-Lambrechts-Woluwe, België\nE-mail: contact@fairride.be · Telefoon: +32 474 20 07 13',
       hostingTitle: 'Hosting',
       hosting: 'Website (fairride.be): Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, VS.\nServer en databank: Railway Corp., 548 Market St PMB 68956, San Francisco, CA 94104, VS.\nBetalingen: Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin 2, Ierland.',
       ipTitle: 'Intellectuele eigendom',
