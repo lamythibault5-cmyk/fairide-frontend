@@ -5565,6 +5565,13 @@ html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
 .bv-jours button.on { background: var(--iris); border-color: var(--iris); color: #fff; }
 .bv-creneau { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
 .bv-creneau input { flex: 1; min-width: 0; width: auto; text-align: center; padding: 14px 10px; }
+/* Un jour avec d'autres heures : sa carte sous les heures communes ; le choix du jour grise ceux qui n'en sont pas. */
+.bv-jour-a-part { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: var(--radius); padding: 10px 12px 2px; margin: 8px 0 4px; }
+.bv-jour-a-part-tete { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: 15px; }
+.bv-jour-a-part-tete .bv-rond { width: 32px; height: 32px; }
+.bv-jour-a-part .bv-ajout { padding: 0 0 10px; }
+.bv-jours-choix { margin-bottom: 8px; }
+.bv-jours button:disabled { opacity: .35; }
 
 /* Choix en pastilles sous une option (mode de livraison, paiement de l'à emporter). */
 .bv-segments { display: flex; gap: 6px; margin: -2px 0 12px; }
