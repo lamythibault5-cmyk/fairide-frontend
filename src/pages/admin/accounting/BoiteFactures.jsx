@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react';
-import { api } from '../../../api';
+import { api, apiUpload } from '../../../api';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import Icone from '../../../components/Icone';
 import { useLanguage } from '../../../context/LanguageContext';
@@ -33,9 +33,9 @@ export default function BoiteFactures({ token, toast, onChange }) {
     if (!liste.length) return;
     setDepot(true);
     try {
-      const form = new FormData();
-      for (const f of liste) form.append('fichiers', f);
-      const r = await api('/admin/accounting/pieces', { method: 'POST', token, body: form });
+      // apiUpload et non api() : api() envoie toujours du JSON, et les fichiers y devenaient « {} » (le serveur répondait
+      // « Aucun fichier reçu. » à chaque dépôt depuis le 2026-10-24, corrigé le 2026-11-05).
+      const r = await apiUpload('/admin/accounting/pieces', { files: liste, token, fieldName: 'fichiers' });
       const nouvelles = (r.items || []).filter((p) => !p.alreadyThere).length;
       const deja = (r.items || []).length - nouvelles;
       toast(tr('adminAccounting.inboxUploaded', { n: nouvelles }) + (deja ? ` ${tr('adminAccounting.inboxAlreadyThere', { n: deja })}` : ''));
