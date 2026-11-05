@@ -1239,6 +1239,8 @@ export default function DriverDashboard() {
         {articles(o)}
         <DeliveryTiming order={o} />
         {o.bonusCents > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</p>}
+        {/* Le pourboire déjà payé, comme sur la carte d'offre (téléphone, app) : il manquait ici, sur ordinateur (2026-11-05). */}
+        {o.tipPaid && o.tipAmount > 0 && <p className="ecl-impact"><Icone nom="euro" taille={18} /><span>{t('ecranLivreur.pourboireOffre', { amount: dec(o.tipAmount) })}</span></p>}
         <div className="ecl-fc-actions">
           <button type="button" className="btn-gold" disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
           {/* Refuser reste neutre : aucune conséquence pour le livreur. */}
