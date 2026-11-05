@@ -5,9 +5,12 @@ import { getLanguage, traduire } from './context/LanguageContext';
 // par Railway : le 2026-11-05, des réseaux bloquaient les adresses de Railway (incident « External network blocks ») et
 // le site restait vide. Adresse complète (pas « /api ») : la coque du terminal la reçoit telle quelle (transmettreJeton).
 const SUR_FAIRRIDE = typeof window !== 'undefined' && !estNatif() && /(^|\.)fairride\.be$/.test(window.location.hostname);
-export const API_BASE = SUR_FAIRRIDE
-  ? `${window.location.origin}/api`
-  : (import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api');
+// Les ENVOIS DE FICHIERS vont toujours directement à Railway, jamais par le relais : Vercel refuse un corps de plus de
+// 4,5 Mo (413 FUNCTION_PAYLOAD_TOO_LARGE, constaté le 2026-11-05) et une photo de téléphone dépasse souvent (pièce
+// d'identité d'un livreur, carte, photo de plat : jusqu'à 15 Mo côté serveur). Pendant un blocage de Railway, seuls ces
+// envois échouent ; tout le reste du site passe par le relais.
+const API_DIRECT = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
+export const API_BASE = SUR_FAIRRIDE ? `${window.location.origin}/api` : API_DIRECT;
 
 // Erreur enrichie du code HTTP : jusqu'ici toute réponse non-OK devenait un Error générique, ce qui
 // rendait un 401 (session expirée) indiscernable d'un 500 côté appelant — l'app affichait donc
@@ -147,7 +150,7 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
     // (même raison que dans apiUpload plus bas).
     const estFormData = typeof FormData !== 'undefined' && body instanceof FormData;
     if (body && !estFormData) headers['Content-Type'] = 'application/json';
-    res = await fetch(API_BASE + path, {
+    res = await fetch((estFormData ? API_DIRECT : API_BASE) + path, {
       method,
       headers,
       body: body ? (estFormData ? body : JSON.stringify(body)) : undefined
@@ -204,7 +207,7 @@ export async function apiUpload(path, { file, files, token, fieldName = 'image',
   const minuteur = controle ? setTimeout(() => controle.abort(), DELAI_ENVOI_FICHIER_MS) : null;
   let res;
   try {
-    res = await fetch(API_BASE + path, { method: 'POST', headers, body: formData, signal: controle?.signal });
+    res = await fetch(API_DIRECT + path, { method: 'POST', headers, body: formData, signal: controle?.signal });
   } catch {
     throw erreurReseau(controle, false);
   } finally {
