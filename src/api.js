@@ -1,7 +1,13 @@
 import { estNatif, ouvrirPdfBlob } from './natif';
 import { getLanguage, traduire } from './context/LanguageContext';
 
-export const API_BASE = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
+// Sur fairride.be, le site passe par son propre relais fairride.be/api (middleware.js, Vercel) et non plus directement
+// par Railway : le 2026-11-05, des réseaux bloquaient les adresses de Railway (incident « External network blocks ») et
+// le site restait vide. Adresse complète (pas « /api ») : la coque du terminal la reçoit telle quelle (transmettreJeton).
+const SUR_FAIRRIDE = typeof window !== 'undefined' && !estNatif() && /(^|\.)fairride\.be$/.test(window.location.hostname);
+export const API_BASE = SUR_FAIRRIDE
+  ? `${window.location.origin}/api`
+  : (import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api');
 
 // Erreur enrichie du code HTTP : jusqu'ici toute réponse non-OK devenait un Error générique, ce qui
 // rendait un 401 (session expirée) indiscernable d'un 500 côté appelant — l'app affichait donc
