@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import { api } from '../../api';
-import { achatsCommerceAutorises, allerAuPaiement, experienceApp } from '../../natif';
+import { experienceApp } from '../../natif';
 import { useAuth } from '../../context/AuthContext';
 import CopieDac7 from '../../components/conformite/CopieDac7';
 import { useToast } from '../../context/ToastContext';
@@ -16,7 +16,6 @@ import CadreSite from '../../components/commerce/CadreSite';
 import { SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import EtatVide from '../../components/EtatVide';
 import ErrorCard from '../../components/ErrorCard';
-import AbonnementOffert from '../../components/commerce/AbonnementOffert';
 import NotesCredit from '../../components/commerce/NotesCredit';
 
 // Facture sans TVA : Fairide est sous le régime de la franchise depuis le 7/9/2026 (lettre du SPF Finances du 12/10/2026).
@@ -51,8 +50,8 @@ function lastDayOfMonth(month) {
   return new Date(y, m, 0).getDate();
 }
 
-// Deux documents distincts : les factures d'abonnement Fairide (générées et hébergées par Stripe,
-// via le portail client) et la facture de commission d'un mois donné — celle-ci est une vraie facture
+// La facture de commission d'un mois donné (l'onglet « Abonnement », factures Stripe, est parti avec l'abonnement :
+// fondateur, 2026-11-04) — c'est une vraie facture
 // au sens légal (mentions obligatoires belges, Code TVA art. 5 AR n°1 ; numérotée séquentiellement et
 // figée côté backend, voir POST /restaurants/:id/commission-invoice) puisque Fairide facture un
 // service (la commission) au restaurant.
@@ -68,7 +67,6 @@ export default function InvoicesPage() {
   const { token } = useAuth();
   const toast = useToast();
   const { restaurant, restoId } = useOutletContext();
-  const [openingPortal, setOpeningPortal] = useState(false);
   const dernierMois = lastFinishedMonthValue();
   const [month, setMonth] = useState(dernierMois);
   // Saisi à la main au-delà du maximum : aperçu seulement, sans bouton d'émission.
@@ -80,11 +78,12 @@ export default function InvoicesPage() {
   // Le mois affiché maintenant : « Générer » n'applique sa réponse que s'il n'a pas changé entre-temps (shop-118).
   const moisCourant = useRef(month);
   const [generating, setGenerating] = useState(false);
-  // Trois onglets : les factures (pièces comptables, mensuelles), les relevés détaillés (suivi libre par
-  // semaine / mois / trimestre), l'abonnement (factures Stripe). L'onglet ouvert survit à un rechargement.
+  // Trois onglets : les virements, les factures (pièces comptables, mensuelles), les relevés détaillés (suivi libre par
+  // semaine / mois / trimestre). L'onglet ouvert survit à un rechargement ; l'ancien onglet « abonnement » gardé dans le
+  // navigateur retombe sur les factures (plus d'abonnement depuis le 04/11/2026).
   // « Virements » (fondateur, 2026-10-31, maquettes/revue-parcours, question 2 B) : ce qui part lundi, puis chaque versement.
   const [onglet, setOnglet] = useState(() => {
-    try { const o = sessionStorage.getItem('fairide_factures_onglet') || 'factures'; return o === 'abonnement' && !achatsCommerceAutorises() ? 'factures' : o; } catch { return 'factures'; }
+    try { const o = sessionStorage.getItem('fairide_factures_onglet') || 'factures'; return o === 'abonnement' ? 'factures' : o; } catch { return 'factures'; }
   });
   function choisirOnglet(o) { setOnglet(o); try { sessionStorage.setItem('fairide_factures_onglet', o); } catch { /* sans stockage */ } }
 
@@ -105,20 +104,6 @@ export default function InvoicesPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [month, restoId, essai]);
 
-  async function openPortal() {
-    setOpeningPortal(true);
-    try {
-      const r = await api(`/restaurants/${restoId}/subscription/portal`, { method: 'POST', token });
-      // Dans l'app, Stripe s'ouvre dans le navigateur intégré et l'on revient ici en le fermant (allerAuPaiement, natif.js) ;
-      // sur le site, rien ne change : la page part vers Stripe.
-      await allerAuPaiement(r.url, { retour: '/dashboard/invoices' });
-      setOpeningPortal(false);
-    } catch (e) {
-      toast(e.message, 'erreur');
-      setOpeningPortal(false);
-    }
-  }
-
   async function generateInvoice() {
     setGenerating(true);
     const moisEmis = month;
@@ -134,8 +119,6 @@ export default function InvoicesPage() {
   }
 
   const fairide = invoice?.fairide;
-  // Un abonnement déjà entamé une fois (client Stripe posé) : seul cas où le portail Stripe a des factures à montrer.
-  const dejaAbonne = ['active', 'trialing', 'past_due', 'paused', 'canceled', 'unpaid'].includes(restaurant.subscriptionStatus);
   const periodLabel = new Date(`${month}-01`).toLocaleDateString(getLocale(), { month: 'long', year: 'numeric' });
   const periodRange = `01/${month.split('-')[1]}/${month.split('-')[0]}, ${lastDayOfMonth(month)}/${month.split('-')[1]}/${month.split('-')[0]}`;
 
@@ -145,7 +128,7 @@ export default function InvoicesPage() {
     <CadreSite appli classe="ec-factures" titre={t('invoicesResto.title')} sous={ordinateur ? t('invoicesResto.pageIntro') : t('ecransPro.facturesSous')}>
       <div className="no-print ec-factures-onglets">
         <SegmentGlisse libelle={t('invoicesResto.title')} valeur={onglet} onChange={choisirOnglet}
-          options={[['virements', t('invoicesResto.tabPayouts')], ['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')], ...(achatsCommerceAutorises() ? [['abonnement', t('invoicesResto.tabSubscription')]] : [])].map(([value, label]) => ({ value, label }))} />
+          options={[['virements', t('invoicesResto.tabPayouts')], ['factures', t('invoicesResto.tabInvoices')], ['releves', t('invoicesResto.tabStatements')]].map(([value, label]) => ({ value, label }))} />
       </div>
 
       {onglet === 'virements' && <div className="ec-bloc"><VirementsCommerce restoId={restoId} token={token} /></div>}
@@ -159,24 +142,6 @@ export default function InvoicesPage() {
           <div className="no-print"><CopieDac7 chemin={(a) => `/restaurants/${restoId}/dac7/${a}.pdf`} token={token}
             annees={[new Date().getFullYear(), new Date().getFullYear() - 1].filter((an) => an >= 2026)} /></div>
         </>
-      )}
-
-      {/* L'onglet Abonnement n'ouvre que le portail Stripe, où l'on paie : absent de l'app des magasins (natif.js). */}
-      {onglet === 'abonnement' && achatsCommerceAutorises() && (
-        <section className="no-print">
-          {/* Titre en capitales, donc sans AvecMarque : le mot-logo reste toujours en minuscules. */}
-          <p className="ec-feuille-titre">{t('invoicesResto.subscription')}</p>
-          {/* Abonnement offert (le cas de tous les commerces au lancement) : pas de « 20 €/mois » ni de bouton qui répondait
-              « abonne-toi d'abord » ; jamais abonné : rien à montrer non plus (audit du 19/10, shop-105). */}
-          {restaurant.subscriptionWaived ? <AbonnementOffert />
-            : !dejaAbonne ? <p className="ec-aide">{t('invoicesResto.subscriptionNone')}</p>
-            : (<>
-              <p className="ec-aide">{t('invoicesResto.subscriptionHelp')}</p>
-              <button type="button" className="ec-bouton ec-bouton--iris ec-bouton--court" disabled={openingPortal} onClick={openPortal}>
-                {openingPortal ? '...' : t('invoicesResto.viewSubInvoices')}
-              </button>
-            </>)}
-        </section>
       )}
 
       {onglet === 'factures' && (<>

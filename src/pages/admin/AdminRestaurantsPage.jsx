@@ -26,7 +26,7 @@ import CreateTicketButton from '../../components/admin/CreateTicketButton';
 import CreateTaskButton from '../../components/admin/CreateTaskButton';
 import { UploadDocumentModal } from './AdminDocumentsPage';
 import { estCompteTest, estCompteSupprime, TestBadge, TestToggleButton, money, fmtDate, pct, downloadCsv, useDebouncedValue, NatureChips, BUSINESS_STATUS_LABELS, INVOICE_STATUS_LABELS, DOCUMENT_TYPE_LABELS, DOCUMENT_EXPIRY_LABELS, ORDER_STATUS_LABELS } from './adminUtils';
-import { REFUND_RESPONSIBILITY_LABELS, SUBSCRIPTION_STATUS_LABELS, DELIVERY_MODE_LABELS, libelle } from './libellesCodes';
+import { REFUND_RESPONSIBILITY_LABELS, DELIVERY_MODE_LABELS, libelle } from './libellesCodes';
 import { useLanguage } from '../../context/LanguageContext';
 import useEtatPage from '../../hooks/useEtatPage';
 import ouvrirDocument from '../../ouvrirDocument';
@@ -112,34 +112,8 @@ export function BoutonFermerSoir({ detail, token, api, toast, tr, onChanged }) {
   return <button type="button" className="btn-outline" disabled={busy} onClick={basculer} title={tr('adminRestos.closeTonightHelp')}>{busy ? '…' : ferme ? tr('adminRestos.reopenNow', { time: heure }) : tr('adminRestos.closeTonight')}</button>;
 }
 
-// Abonnement offert ou facturé (fondateur, 7 oct. 2026) : offert à tous pendant le lancement, facturé commerce par commerce
-// quand il commence à profiter de Fairide. Activer la facturation lui demande de souscrire (premier mois offert) ; le geste
-// passe par une confirmation. Le retour à « offert » aussi (audit du 19/10, admin-06) : un commerce déjà abonné voit son
-// abonnement Stripe résilié par le serveur (plus aucun prélèvement, rien de remboursé), et la confirmation le dit.
-const ABONNEMENT_STRIPE_VIVANT = ['trialing', 'active', 'past_due', 'paused'];
-export function BoutonFacturationAbonnement({ detail, token, api, toast, tr, onChanged }) {
-  const [busy, setBusy] = useState(false);
-  const [confirmer, setConfirmer] = useState(false);
-  const facture = !!detail.subscriptionBillingEnabled;
-  const abonne = ABONNEMENT_STRIPE_VIVANT.includes(detail.subscriptionStatus);
-  async function basculer() {
-    setConfirmer(false);
-    setBusy(true);
-    try {
-      const rep = await api(`/admin/restaurants/${detail.id}/subscription-billing`, { method: 'PATCH', token, body: { enabled: !facture } });
-      toast(facture ? tr(rep?.stripeSubscriptionCanceled ? 'adminRestos.subBillingOffCanceledToast' : 'adminRestos.subBillingOffToast') : tr(rep?.shopNotified ? 'adminRestos.subBillingOnNotifiedToast' : 'adminRestos.subBillingOnToast'));
-      onChanged?.();
-    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
-  }
-  return (
-    <>
-      <button type="button" className="btn-outline" disabled={busy} onClick={() => setConfirmer(true)} title={tr('adminRestos.subBillingHelp')}>{busy ? '…' : facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}</button>
-      <ConfirmDialog open={confirmer} title={facture ? tr('adminRestos.subBillingOff') : tr('adminRestos.subBillingOn')}
-        message={facture ? tr(abonne ? 'adminRestos.subBillingOffConfirmStripe' : 'adminRestos.subBillingOffConfirm', { name: detail.name }) : tr('adminRestos.subBillingConfirmNotify', { name: detail.name })}
-        loading={busy} onConfirm={basculer} onCancel={() => setConfirmer(false)} />
-    </>
-  );
-}
+// Le bouton « Facturer l'abonnement » / « Offrir l'abonnement » est parti avec l'abonnement (fondateur, 2026-11-04 : « on
+// retire les 20 € par mois ») : plus rien à facturer chaque mois à un commerce.
 
 // La colonne « Note » (tirée des avis, audit du 19/10, admin-65) est partie avec les avis clients (fondateur, 22/10/2026 :
 // pas assez d'utilisateurs, des commerces avec peu d'étoiles feraient mauvaise impression ; on les refera peut-être plus
@@ -928,15 +902,8 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
           {detail.signupBusinessSource === 'recherche' && (
             <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.sourceFound')}</p>
           )}
-          {/* Offert ou facturé, et l'état Stripe, en mots (audit du 19/10, admin-26 / admin-86 : « Abonnement : none »). */}
-          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.subscriptionLineWords', { offer: detail.isDemo ? tr('adminRestos.subDemo') : detail.subscriptionBillingEnabled ? tr('adminRestos.subBilled') : tr('adminRestos.subOffered'), sub: libelle(SUBSCRIPTION_STATUS_LABELS, detail.subscriptionStatus || 'none'), mode: libelle(DELIVERY_MODE_LABELS, detail.deliveryMode) })}</p>
-          {/* Délai de grâce (fondateur, 2026-10-21) : facturé, pas encore souscrit, commandes ouvertes jusqu'à la date. */}
-          {detail.subscriptionBillingEnabled && !detail.isDemo && !!detail.subscriptionGraceUntil && (
-            <p className="small" style={{ margin: '2px 0', color: 'var(--orange)' }}>{tr('adminRestos.subGraceUntil', { date: fmtDate(detail.subscriptionGraceUntil) })}</p>
-          )}
-          {detail.subscriptionBillingEnabled && !detail.isDemo && !detail.subscriptionGraceUntil && !['active', 'trialing'].includes(detail.subscriptionStatus) && (
-            <p className="small" style={{ margin: '2px 0', color: 'var(--red)' }}>{tr('adminRestos.subBilledNoOrders')}</p>
-          )}
+          {/* Le mode de livraison en mots ; l'abonnement (offert, facturé, état Stripe, délai de grâce) n'existe plus (04/11/2026). */}
+          <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.deliveryModeLine', { mode: libelle(DELIVERY_MODE_LABELS, detail.deliveryMode) })}</p>
           {/* Livraison par l'équipe du commerce (2026-11-02) : état, et l'arrêt motivé par l'équipe. */}
           <LivraisonEquipeAdmin restaurantId={detail.id} etat={detail.restaurantDelivery} onChanged={onChanged} />
           {/* Livraison Fairide dans la zone : coupée pour un commerce seul (pas de livreur) ; un commerce qui livre avec son
@@ -955,7 +922,6 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
               </div>
             )}
           </div>
-          {detail.plan && <p className="small" style={{ margin: '2px 0' }}>{tr('adminRestos.planLine', { plan: tr('adminRestos.planComplete') })}</p>}
           {detail.terminal && (
             <div className="small" style={{ margin: '2px 0' }}>
               <p style={{ margin: 0 }}>{tr('adminRestos.terminalLine', { status: tr(`adminRestos.terminalStatus_${detail.terminal.status}`), amount: Number(detail.terminal.depositAmount || 80).toFixed(0), rank: detail.terminal.signupRank ? tr('adminRestos.terminalRank', { n: detail.terminal.signupRank }) : '' })}{detail.terminal.note ? ` · ${detail.terminal.note}` : ''}</p>
@@ -1002,7 +968,6 @@ function RestaurantDetailModal({ selected, detail, orders, pret, onClose, onSusp
             {detail.adminStatus === 'pending' && <button className="btn-teal" onClick={onApprove}>{tr('adminCommon.approve')}</button>}
             {!estTest(detail) && (detail.publicListed || detail.adminStatus === 'approved') && <button className={detail.publicListed ? 'btn-outline' : 'btn-gold'} onClick={onToggleListing}>{detail.publicListed ? tr('adminRestos.unpublish') : tr('adminRestos.publish')}</button>}
             {!detail.isDemo && <BoutonFermerSoir detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
-            {!detail.isDemo && <BoutonFacturationAbonnement detail={detail} token={token} api={api} toast={toast} tr={tr} onChanged={onChanged} />}
             {detail.adminStatus !== 'blocked' && <button className="btn-danger-ghost" onClick={onSuspend}>{tr('adminCommon.suspend')}</button>}
             {detail.adminStatus === 'blocked' && <button className="btn-teal" onClick={onReactivate}>{tr('adminCommon.reactivate')}</button>}
             <button className="btn-danger-ghost" style={{ marginLeft: 'auto' }} onClick={onDelete}>{tr('adminRestos.deleteRestaurant')}</button>

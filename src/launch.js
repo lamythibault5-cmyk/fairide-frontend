@@ -106,25 +106,5 @@ export const OUVERTURE_PAIEMENTS = new Date('2026-10-05T00:00:00+02:00');
 export function paiementsOuverts() { return Date.now() >= OUVERTURE_PAIEMENTS.getTime(); }
 export function dateOuverturePaiements(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENTS, locale); }
 
-// Abonnement des commerces (version complète : livraison et paiement en ligne) : activable dès le 6 octobre 2026 (date d'abord liée à la sortie de l'application, qui n'a pas eu lieu),
-// pour être prêt à l'ouverture des commandes. Miroir de FAIRIDE_SUBSCRIPTION_OPEN_AT (routes/restaurants.js).
-export const OUVERTURE_ABONNEMENT = new Date('2026-10-06T00:00:00+02:00');
-export function abonnementOuvert() {
-  return Date.now() >= OUVERTURE_ABONNEMENT.getTime();
-}
-// Date annoncée au restaurateur dans la check-list de mise en ligne : elle vient d'ici, pas d'une
-// phrase traduite, pour qu'un report du calendrier ne laisse pas trois textes périmés derrière lui.
-export function dateOuvertureAbonnement(locale = 'fr-BE') {
-  return formater(OUVERTURE_ABONNEMENT, locale);
-}
-
-// Premier prélèvement de la formule complète si le commerce l'active à la date donnée : le mois offert (30 jours)
-// court à partir de l'ouverture des commandes payées en ligne (le GO), ou de l'activation si elle est postérieure. Miroir
-// de routes/restaurants.js et de lancement.prolongerEssais côté serveur. Avant GO, la date n'est pas connue : null, et
-// l'écran le dit en mots (« 30 jours après l'ouverture »).
-export const MOIS_OFFERT_JOURS = 30;
-export function datePremierPrelevement(activation = new Date()) {
-  if (!etat.go) return null;
-  const go = etat.goAt ? new Date(etat.goAt).getTime() : 0;
-  return new Date(Math.max(activation.getTime(), go) + MOIS_OFFERT_JOURS * 86400000);
-}
+// L'abonnement des commerces (OUVERTURE_ABONNEMENT, datePremierPrelevement) n'existe plus depuis le 04/11/2026 (fondateur :
+// « on retire les 20 € par mois ») : plus de date d'activation ni de premier prélèvement à annoncer.

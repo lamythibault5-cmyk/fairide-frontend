@@ -57,8 +57,6 @@ function PeppolStatusCard({ token, toast, tr }) {
           <p className="small" style={{ margin: '0 0 4px' }}>{etat.fairideRegistered ? <><Icone nom="valider" taille={14} className="icone-texte" /> {tr('adminInvoices.fairideRegistered')}</> : <><Icone nom="alerte" taille={14} className="icone-texte" /> {tr('adminInvoices.fairideNotRegistered')}</>}</p>
           {etat.providerCheck && <p className="small" style={{ margin: '0 0 4px', color: etat.providerCheck.ok ? 'inherit' : 'var(--red)' }}>{etat.providerCheck.ok ? <Icone nom="valider" taille={16} className="icone-texte" /> : <Icone nom="croix" taille={16} className="icone-texte" />}{etat.providerCheck.message}{etat.keyHint ? ` · clé ${etat.keyHint}` : ''}</p>}
           <p className="small" style={{ margin: 0 }}>{tr('adminInvoices.peppolCounts', { a: c.en_attente || 0, b: c.envoye || 0, c: c.erreur || 0 })}</p>
-          {/* CODE-9 : factures d'abonnement émises par Fairide, même file Peppol. */}
-          <p className="small" style={{ margin: '2px 0 0' }}>{tr('adminInvoices.peppolCountsSubscription', { a: etat.counts?.subscription?.en_attente || 0, b: etat.counts?.subscription?.envoye || 0, c: etat.counts?.subscription?.erreur || 0 })}</p>
           {/* CODE-9 : commerces qui ne peuvent pas recevoir par Peppol — ils reçoivent un PDF en secours ; à régulariser. */}
           {etat.restaurantsWithoutPeppol?.length > 0 && (
             <p className="small" style={{ margin: '6px 0 0', color: 'var(--red)' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{tr('adminInvoices.withoutPeppol', { n: etat.restaurantsWithoutPeppol.length })} {etat.restaurantsWithoutPeppol.map((x) => x.name).join(', ')}</p>

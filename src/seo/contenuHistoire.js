@@ -9,7 +9,8 @@ export const BLOCS_HISTOIRE = [
   ['croyance', 'p'], ['autrement', 'p'], ['service', 'p'], ['equipe', 'p']
 ];
 
-// 6 (2026-10-02) : la garantie d’abonnement (50 € de commandes ou moins depuis le 2026-10-11), à la suite de l'inscription.
+// 6 (2026-10-02) : « Que se passe-t-il si mon commerce reçoit peu de commandes ? », à la suite de l'inscription. Elle disait la
+// garantie d'abonnement (50 € de commandes ou moins) ; depuis le 04/11/2026 il n'y a plus d'abonnement : réponse « rien ».
 // 7 (2026-10-19) : « Les prix sont-ils les mêmes qu'au restaurant ? », en tête, comme dans l'aide.
 // 8 (2026-10-22) : « Pourquoi s’appelle-t-on Fairide ? » — « fair ride », et les orthographes que les gens tapent (Fairride,
 // Fair ride), écrites en toutes lettres sur une page que Google lit, en plus de alternateName (seo/jsonLd.js).

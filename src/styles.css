@@ -4443,21 +4443,6 @@ html.tracking-plein-actif .panier-pilule { display: none !important; }
 .driver-badge-texte b { font-size: 14px; }
 .driver-badge-tel { font-size: 12.5px; }
 
-/* Offre gratuit → payant (components/OffreFormules.jsx) : deux colonnes, la formule choisie soulignée, puis
-   « Quand est-ce que je commence à payer ? » en trois étapes. Aplats et filets, sans ombre (règles de la marque). */
-.offre-formules { margin-top: 8px; }
-.offre-colonnes { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-@media (max-width: 520px) { .offre-colonnes { grid-template-columns: 1fr; } }
-.offre-col { display: flex; flex-direction: column; gap: 3px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; color: var(--ink); }
-.offre-col.offre-col-choisie { border: 2px solid var(--iris); padding: 9px 11px; }
-.offre-col b { font-size: 13.5px; }
-.offre-prix { font-weight: 800; color: var(--iris); font-size: 14px; }
-.offre-quand { margin-top: 8px; background: #fff; border: 1px solid var(--line); border-radius: var(--radius-chip); padding: 10px 12px; color: var(--ink); }
-.offre-quand b { font-size: 13px; }
-.offre-quand ol { margin: 6px 0 0; padding-left: 18px; }
-.offre-quand li { margin: 3px 0; }
-.offre-note { margin: 8px 0 0; color: var(--ink); }
-
 /* « Et maintenant ? » sous le statut d'une commande client (voir orderStatus.jsx) : une phrase qui dit ce
    qui se passe et ce qu'il y a à faire, plutôt qu'un badge à interpréter. */
 .order-next { margin: 4px 0 2px; color: var(--ink-soft); line-height: 1.45; }
@@ -4664,8 +4649,6 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
 /* Fenêtre de pseudo : la question « affiché publiquement ? » en deux vraies réponses (GameSocial.jsx),
    aucune choisie d'avance. Deux cartes cliquables en entier, la choisie cerclée d'iris. */
 
-/* Le terminal Fairide dans le bloc des formules (OffreFormules.jsx) : un encart à part, sous « quand est-ce que je paie ». */
-.offre-terminal { margin-top: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--radius-field); background: var(--cream-dim); }
 /* Le terminal Fairide expliqué (components/TerminalFairide.jsx) : image + « c'est quoi », étapes, conditions. */
 .terminal-haut { display: flex; gap: 14px; align-items: center; }
 .terminal-commandes { border-left: 4px solid var(--iris); }
@@ -5189,12 +5172,8 @@ html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
 .sponsor-apercu .sponsor-demo { flex-direction: column; align-items: flex-start; }
 .sponsor-apercu .sponsor-demo-bouton { margin-left: 0; }
 
-/* Garantie « zéro commande = zéro abonnement » (GarantieAbonnement.jsx). */
-.garantie-abonnement { margin: 0 0 12px; padding: 12px 14px; border-radius: 12px; background: var(--surface-soft); border-left: 4px solid var(--iris); } /* iris : un filet lime sur fond clair est la règle n° 1 qu'on ne casse pas */
+/* Note sous les services à l'inscription (Auth.jsx) : ce que Fairride prend, sans abonnement (fondateur, 2026-11-04). */
 .offre-lancement { margin: 10px 0 0; padding: 10px 12px; border-radius: var(--radius-chip); border: 1px solid var(--line); }
-.garantie-etat { margin: 8px 0 0; font-weight: 600; }
-.garantie-historique { margin: 8px 0 0; padding-left: 18px; }
-.offre-formules .garantie-abonnement { margin: 12px 0 0; }
 /* Plus de trois positions : la grille défile horizontalement plutôt que d'écraser les cases. */
 .mea-grille--large { overflow-x: auto; padding-bottom: 4px; }
 .mea-retirer { min-width: 36px; min-height: 36px; padding: 0; color: var(--red); }

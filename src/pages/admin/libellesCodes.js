@@ -19,11 +19,6 @@ export const REFUND_RESPONSIBILITY_LABELS = parLangue({
   en: { restaurant: 'charged to the business', driver: 'charged to the courier', fairide: 'charged to Fairride' },
   nl: { restaurant: 'ten laste van de zaak', driver: 'ten laste van de koerier', fairide: 'ten laste van Fairride' }
 });
-export const SUBSCRIPTION_STATUS_LABELS = parLangue({
-  fr: { none: 'aucun', trialing: 'mois offert en cours', active: 'actif', past_due: 'paiement en retard', paused: 'en pause', canceled: 'résilié', incomplete: 'incomplet', incomplete_expired: 'expiré', unpaid: 'impayé' },
-  en: { none: 'none', trialing: 'free month running', active: 'active', past_due: 'payment overdue', paused: 'paused', canceled: 'cancelled', incomplete: 'incomplete', incomplete_expired: 'expired', unpaid: 'unpaid' },
-  nl: { none: 'geen', trialing: 'gratis maand loopt', active: 'actief', past_due: 'betaling achterstallig', paused: 'gepauzeerd', canceled: 'opgezegd', incomplete: 'onvolledig', incomplete_expired: 'verlopen', unpaid: 'onbetaald' }
-});
 export const DELIVERY_MODE_LABELS = parLangue({
   fr: { fairide: 'livreurs Fairride', restaurant: 'son équipe' },
   en: { fairide: 'Fairride couriers', restaurant: 'its own staff' },

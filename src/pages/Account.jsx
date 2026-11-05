@@ -1,5 +1,4 @@
-import GarantieAbonnement from '../components/GarantieAbonnement';
-import { achatsCommerceAutorises, allerAuPaiement, experienceApp, lienPublic } from '../natif';
+import { experienceApp, lienPublic } from '../natif';
 import { useEffect, useRef, useState, useId } from 'react';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useSiteLarge } from '../hooks/useSiteLarge';
@@ -37,9 +36,6 @@ import useInbox from '../hooks/useInbox';
 import PaiementRestaurant from '../components/PaiementRestaurant';
 import PaiementLivreur from '../components/PaiementLivreur';
 import SonAlertesLivreur from '../components/livreur/SonAlertesLivreur';
-import { abonnementOuvert, datePremierPrelevement, useLancement } from '../launch';
-import AbonnementOffert from '../components/commerce/AbonnementOffert';
-import OffreFormules from '../components/OffreFormules';
 import TerminalFairide from '../components/TerminalFairide';
 import { euros } from '../prixPlat';
 import { defilement } from '../gestes';
@@ -88,10 +84,6 @@ function genders(t) {
 
 const LANGUE_LABEL = { fr: 'Français', en: 'English', nl: 'Nederlands' };
 
-const ABONNEMENT_RESUME = {
-  trialing: 'subTrialing', active: 'subActive', past_due: 'subPastDueShort', paused: 'subPausedShort', canceled: 'subCanceledShort', inactive: 'subNotVisible'
-};
-
 // Moyens de paiement au retrait, dans l'ordre du serveur (reseauxCommerce.js, PAIEMENTS_SUR_PLACE) et leur libellé.
 const MOYENS_SUR_PLACE = [['especes', 'payEspeces'], ['bancontact', 'payBancontact'], ['carte', 'payCarte'], ['payconiq', 'payPayconiq'], ['titres_repas', 'payTitresRepas']];
 
@@ -129,8 +121,7 @@ export default function Account({ integre = false, milieu = null }) {
       toast(t('accountUi.toastShareUnavailable', { link: lien }));
     }
   }
-  const { t, language, locale } = useLanguage();
-  useLancement(); // redessine au GO : la date du premier prélèvement de l'abonnement devient connue
+  const { t, language } = useLanguage();
   const DELETION_REASONS = deletionReasons(t);
   const GENDERS = genders(t);
   const [driverDeliveries, setDriverDeliveries] = useState(null);
@@ -140,19 +131,12 @@ export default function Account({ integre = false, milieu = null }) {
   const [relanceActivite, setRelanceActivite] = useState(0);
   const [restoId, setRestoId] = useState(null);
   const [restaurant, setRestaurant] = useState(null);
-  // Fiche du commerce pas chargée (réseau) : contrat, paiements, abonnement et services disparaissaient sans un mot ; une
+  // Fiche du commerce pas chargée (réseau) : contrat, paiements et services disparaissaient sans un mot ; une
   // carte « Réessayer » prend leur place (audit du 19/10, CROSS-44).
   const [erreurCommerce, setErreurCommerce] = useState('');
   const [membreEquipe, setMembreEquipe] = useState(false);
   // Reçus de la sous-section Paiement : toutes les commandes du restaurant, filtrées sur « payées » à l'affichage.
   const [commandesResto, setCommandesResto] = useState([]);
-  const [now, setNow] = useState(() => new Date());
-  const [subscribing, setSubscribing] = useState(false);
-  const [promoCodeInput, setPromoCodeInput] = useState('');
-  const [pausingSub, setPausingSub] = useState(false);
-  const [resumingSub, setResumingSub] = useState(false);
-  const [cancelingSub, setCancelingSub] = useState(false);
-  const [confirmCancelSub, setConfirmCancelSub] = useState(false);
   const [referralStats, setReferralStats] = useState(null);
   const [redeemCode, setRedeemCode] = useState('');
   const [redeeming, setRedeeming] = useState(false);
@@ -213,8 +197,8 @@ export default function Account({ integre = false, milieu = null }) {
   // Mon profil. Sur un téléphone et dans l'app, toutes les rubriques sont visibles et cet état ne change rien.
   const [rubrique, setRubrique] = useState(() => rubriqueDe(sectionDemandee));
   const contenuRef = useRef(null);
-  // Le défilement doit ATTENDRE que la cible existe. Les trois ancres du restaurateur
-  // (section-contrat, section-paiement, section-abonnement) ne sont rendues qu'une fois la fiche
+  // Le défilement doit ATTENDRE que la cible existe. Les deux ancres du restaurateur
+  // (section-contrat, section-paiement ; section-abonnement jusqu'au 04/11/2026) ne sont rendues qu'une fois la fiche
   // du commerce chargée — deux appels enchaînés, /restaurants/mine/dashboard puis /restaurants/:id.
   // L'ancienne version cherchait l'ancre 150 ms après le montage, donc toujours avant la réponse du
   // serveur : getElementById renvoyait null, le défilement n'avait jamais lieu et la rangée dépliée
@@ -292,12 +276,6 @@ export default function Account({ integre = false, milieu = null }) {
   useEffect(() => {
     if (role !== 'restaurant') return;
     rechargerRestaurant();
-    if (new URLSearchParams(window.location.search).get('subscribed')) {
-      toast(t('accountUi.toastSubActivating'));
-      window.history.replaceState({}, '', '/account');
-      setOuvertes((prev) => new Set(prev).add('abonnement'));
-      setRubrique('role');
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [role]);
 
@@ -307,24 +285,18 @@ export default function Account({ integre = false, milieu = null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId]);
 
-  useEffect(() => {
-    if (role !== 'restaurant') return;
-    const clock = setInterval(() => setNow(new Date()), 30000);
-    return () => clearInterval(clock);
-  }, [role]);
-
   function refreshRestaurant() {
     if (!restoId) return;
     api(`/restaurants/${restoId}`, { token }).then(setRestaurant).catch((e) => toast(e.message, 'erreur'));
   }
 
   // N'initialise les cases à cocher qu'une fois par restaurant, pas à chaque refreshRestaurant() (ex.
-  // après une action sur l'abonnement) — sinon ça écraserait une modification en cours, non sauvegardée.
+  // après un enregistrement) — sinon ça écraserait une modification en cours, non sauvegardée.
   useEffect(() => {
     if (!restaurant || servicesInitRef.current) return;
     servicesInitRef.current = true;
-    // Le choix enregistré (wants*), pas ce qui est ouvert aux clients : sans abonnement actif, livraison et
-    // emporter restent cochés ici mais fermés côté client (voir formules.js côté serveur).
+    // Le choix enregistré (wants*), pas ce qui est ouvert aux clients : une livraison coupée par l'équipe reste cochée ici
+    // mais fermée côté client (voir formules.js côté serveur).
     setOffersDelivery(restaurant.wantsDelivery ?? restaurant.offersDelivery);
     setOffersPickup(restaurant.wantsPickup ?? restaurant.offersPickup);
     setPickupPaymentMode(restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online'));
@@ -346,63 +318,6 @@ export default function Account({ integre = false, milieu = null }) {
       toast(err.message, 'erreur');
     } finally {
       setSavingServices(false);
-    }
-  }
-
-  // Depuis « Services proposés » : déplie l'abonnement et l'amène à l'écran.
-  function voirAbonnement() {
-    setOuvertes((prev) => new Set(prev).add('abonnement'));
-    setTimeout(() => document.getElementById('section-abonnement')?.scrollIntoView({ behavior: defilement(), block: 'start' }), 120);
-  }
-
-  async function subscribeNow() {
-    setSubscribing(true);
-    try {
-      const r = await api(`/restaurants/${restoId}/subscription/checkout`, { method: 'POST', token, body: { promoCode: promoCodeInput.trim() || undefined } });
-      await allerAuPaiement(r.checkoutUrl, { retour: '/account' });
-    } catch (e) {
-      toast(e.message, 'erreur');
-      setSubscribing(false);
-    }
-  }
-
-  async function pauseSubscription() {
-    setPausingSub(true);
-    try {
-      await api(`/restaurants/${restoId}/subscription/pause`, { method: 'POST', token });
-      refreshRestaurant();
-      toast(t('accountUi.toastSubPaused'));
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setPausingSub(false);
-    }
-  }
-
-  async function resumeSubscription() {
-    setResumingSub(true);
-    try {
-      await api(`/restaurants/${restoId}/subscription/resume`, { method: 'POST', token });
-      refreshRestaurant();
-      toast(t('accountUi.toastSubResumed'));
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setResumingSub(false);
-    }
-  }
-
-  async function cancelSubscription() {
-    setCancelingSub(true);
-    try {
-      await api(`/restaurants/${restoId}/subscription/cancel`, { method: 'POST', token });
-      refreshRestaurant();
-      setConfirmCancelSub(false);
-      toast(t('accountUi.toastSubCanceled'));
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setCancelingSub(false);
     }
   }
 
@@ -1128,123 +1043,6 @@ export default function Account({ integre = false, milieu = null }) {
               <PaiementRestaurant restaurant={restaurant} orders={commandesResto} onRestaurantChange={rechargerRestaurant} />
             </LigneCompte>
           </div>
-          {/* Une seule offre depuis le 2026-09-25 (à emporter et livraison, 20 €/mois) : l'abonnement n'est jamais activé
-              d'office, c'est le restaurateur qui le fait. */}
-          <div id="section-abonnement">
-          <LigneCompte icone="carteBancaire" titre={t('accountUi.subscription')} sous={restaurant.subscriptionWaived ? t('accountUi.subWaivedShort') : ABONNEMENT_RESUME[restaurant.subscriptionStatus] ? t(`accountUi.${ABONNEMENT_RESUME[restaurant.subscriptionStatus]}`) : restaurant.subscriptionStatus} ouverte={ouvertes.has('abonnement')} onClick={() => basculer('abonnement')}>
-            {/* Offert pendant le lancement (fondateur, 7 oct. 2026) : pas de garantie ni de bouton de paiement à montrer. */}
-            {restaurant.subscriptionWaived ? <AbonnementOffert /> : (<>
-            <p className="small" style={{ margin: '0 0 10px', opacity: 0.7 }}>
-              {now.toLocaleDateString(locale, { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · {now.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' })}
-            </p>
-            {/* Garantie d’abonnement (50 € de commandes ou moins = mois non dû) : la règle, le montant du mois, les mois offerts ou remboursés. */}
-            <GarantieAbonnement restoId={restoId} token={token} abonne={['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus)} />
-            {restaurant.subscriptionStatus === 'trialing' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                {t('accountUi.subTrialIntro')}
-                {restaurant.subscriptionCurrentPeriodEnd ? t('accountUi.subFirstCharge', { date: new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }) : '.'}
-              </p>
-            )}
-            {restaurant.subscriptionStatus === 'active' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                {t('accountUi.subVisibleIntro')}
-                {restaurant.subscriptionCurrentPeriodEnd ? t('accountUi.subNextCharge', { date: new Date(restaurant.subscriptionCurrentPeriodEnd).toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) }) : ''}
-              </p>
-            )}
-            {restaurant.subscriptionStatus === 'past_due' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                {t('accountUi.subPastDue')}
-              </p>
-            )}
-            {restaurant.subscriptionStatus === 'paused' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                {t('accountUi.subPaused')}
-              </p>
-            )}
-            {restaurant.subscriptionStatus === 'canceled' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>{t('accountUi.subCanceled')}</p>
-            )}
-            {restaurant.subscriptionStatus === 'inactive' && (
-              <p className="small" style={{ margin: '0 0 12px' }}>
-                {t('accountUi.subInactiveIntro')}
-                {' '}{datePremierPrelevement()
-                  ? t('accountUi.subPendingValidation', { date: datePremierPrelevement().toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' }) })
-                  : t('accountUi.subPendingValidationAvantGo')}
-              </p>
-            )}
-
-            {/* Aucun abonnement à activer avant la date d'ouverture (6 octobre 2026, FAIRIDE_SUBSCRIPTION_OPEN_AT) : le bouton
-                d'abonnement reviendra à ce moment-là (voir aussi le serveur, qui refuse l'activation avant
-                la date d'ouverture). Le premier mois est offert quoi qu'il arrive. */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && !abonnementOuvert() && (
-              <div className="paiement-encart" style={{ marginBottom: 12 }}>
-                <b>{t('accountUi.subNotYetTitle')}</b>
-                <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.subNotYetText')}</p>
-              </div>
-            )}
-            {/* Contrat d'abord : l'abonnement ne s'active qu'une fois la version en vigueur lue et acceptée (serveur : 409 CONTRACT_REQUIRED). */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && !restaurant.isDemo && restaurant.onboarding && !restaurant.onboarding.contractAccepted && (
-              <div className="paiement-encart" style={{ marginBottom: 12 }}>
-                <b>{t('accountUi.subContractTitle')}</b>
-                <p className="small" style={{ margin: '4px 0 8px' }}>{t('accountUi.subContractText')}</p>
-                <Link to="/dashboard/engagements" className="btn-gold" style={{ display: 'inline-block' }}>{t('accountUi.subContractBtn')}</Link>
-              </div>
-            )}
-            {/* Fiche pas encore validée : le bouton d'abonnement ci-dessous exige adminStatus === 'approved', et
-                sans ce mot la rangée se terminait sur du vide, sans jamais dire ce qui manquait. */}
-            {['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && abonnementOuvert() && restaurant.adminStatus !== 'approved' && (
-              <div className="paiement-encart" style={{ marginBottom: 12 }}>
-                <b>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedTitle' : 'accountUi.subPendingApprovalTitle')}</b>
-                <p className="small" style={{ margin: '4px 0 0' }}>{t(restaurant.adminStatus === 'blocked' ? 'accountUi.subBlockedText' : 'accountUi.subPendingApprovalText')}</p>
-              </div>
-            )}
-            {/* Bouton d'abonnement : impayé à régulariser, ou, dès le 6 octobre, formule complète pas encore abonnée (contrat accepté).
-                Jamais dans l'app des magasins (achatsCommerceAutorises, natif.js) : l'abonnement se prend sur le site. */}
-            {achatsCommerceAutorises() && (restaurant.subscriptionStatus === 'past_due' || (['inactive', 'canceled'].includes(restaurant.subscriptionStatus) && abonnementOuvert() && (restaurant.isDemo || !restaurant.onboarding || restaurant.onboarding.contractAccepted))) && restaurant.adminStatus === 'approved' && (
-              <div>
-                <div className="field" style={{ maxWidth: 260 }}>
-                  <label htmlFor={idsA11y + '-promocode'}>{t('auth.promoCode')}</label>
-                  <input id={idsA11y + '-promocode'} value={promoCodeInput} onChange={(e) => setPromoCodeInput(e.target.value)} placeholder={t('auth.promoCodePlaceholder')} />
-                </div>
-                <button className="btn-gold" disabled={subscribing} onClick={subscribeNow}>
-                  {subscribing ? '...' : t('accountUi.subscribeBtn', { months: restaurant.freeTrialMonths === 0 ? t('accountUi.noCommitmentShort') : t('accountUi.firstMonthFree') })}
-                </button>
-              </div>
-            )}
-            {['trialing', 'active', 'past_due'].includes(restaurant.subscriptionStatus) && (
-              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                <button className="btn-ghost" disabled={pausingSub} onClick={pauseSubscription}>{pausingSub ? '...' : t('accountUi.pauseSub')}</button>
-                {!confirmCancelSub && (
-                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>{t('accountUi.cancelSub')}</button>
-                )}
-              </div>
-            )}
-            {restaurant.subscriptionStatus === 'paused' && (
-              <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
-                {/* Reprendre, c'est relancer un abonnement payant : sur le site seulement. Mettre en pause ou résilier restent possibles partout. */}
-                {achatsCommerceAutorises() && <button className="btn-teal" disabled={resumingSub} onClick={resumeSubscription}>{resumingSub ? '...' : t('accountUi.resumeSub')}</button>}
-                {!confirmCancelSub && (
-                  <button className="btn-danger-ghost" onClick={() => setConfirmCancelSub(true)}>{t('accountUi.cancelSub')}</button>
-                )}
-              </div>
-            )}
-            {confirmCancelSub && (
-              <div style={{ marginTop: 10 }}>
-                <p className="small" style={{ color: 'var(--red)', marginBottom: 8 }}>
-                  {t('accountUi.cancelSubConfirm')}
-                </p>
-                <div className="row" style={{ gap: 8 }}>
-                  <button className="btn-outline" style={{ borderColor: 'var(--red)', color: 'var(--red)' }} disabled={cancelingSub} onClick={cancelSubscription}>
-                    {cancelingSub ? '...' : t('accountUi.yesCancel')}
-                  </button>
-                  <button className="btn-ghost" onClick={() => setConfirmCancelSub(false)}>{t('accountUi.cancel')}</button>
-                </div>
-              </div>
-            )}
-            </>)}
-          </LigneCompte>
-          </div>
-
           <LigneCompte
             icone="cloche" titre={t('accountUi.servicesOffered')}
             sous={[offersDelivery && t('accountUi.delivery'), offersPickup && t('accountUi.pickup')].filter(Boolean).join(' · ') || t('accountUi.noActiveService')}
@@ -1253,26 +1051,12 @@ export default function Account({ integre = false, milieu = null }) {
             <p className="small" style={{ margin: '0 0 12px' }}>
               {t('accountUi.servicesIntro')}
             </p>
-            {/* Une seule offre (2026-09-25) : à emporter et livraison, abonnement de 20 €/mois. Sans abonnement actif, le
-                choix est gardé et s'ouvrira à son activation (même règle que formules.js côté serveur). */}
-            {(() => {
-              const complete = offersDelivery || offersPickup;
-              // Abonnement offert pendant le lancement (subscriptionWaived) : les services sont ouverts sans abonnement, la phrase
-              // « dès que tu auras activé l'abonnement » était fausse pour lui (audit du 19/10, shop-107).
-              const abonne = restaurant.isDemo || restaurant.subscriptionWaived || ['trialing', 'active'].includes(restaurant.subscriptionStatus);
-              return (
-                <div className="paiement-encart" style={{ marginBottom: 12 }}>
-                  <b>{t('accountUi.planCompleteTitle')}</b>
-                  {complete && !abonne && (
-                    <p className="small" style={{ margin: '4px 0 8px' }}>
-                      <b>{t('accountUi.planNeedsSubTitle')}</b><br />
-                      {t('accountUi.planNeedsSubText')}
-                    </p>
-                  )}
-                  <OffreFormules payant={complete} statut={restaurant.isDemo ? null : restaurant.subscriptionStatus} finEssai={restaurant.subscriptionCurrentPeriodEnd} onActiver={complete && !abonne && achatsCommerceAutorises() ? voirAbonnement : null} />
-                </div>
-              );
-            })()}
+            {/* Plus d'abonnement (fondateur, 2026-11-04 : « on retire les 20 € par mois ») : ce que Fairride prend, en clair. Les
+                services cochés s'ouvrent aux clients sans rien à activer (formules.js côté serveur). */}
+            <div className="paiement-encart" style={{ marginBottom: 12 }}>
+              <b>{t('accountUi.planCompleteTitle')}</b>
+              <p className="small" style={{ margin: '4px 0 0' }}>{t('accountUi.planCompleteText')}</p>
+            </div>
             <div className="service-table-wrap">
               <table className="service-table">
                 <thead>

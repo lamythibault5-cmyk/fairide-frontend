@@ -276,7 +276,7 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 /* Factures : les onglets au pouce iris, l'alerte de configuration, la facture comme document. */
 .ec-factures-onglets { margin-bottom: 18px; }
 @media (min-width: 600px) { .ec-factures-onglets { max-width: 480px; } }
-/* Quatre onglets depuis « Virements » (31/10/2026) : chacun prend la largeur de son mot, « Abonnement » ne déborde plus. */
+/* Chaque onglet prend la largeur de son mot (quatre depuis « Virements », 31/10/2026 ; trois depuis le retrait de l'abonnement, 04/11/2026). */
 .ec-factures-onglets .ec-segment:not(.ec-segment--lime) button { flex: 1 1 auto; padding: 0 8px; }
 .ec-alerte { margin: 14px 0 0; padding: 12px 14px; border-radius: 16px; border: 1px solid var(--red); }
 .ec-alerte > b { color: var(--red); font-size: 14.5px; }

@@ -145,7 +145,7 @@ export default function Auth() {
   const raisonSocialeBce = useRef(''); // dernière raison sociale remplie par la BCE, remplaçable par la suivante (shop-1)
   const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — affiché sous le numéro (VerifSociete, shop-2)
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
-  // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' — l'à emporter relève toujours de la version complète, voir OffreFormules.
+  // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' (10 % sur les commandes payées en ligne).
   // Proposé par défaut : « Au choix du client » avant GO, « En ligne uniquement » après (launch.js › modeEmporterParDefaut).
   const [services, setServices] = useState(() => ({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: modeEmporterParDefaut() }));
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
@@ -1458,8 +1458,7 @@ export default function Auth() {
             )}
 
             {/* ÉCRAN 4 — ce que le commerce VEND. Isolé parce que c'est le seul écran de
-                l'inscription qui engage de l'argent : le choix des services décide de la formule, et
-                OffreFormules affiche juste en dessous ce qui sera prélevé et à partir de quand. */}
+                l'inscription qui touche à l'argent : le mode de paiement de l'à emporter décide de la commission. */}
             {stepKey === 'services' && (
               <>
                 <div className="field services-choice" role="group" aria-labelledby="auth-services-titre">
@@ -1475,17 +1474,15 @@ export default function Auth() {
                   <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span><Icone nom="maison" taille={16} className="icone-texte" />{' '}{t('auth.servicePickup')}</span></label>
                   {services.pickup && (
                     // Comment l'à emporter est payé décide de la commission : sur place = 0 %, en ligne ou au choix = 10 % sur les
-                    // commandes payées en ligne. L'à emporter lui-même relève toujours de la version complète (2026-09-23).
+                    // commandes payées en ligne.
                     <div className="service-suboptions" role="group" aria-label={t('accountUi.pickupPayTitle')}>
                       {[['on_site', 'pickupPayOnSiteOnly'], ['online', 'pickupPayOnline'], ['both', 'pickupPayBoth']].map(([v, cle]) => (
                         <label key={v} className="service-option"><input type="radio" name="pickupPaymentMode" checked={services.pickupPaymentMode === v} onChange={() => setServices((s) => ({ ...s, pickupPaymentMode: v }))} /> <span>{t(`accountUi.${cle}`)}{services.pickupPaymentMode === v && <span className="small" style={{ display: 'block' }}>{t(`accountUi.${cle}Text`)}</span>}</span></label>
                       ))}
                     </div>
                   )}
-                  {/* PENDANT LE LANCEMENT, RIEN À PAYER (12 oct. 2026, test au téléphone). Le grand encadré des formules (prix,
-                      « quand est-ce que je commence à payer », premier prélèvement daté) contredisait l'abonnement offert
-                      pendant le lancement (formules.abonnementOffert) et faisait de cet écran le plus long de l'inscription.
-                      Une phrase suffit ; le détail reste dans Mon compte › Abonnement, où il suit l'état réel du commerce. */}
+                  {/* UNE PHRASE (12 oct. 2026, test au téléphone) : ce que Fairride prend. Plus d'abonnement depuis le 04/11/2026
+                      (fondateur : « on retire les 20 € par mois ») ; le détail reste dans Mon compte › Services proposés. */}
                   {(services.delivery || services.pickup) && <p className="small offre-lancement">{t('dashResto.createNote')}</p>}
                   {fieldError('services')}
                 </div>
