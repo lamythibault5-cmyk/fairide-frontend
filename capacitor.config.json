@@ -26,7 +26,8 @@
       "@capacitor/share",
       "@capacitor/splash-screen",
       "@capacitor/status-bar",
-      "@capgo/capacitor-social-login"
+      "@capgo/capacitor-social-login",
+      "@capgo/capacitor-updater"
     ]
   },
   "plugins": {
@@ -61,6 +62,16 @@
         "facebook": false,
         "twitter": false
       }
+    },
+    "CapacitorUpdater": {
+      "autoUpdate": false,
+      "updateUrl": "",
+      "statsUrl": "",
+      "channelUrl": "",
+      "appReadyTimeout": 15000,
+      "resetWhenUpdate": true,
+      "keepUrlPathAfterReload": true,
+      "shakeMenu": false
     }
   }
 }

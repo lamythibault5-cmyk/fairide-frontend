@@ -85,6 +85,10 @@ jobs:
 
       - run: npm ci
 
+      # Mises à jour directes (app-mise-a-jour-directe.yml) : ce build sait qui il est et sur quelle coque il tourne.
+      - name: Identité du paquet et socles natifs
+        run: node scripts/paquet-appli.mjs env | tee -a "$GITHUB_ENV"
+
       - name: Site (dist/) relié à la production
         run: npm run build
 

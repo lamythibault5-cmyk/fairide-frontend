@@ -57,7 +57,9 @@ this repo's i18n files (see « Legal texts » below).
 
 Other workflows: `app-android-test.yml` builds the Fairide Test APK on every merge to `main`; `app-android-store.yml`
 (by hand: Actions › *App Android Play Store* › *Run workflow*) builds the signed Play bundle and uploads it to Internal
-testing itself — never bump `versionCode` by hand; `staging-miroir.yml` copies `main` to the `staging` branch
+testing itself — never bump `versionCode` by hand; `app-mise-a-jour-directe.yml` (every merge to `main`, since
+2026-11-05) zips `dist/` and announces it to the backend, so installed apps take the new screens without a store update
+(*Live updates* in [docs/agents/appli.md](docs/agents/appli.md)); `staging-miroir.yml` copies `main` to the `staging` branch
 (Vercel preview behind a Vercel login only: there is no staging website, staging.fairide.be is gone).
 
 ### Environment variables
@@ -93,6 +95,10 @@ read that doc before working near it.
   `obligatoire` (rare: the old app would break an order, payment, sign-up or login, or a legal text), said in plain words
   in the PR description. Nobody sets versions in Admin (Owen, 2026-11-04). Rules in
   [mises-a-jour/LISEZMOI.md](mises-a-jour/LISEZMOI.md). *(appli.md)*
+- Screen fixes reach installed apps by live update; a native change (a plugin, `capacitor.config.json`, `ios/`,
+  `android/`) changes the app's « socle » and does NOT: installed apps keep their last compatible screens until the store
+  version. Keep native changes out of urgent fixes, and say so in the PR. Never point `capacitor.config.json` ›
+  `CapacitorUpdater` at Capgo's servers. *(appli.md)*
 
 **Look and feel**
 - Two brand colours: iris `#3B2FB5` and lime `#C8F03C`. Lime only on iris, or as a filled block with ink text; backgrounds

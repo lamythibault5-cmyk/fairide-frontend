@@ -1,0 +1,9 @@
+{
+  "niveau": "conseillee",
+  "raison": "Mises à jour directes (greffon @capgo/capacitor-updater) : seules les applis qui ont cette version reçoivent ensuite les corrections d'écrans sans passer par le store ; Android 25 et avant ne l'ont pas.",
+  "lignes": {
+    "fr": ["Tes prochaines améliorations arrivent plus vite, sans passer par le store"],
+    "nl": ["Je volgende verbeteringen komen sneller, zonder langs de store te gaan"],
+    "en": ["Your next improvements arrive faster, without going through the store"]
+  }
+}

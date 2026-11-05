@@ -63,7 +63,13 @@ if (action === 'envoyer') {
     const r = await fetch(`${API}/app/builds`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${jeton}` },
-      body: JSON.stringify({ plateforme, build: Number(build), commit: process.env.GITHUB_SHA || '', entrees }),
+      // L'ordre et le socle de ce build (scripts/paquet-appli.mjs env, posés avant le build) : le serveur ne demande pas
+      // d'aller au store à une appli qui a déjà ces écrans par mise à jour directe (fairide-backend/versionsApplis.js).
+      body: JSON.stringify({
+        plateforme, build: Number(build), commit: process.env.GITHUB_SHA || '', entrees,
+        ordre: Number(process.env.VITE_PAQUET_ORDRE) || undefined,
+        socle: (plateforme === 'ios' ? process.env.VITE_SOCLE_IOS : process.env.VITE_SOCLE_ANDROID) || undefined
+      }),
       signal: AbortSignal.timeout(30000)
     });
     const texte = await r.text();

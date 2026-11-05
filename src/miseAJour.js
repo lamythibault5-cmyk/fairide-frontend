@@ -69,6 +69,12 @@ export function signalerOccupe(cle, oui) {
   if (occupe !== etat.occupe) publier({ occupe });
 }
 
+// Les mises à jour directes (miseAJourDirecte.js) ne rechargent pas les écrans pendant ce temps-là non plus, et suivent le
+// niveau : sous l'écran obligatoire, des écrans déjà téléchargés qui le lèvent se mettent en place tout de suite.
+export const estOccupe = () => occupations.size > 0;
+export const niveauMiseAJour = () => etat.niveau;
+export const ecouterMiseAJour = (f) => sAbonner(f);
+
 async function buildInstalle() {
   try {
     const { App } = await import('@capacitor/app');
@@ -84,7 +90,11 @@ async function verifier() {
     const build = await buildInstalle();
     if (!build) return;
     // Le build envoyé : « ce qui change » ne liste que ce que cette appli n'a pas encore.
-    const reponse = await api(`/app/min-version?os=${os}&build=${build}`, { logoutOn401: false });
+    // Le socle et l'ordre des écrans qui tournent (mises à jour directes, miseAJourDirecte.js) : le build ne change pas quand
+    // les écrans arrivent en direct, et le serveur ne demande rien pour ce que l'appli a déjà (versionsApplis.couverture).
+    const socle = (os === 'ios' ? import.meta.env.VITE_SOCLE_IOS : import.meta.env.VITE_SOCLE_ANDROID) || '';
+    const ecrans = socle ? `&socle=${socle}&ordre=${Number(import.meta.env.VITE_PAQUET_ORDRE) || 0}` : '';
+    const reponse = await api(`/app/min-version?os=${os}&build=${build}${ecrans}`, { logoutOn401: false });
     const minimum = Number(reponse?.[os]) || 0;
     const conseille = Number(reponse?.conseille?.[os]) || 0;
     const dernier = Number(reponse?.dernier?.[os]) || 0;

@@ -14,6 +14,31 @@ everything native goes through `src/natif.js` and `src/pushNatif.js` — see
 Store* › *Run workflow*, which uploads to Internal testing itself).
 **Releasing the iPhone app**: nothing to do — every merge to `main` builds it on GitHub's Macs and sends it to TestFlight
 (`app-ios-testflight.yml`, since 2026-10-23); its signing expires 2027-10-23 (see « Sortir une version iPhone »).
+**Live updates (Owen, 2026-11-05: « we find a lot of bugs », a fix must reach the app as fast as the site, without a day
+of Apple review)**: every merge to `main` runs `app-mise-a-jour-directe.yml`, which builds `dist/` exactly like the store
+builds, zips it into the GitHub release `appli-directe` and announces it to the backend (`POST /api/app/paquets`,
+`fairide-backend/paquetsAppli.js`). In the app, [src/miseAJourDirecte.js](../../src/miseAJourDirecte.js) asks
+`GET /app/paquet` at start-up and on every return to the foreground; the free plugin `@capgo/capacitor-updater` (manual
+mode, its Capgo addresses emptied in `capacitor.config.json`: nothing goes to Capgo) downloads the newer zip and checks
+its sha256. It is applied only at the next start, or on a return after 30 minutes away, never while a screen holds
+something (`signalerOccupe`) nor when the app opens on a link. Safety: (1) the **socle**
+([scripts/paquet-appli.mjs](../../scripts/paquet-appli.mjs)), a fingerprint per platform of `capacitor.config.json`,
+the plugin versions and the `ios/` or `android/` tree of the commit; a phone only takes a zip of its own socle, so a native
+change never reaches a shell without it and waits for the store; (2) the app calls `notifyAppReady` 3 s after React mounted
+without a crashed page, otherwise the plugin goes back to the previous screens after 15 s and that zip is never retried on
+this phone; (3) the team can withdraw a zip (`POST /api/admin/app/paquets/:id/retrait`: phones go back to the previous one,
+else to the store version) or stop everything (`app_paquets_arret` = 1 in Admin › Conformité › Paramètres); reverting
+the PR on GitHub also gives a new zip in about 10 minutes. The store builds bake the same identity
+(`VITE_PAQUET_ID`, `VITE_PAQUET_ORDRE`, `VITE_SOCLE_IOS`, `VITE_SOCLE_ANDROID`); a build without them (website, Fairide
+Test, a local build) never asks. Only apps that contain the plugin (iPhone 1.0 once rebuilt after this, Android after
+build 25) get live updates. **With the update window**: a live update changes the screens, not the build number, so the
+app also sends `socle` and `ordre` to `/app/min-version`, and the store workflows send the same for each build
+(`scripts/mises-a-jour.mjs envoyer`, table `app_builds_contenu`). The server (`versionsApplis.couverture`) asks nothing for a
+store build whose screens the app already has on the same shell: no recommended notice, no « new version » row, no lines
+it already has. A required screen stays until the app really runs screens that contain the fix; if those screens are
+already downloaded, `miseAJourDirecte.js` puts them in place at once and the screen goes away. A build with native changes
+(other socle), an app without the plugin, or live updates stopped: decided by build number, as before. Admin's manual
+overrides stay by build number.
 **Asking people to update (Owen, 2026-11-03, answers to the workspace mockup `maquettes/mise-a-jour/mise-a-jour.html`)**: the
 app ships a frozen copy of the screens, so an old install keeps calling today's server with yesterday's screens. At start-up
 and on every return to the foreground, [src/miseAJour.js](../../src/miseAJour.js) compares the installed build

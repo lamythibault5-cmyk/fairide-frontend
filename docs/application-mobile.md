@@ -163,7 +163,10 @@ d'`adb logcat`), et Safari › Développement › [l'iPhone] inspecte la page de
 
 ## Mettre à jour l'application
 
-Chaque `git push` sur `main` met le site à jour, pas l'application : son `dist/` est figé à la compilation.
+Chaque `git push` sur `main` met le site à jour. L'application embarque son `dist/`, figé à la compilation ; depuis le
+5 nov. 2026, le workflow *App mise à jour directe* l'envoie aussi aux applis installées, qui le prennent au prochain
+démarrage (« Live updates » dans `docs/agents/appli.md`). Ce qui touche la coque native (greffons,
+`capacitor.config.json`, `ios/`, `android/`) n'arrive qu'avec une version des stores, comme avant.
 Les corrections côté API (Railway) et le contenu (cartes, commerces, prix) touchent immédiatement les deux.
 
 **Les deux applications Android** (17 oct. 2026) :
