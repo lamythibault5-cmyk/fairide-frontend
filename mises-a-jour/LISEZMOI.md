@@ -9,6 +9,13 @@ ligne sur l'App Store et Google Play, et applique la décision seulement quand u
 (`fairide-backend/versionsApplis.js`). Un écran obligatoire sans version à télécharger bloquerait les gens : c'est pour ça
 qu'il attend le store.
 
+**Depuis le 2026-11-05, les écrans arrivent aussi sans store** (mise à jour directe, `docs/agents/appli.md`) : une
+correction de `src/` atteint au prochain démarrage les applis qui ont le greffon. Ces fichiers ne concernent que les
+**versions des stores** : à écrire quand un changement a besoin de la coque native (greffon, permission, `ios/`,
+`android/`), ou doit atteindre les applis trop anciennes pour les mises à jour directes. Le serveur ne montre jamais la
+notification, la rangée ni l'écran obligatoire à une appli qui a déjà ces écrans par mise à jour directe, sur la même coque
+(`fairide-backend/versionsApplis.js`, `couverture`).
+
 ## Quand écrire un fichier
 
 Seulement si le changement **arrive dans l'appli** (les écrans sont embarqués dans l'app : tout ce qui est dans `src/`,

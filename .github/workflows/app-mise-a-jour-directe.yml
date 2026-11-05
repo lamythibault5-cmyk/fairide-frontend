@@ -1,0 +1,100 @@
+# MISE À JOUR DIRECTE des applis iPhone et Android (Owen, 2026-11-05) : les écrans corrigés arrivent dans l'appli
+# installée sans passer par l'App Store ni Google Play.
+#
+# POURQUOI. L'appli embarque une copie des écrans (dist/) ; sans ce workflow, chaque correction attendait une version de
+# store (un jour de revue chez Apple). Ici, à chaque fusion dans main, GitHub construit dist/ exactement comme les builds
+# des stores (même serveur, mêmes réglages), le zippe et le dépose dans la release « appli-directe » de ce dépôt (public,
+# comme le site), puis l'annonce au serveur (POST /api/app/paquets, fairide-backend/paquetsAppli.js). Les applis le
+# téléchargent en silence et le prennent au prochain démarrage, ou au retour après 30 minutes d'absence
+# (src/miseAJourDirecte.js). Rien ne passe par Capgo : seul son greffon libre est dans l'appli.
+#
+# CE QUI NE PASSE PAS PAR ICI : tout changement de la coque native (greffons, capacitor.config.json, ios/, android/). Il
+# change le « socle » (scripts/paquet-appli.mjs) : les applis installées gardent leur dernier paquet compatible, et la
+# correction n'arrive qu'avec la version du store (workflows App iPhone TestFlight / App Android Play Store).
+#
+# EN CAS DE MAUVAIS PAQUET. Un paquet qui ne démarre pas est écarté seul par l'appli (retour au précédent). Pour un paquet
+# qui démarre mais casse quelque chose : annuler la fusion sur GitHub (Revert) donne un nouveau paquet en ~10 minutes ; ou
+# l'équipe le retire (POST /api/admin/app/paquets/<id>/retrait), ou arrête tout (Admin › Conformité › Paramètres,
+# app_paquets_arret = 1 : toutes les applis reviennent à la version du store).
+#
+# CONFIGURATION : le secret APP_BUILDS_TOKEN (le même que pour les builds des stores) et les variables VITE_* des builds.
+# Sans le secret, le workflow échoue en rouge : le paquet serait déposé sans qu'aucune appli ne le sache.
+name: App mise à jour directe
+
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['**.md', 'docs/**', 'security/**']
+  workflow_dispatch:
+
+# Écriture du contenu : SEULEMENT pour déposer le zip dans la release « appli-directe » (et retirer les vieux zips). Rien
+# n'est poussé dans git.
+permissions:
+  contents: write
+
+# Deux fusions rapprochées : seule la plus récente est construite (elle contient l'autre).
+concurrency:
+  group: app-mise-a-jour-directe
+  cancel-in-progress: true
+
+jobs:
+  paquet:
+    name: Construire et annoncer le paquet
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Les mêmes que les builds des stores (app-ios-testflight.yml, app-android-store.yml) : un paquet remplace leurs écrans.
+      VITE_API_BASE: https://fairide-backend-production.up.railway.app/api
+      VITE_GOOGLE_CLIENT_ID: ${{ vars.VITE_GOOGLE_CLIENT_ID }}
+      VITE_GOOGLE_IOS_CLIENT_ID: ${{ vars.VITE_GOOGLE_IOS_CLIENT_ID }}
+      VITE_SENTRY_DSN: ${{ vars.VITE_SENTRY_DSN }}
+      VITE_PLAUSIBLE_DOMAIN: ${{ vars.VITE_PLAUSIBLE_DOMAIN }}
+      # Jamais de photos de banque d'images présentées comme les plats d'un vrai commerce (AVANT-PRODUCTION.md).
+      VITE_STOCK_DISH_PHOTOS: 'off'
+      RELEASE: appli-directe
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Identité du paquet et socles natifs
+        run: |
+          node scripts/paquet-appli.mjs env | tee -a "$GITHUB_ENV"
+
+      - name: Écrans (dist/) reliés à la production
+        run: npm run build
+
+      # index.html à la racine du zip (ce que le greffon attend). Le numéro de lancement et d'essai dans le nom : un
+      # workflow relancé dépose un nouveau fichier au lieu d'écraser celui que des téléphones téléchargent peut-être.
+      - name: Zip
+        run: |
+          NOM="fairride-${VITE_PAQUET_ID}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}.zip"
+          (cd dist && zip -qr -X "$RUNNER_TEMP/$NOM" .)
+          echo "NOM=$NOM" >> "$GITHUB_ENV"
+          ls -lh "$RUNNER_TEMP/$NOM"
+
+      - name: Dépôt dans la release appli-directe
+        run: |
+          gh release view "$RELEASE" > /dev/null 2>&1 || gh release create "$RELEASE" --prerelease --title "Mises à jour directes de l'appli" \
+            --notes "Écrans de l'appli Fairride envoyés aux applis installées (workflow App mise à jour directe). Ce n'est pas une version à télécharger."
+          gh release upload "$RELEASE" "$RUNNER_TEMP/$NOM"
+
+      - name: Annonce au serveur
+        env:
+          APP_BUILDS_TOKEN: ${{ secrets.APP_BUILDS_TOKEN }}
+        run: node scripts/paquet-appli.mjs annoncer "https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE}/${NOM}" "$RUNNER_TEMP/$NOM"
+
+      # Les 60 zips les plus récents restent (assez pour revenir en arrière de plusieurs jours) ; les autres sont retirés.
+      - name: Vieux zips retirés
+        run: |
+          REL=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE}" --jq .id)
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${REL}/assets?per_page=100" --jq '.[] | "\(.created_at) \(.id)"' |
+            sort -r | tail -n +61 | while read -r _ ID; do gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$ID"; done

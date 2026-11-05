@@ -32,6 +32,7 @@ import './transitions-appli.css';
 import { rechargerSiNouveauCode, horsLigne } from './lazyPage';
 import { demarrerAnalytics } from './analytics';
 import { estNatif, demarrerNatif, retirerEcranLancementNatif, garderLesLiensDansLApp } from './natif';
+import { demarrerMiseAJourDirecte } from './miseAJourDirecte';
 import { ecouterNotificationsNatives } from './pushNatif';
 import { installerFonduPhotos } from './images';
 
@@ -179,6 +180,8 @@ function retirerEcranChargement() {
 setTimeout(retirerEcranChargement, 0);
 
 // Coque iOS / Android : bouton Retour, liens universels, barre d'état, clavier (voir natif.js).
+// D'abord une mise à jour directe qui attend (miseAJourDirecte.js) : elle recharge les écrans derrière l'écran de lancement.
+demarrerMiseAJourDirecte();
 demarrerNatif(historiqueLangue);
 garderLesLiensDansLApp(historiqueLangue);
 if (estNatif()) ecouterNotificationsNatives(historiqueLangue);
