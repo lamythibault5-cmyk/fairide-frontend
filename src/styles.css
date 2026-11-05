@@ -4683,6 +4683,12 @@ html.appli body:has(.dashboard-shell--flux) .panier-pilule, html.appli body:not(
   position: fixed; inset: 0; z-index: 300;
   background: #fff; display: flex; flex-direction: column;
 }
+/* UNE CONFIRMATION OUVERTE DEPUIS UNE FEUILLE PASSE AU-DESSUS D'ELLE (fenêtres à 100, feuille à 300 : elle s'ouvrait cachée
+   derrière, et le bouton qui la demandait semblait ne rien faire). La règle vivait dans ecran-commerce.css (« Quitter sans
+   enregistrer ? », audit du 19/10, shop-321), chargé seulement par les écrans du commerce : le 2026-11-05, des livreurs
+   n'arrivaient pas à changer de statut (Dossier › Changer de statut, la confirmation restait sous la feuille). Ici, pour
+   tous les écrans et toutes les feuilles. */
+body:has(> .plat-feuille) > .confirm-voile { z-index: 310; }
 /* Sur telephone le panneau EST l'ecran ; sur ordinateur il devient une carte centree (plus bas). */
 .plat-panneau { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; position: relative; }
 /* Seule cette zone défile : le pied reste en place quoi qu'il arrive. */

@@ -456,9 +456,7 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
 .alerte-ouvrir-voir { flex: none; font-size: 13.5px; font-weight: 700; color: #fff; background: var(--iris); border-radius: var(--radius-pill); padding: 8px 14px; }
 .alerte-ouvrir:hover .alerte-ouvrir-voir { background: var(--iris-deep); }
 /* Un nom très long sans espace débordait du bandeau à 430 px (audit du 19/10, shop-327) : overflow-wrap ci-dessus. */
-/* « Quitter sans enregistrer ? » (SousEcran, audit du 19/10, shop-321) : la confirmation passe AU-DESSUS du sous-écran ouvert
-   (feuille à 300, fenêtres à 100 dans styles.css), sinon elle s'ouvrait cachée derrière. */
-body:has(> .sous-ecran-feuille) > .confirm-voile { z-index: 310; }
+/* La confirmation au-dessus d'une feuille ouverte est dans styles.css (.plat-feuille) : ici, elle manquait aux livreurs. */
 
 /* LA COMMANDE À TRAITER AU-DESSUS DES ONGLETS (BandeATraiter.jsx ; fondateur, 2026-10-27, réponse 1 A de maquettes/ecrans-pro) :
    la bande du client (.suivi-commande, client-ui.css : place, verre, lime, cachée sous une fenêtre) faite de deux boutons,

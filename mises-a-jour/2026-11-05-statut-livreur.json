@@ -1,0 +1,9 @@
+{
+  "niveau": "conseillee",
+  "raison": "Livreurs : Dossier › Changer de statut ne faisait rien (la confirmation s'ouvrait cachée sous la feuille) ; signalé par un livreur le 2026-11-05.",
+  "lignes": {
+    "fr": ["Livreurs : tu peux de nouveau changer de statut dans ton dossier"],
+    "nl": ["Koeriers: je kunt je statuut weer wijzigen in je dossier"],
+    "en": ["Couriers: you can change your status in your file again"]
+  }
+}
