@@ -4499,7 +4499,7 @@ export default {
       draftWarning: 'Version du 6 octobre 2026.',
       title: 'Mentions légales',
       publisherTitle: 'Éditeur du site',
-      publisher: 'FAIRIDE SRL\nSociété à responsabilité limitée (SRL) de droit belge\nNuméro d\'entreprise (BCE) : 1042.169.780 · TVA : BE 1042.169.780 · RPM Bruxelles\nSiège social : Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique\nReprésentant légal et directeur de la publication : Thibault Lamy, administrateur\nE-mail : contact@fairride.be · Téléphone : +32 474 20 07 13',
+      publisher: 'FAIRIDE SRL\nSociété à responsabilité limitée (SRL) de droit belge\nNuméro d\'entreprise (BCE) : 1042.169.780 · TVA : BE 1042.169.780 · RPM Bruxelles\nSiège social : Avenue du Castel 30, 1200 Woluwe-Saint-Lambert, Belgique\nE-mail : contact@fairride.be · Téléphone : +32 474 20 07 13',
       hostingTitle: 'Hébergement',
       hosting: 'Site (fairride.be) : Vercel Inc., 340 S Lemon Ave #4133, Walnut, CA 91789, États-Unis.\nServeur et base de données : Railway Corp., 548 Market St PMB 68956, San Francisco, CA 94104, États-Unis.\nPaiements : Stripe Payments Europe Ltd., 1 Grand Canal Street Lower, Dublin 2, Irlande.',
       ipTitle: 'Propriété intellectuelle',
