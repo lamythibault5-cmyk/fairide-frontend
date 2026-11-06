@@ -23,6 +23,7 @@ import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import { demarrerTerminalNavigateur, EVENEMENT_COMMANDE } from '../../terminalNavigateur';
 import { signalerOccupe } from '../../miseAJour';
 import Icone from '../../components/Icone';
+import { murTelephone } from '../../murTelephone';
 import '../../site-pro.css';
 
 // Charge une seule fois restaurant/orders et les partage aux sous-pages via
@@ -435,6 +436,14 @@ export default function DashboardLayout() {
         <div className="agir-bandeau" role="status">
           <span><Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('dashResto.actingBanner', { name: user?.name || '', admin: actingAdminEmail })}</span>
           <button type="button" className="btn-outline btn-sm" onClick={quitterAction}>{t('dashResto.actingQuit')}</button>
+        </div>
+      )}
+      {/* Numéro pas encore prouvé : seule la page Commandes s'ouvre (ProtectedRoute, G16), avec ce bandeau qui reste tant que le
+          numéro n'est pas prouvé ; « Recevoir le code » ouvre le mur (Mon commerce), d'où « Voir mes commandes » ramène ici. */}
+      {murTelephone(user, 'restaurant', actingAdminEmail) && (
+        <div className="agir-bandeau" role="status">
+          <span><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('verifTel.murBandeau')}</span>
+          <button type="button" className="btn-outline btn-sm" onClick={() => navigate('/dashboard')}>{t('verifTel.murBandeauCta')}</button>
         </div>
       )}
       {myRestos.length === 1 ? (

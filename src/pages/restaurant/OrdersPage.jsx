@@ -48,6 +48,7 @@ import LivreurCommande from '../../components/commerce/LivreurCommande';
 import PlusDeTemps from '../../components/commerce/PlusDeTemps';
 import ReclamationsCommerce from '../../components/commerce/ReclamationsCommerce';
 import RenouvellementContrat from '../../components/commerce/RenouvellementContrat';
+import TicketsBloques from '../../components/commerce/TicketsBloques';
 import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
 import { telephoneLisible } from '../../validation';
 
@@ -213,6 +214,12 @@ export default function OrdersPage() {
     api(`/restaurants/${restoId}/terminals`, { token }).then((d) => setTerminaux(d.terminals || [])).catch(() => setTerminaux([]));
   }, [restoId, token]);
   useEffect(() => { chargerTerminaux(); }, [chargerTerminaux]);
+  // Relue chaque minute, onglet visible (G67) : la liste n'était lue qu'à l'ouverture, un terminal tombé pendant le service
+  // restait « en ligne » à l'écran toute la soirée.
+  useEffect(() => {
+    const i = setInterval(() => { if (document.visibilityState === 'visible') chargerTerminaux(); }, 60000);
+    return () => clearInterval(i);
+  }, [chargerTerminaux]);
   const terminauxActifs = (terminaux || []).filter((x) => !x.revokedAt);
   const aTerminal = terminauxActifs.length > 0;
   const terminalEnLigne = terminauxActifs.some((x) => x.online);
@@ -233,6 +240,15 @@ export default function OrdersPage() {
       const r = await api(`/orders/${order.id}/print`, { method: 'POST', token, body: { copies } });
       const n = r?.jobIds?.length || copies;
       toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : terminalEnLigne ? t('ordersResto.ticketSentTerminal') : t('ordersResto.ticketQueuedOffline'));
+      loadDashboard(restoId);
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoiTicket(null); }
+  }
+  // « Réimprimer » de la carte des tickets abandonnés (TicketsBloques, G62) : chaque commande, au nombre minimum de tickets.
+  async function reimprimerAbandons(liste) {
+    setEnvoiTicket('abandons');
+    try {
+      for (const o of liste) await api(`/orders/${o.id}/print`, { method: 'POST', token, body: { copies: minExemplaires(o) } });
+      toast(t('ordersResto.ticketSentTerminal'));
       loadDashboard(restoId);
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoiTicket(null); }
   }
@@ -948,6 +964,7 @@ export default function OrdersPage() {
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}
+        <TicketsBloques commandes={enCours} aTerminal={aTerminal} terminalEnLigne={terminalEnLigne} onReimprimer={reimprimerAbandons} envoi={envoiTicket === 'abandons'} />
         {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
         {!membreEquipe && <RenouvellementContrat restoId={restoId} token={token} toast={toast} lectureSeule={lectureSeule} onChange={() => loadDashboard(restoId)} />}
         <div className="sp-cadre">
@@ -1033,6 +1050,7 @@ export default function OrdersPage() {
       <FeuilleCommerce>
         {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}
         {communs}
+        <TicketsBloques commandes={enCours} aTerminal={aTerminal} terminalEnLigne={terminalEnLigne} onReimprimer={reimprimerAbandons} envoi={envoiTicket === 'abandons'} />
         {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
         {!membreEquipe && <RenouvellementContrat restoId={restoId} token={token} toast={toast} lectureSeule={lectureSeule} onChange={() => loadDashboard(restoId)} />}
         {etatListe}

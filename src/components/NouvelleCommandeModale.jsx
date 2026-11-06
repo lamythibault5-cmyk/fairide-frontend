@@ -113,6 +113,10 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
   const lieu = ouEstLeClient(o);
   const pret = heurePrete(o, enPlus);
   const paiement = o.paymentMode === 'on_site' ? t('serviceCommerce.aPayerSurPlace', { amount: euros(o.total) }) : o.paid ? t('serviceCommerce.payeeEnLigne') : '';
+  // Le ticket est déjà sorti, ou part de lui-même (impression à la réception, backend impressions.js) : la feuille le dit et le
+  // bouton devient « Réimprimer » ; « Imprimer » semblait dû et faisait préparer la commande deux fois (G173).
+  const imprime = (o.print?.printed || 0) > 0;
+  const etatTicket = imprime ? t('ordersResto.printedOnce') : (o.print?.pending || 0) > 0 ? t('ordersResto.printWaiting') : null;
 
   return (
     <>
@@ -121,7 +125,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
           <div className="nc-tete">
             <div>
               <h3 className="modal-titre">{t('serviceCommerce.nouvelleCommande')}</h3>
-              <p className="nc-sous">{[num && <b key="n">{num}</b>, orderTypeLabel(o, t), paiement].filter(Boolean).reduce((acc, x, i) => (i ? [...acc, ' · ', x] : [x]), [])}</p>
+              <p className="nc-sous">{[num && <b key="n">{num}</b>, orderTypeLabel(o, t), paiement, terminal && etatTicket].filter(Boolean).reduce((acc, x, i) => (i ? [...acc, ' · ', x] : [x]), [])}</p>
             </div>
             <AnneauDelai order={o} />
           </div>
@@ -151,8 +155,8 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
             <button type="button" className="nc-lien" disabled={!!action} onClick={() => setARefuser(true)}>{t('ordersResto.refuse')}</button>
             {terminal && (
               <span className="nc-imprimer">
-                <button type="button" className="nc-lien nc-lien--iris" disabled={envoi} onClick={reimprimer} aria-label={t('serviceCommerce.imprimer')}>
-                  <Icone nom="imprimante" taille={18} /><span className="nc-imprimer-mot">{envoi ? t('ordersResto.printing') : t('serviceCommerce.imprimer')}</span>
+                <button type="button" className="nc-lien nc-lien--iris" disabled={envoi} onClick={reimprimer} aria-label={etatTicket ? `${t('serviceCommerce.reimprimer')} (${etatTicket})` : t('serviceCommerce.imprimer')} title={etatTicket || undefined}>
+                  <Icone nom="imprimante" taille={18} /><span className="nc-imprimer-mot">{envoi ? t('ordersResto.printing') : etatTicket ? t('serviceCommerce.reimprimer') : t('serviceCommerce.imprimer')}</span>
                 </button>
                 <span className="exemplaires" role="group" aria-label={t('ordersResto.copiesLabel')}>
                   <button type="button" className="btn-ghost" disabled={exemplaires <= (o.orderType === 'delivery' ? 2 : 1)} onClick={() => setExemplaires((v) => Math.max(o.orderType === 'delivery' ? 2 : 1, v - 1))} aria-label="−">−</button>

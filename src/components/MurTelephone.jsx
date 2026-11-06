@@ -1,9 +1,11 @@
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { experienceApp } from '../natif';
 import EcranPlein from './EcranPlein';
 import VerifTelephone from './VerifTelephone';
 import { Langues } from '../pages/app/EcransBienvenue';
+import { PAGE_HORS_MUR } from '../murTelephone';
 
 /* COMMERCES ET LIVREURS PROUVENT LEUR NUMÉRO DÈS L'INSCRIPTION (fondateur, 2026-11-05).
  *
@@ -24,14 +26,17 @@ import { Langues } from '../pages/app/EcransBienvenue';
  * Pas de mur pour l'équipe qui agit pour un compte (le serveur refuse le code, refuserAgirPour), ni pour un compte de test
  * (boutique.test@, livreur.test@ : les relecteurs des stores s'y connectent, sans le téléphone derrière), ni en simulation.
  * Les anciennes versions de l'app ne le montrent pas : elles l'auront à la prochaine mise à jour.
- * Qui le voit : murTelephone() dans ProtectedRoute.jsx (chargé d'emblée ; cet écran ne se télécharge que pour qui le voit). */
+ * Qui le voit : murTelephone.js, lu par ProtectedRoute.jsx (chargé d'emblée ; cet écran ne se télécharge que pour qui le voit).
+ * Commerce : la page Commandes reste ouverte, avec un bandeau (G16, 2026-11-06) ; « Voir mes commandes » y ramène d'ici. */
 export default function MurTelephone({ role }) {
   const { logout, refreshUser } = useAuth();
+  const navigate = useNavigate();
   const { t } = useLanguage();
   const titre = t('verifTel.murTitre');
   const sous = role === 'driver' ? t('verifTel.dossierSous') : t('verifTel.murSousCommerce');
   // Prouvé (ou code reçu par e-mail) : VerifTelephone a déjà relu le compte ; le mur tombe avec lui.
   const contenu = <VerifTelephone auto repliEmail onFait={() => refreshUser?.()} />;
+  const versCommandes = role === 'restaurant' ? () => navigate(PAGE_HORS_MUR) : null;
   if (experienceApp()) {
     return (
       <EcranPlein etiquette={titre}>
@@ -42,6 +47,7 @@ export default function MurTelephone({ role }) {
             <p className="bv-sous">{sous}</p>
             {contenu}
             <div className="bv-grandit" />
+            {versCommandes && <button type="button" className="bv-lien" onClick={versCommandes}>{t('verifTel.murVersCommandes')}</button>}
             <button type="button" className="bv-lien" onClick={() => logout()}>{t('nav.logout')}</button>
           </div>
         </main>
@@ -54,6 +60,7 @@ export default function MurTelephone({ role }) {
         <h1>{titre}</h1>
         <p className="mur-tel-sous">{sous}</p>
         {contenu}
+        {versCommandes && <button type="button" className="lien-bouton mur-tel-quitter" onClick={versCommandes}>{t('verifTel.murVersCommandes')}</button>}
         <button type="button" className="lien-bouton mur-tel-quitter" onClick={() => logout()}>{t('nav.logout')}</button>
       </div>
     </div>

@@ -80,7 +80,9 @@ function sessionPerdue(e) {
 async function battement() {
   if (!config) return;
   const ok = await serviceGoodcomDisponible({ forcer: true });
-  const imprimante = ok ? 'ok' : 'printer_offline';
+  // Le service répond mais a refusé le dernier ticket (papier, G62) : le battement le dit, au lieu de « prête », jusqu'au
+  // prochain ticket sorti (derniereErreur remise à zéro).
+  const imprimante = !ok ? 'printer_offline' : etat.derniereErreur === 'printer_refused' ? 'printer_refused' : 'ok';
   // L'imprimante revient : on vide la file tout de suite, sans attendre le prochain tour.
   const revenue = ok && etat.imprimante === 'printer_offline';
   majEtat({ imprimante });
@@ -110,10 +112,10 @@ export async function traiterFile() {
         } catch (e) {
           const code = e.code || 'unknown';
           await appel(`/terminal/jobs/${job.id}/ack`, { method: 'POST', body: { status: 'failed', errorCode: code, error: e.message } }).catch(() => {});
-          majEtat({ derniereErreur: code, imprimante: code === 'printer_offline' ? 'printer_offline' : etat.imprimante });
+          majEtat({ derniereErreur: code, imprimante: ['printer_offline', 'printer_refused'].includes(code) ? code : etat.imprimante });
           // Le serveur apprend la panne tout de suite, sans attendre le battement de la minute : l'écran du commerce (et le
           // banc d'essai) affichait encore « imprimante prête » alors qu'un ticket attendait.
-          if (code === 'printer_offline') appel('/terminal/heartbeat', { method: 'POST', body: { appVersion: 'web-1', model: 'Goodcom (navigateur)', printerStatus: 'printer_offline', network: navigator.onLine ? 'online' : 'offline' } }).catch(() => {});
+          if (['printer_offline', 'printer_refused'].includes(code)) appel('/terminal/heartbeat', { method: 'POST', body: { appVersion: 'web-1', model: 'Goodcom (navigateur)', printerStatus: code, network: navigator.onLine ? 'online' : 'offline' } }).catch(() => {});
           break; // imprimante en difficulté : le reste de la file attend le tour suivant
         }
       }
