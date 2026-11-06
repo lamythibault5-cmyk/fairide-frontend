@@ -60,6 +60,8 @@ function webglDisponible() {
 
 // Le style doit avoir fini de se dessiner dans ce délai, sinon on passe au raster (serveur lent, réseau qui bloque).
 const DELAI_STYLE_MS = 10000;
+// Tuiles vectorielles en échec avant de passer au raster de secours (G155) : une tuile perdue arrive, quatre, c'est une panne.
+const ERREURS_TUILES_MAX = 4;
 
 // Rend une couche que les cartes ajoutent tout de suite (coucheTuiles(L).addTo(carte)) : un groupe, rempli dès que le fond
 // est choisi — vectoriel, ou raster en secours. Marqueurs et tracés restent au-dessus (volet des tuiles, comme avant).
@@ -86,6 +88,21 @@ export function coucheTuiles(L, options = {}) {
       if (!gl) { fini = true; return; }
       const minuterie = setTimeout(() => raster(r.raster), DELAI_STYLE_MS);
       gl.once('load', () => { clearTimeout(minuterie); fini = true; });
+      /* LES TUILES QUI NE VIENNENT PAS (G155). MapLibre annonce « load » même quand ses tuiles échouent (serveur de tuiles en
+       * panne, style pris dans le cache) : la minuterie était coupée et le suivi montrait un point qui bouge sur un fond beige,
+       * sans rues. Après quelques tuiles en échec, avant ou après « load », on passe au raster de secours, une fois. */
+      let erreursTuiles = 0;
+      const surErreur = (e) => {
+        if (!e?.tile && !e?.sourceId) return; // une erreur de tuile ou de source, pas une autre
+        if (!groupe.hasLayer(couche)) { gl.off('error', surErreur); return; } // déjà passé au raster (minuterie)
+        erreursTuiles += 1;
+        if (erreursTuiles < ERREURS_TUILES_MAX) return;
+        gl.off('error', surErreur);
+        clearTimeout(minuterie);
+        fini = false;
+        raster(r.raster);
+      };
+      gl.on('error', surErreur);
     } catch (e) {
       console.warn('Fond vectoriel indisponible, fond raster de secours :', e?.message || e);
       raster(r.raster);

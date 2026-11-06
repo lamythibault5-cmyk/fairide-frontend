@@ -46,7 +46,10 @@ const DELIVERY_ICON = pastilleMaison();
 // `homeLabel`/`homeEmoji`/`homeColor` : le « chez soi » n'est pas le même pour tout le monde — la maison du
 // client, le commerce du restaurateur. `legendeDestination` : ce que la légende appelle l'adresse de
 // livraison (« Toi » pour le client, « Client » pour le restaurateur).
-export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel, homeEmoji = 'maison', homeColor = '#C8F03C', legendeDestination, onEta, height = 260 }) {
+// `velo` / `voiture` : le véhicule du livreur (backend GET /orders/mine, driverVelo / driverVoiture, G54). L'arrivée se
+// calculait toujours au pas d'une voiture : un livreur à vélo à 2,4 km « arrivait dans ~6 min » au lieu d'une dizaine.
+// Inconnus (null, livreur de l'équipe du commerce) : le plus lent du trajet motorisé et de la distance à 15 km/h.
+export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deliveryLat, deliveryLng, driverLat, driverLng, lastUpdatedAt, homeLat, homeLng, homeLabel, homeEmoji = 'maison', homeColor = '#C8F03C', legendeDestination, onEta, height = 260, velo = null, voiture = null }) {
   const { t } = useLanguage();
   const { token } = useAuth();
   // Libellés par défaut résolus ici (pas dans la signature) : t n'existe qu'à l'intérieur du composant.
@@ -238,15 +241,20 @@ export default function DeliveryTrackingMap({ restaurantLat, restaurantLng, deli
       const assezVieux = Date.now() - dernier.at >= ETA_INTERVALLE_MIN_MS;
       if (aBouge || assezVieux) {
         etaDernierRef.current = { pos, at: Date.now() };
-        itineraireRue(token, driverLat, driverLng, deliveryLat, deliveryLng)
+        itineraireRue(token, driverLat, driverLng, deliveryLat, deliveryLng, { velo: velo === true, voiture: voiture === true })
           .then(({ latLngs, duration, distance }) => {
             if (cancelled || !mapRef.current) return;
             if (!remainingLineRef.current) {
               remainingLineRef.current = L.polyline(latLngs, TRACE_RESTE).addTo(mapRef.current);
             } else remainingLineRef.current.setLatLngs(latLngs);
             // Un scooter en ville ne roule pas comme la voiture d'OSRM : on majore de 15 %, et jamais
-            // moins d'une minute — « arrive dans 0 min » alors qu'il n'est pas là est un mensonge.
-            const minutes = Math.max(1, Math.round((duration * 1.15) / 60));
+            // moins d'une minute — « arrive dans 0 min » alors qu'il n'est pas là est un mensonge. À vélo, l'itinéraire
+            // cycliste donne déjà son temps (pas de majoration, comme DriverNavigationMap). Véhicule inconnu : on ne promet
+            // pas plus vite qu'un vélo (distance à 15 km/h), G54.
+            const secondes = velo === true ? duration
+              : (velo === false || voiture === true) ? duration * 1.15
+                : Math.max(duration * 1.15, (distance / 1000 / 15) * 3600);
+            const minutes = Math.max(1, Math.round(secondes / 60));
             const info = { minutes, km: Math.round(distance / 100) / 10 };
             setEta(info); onEta?.(info);
           })

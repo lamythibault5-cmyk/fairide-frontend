@@ -15,6 +15,8 @@ let etat = VIDE;
 let jeton = null;
 let minuterie = null;
 let derniereLecture = 0;
+// L'écran affiché (le `chemin` du crochet monté par la Layout) : sur Mes commandes, la page relit elle-même (G156).
+let cheminCourant = null;
 const abonnes = new Set();
 
 const EN_COURS = ['nouveau', 'preparation', 'pret', 'livraison'];
@@ -32,7 +34,9 @@ function publier(commandes) {
   // Une commande suivie : la mise à jour de l'app attend la fin (Owen, 2026-11-03, src/miseAJour.js).
   signalerOccupe('commande', enCours);
   // Pas pendant que l'app est en arrière-plan (tenir la charge, 2026-11-02) : le retour la relit (useRevalidation).
-  if (enCours && !minuterie) minuterie = setInterval(() => { if (document.visibilityState === 'visible') relireAvec(jeton); }, 15000);
+  // Ni sur Mes commandes (G156) : la page relit déjà sa propre liste toutes les 15 s et la donne ici (nourrirSuivi) ; la même
+  // liste était lue deux fois toutes les 15 s sur l'écran le plus fréquenté pendant les commandes.
+  if (enCours && !minuterie) minuterie = setInterval(() => { if (document.visibilityState === 'visible' && cheminCourant !== '/orders') relireAvec(jeton); }, 15000);
   if (!enCours && minuterie) { clearInterval(minuterie); minuterie = null; }
 }
 
@@ -45,6 +49,14 @@ function relireAvec(token) {
     // Une réponse arrivée après une déconnexion ou un changement de compte ne doit pas montrer les commandes de l'autre.
     .then((liste) => { if (token === jeton && Array.isArray(liste)) publier(liste); })
     .catch(() => {});
+}
+
+/* MES COMMANDES NOURRIT LA BANDE (G156). Sa première page (les plus récentes d'abord, comme ?suivi=1) arrive ici à chaque
+ * relecture : la bande y lit le refus pour le noter vu, et l'état « commande en cours » reste juste sans seconde lecture. */
+export function nourrirSuivi(liste, token) {
+  if (!token || token !== jeton || !Array.isArray(liste)) return;
+  derniereLecture = Date.now();
+  publier(liste);
 }
 
 function sAbonner(f) {
@@ -74,9 +86,11 @@ export default function useCommandeEnCours(chemin) {
     };
   }, [actif, token]);
 
-  // À chaque changement d'écran, au plus une fois toutes les 10 s.
+  // À chaque changement d'écran, au plus une fois toutes les 10 s. Mes commandes lit sa liste en arrivant et la donne ici.
   useEffect(() => {
+    cheminCourant = chemin;
     if (!actif) return;
+    if (chemin === '/orders') return;
     if (Date.now() - derniereLecture > 10000) relireAvec(token);
   }, [actif, token, chemin]);
 
