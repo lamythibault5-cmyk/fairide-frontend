@@ -7184,6 +7184,9 @@ export default {
       forName: 'Pour {name}',
       lockedHost: 'Groupe fermé : plus personne ne peut ajouter de plat. Termine la commande, ou rouvre le groupe.',
       lockedGuest: '{name} est en train de passer la commande : le groupe est fermé.',
+      // G162 : la commande de l'hôte refusée ou annulée (orderStopped du serveur).
+      stoppedHost: "Ta commande pour le groupe a été refusée ou annulée. Rouvre le groupe, ou commande de nouveau.",
+      stoppedGuest: "La commande de {name} a été refusée ou annulée : ce groupe ne sera pas livré. Vois avec {name}.",
       orderedHost: "Tu as commandé pour le groupe : suis la commande dans tes commandes.",
       orderedGuest: "{name} a passé la commande du groupe.",
       ended: 'Cette commande groupée est terminée (expirée ou annulée).',
@@ -8448,6 +8451,9 @@ export default {
       onlinePaymentOpenSoon: 'Ce commerce n\'accepte que le paiement en ligne, qui ouvre bientôt sur Fairride : tu ne peux pas encore y commander. D\'autres commerces acceptent déjà l\'à emporter payé sur place.',
       whenLabel: 'Quand la recevoir ?',
       unavailableToday: "Plus disponible aujourd'hui",
+      // G166 : les choix de la ligne ne respectent plus les règles du plat ; G165 : épuisé aujourd'hui, commandable un autre jour.
+      optionsToRedo: "Ses choix ont changé : retire-la et choisis de nouveau",
+      soldOutLaterDay: "Épuisé aujourd'hui : possible pour un autre jour",
       removeLine: "Retirer",
       removeUnavailable: "Un plat de ton panier n'est plus disponible aujourd'hui : retire-le pour commander le reste.",
       whenLabelPickup: "Quand la chercher ?",

@@ -13,3 +13,12 @@ export const SERVICE_FEE_RATE = 0.10;
 export function fraisService(livraison) {
   return +(Number(livraison) - +(Number(livraison) * (1 - SERVICE_FEE_RATE)).toFixed(2)).toFixed(2);
 }
+
+// Ce qui revient au commerce sur ses plats : le sous-total moins la part de Fairide (10 %, REGLES_FIXES du serveur ; sans
+// TVA sous la franchise), arrondie comme pricing.commissionFairide. Sert seulement à plafonner la livraison qu'il offre, comme
+// le serveur (CartContext.totals, G164) ; jamais affichée au client.
+const PART_FAIRIDE = 0.10;
+export function partCommerce(sousTotal) {
+  const s = Number(sousTotal) || 0;
+  return Math.max(0, +(s - +(s * PART_FAIRIDE).toFixed(2)).toFixed(2));
+}
