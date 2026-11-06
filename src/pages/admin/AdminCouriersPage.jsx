@@ -321,6 +321,21 @@ function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIden
       <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>{actions}</div>
     </div>
   );
+  /* CE QU'IL Y A À COMPARER, SOUS LES YEUX (Owen, 06/11 : « je ne vois pas sa pièce »). Une pièce vérifiée par Stripe est
+   * effacée chez Stripe juste après (promesse du consentement biométrique) : il ne reste que le nom que Stripe y a lu, et
+   * la date tapée par le livreur. La carte les montre au lieu de renvoyer vers une pièce qui n'existe plus ; une pièce
+   * déposée à la main, elle, est dans Documents. */
+  const parStripe = id.provider === 'stripe_identity';
+  const nomPiece = `${id.firstName || ''} ${id.lastName || ''}`.trim() || '-';
+  const ans = c.birthDate ? Math.floor((Date.now() - new Date(c.birthDate)) / (365.25 * 24 * 3600 * 1000)) : null;
+  const texteHumain = (p) => {
+    if (p === 'noms') return tr('adminCouriers.exHumainNoms', { piece: nomPiece, compte: d.user?.name || '-',
+      stripe: tr(id.nameMatchStripe == null ? 'adminCouriers.exNomStripeInconnu' : id.nameMatchStripe ? 'adminCouriers.exNomStripeOk' : 'adminCouriers.exNomStripeKo') })
+      + ' ' + tr(parStripe ? 'adminCouriers.exPieceEffacee' : 'adminCouriers.exPieceDocuments');
+    if (p === 'date_naissance') return tr(parStripe ? 'adminCouriers.exHumainNaissanceStripe' : 'adminCouriers.exHumainNaissancePiece',
+      { date: c.birthDate ? new Date(`${String(c.birthDate).slice(0, 10)}T12:00:00`).toLocaleDateString(getLocale()) : '-', age: ans ?? '-' });
+    return tr(`adminCouriers.exHumain_${p}`);
+  };
   return (
     <>
       {d.autoApprovedAt && (
@@ -331,7 +346,7 @@ function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIden
         </div>
       )}
       {(points.length > 0 || humains.length > 0) && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
-      {humains.map((p) => ligne(p, `${tr(`adminCouriers.exHumain_${p}`)} ${tr('adminCouriers.exHumainValider')}`, null))}
+      {humains.map((p) => ligne(p, `${texteHumain(p)} ${tr('adminCouriers.exHumainValider')}`, null))}
       {points.some((p) => ['identite', 'nationalite', 'titre_sejour'].includes(p)) && <VerifierPiece d={d} tr={tr} busy={busy} agir={agir} token={token} toast={toast} onDocuments={onDocuments} onRefuserIdentite={onRefuserIdentite} />}
       {points.includes('bce') && ligne('bce',
         tr('adminCouriers.exBceDetail', { num: c.independent?.companyNumber || '-', registre: !registre ? tr('adminCouriers.exRegistrePasLu') : registre.valid ? tr('adminCouriers.exRegistreValide', { name: registre.name }) : registre.valid === false ? tr('adminCouriers.exRegistreAbsent') : tr('adminCouriers.exRegistrePasLu'), nom: `${id.firstName || ''} ${id.lastName || ''}`.trim() || '-' }),
