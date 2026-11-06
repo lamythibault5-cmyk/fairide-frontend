@@ -14,19 +14,43 @@ export function jetonNatifCourant() {
   try { return localStorage.getItem(CLE_JETON); } catch { return null; }
 }
 
+// Un chemin interne seulement (audit sécurité 2026-10-31) : « //autre.site » et « /\autre.site » commencent aussi
+// par « / » mais désignent un autre site pour le navigateur.
+const cheminInterne = (url) => !!url && typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\');
+
+/* LA PAGE D'UNE NOTIFICATION SURVIT À UN RECHARGEMENT (G128). Une mise à jour directe qui attend recharge les écrans au
+ * démarrage (miseAJourDirecte.js) : ouverte par le toucher d'une notification, l'appli consommait ce toucher puis se
+ * rechargeait, et la page à ouvrir était perdue (le commerce ou le livreur arrivait sur l'accueil au moment d'agir). La page
+ * est gardée quelques secondes : rechargée entre-temps, l'appli la rouvre au démarrage suivant. Et la mise à jour ne
+ * recharge pas juste après un toucher (notificationToucheeRecemment). */
+const CLE_OUVERTE = 'fairide_notif_ouverte';
+const GARDE_MS = 10000;
+let toucheeLe = 0;
+export const notificationToucheeRecemment = () => Date.now() - toucheeLe < 60000;
+
 let ecouteursPoses = false;
 // Clic sur une notification : on ouvre la page qu'elle désigne (data.url), comme le service worker le fait
 // sur le web. Posé une seule fois, à la première demande d'abonnement ou au démarrage (main.jsx).
 export async function ecouterNotificationsNatives(historique) {
   if (ecouteursPoses) return;
   ecouteursPoses = true;
+  // Une page de notification laissée par le chargement d'avant (rechargé juste après le toucher) : on la rouvre.
+  try {
+    const laissee = JSON.parse(localStorage.getItem(CLE_OUVERTE) || 'null');
+    localStorage.removeItem(CLE_OUVERTE);
+    if (laissee && cheminInterne(laissee.url) && Date.now() - Number(laissee.at) < 3 * GARDE_MS) historique.push(laissee.url);
+  } catch { /* stockage indisponible */ }
   try {
     const { PushNotifications } = await import('@capacitor/push-notifications');
     PushNotifications.addListener('pushNotificationActionPerformed', ({ notification }) => {
       const url = notification?.data?.url;
-      // Un chemin interne seulement (audit sécurité 2026-10-31) : « //autre.site » et « /\autre.site » commencent aussi
-      // par « / » mais désignent un autre site pour le navigateur.
-      if (url && typeof url === 'string' && url.startsWith('/') && !url.startsWith('//') && !url.startsWith('/\\')) historique.push(url);
+      toucheeLe = Date.now();
+      if (!cheminInterne(url)) return;
+      try {
+        localStorage.setItem(CLE_OUVERTE, JSON.stringify({ url, at: toucheeLe }));
+        setTimeout(() => { try { localStorage.removeItem(CLE_OUVERTE); } catch { /* rien */ } }, GARDE_MS);
+      } catch { /* stockage indisponible : la page s'ouvre quand même */ }
+      historique.push(url);
     });
     // Reçue alors que l'application est au premier plan : les listes se rafraîchissent tout de suite
     // (useNewOrderAlert sonne et affiche la commande dès qu'elle apparaît).
