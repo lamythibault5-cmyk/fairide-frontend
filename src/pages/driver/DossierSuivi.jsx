@@ -7,7 +7,7 @@ import SousEcran from '../../components/SousEcran';
 import RouteVelo from '../../components/livreur/RouteVelo';
 import { EtapeNotices } from '../../components/conformite/LivreurConformite';
 import { DocumentsVente, TarifMinimum } from '../../components/conformite/EspaceVendeurLivreur';
-import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour, ConfirmerEcole } from './dossierBlocs';
+import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour } from './dossierBlocs';
 import { STATUTS, ouvrirPdf } from './dossierCommun';
 import { EcranIdentite, EcranPaiement } from './DossierAppli';
 import { API_BASE } from '../../api';
@@ -141,9 +141,6 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
             du dossier (site-livreur.css). Ailleurs, ces deux enveloppes n'ont pas de boîte (display: contents). */}
         <div className="ecl-site-cols">
           <div className="ecl-site-col">
-            {c.needsRenewal && <p className="ecl-note"><Icone nom="alerte" taille={18} />{t('courierOnboarding.renewalNeeded')}</p>}
-            {/* Le geste qui lève le renouvellement (audit du 19/10, courier-30) : confirmer l'école et l'année académique. */}
-            {roule && <ConfirmerEcole key={`ecole-${c.needsRenewal}`} d={d} t={t} token={token} busy={busy} action={action} />}
             {aSonTour && (
               <>
                 <button type="button" className="ecl-prochaine" onClick={faireLaPremiere}>

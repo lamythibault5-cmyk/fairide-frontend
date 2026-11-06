@@ -64,8 +64,11 @@ components live in [src/components/conformite/](../../src/components/conformite/
   `telephone` missing item that blocks the sending until it is proven by SMS; no status, company number, vehicle or
   address — the backend accepts a courier without them). The dossier then asks « Ton activité » (status, company number read
   at the EU VAT register VIES, which fills legal name, seat, address and zone; the address typed only when nobody gives it;
-  school, VAT regime, nationality declared in one tap, social insurance fund), « Tes courses » (vehicle, zone, other
-  platforms, bag, minimum), non-EEA documents, the ID at **Stripe Identity, document + selfie** (version B, chosen on
+  VAT regime, nationality declared in one tap), « Tes courses » (vehicle, other platforms, bag, minimum). **Only what the
+  law asks of us (Owen, 2026-11-06)**: no school / academic year (nor the yearly student renewal), no social insurance fund,
+  no zone (a displayed preference, dispatch ignores it, it comes from the address), no licence number or plate; never add
+  one back as a missing item without its legal reason written next to it. A birth date that cannot be right (future, under
+  16, over 100) is refused (`DATE_NAISSANCE_IMPOSSIBLE`), and the field stays open while `age_minimum` is missing. Then non-EEA documents, the ID at **Stripe Identity, document + selfie** (version B, chosen on
   2026-10-22 over « document only »: without the face match a found or lent ID card was enough to sign up), with the
   biometric consent as ONE box on the identity screen (its full text one tap away; the 428 `CONSENTEMENT_BIOMETRIQUE_REQUIS`
   stays as the server-side guard). Whoever refuses (« Je préfère sans selfie chez Stripe ») uploads an ID photo and a
@@ -96,10 +99,10 @@ components live in [src/components/conformite/](../../src/components/conformite/
   register number); shops' answers to menu questions 7 days, checkout choices for the tab only (all declared in
   `cookies.technical` and `cookies.duration`). **After approval the dossier is not frozen** (audit 2026-10-19, courier-4 to -7, -30): the
   approved page (DossierSuivi.jsx, site and app, blocks in dossierBlocs.jsx) lets the courier change
-  zone, vehicle (+ licence and plate when motorised), « other platforms » (1 vs 3 jobs at a time), bag and minimum, upload a
-  renewed residence permit / professional card (date first) and confirm school + year for the yearly student renewal —
+  zone, vehicle, « other platforms » (1 vs 3 jobs at a time), bag and minimum, upload a
+  renewed residence permit / professional card (date first) —
   none of it re-opens the review; the team gets a task (vehicle changed, permit to check). A STATUS change sends the
-  dossier back to draft when the new status needs something (siège, école, contract), else to the team; no offers until
+  dossier back to draft when the new status needs something (siège, contract), else to the team; no offers until
   re-verified. The daily job also e-mails / pushes 30 and 7 days before a dated document expires
   (`couriers.rappelerEcheancesPieces`).
 - **Merchant**: card signature, allergen attestation and professional declaration in

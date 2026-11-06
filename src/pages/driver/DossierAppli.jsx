@@ -14,7 +14,6 @@ import { RetraitConsentementBiometrique } from '../../components/conformite/Livr
 import { Haut, Option, Fait } from '../app/EcransBienvenue';
 import { Champ } from '../app/InscriptionAppli';
 import RouteVelo from '../../components/livreur/RouteVelo';
-import { formaterAnneeAcademique } from '../../validation';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import { defilement } from '../../gestes';
 import { euros } from '../../prixPlat';
@@ -22,7 +21,7 @@ import GuideIndependant from '../../components/livreur/GuideIndependant';
 import { AvantDeCommencer } from './dossierBlocs';
 import '../../ecran-livreur.css';
 import '../../ecran-general.css'; // le rond du retour (.gn-rond) de la fin express
-import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, CAISSES, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
+import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 import VerifTelephone from '../../components/VerifTelephone';
 
 /* UN SEUL DOSSIER, SUR LE SITE COMME DANS L'APP (fondateur, 2026-10-25). Le site avait son propre dossier en six étapes
@@ -87,7 +86,9 @@ const ECRAN_DE_ETAPE = { statut: 'activite', identite: 'identite', infos: 'activ
 /* LA PARTIE « NUMÉRO D'ENTREPRISE » DE « TON ACTIVITÉ » (fondateur, 2026-11-03, maquettes/dossier-livreur-simple, version A) :
  * ce qu'un livreur qui n'est pas encore indépendant ne peut pas donner. Quand il ne manque que ça, l'étape « peut attendre »
  * et le sommaire dit « Presque prêt ». */
-const NUMERO_ENTREPRISE = ['bce', 'tva', 'tva_numero', 'caisse', 'siege'];
+const NUMERO_ENTREPRISE = ['bce', 'tva', 'tva_numero', 'siege'];
+// « AAAA-MM-JJ » d'il y a `ans` années : les bornes du calendrier de la date de naissance (16 à 100 ans).
+const ilYA = (ans) => { const d = new Date(); d.setFullYear(d.getFullYear() - ans); return d.toISOString().slice(0, 10); };
 
 // Ce qui manque → l'écran qui le demande.
 function ecranDuManque(m) {
@@ -95,8 +96,7 @@ function ecranDuManque(m) {
   const table = {
     // Le statut et la nationalité : « Ton statut », la première question (2026-11-03) ; le reste de l'activité vient en dernier.
     statut: 'profil', identite: 'identite', nationalite: 'profil', date_naissance: 'registre', registre_national: 'registre', age_minimum: 'registre',
-    zone: 'courses', vehicule: 'courses', permis_immatriculation: 'courses', ecole: 'activite', bce: 'activite', tva: 'activite', tva_numero: 'activite',
-    caisse: 'activite', siege: 'activite',
+    vehicule: 'courses', bce: 'activite', tva: 'activite', tva_numero: 'activite', siege: 'activite',
     titre_sejour: 'doc:residence_permit', carte_professionnelle: 'doc:professional_card',
     // Le numéro se prouve ici depuis que le compte s'ouvre sans code (fondateur, 2026-11-02, maquettes/inscription-legere).
     telephone: 'telephone'
@@ -201,13 +201,6 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
 
   let titre = ''; let sous = null; let contenu = null; let pied = null;
   const continuer = (fn = suivant, libelle = t('appli.continuer')) => <button type="button" className="bv-btn btn-teal" disabled={busy} onClick={fn}>{busy ? t('common.loading') : libelle}</button>;
-  const select = (id, k, options, vide = '-') => (
-    <select id={id} value={f[k]} onChange={(e) => val(k, e.target.value)}>
-      <option value="">{vide}</option>
-      {options.map(([v, txt]) => <option key={v} value={v}>{txt}</option>)}
-    </select>
-  );
-
   if (ouvert === 'telephone') {
     titre = t('verifTel.dossierTitre'); sous = t('verifTel.dossierSous');
     // Le code part à l'ouverture et se valide tout seul à six chiffres ; prouvé, on passe à « Ton activité ».
@@ -229,7 +222,7 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
   } else if (ouvert === 'activite' && modeNumero === 'non') {
     // Le guide « Pas encore de numéro ? C'est normal. » (version G1) : comment l'obtenir, puis il continue sans.
     titre = t('appli.exGuideTitre'); sous = t('appli.exGuideSous');
-    contenu = <GuideNumero c={c} f={f} val={val} t={t} compteId={compteId} />;
+    contenu = <GuideNumero c={c} f={f} t={t} compteId={compteId} />;
     // Le lime ouvre le champ du numéro ; « Continuer, je l'ajouterai après » passe à la suite sans lui.
     pied = (
       <>
@@ -244,7 +237,7 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     );
   } else if (ouvert === 'activite') {
     titre = t('appli.exActiviteTitre'); sous = t('appli.exActiviteSous');
-    contenu = <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} select={select} />;
+    contenu = <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} />;
     pied = continuer(async () => {
       // Dénomination d'un indépendant en personne physique : son nom, si le registre ne l'a pas donnée.
       const corps = corpsInfos({ ...f, legalName: f.legalName || d.companyRegistry?.name || d.user?.name || '' }, c);
@@ -260,7 +253,7 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     });
   } else if (ouvert === 'courses') {
     titre = t('appli.exCoursesTitre'); sous = t('appli.exCoursesSous');
-    contenu = <EcranCourses d={d} c={c} f={f} val={val} t={t} motorise={motorise} select={select} />;
+    contenu = <EcranCourses d={d} c={c} f={f} val={val} t={t} />;
     pied = continuer(enregistrerPuisSuivant);
   } else if (ouvert === 'identite') {
     titre = t('appli.exPieceTitre'); sous = t('appli.exPieceSous');
@@ -279,10 +272,13 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
         {/* Date de naissance : lue sur la pièce par Stripe ; à taper seulement sans elle (pièce déposée, contrôle en personne).
             AUSSI APRÈS STRIPE QUAND ELLE N'EST PAS ARRIVÉE (03/11/2026) : Stripe ne rendait pas la date (résultat « sensible »,
             backend identityVerification.relireStripeIdentity), et le champ caché laissait le livreur sur « Il manque encore :
-            la date de naissance » sans rien à taper. Pendant que Stripe vérifie encore, on attend sa lecture. */}
-        {!c.birthDate && (id.provider !== 'stripe_identity' || !['pending', 'processing'].includes(id.status)) && (
+            la date de naissance » sans rien à taper. Pendant que Stripe vérifie encore, on attend sa lecture.
+            AUSSI QUAND ELLE DIT « MOINS DE 18 ANS » (06/11) : un livreur avait tapé l'année en cours et ne voyait plus de champ
+            pour la corriger. Une date lue sur la pièce, le serveur la refuse quand même (DATE_NAISSANCE_VERIFIEE). Le
+            calendrier ne propose que 16 à 100 ans ; le serveur refuse le reste (DATE_NAISSANCE_IMPOSSIBLE). */}
+        {(!c.birthDate || manques.includes('age_minimum')) && (id.provider !== 'stripe_identity' || !['pending', 'processing'].includes(id.status)) && (
           <Champ id="dos-naissance" label={t('courierOnboarding.fBirthDate')}>
-            <input id="dos-naissance" type="date" value={f.birthDate} onChange={(e) => val('birthDate', e.target.value)} />
+            <input id="dos-naissance" type="date" value={f.birthDate} onChange={(e) => val('birthDate', e.target.value)} min={ilYA(100)} max={ilYA(16)} />
           </Champ>
         )}
         <Champ id="dos-nrn" label={t('courierOnboarding.fNrn')} aide={c.hasNationalNumber ? t('courierOnboarding.nrnStored', { masked: c.nationalNumberMasked }) : t('appli.exNrnAide')}>
@@ -513,7 +509,7 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
  * le dernier écran du dossier, ouvert par « Oui, je l'ai » ; le statut et la nationalité sont dans « Ton statut » (EcranProfil). */
 // « RUE DU BAILLI 42 1050 IXELLES » (registre, en capitales) → « Rue Du Bailli 42 1050 Ixelles », lisible sur la carte.
 const adresseLisible = (a) => String(a || '').toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (x) => x.toUpperCase());
-function EcranActivite({ d, f, val, t, token, action, select }) {
+function EcranActivite({ d, f, val, t, token, action }) {
   const c = d.courier;
   const registre = d.companyRegistry;
   const chiffres = String(f.companyNumber || '').replace(/\D/g, '');
@@ -526,7 +522,6 @@ function EcranActivite({ d, f, val, t, token, action, select }) {
   }, [chiffres]); // eslint-disable-line react-hooks/exhaustive-deps
   // Le registre a trouvé le numéro : il est assujetti à la TVA (VIES ne connaît que les assujettis).
   useEffect(() => { if (dejaLu && registre?.valid && !f.vatStatus) val('vatStatus', 'assujetti'); }, [dejaLu, registre?.valid]); // eslint-disable-line react-hooks/exhaustive-deps
-  const connue = !f.socialInsuranceFund || CAISSES.includes(f.socialInsuranceFund);
   const legal = d.legal ?? {};
   /* LA TVA EN MOTS SIMPLES (2026-11-03, maquettes/dossier-livreur-simple, fil B) : « Non / Oui / Je ne sais pas » au lieu de
    * « Franchise / Assujetti ». « Je ne sais pas » enregistre la franchise, le cas de la plupart des livreurs, et se change ici. */
@@ -551,13 +546,7 @@ function EcranActivite({ d, f, val, t, token, action, select }) {
             <Champ id="dos-commune" label={t('appli.exCommune')}><input id="dos-commune" value={f.addressCity} onChange={(e) => val('addressCity', e.target.value)} autoComplete="address-level2" /></Champ></div>
         </>
       )}
-      {c.statusType === 'student_independent' && (
-        <div className="bv-rangee">
-          <Champ id="dos-ecole" label={t('courierOnboarding.fSchool')}><input id="dos-ecole" value={f.schoolName} onChange={(e) => val('schoolName', e.target.value)} /></Champ>
-          {/* Tiret posé tout seul : le pavé numérique de l'iPhone n'en a pas (audit du 19/10, CROSS-64). */}
-          <Champ id="dos-annee" label={t('courierOnboarding.fAcademicYear')}><input id="dos-annee" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" /></Champ>
-        </div>
-      )}
+      {/* Plus d'école, d'année académique ni de caisse d'assurances sociales (Owen, 06/11 : rien que la loi ne nous demande). */}
       {c.statusType === 'student_independent' && legal.studentParentsCeiling != null && (
         <p className="bv-aide" style={{ marginTop: -4 }}>{t('courierOnboarding.studentParentsInfo', { amount: euros(Number(legal.studentParentsCeiling)) })}</p>
       )}
@@ -570,9 +559,6 @@ function EcranActivite({ d, f, val, t, token, action, select }) {
         })}
       </div>
       <p className="bv-aide" style={{ marginTop: -4 }}>{t('appli.exTvaAide', { max: maxFranchise })}</p>
-      <Champ id="dos-caisse" label={t('courierOnboarding.fSocialInsuranceFund')} aide={t('courierOnboarding.fSocialInsuranceFundHelp')}>
-        {select('dos-caisse', 'socialInsuranceFund', [...CAISSES.map((x) => [x, x]), ...(connue ? [] : [[f.socialInsuranceFund, f.socialInsuranceFund]])], t('appli.exCaisseInconnue'))}
-      </Champ>
     </>
   );
 }
@@ -624,7 +610,7 @@ const GUIDE_CLE = 'fairide_guide_numero';
 function lireGuide(compteId) {
   try { const s = JSON.parse(localStorage.getItem(GUIDE_CLE) || 'null'); return s && s.compte === compteId ? s.fait || {} : {}; } catch { return {}; }
 }
-function GuideNumero({ c, f, val, t, compteId }) {
+function GuideNumero({ c, f, t, compteId }) {
   const [fait, setFait] = useState(() => lireGuide(compteId));
   const cocher = (n) => setFait((x) => {
     const suite = { ...x, [n]: !x[n] };
@@ -660,12 +646,6 @@ function GuideNumero({ c, f, val, t, compteId }) {
       <p className="bv-aide"><b>{t('appli.exGuideDelais')}</b></p>
       {voiture && <p className="bv-aide">{t('appli.exGuideVoiture')}</p>}
       <p className="bv-aide">{t('appli.exGuideGestion')}</p>
-      {etudiant && (
-        <div className="bv-rangee">
-          <Champ id="dos-ecole-g" label={t('courierOnboarding.fSchool')}><input id="dos-ecole-g" value={f.schoolName} onChange={(e) => val('schoolName', e.target.value)} /></Champ>
-          <Champ id="dos-annee-g" label={t('courierOnboarding.fAcademicYear')}><input id="dos-annee-g" inputMode="numeric" value={f.academicYear} onChange={(e) => val('academicYear', formaterAnneeAcademique(e.target.value))} placeholder="2026-2027" /></Champ>
-        </div>
-      )}
     </>
   );
 }
@@ -714,9 +694,8 @@ function ComparaisonStatuts({ legal, t, actuel }) {
   );
 }
 
-/* « TES COURSES » (version A) : le véhicule (permis et plaque s'il est motorisé), la zone (tirée de l'adresse, à changer ici), une
- * autre plateforme (une course à la fois, ou trois), le sac, et le minimum par course et par km — facultatif. */
-function EcranCourses({ d, c, f, val, t, motorise, select }) {
+/* « TES COURSES » (version A) : le véhicule, une autre plateforme (une course à la fois, ou trois), le sac, et le minimum par course et par km — facultatif. */
+function EcranCourses({ d, c, f, val, t }) {
   const sacModifiable = ['none', 'due'].includes(c.bag?.depositStatus || 'none');
   const segments = (id, k, liste) => (
     <div className="bv-segments" role="radiogroup" aria-labelledby={id}>
@@ -728,15 +707,10 @@ function EcranCourses({ d, c, f, val, t, motorise, select }) {
       <div className="bv-grille" style={{ marginBottom: 14 }}>
         {(d.vehicles ?? VEHICULES).map((v) => <Option key={v} on={f.vehicleType === v} titre={t(`courierOnboarding.vehicle_${v}`)} onClick={() => val('vehicleType', v)} />)}
       </div>
-      {motorise && (
-        <div className="bv-rangee bv-rangee-moitie">
-          <Champ id="dos-permis" label={t('courierOnboarding.fLicence')}><input id="dos-permis" value={f.licenceNumber} onChange={(e) => val('licenceNumber', e.target.value)} /></Champ>
-          <Champ id="dos-plaque" label={t('courierOnboarding.fPlate')}><input id="dos-plaque" value={f.licencePlate} onChange={(e) => val('licencePlate', e.target.value)} placeholder="1-ABC-123" /></Champ>
-        </div>
-      )}
+      {/* Plus de permis, de plaque ni de zone (Owen, 06/11 : rien que la loi ne nous demande ; la zone n'attribue rien et se
+          déduit de l'adresse). */}
       {/* En voiture, les deux poids de la carte grise : au-delà, licence de transport (maquettes/livreur-voiture/livreur-voiture.html). */}
       {f.vehicleType === 'voiture' && <p className="bv-aide" style={{ marginTop: -4, marginBottom: 14 }}>{t('courierOnboarding.carWeightHelp')}</p>}
-      <Champ id="dos-zone" label={t('courierOnboarding.fZone')}>{select('dos-zone', 'zone', (d.zones ?? []).map((z) => [z, z]))}</Champ>
       <span className="bv-etiquette" id="dos-plateformes">{t('auth.platformsTitle')}</span>
       {segments('dos-plateformes', 'worksOtherPlatforms', [['no', t('auth.platformsNo')], ['yes', t('auth.platformsYes')]])}
       <span className="bv-etiquette" id="dos-sac">{t('courierOnboarding.fBag')}</span>
