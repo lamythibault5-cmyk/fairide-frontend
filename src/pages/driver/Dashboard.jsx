@@ -14,7 +14,7 @@ import PhotoDepot from '../../components/livreur/PhotoDepot';
 import BoutonUrgence from '../../components/livreur/BoutonUrgence';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
 import RouteVelo from '../../components/livreur/RouteVelo';
-import { experienceApp, suivrePositionCourse, demanderPosition } from '../../natif';
+import { experienceApp, suivrePositionCourse, demanderPosition, refusPosition, estNatif, ouvrirReglagesAppli } from '../../natif';
 import { ouvrirStripe } from '../../ouvrirStripe';
 import { mouvementReduit, vibrer } from '../../gestes';
 import Icone from '../../components/Icone';
@@ -197,6 +197,8 @@ export default function DriverDashboard() {
   const [ageAVerifier, setAgeAVerifier] = useState(null);
   const [sharingLocation, setSharingLocation] = useState(false);
   const [lastPositionAt, setLastPositionAt] = useState(null);
+  // Le suivi a été refusé par le téléphone (G42 : position approximative ou bloquée) : dit tant que la livraison dure.
+  const [suiviRefuse, setSuiviRefuse] = useState(false);
   const [connecting, setConnecting] = useState(false);
   // Selfie de contrôle demandé (SelfieControle.jsx) : null, ou { dueAt, blocking }. Sert au bandeau (LIVE-25).
   const [selfie, setSelfie] = useState(null);
@@ -218,8 +220,10 @@ export default function DriverDashboard() {
    * Oui : il s'allume. Non, ou position déjà bloquée : la petite fenêtre dit seulement où la rallumer dans les réglages. */
   async function togglePause() {
     if (user?.driverPaused && user?.locationSharingEnabled !== false && (await verifierPos()) !== 'granted') {
-      const position = await demanderPosition();
-      if (position || (await verifierPos()) === 'granted') basculerPause();
+      // La position EXACTE (G42) : une approximative ne suffit pas au suivi en livraison, elle ne compte pas comme un oui.
+      const position = await demanderPosition({ precise: true });
+      const etat = await verifierPos();
+      if (etat === 'granted' || (position && etat !== 'approximate')) basculerPause();
       else setDemandePosition(true);
       return;
     }
@@ -411,6 +415,8 @@ export default function DriverDashboard() {
   // arrière-plan n'existe pas sur le web. DANS L'APPLICATION, pendant une course en livraison, elle existe depuis le
   // 15/10/2026 (natif.js suivrePositionCourse, service au premier plan avec sa notification) : le suivi reprend quand
   // `enLivraison` change. L'horodatage renvoyé au client reste : une carte figée doit se lire comme telle.
+  // Gains, Mon compte… pendant une livraison (G41) : cet écran se démonte, components/livreur/SuiviCoursesHorsEcran.jsx (monté
+  // par App.jsx hors de /driver et /driver/map) reprend le même suivi et les alertes « prête » / « annulée ».
   const enLivraison = mine.some((o) => o.status === 'livraison');
   // Une course en main (à récupérer ou en route) : la mise à jour de l'app attend qu'elle soit livrée (Owen, 2026-11-03,
   // src/miseAJour.js). Pas remis à zéro en quittant l'écran : Mon compte pendant une course ne doit pas l'ouvrir.
@@ -452,6 +458,7 @@ export default function DriverDashboard() {
       message: t('dashDriver.bgTrackingMessage'),
       onPosition: ({ latitude, longitude }) => {
         setSharingLocation(true);
+        setSuiviRefuse(false);
         // Pour trier les courses (2 A) : un nouveau rendu seulement après 30 m, pas à chaque mesure du GPS.
         if (!posTri || haversineDistanceKm(posTri.lat, posTri.lng, latitude, longitude) > 0.03) { posTri = { lat: latitude, lng: longitude }; setMaPosition(posTri); }
         lastCoords = { latitude, longitude };
@@ -460,8 +467,11 @@ export default function DriverDashboard() {
         if (Date.now() - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
         send(latitude, longitude);
       },
-      onErreur: () => {
+      onErreur: (e) => {
         setSharingLocation(false);
+        // Plus qu'un toast (G42) : un refus du téléphone, la rangée « Partage de position » du bandeau le dit tant que la
+        // livraison dure (un GPS lent n'est pas un refus).
+        if (refusPosition(e)) setSuiviRefuse(true);
         if (!deniedNotified) {
           deniedNotified = true;
           toast(t('dashDriver.toastAllowGeo'));
@@ -665,6 +675,11 @@ export default function DriverDashboard() {
   const dossierARevoir = ['draft', 'rejected', 'pending_review'].includes(dossier?.statut) && mine.length === 0;
   const approuve = user?.adminStatus === 'approved' && !dossierARevoir;
   const peutRouler = approuve && user?.stripeConnectStatus === 'active';
+  /* UNE COURSE EN MAIN RESTE À L'ÉCRAN (G159, 2026-11-06). Un livreur suspendu ou bloqué en pleine livraison perdait tout
+     l'écran de la course : plus d'adresse, ni d'appel, ni de code à taper, la commande coincée dans son sac — alors que le
+     serveur le laisse la remettre (/deliver ne lit pas admin_status). Les courses déjà en main restent affichées ; seules les
+     nouvelles offres disparaissent (la carte de son dossier les remplace). */
+  const voitSesCourses = approuve || awaitingPickup.length + active.length > 0;
   const enPause = !!user?.driverPaused;
   const appli = experienceApp();
 
@@ -681,12 +696,12 @@ export default function DriverDashboard() {
     const o = mine.find((x) => x.id === a.orderId);
     return o && (a.type === 'pickup' ? ['preparation', 'pret'].includes(o.status) : ['preparation', 'pret', 'livraison'].includes(o.status));
   });
-  const tourneeActive = approuve && nEnMain >= 2 && arretsPlan.length > 0;
+  const tourneeActive = voitSesCourses && nEnMain >= 2 && arretsPlan.length > 0;
   const premierArret = tourneeActive ? mine.find((o) => o.id === arretsPlan[0].orderId) : null;
-  const principale = approuve ? (premierArret || active[0] || awaitingPickup[0] || null) : null;
+  const principale = voitSesCourses ? (premierArret || active[0] || awaitingPickup[0] || null) : null;
   const autresActives = active.filter((o) => o !== principale);
   const autresRetraits = awaitingPickup.filter((o) => o !== principale);
-  const course = principale || (approuve && terminee ? terminee : null);
+  const course = principale || (voitSesCourses && terminee ? terminee : null);
   const enRetrait = !!principale && principale.status !== 'livraison';
   const fraisCourse = (o) => dec(o.driverFee ?? o.deliveryFee ?? o.fee);
   /* PRÊTE, PRÊTE À…, OU EN RETARD (1 B, 4 A) : le serveur dit l'heure prévue et le retard (tournee.etatPrete), pour une course
@@ -949,7 +964,10 @@ export default function DriverDashboard() {
     );
   };
 
-  const urgence = peutRouler && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} /></span>;
+  /* L'URGENCE NE DÉPEND PAS DES PAIEMENTS (G123, 2026-11-06). Elle suivait `peutRouler`, qui exige un compte Stripe actif :
+     un compte restreint par Stripe en pleine tournée, ou un livreur suspendu avec une course en main, perdait le bouton au
+     moment où il pouvait servir. Elle reste pour tout livreur validé, et pour quiconque tient une course. */
+  const urgence = (user?.adminStatus === 'approved' || nEnMain > 0) && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} /></span>;
 
   /* ---------- Le site (jamais l'app) : le bandeau du tableau de bord, la liste et le détail d'une course ---------- */
   const site = !appli;
@@ -989,7 +1007,11 @@ export default function DriverDashboard() {
         ? t('dashDriver.sharingDisabledSub')
         : sharingLocation
           ? t('dashDriver.sharingOnSub', { last: lastPositionAt ? t('dashDriver.geoLastSentDot', { time: formatClock(lastPositionAt) }) : '' })
-          : t('dashDriver.sharingWaitingSub')}</span>
+          : suiviRefuse ? t('dashDriver.sharingBlockedSub') : t('dashDriver.sharingWaitingSub')}
+        {/* Refusé par le téléphone (G42) : les réglages de Fairride, d'un toucher, dans l'app (sans le greffon : le chemin écrit). */}
+        {!sharingLocation && suiviRefuse && user?.locationSharingEnabled !== false && estNatif() && (
+          <> <button type="button" className="lien-bouton" onClick={() => ouvrirReglagesAppli().then((ok) => { if (!ok) toast(t('dashDriver.posReqApproxAndroid')); })}>{t('dashDriver.posReqReglages')}</button></>
+        )}</span>
     </p>
   );
 
@@ -1317,6 +1339,8 @@ export default function DriverDashboard() {
             course tant qu'il n'est pas envoyé (controleSelfie.js côté serveur). */}
         {peutRouler && <SelfieControle token={token} onDepose={load} onEtat={setSelfie} />}
 
+        {/* Bloqué ou suspendu avec une course en main (G159) : la course d'abord, la carte du dossier dessous. */}
+        {!approuve && voitSesCourses && blocEnMain(false)}
         {!approuve ? (() => {
           /* LE MESSAGE SUIT L'ÉTAT DU DOSSIER (audit du 15/10/2026). « L'équipe vérifie ton dossier » s'affichait aussi à un
              livreur qui ne l'avait pas encore envoyé, ou dont le dossier était à corriger — sans bouton : il attendait une
@@ -1369,7 +1393,7 @@ export default function DriverDashboard() {
         onRefuse={() => refuserRemiseAge(ageAVerifier)} />
       {/* « Disponible » avec la position refusée : où la rallumer (voir togglePause). */}
       {demandePosition && (
-        <Modale titre={t('dashDriver.posReqTitre')} onFermer={() => setDemandePosition(false)}>
+        <Modale titre={t(etatPos === 'approximate' ? 'dashDriver.posReqExacteTitre' : 'dashDriver.posReqTitre')} onFermer={() => setDemandePosition(false)}>
           <ExplicationPosition etat={etatPos} verifier={verifierPos} onAutorisee={() => { setDemandePosition(false); basculerPause(); }}>
             <button type="button" className="btn-outline" onClick={() => setDemandePosition(false)}>{t('dashDriver.posReqPlusTard')}</button>
           </ExplicationPosition>

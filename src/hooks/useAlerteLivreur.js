@@ -32,7 +32,8 @@ export function sonActifMemorise() {
 
 
 // `surAnnulee` (facultatif) : appelé avec la course annulée, pour l'écrire aussi à l'écran (Dashboard.jsx).
-export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif, surAnnulee }) {
+// `titreOnglet` : false hors de l'écran des courses (SuiviCoursesHorsEcran.jsx) — la page affichée garde son titre.
+export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif, surAnnulee, titreOnglet = true }) {
   const { t } = useLanguage();
   const [sonActif, setSonActifEtat] = useState(sonActifMemorise);
   const [permission, setPermission] = useState(() => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission));
@@ -159,12 +160,13 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
   if (baseTitre.current === null && typeof document !== 'undefined') baseTitre.current = document.title;
   const nbDispo = actif ? disponibles.length : 0;
   useEffect(() => {
+    if (!titreOnglet) return undefined;
     const base = baseTitre.current || 'Fairride';
     if (nbPretes) document.title = `(${nbPretes}) ${t(nbPretes === 1 ? 'driverAlert.titleReadyOne' : 'driverAlert.titleReady')} · ${base}`;
     else if (nbDispo) document.title = `(${nbDispo}) ${t(nbDispo === 1 ? 'driverAlert.titleAvailableOne' : 'driverAlert.titleAvailable')} · ${base}`;
     else document.title = base;
     return () => { document.title = base; };
-  }, [nbPretes, nbDispo, t]);
+  }, [nbPretes, nbDispo, t, titreOnglet]);
 
   return { sonActif, setSonActif, permission, demanderPermission, nbDispo, nbPretes };
 }

@@ -160,6 +160,18 @@ function PrechauffageCarte() {
   return null;
 }
 
+/* LE SUIVI D'UNE LIVRAISON HORS DE L'ÉCRAN DES COURSES (G41, 2026-11-06) : un livreur qui ouvre Gains ou Mon compte pendant
+   une livraison continue de partager sa position et d'entendre « prête » / « annulée ». Hors de /driver et /driver/map
+   seulement (ces deux écrans ont leur propre suivi) ; chargé pour un compte livreur, jamais pour un autre visiteur. `chemin` :
+   la page réellement rendue (une page en feuille laisse celle du dessous montée). */
+const SuiviCoursesHorsEcran = lazy(() => import('./components/livreur/SuiviCoursesHorsEcran'));
+const ECRANS_AVEC_SUIVI = ['/driver', '/driver/map'];
+function SuiviLivreur({ chemin }) {
+  const { token, roles } = useAuth();
+  if (!token || !roles?.includes('driver') || ECRANS_AVEC_SUIVI.includes(chemin.replace(/\/+$/, '') || '/')) return null;
+  return <Suspense fallback={null}><SuiviCoursesHorsEcran /></Suspense>;
+}
+
 // Anciens liens de réservation (/reserver/:id, /restaurants/:id/reserver) → la fiche du commerce.
 function RedirectionFiche() {
   const { id } = useParams();
@@ -189,6 +201,7 @@ export default function App() {
       <NavigationFeedback />
       <BarreSimulation />
       <PrechauffageCarte />
+      <SuiviLivreur chemin={(fond || location).pathname} />
       {/* Un seul Suspense autour de toutes les routes : le repli réutilise les squelettes déjà employés
           au chargement des données, donc l'attente d'un module a la même apparence que l'attente d'une
           requête — pas un deuxième vocabulaire visuel à apprendre pour l'utilisateur. */}
