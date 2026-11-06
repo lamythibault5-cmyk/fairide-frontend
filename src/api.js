@@ -63,6 +63,13 @@ export function setSessionExpiredHandler(fn) {
   onSessionExpired = fn;
 }
 
+// Refus « pas encore ouvert » (PICKUP_NOT_OPEN, DELIVERY_NOT_OPEN, ONLINE_PAYMENT_NOT_OPEN) : launch.js s'y abonne pour relire
+// l'état d'ouverture tout de suite (G100, 2026-11-06). Même raison que plus haut : launch.js importe api.js, pas l'inverse.
+let surRefusOuverture = null;
+export function siRefusOuverture(fn) {
+  surRefusOuverture = fn;
+}
+
 // Un 401 sur une requête SANS token n'est pas une session expirée mais un échec de connexion
 // (mauvais mot de passe sur /auth/login, jeton Google invalide...) : il doit remonter normalement à
 // l'appelant pour être affiché dans le formulaire, sans déclencher de déconnexion.
@@ -84,6 +91,7 @@ function handleResponse(res, data, hadToken, logoutOn401) {
     if (onSessionExpired) onSessionExpired(data.code);
     throw error;
   }
+  if (surRefusOuverture && typeof data.code === 'string' && data.code.endsWith('_NOT_OPEN')) surRefusOuverture(data.code);
   const error = new ApiError(data.error || traduire('common.genericError'), res.status);
   if (data.code) error.code = data.code;
   if (data.field) error.field = data.field;
@@ -116,7 +124,7 @@ function erreurReseau(controle, lecture) {
 // `withHeaders: true` renvoie { data, headers } au lieu du seul corps : les listes admin paginées
 // annoncent leur total dans l'en-tête X-Total-Count tout en gardant un tableau en réponse (voir
 // GET /admin/restaurants|drivers|clients côté serveur). Sans l'option, comportement inchangé.
-export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false, delai: delaiDemande } = {}) {
+export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false, delai: delaiDemande, cache } = {}) {
   // Langue de l'interface : le backend en fait la langue des e-mails déclenchés par cette requête
   // (code de vérification, bienvenue...) — voir userLang.js côté serveur.
   const headers = { 'Content-Type': 'application/json', 'X-Fairide-Lang': getLanguage() };
@@ -139,7 +147,8 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   const controle = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const minuteur = controle ? setTimeout(() => controle.abort(), delai) : null;
   let res;
-  const envoyer = (base, signal) => fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal });
+  // `cache` (facultatif) : 'no-store' pour une lecture qui doit venir du serveur (l'état d'ouverture, src/launch.js).
+  const envoyer = (base, signal) => fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal, ...(cache ? { cache } : {}) });
   const base = adresseApi();
   try {
     res = await envoyer(base, controle?.signal);
