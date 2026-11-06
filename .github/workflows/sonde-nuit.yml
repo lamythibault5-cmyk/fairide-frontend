@@ -1,0 +1,109 @@
+# SONDE DE NUIT : des comptes neufs touchent chaque bouton, chaque nuit (2026-11-06).
+#
+# POURQUOI. `npm run sonde` (scripts/sonde-nouveaux.mjs) trouve ce que check:app ne peut pas voir : une fenêtre ouverte mais
+# cachée, un bouton couvert, une erreur serveur sur le parcours d'un nouveau compte (le 05/11, aucun livreur ne pouvait
+# changer de statut). Lancée à la main, elle dépend de quelqu'un qui y pense. Ici elle tourne seule, chaque nuit, contre un
+# backend et une base JETABLES : un Postgres vide créé pour la nuit, le backend de main démarré dessus, sans aucune clé
+# (pas de Stripe, pas de SMS, pas d'e-mail). Rien ne touche la production ni la base de dev.
+#
+# OÙ VOIR LE RÉSULTAT. Owen n'a pas à ouvrir GitHub : /fairride (scan.js › depuisSondeNuit) lit le dernier passage, et
+# rouge, télécharge l'artifact « sonde-nuit » (constats.json + captures) et liste ce qu'il faut corriger. La page du run a
+# aussi un résumé.
+#
+# COÛT. Ce dépôt est public : les minutes GitHub Actions sur ubuntu-latest y sont gratuites. Le dépôt du backend (privé)
+# n'exécute rien : il est seulement lu, par une clé de déploiement EN LECTURE SEULE limitée à ce dépôt (secret
+# SONDE_BACKEND_KEY ; Settings › Deploy keys du backend pour la retirer).
+#
+# Jamais sur une proposition de fusion : le secret ne doit pas servir à du code non relu.
+name: Sonde de nuit
+
+on:
+  schedule:
+    # 02:30 UTC : 03:30 à Bruxelles l'hiver, 04:30 l'été. Personne ne commande, et le résultat est là au réveil.
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: sonde-nuit
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  sonde:
+    name: Comptes neufs, chaque bouton
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: sonde
+          POSTGRES_DB: fairride
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 12
+    env:
+      DATABASE_URL: postgres://postgres:sonde@localhost:5432/fairride
+      SONDE_DATABASE_URL: postgres://postgres:sonde@localhost:5432/fairride
+      FAIRIDE_BACKEND: ${{ github.workspace }}/backend
+      SONDE_SORTIE: ${{ github.workspace }}/sonde-resultats
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Code du backend (main, lecture seule)
+        uses: actions/checkout@v4
+        with:
+          repository: lamythibault5-cmyk/fairide-backend
+          ssh-key: ${{ secrets.SONDE_BACKEND_KEY }}
+          path: backend
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            backend/package-lock.json
+
+      - run: npm ci
+      - run: npm ci
+        working-directory: backend
+
+      # Le backend sur la base vide : il crée son schéma et ses commerces de démonstration au démarrage (schema.sql). Pas
+      # de NODE_ENV=production : sans clés, il journalise les e-mails et SMS au lieu de les envoyer. HIBP_CHECK=off : le
+      # contrôle des mots de passe fuités appelle un service externe (sans effet en production, voir motDePasse.js).
+      - name: Backend jetable
+        working-directory: backend
+        env:
+          PORT: '3000'
+          APP_URL: http://localhost:5174
+          HIBP_CHECK: 'off'
+        run: |
+          JWT_SECRET="$(openssl rand -hex 32)" nohup node server.js > "$RUNNER_TEMP/backend.log" 2>&1 &
+          for i in $(seq 1 90); do
+            if curl -sf http://localhost:3000/api/health > /dev/null; then echo "backend prêt"; exit 0; fi
+            sleep 2
+          done
+          echo "Le backend n'a pas démarré :"; tail -60 "$RUNNER_TEMP/backend.log"; exit 1
+
+      - name: Sonde
+        run: npm run sonde
+
+      - name: Journal du backend avec les constats
+        if: always()
+        run: mkdir -p "$SONDE_SORTIE" && cp "$RUNNER_TEMP/backend.log" "$SONDE_SORTIE/backend.log" || true
+
+      # Lu par /fairride (scan.js) : constats.json à la racine de l'artifact. Sept jours suffisent : il est lu le matin.
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: sonde-nuit
+          retention-days: 7
+          if-no-files-found: ignore
+          path: |
+            sonde-resultats/constats.json
+            sonde-resultats/backend.log
+            sonde-resultats/*/*.png
+            !sonde-resultats/site/**

@@ -18,6 +18,8 @@
 // des commerces et livreurs (sinon on ne verrait que le mur du numéro, MurTelephone.jsx, testé à part par le rôle « mur »),
 // le dossier envoyé du livreur « driver-envoye ». Elle prend la connexion dans le .env du backend (FAIRIDE_BACKEND, sinon
 // ../fairide-backend ou ../../fairide-backend) et refuse toute base qui n'est pas Neon ; sans elle, ces rôles sont sautés.
+// Chaque nuit, GitHub la lance contre un backend et une base jetables (.github/workflows/sonde-nuit.yml) ; /fairride en lit
+// le résultat (scan.js › depuisSondeNuit).
 //
 //   npm run sonde                         tous les rôles
 //   npm run sonde -- --roles client,driver
@@ -27,7 +29,7 @@
 import { build, preview } from 'vite';
 import { chromium } from 'playwright-core';
 import { createRequire } from 'node:module';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { appendFileSync, existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -59,16 +61,19 @@ if (!sante?.ok) { console.error(`Backend local introuvable sur ${API} : lance «
 if (sante.services?.stripeLive) { console.error('Ce backend a des clés Stripe réelles : la sonde ne tourne que sur la base de dev.'); process.exit(2); }
 
 const dossierBackend = [process.env.FAIRIDE_BACKEND, path.resolve(RACINE, '../fairide-backend'), path.resolve(RACINE, '../../fairide-backend')]
-  .find((d) => d && existsSync(path.join(d, '.env')) && existsSync(path.join(d, 'node_modules/pg')));
-// Écrit dans la base de DEV seulement (Neon, jamais Railway) ; false si elle n'est pas joignable.
+  .find((d) => d && existsSync(path.join(d, 'node_modules/pg')));
+// Écrit dans la base de DEV seulement : Neon (poste d'Owen, .env du backend) ou un Postgres local jetable (sonde de nuit,
+// SONDE_DATABASE_URL) ; jamais Railway. false si elle n'est pas joignable.
 async function ecrireBaseDev(sql, params) {
   if (!dossierBackend) return false;
   const req = createRequire(path.join(dossierBackend, 'package.json'));
-  const env = req('dotenv').config({ path: path.join(dossierBackend, '.env'), processEnv: {} }).parsed || {};
-  const url = env.DATABASE_URL || '';
-  if (!/neon\.tech/.test(url) || /railway/.test(url)) return false;
+  const fichierEnv = path.join(dossierBackend, '.env');
+  const env = existsSync(fichierEnv) ? req('dotenv').config({ path: fichierEnv, processEnv: {} }).parsed || {} : {};
+  const url = process.env.SONDE_DATABASE_URL || env.DATABASE_URL || '';
+  const locale = /@(localhost|127\.0\.0\.1)[:/]/.test(url);
+  if (/railway/.test(url) || !(locale || /neon\.tech/.test(url))) return false;
   const { Pool } = req('pg');
-  const p = new Pool({ connectionString: url, ssl: { rejectUnauthorized: false } });
+  const p = new Pool({ connectionString: url, ssl: locale ? false : { rejectUnauthorized: false } });
   try {
     const r = await p.query(sql, params);
     return r.rowCount === 1;
@@ -76,7 +81,7 @@ async function ecrireBaseDev(sql, params) {
 }
 
 // ---------- Le site, construit pour ce backend ----------
-const SORTIE = path.join(tmpdir(), 'fairride-sonde', new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-'));
+const SORTIE = process.env.SONDE_SORTIE || path.join(tmpdir(), 'fairride-sonde', new Date().toISOString().slice(0, 16).replace(/[:T]/g, '-'));
 mkdirSync(SORTIE, { recursive: true });
 const outDir = path.join(SORTIE, 'site');
 process.env.VITE_API_BASE = `${API}`;
@@ -305,5 +310,15 @@ for (const r of resultats) {
   console.log(`  ${r.role.padEnd(14)} ${r.saute ? 'sauté' : `${r.touchers} touchers, ${r.nonTestes} non testés`}  ${Object.entries(parType).map(([t, n]) => `${t} ${n}`).join(', ') || 'rien à signaler'}`);
 }
 const graves = tous.filter((c) => !AVERTISSEMENTS.includes(c.type));
+// Sur GitHub (sonde de nuit) : le résumé sur la page du run ; /fairride lit, lui, constats.json dans l'artifact.
+if (process.env.GITHUB_STEP_SUMMARY) {
+  const lignes = ['## Sonde des nouveaux comptes', '', ...resultats.map((r) => `- **${r.role}** : ${r.saute ? 'sauté' : `${r.touchers} touchers`}, ${r.constats.length} constat(s)`), ''];
+  if (graves.length) lignes.push('### À corriger', '', ...graves.map((c) => `- ${c.role} · ${c.type} · ${c.page} › ${c.chemin.join(' › ')}${c.detail ? ` — ${c.detail}` : ''}`));
+  else lignes.push('Aucun constat grave.');
+  appendFileSync(process.env.GITHUB_STEP_SUMMARY, lignes.join('\n') + '\n');
+}
 console.log(graves.length ? `\n${graves.length} constat(s) à regarder (captures dans le dossier ci-dessus).` : '\nAucun constat grave.');
-process.exit(graves.length ? 1 : 0);
+// Sur GitHub, un rôle sauté (base injoignable) rend la nuit rouge : sinon elle serait verte sans avoir tout testé.
+const sautes = resultats.filter((r) => r.saute).map((r) => r.role);
+if (process.env.CI && sautes.length) console.log(`Rôles sautés (${sautes.join(', ')}) : la sonde n'a pas tout testé.`);
+process.exit(graves.length || (process.env.CI && sautes.length) ? 1 : 0);
