@@ -33,7 +33,9 @@ the better deal, « the 1+1 »; they don't choose an app for what the courier ea
 
 What the courier earns (90 % of the delivery, all tips) is told **only to couriers** (courier onboarding, courier ads,
 the « Livreur » card of « Rejoindre Fairride »): founder, 2026-10-26, « le livreur garde 90 %, cette phrase peut partir ».
-No customer text mentions it, not even lower on the page. « Ton argent reste à Bruxelles » may close a customer sentence,
+No customer text mentions it, not even lower on the page. One exception (founder, 2026-11-06, `maquettes/pourboire`
+question 9): where a customer is asked for a tip, one line says the courier gets all of it (« Karim reçoit tout. », and the
+T&Cs' payment article). It is the reason to tip, not a pitch: never the 90 %, never elsewhere. « Ton argent reste à Bruxelles » may close a customer sentence,
 never open it.
 
 The slogan that holds all of it: **« Paie ton repas, pas la plateforme. »** (under the logo, store listings, sign-offs).

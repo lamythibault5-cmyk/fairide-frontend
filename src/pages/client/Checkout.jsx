@@ -84,7 +84,7 @@ export default function Checkout() {
   // vérifiées au lieu de regéocoder le texte (audit du 19/10, checkout-21). Le serveur ne s'en sert que si la rue, le
   // numéro et le code postal envoyés sont bien les siens : une adresse retouchée à la main est géocodée comme avant.
   const [addressId, setAddressId] = useState(null);
-  // Allergie, instructions, note, couverts, pourboire gardés dans l'onglet (saisiePaiement.js).
+  // Allergie, instructions, note, couverts gardés dans l'onglet (saisiePaiement.js).
   const [gardee] = useState(() => lireSaisiePaiement(cart.restaurantId));
   const [deliveryInstructions, setDeliveryInstructions] = useState(gardee.deliveryInstructions || 'sonner');
   // De l'alcool ne se dépose pas devant une porte : le livreur contrôle l'âge en main propre (plan de test LEG-9 /
@@ -106,12 +106,12 @@ export default function Checkout() {
   const [giftCheck, setGiftCheck] = useState(null);
   // Code promo de commande appliqué (MON-6, CodePromoCheckout) : { code, discount, label } ou null.
   const [codePromo, setCodePromo] = useState(null);
-  // Pourboire choisi au paiement (backend pourboireCommande.js) : '0', '1', '2', '3' ou 'autre' (montant libre). Aucun
-  // par défaut : un pourboire présélectionné serait payé par des clients qui ne l'ont pas choisi.
-  const [pourboire, setPourboire] = useState(gardee.pourboire || '0');
-  const [pourboireAutre, setPourboireAutre] = useState(gardee.pourboireAutre || '');
+  /* PLUS DE POURBOIRE SUR CETTE PAGE (fondateur, 2026-11-06, maquettes/pourboire question 5 : « pas de pourboire au
+   * paiement »). Il se donne à l'arrivée, en un geste, sur la carte que Stripe garde au paiement (components/client/
+   * Pourboire.jsx, backend pourboireApres.js). Donner avant de manger n'avait pas de sens, et celui qui n'avait rien donné
+   * ici croyait la question réglée. Le serveur accepte encore un pourboire envoyé ici, pour les applis pas mises à jour. */
   /* LE CHAMP EN FAUTE (audit du 19/10, CROSS-83) : l'erreur n'était qu'un toast, le champ n'était ni marqué ni atteint, et un
-   * lecteur d'écran restait sur le bouton « Payer ». On retient lequel est en faute ('adresse', 'horaire', 'pourboire') ; la
+   * lecteur d'écran restait sur le bouton « Payer ». On retient lequel est en faute ('adresse', 'horaire') ; la
    * marque disparaît d'elle-même dès que la valeur devient correcte (voir les conditions à l'affichage). */
   const [champEnFaute, setChampEnFaute] = useState(null);
   function signalerChamp(champ, message, idCible) {
@@ -189,8 +189,8 @@ export default function Checkout() {
   const restaurantId = cart.restaurantId;
   useEffect(() => {
     if (commandeTermineeRef.current) return;
-    garderSaisiePaiement(restaurantId, { deliveryInstructions, deliveryNote, couverts, pourboire, pourboireAutre, allergyRequest: conformite.allergyRequest });
-  }, [restaurantId, deliveryInstructions, deliveryNote, couverts, pourboire, pourboireAutre, conformite.allergyRequest]);
+    garderSaisiePaiement(restaurantId, { deliveryInstructions, deliveryNote, couverts, allergyRequest: conformite.allergyRequest });
+  }, [restaurantId, deliveryInstructions, deliveryNote, couverts, conformite.allergyRequest]);
 
   useEffect(() => {
     if (commandeTermineeRef.current || versPaiementRef.current) return;
@@ -447,20 +447,11 @@ export default function Checkout() {
       ? [{ remise: offresTicket.length === 1 ? offresTicket[0].remise : (devisValide.promoLabel || ''), montant: Number(devisValide.promoDiscount) }]
       : [];
   const montantAnnonce = devisValide ? Number(devisValide.total) : estimatedTotal;
-  /* LE POURBOIRE S'AJOUTE À CE QUI EST DÉBITÉ, PAS AU TOTAL DE LA COMMANDE. Le serveur ne le met pas dans orders.total
-   * (commission, remboursements, reçu restent ceux de la commande) : il l'ajoute comme une ligne de plus sur la page
-   * Stripe. montantAnnonce reste donc le total de la commande — c'est lui que placeOrder compare au total du serveur —,
-   * et l'écran affiche montantAnnonce + pourboire. Seulement en livraison payée en ligne, et pas sur une commande que
-   * le solde couvre en entier : elle n'ouvre aucune page de paiement. */
-  // Livrée par l'équipe du commerce (fondateur, 2026-11-02) : il vend la livraison, pas de livreur Fairride, pas de pourboire.
+  // Livrée par l'équipe du commerce (fondateur, 2026-11-02) : il vend la livraison, pas de livreur Fairride.
   // Le devis fait foi (vendeur figé à la commande) ; sans devis, la fiche du commerce dit qui livrerait maintenant.
   const livreParCommerce = fulfillmentType === 'delivery' && (devisValide ? devisValide.deliveryBy === 'restaurant' : !!restaurant.deliveredByRestaurant);
-  const offrePourboire = fulfillmentType === 'delivery' && !livreParCommerce && !surPlaceChoisi && montantAnnonce > 0;
-  const pourboireChoisi = !offrePourboire ? 0
-    : pourboire === 'autre' ? Math.max(0, +(Number(String(pourboireAutre).replace(',', '.')) || 0).toFixed(2))
-    : Number(pourboire);
-  const montantDebite = +(montantAnnonce + pourboireChoisi).toFixed(2);
-  const pourboireEnFaute = champEnFaute === 'pourboire' && pourboireChoisi > 0 && pourboireChoisi < 0.5;
+  // Ce qui est débité : le total de la commande, rien de plus (plus de pourboire ici, voir plus haut).
+  const montantDebite = montantAnnonce;
   // Refus du serveur sur le panier affiché : commerce fermé ou en pause, adresse introuvable ou trop loin, commerce pas
   // encore actif… Sauf ce que le client règle sur cette page même (CGU, âge, téléphone, dépôt devant la porte avec de
   // l'alcool) : ces cases sont sous ses yeux, les annoncer avant qu'il ait pu les cocher serait du bruit. Ni les erreurs
@@ -491,18 +482,6 @@ export default function Checkout() {
       signalerChamp('horaire', t('checkout.toastScheduledDateTimeRequired'), 'checkout-horaire');
       return;
     }
-    // Stripe n'encaisse rien sous 0,50 € : refusé ici plutôt qu'après la création de la commande.
-    if (pourboireChoisi > 0 && pourboireChoisi < 0.5) {
-      signalerChamp('pourboire', t('checkout.tipTooSmall'), 'checkout-pourboire-autre');
-      return;
-    }
-    // Même plafond que le serveur (pourboireCommande.js : 50 € ou deux fois la commande) : un « Autre » trop grand créait la
-    // commande, puis bloquait le paiement sans moyen de changer le pourboire (audit du 19/10, checkout-18).
-    const plafondPourboire = Math.max(50, +(montantAnnonce * 2).toFixed(2));
-    if (pourboireChoisi > plafondPourboire) {
-      toast(t('checkout.tipTooLarge', { max: euros(plafondPourboire) }), 'erreur');
-      return;
-    }
     const manque = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
     if ((manque || telAVerifier()) && APPLI) { setCasesAvant(!!manque); setSousEcran('avantCommande'); return; }
     if (telAVerifier()) { setFenetreTel(true); return; }
@@ -524,10 +503,10 @@ export default function Checkout() {
       const surPlace = surPlaceChoisi;
       const corps = corpsCommande();
       /* PAYÉE EN LIGNE, LA PAGE STRIPE VIENT AVEC LA COMMANDE (fondateur, 2026-10-21 : « très lent quand je clique sur
-       * Stripe »). Même idée que le sur-place : le total vu et le pourboire partent avec la commande ; s'il tombe juste, le
+       * Stripe »). Même idée que le sur-place : le total vu part avec la commande ; s'il tombe juste, le
        * serveur ouvre le paiement dans le même appel (order.paiement) — un aller-retour de moins avant Stripe. Sinon, rien
-       * ne change : la carte « le total a changé », puis /payments/checkout. */
-      const payerEnLigne = surPlace ? null : { expectedTotal: montantAnnonce, tip: corps?.orderType === 'delivery' ? pourboireChoisi : 0 };
+       * ne change : la carte « le total a changé », puis /payments/checkout. Pourboire 0 : il se donne à la livraison. */
+      const payerEnLigne = surPlace ? null : { expectedTotal: montantAnnonce, tip: 0 };
       const order = await api('/orders', {
         method: 'POST', token,
         // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
@@ -591,10 +570,9 @@ export default function Checkout() {
         terminerSurPlace(await api(`/orders/${order.id}/confirm-on-site`, { method: 'POST', token }));
         return;
       }
-      // Le pourboire choisi part avec la demande de paiement (0 = aucun) ; sans objet hors livraison ou à total nul.
-      const tip = order.orderType === 'delivery' && Number(order.total) > 0 ? pourboireChoisi : 0;
-      // Déjà ouvert par POST /orders quand le total tombait juste (voir placeOrder) ; sinon, la demande séparée.
-      const pay = order.paiement || await api(`/payments/checkout/${order.id}`, { method: 'POST', token, body: { tip } });
+      // Déjà ouvert par POST /orders quand le total tombait juste (voir placeOrder) ; sinon, la demande séparée. Pourboire 0 :
+      // il se donne à la livraison (Pourboire.jsx).
+      const pay = order.paiement || await api(`/payments/checkout/${order.id}`, { method: 'POST', token, body: { tip: 0 } });
       if (pay.simulated) {
         // Chemin simulé : le paiement est acquis immédiatement, donc vider le panier ici est correct.
         // Commande entièrement couverte (solde, bon cadeau, code) : le même écran « Merci pour ta commande ! » qu'après un
@@ -665,36 +643,6 @@ export default function Checkout() {
       </span>
       <span className={`co-interrupteur${couverts ? ' on' : ''}`} aria-hidden="true" />
     </button>
-  );
-
-  // Le pourboire : en tête du récapitulatif dans l'app, dans la colonne des choix sur le site (voir plus bas).
-  const blocPourboire = offrePourboire && (
-    <div className="field ec-pourboire">
-      <span className="field-intitule ec-section">{t('checkout.tipTitle')}</span>
-      <ChoixPastilles
-        libelle={t('checkout.tipTitle')}
-        valeur={pourboire}
-        onChange={setPourboire}
-        options={[
-          { value: '0', label: t('pourboire.none') },
-          { value: '1', label: euros(1) },
-          { value: '2', label: euros(2) },
-          { value: '3', label: euros(3) },
-          { value: 'autre', label: t('checkout.tipOther') }
-        ]}
-      />
-      {/* Texte + clavier décimal plutôt que type="number" (audit du 19/10, CROSS-62) : sur iPhone, « 2,50 » tapé dans un champ
-          numérique pouvait remonter vide, et le pourboire tombait à 0 sans un mot. La virgule est lue plus haut (pourboireChoisi). */}
-      {pourboire === 'autre' && (
-        <input id="checkout-pourboire-autre" aria-label={t('checkout.tipOtherPh')} type="text" inputMode="decimal" autoComplete="off" placeholder={t('checkout.tipOtherPh')}
-          value={pourboireAutre} onChange={(e) => setPourboireAutre(e.target.value)} style={{ marginTop: 6, maxWidth: 160 }}
-          className={pourboireEnFaute ? 'input-invalid' : undefined}
-          aria-invalid={pourboireEnFaute ? 'true' : undefined}
-          aria-describedby={pourboireEnFaute ? 'checkout-pourboire-erreur' : undefined} />
-      )}
-      {pourboireEnFaute && <p className="small" id="checkout-pourboire-erreur" style={{ margin: '6px 0 0', color: 'var(--red)' }}>{t('checkout.tipTooSmall')}</p>}
-      <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('checkout.tipSub')}</p>
-    </div>
   );
 
   // Le bon cadeau : son champ et sa réponse, repliés sous le récapitulatif sur le site, dans la feuille « Codes » dans l'app.
@@ -926,9 +874,6 @@ export default function Checkout() {
                 )}
               </div>
             )}
-            {/* Site (2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : le pourboire est un choix comme les autres, il rejoint la colonne
-                des choix ; le total du récapitulatif roule quand il change. L'app le garde en tête du récapitulatif. */}
-            {!APPLI && blocPourboire}
             {/* Site : les codes, l'allergie, l'âge et les CGU sont des choix aussi — ils passent dans cette colonne, AVANT le
                 récapitulatif et son bouton « Commander et payer » (dans l'ordre de lecture comme à l'écran), et le bouton reste
                 sous les yeux, juste sous le total. L'app les garde en rangées et en feuilles (voir APPLI plus bas). */}
@@ -1004,8 +949,6 @@ export default function Checkout() {
           </BarreCommande>
           {cart.count > 0 && (
           <div className="card">
-            {/* Le pourboire avant le récapitulatif (2026-10-16) : le choisir fait rouler le total de la barre. */}
-            {APPLI && blocPourboire}
             {/* LE TICKET (audit design 2 du 2026-10-19, « un seul récit du prix ») : les plats ne se relistent plus ici avec
                 leurs compteurs — ils sont dans la rangée « N articles · Modifier » en haut de la page — et le récapitulatif se
                 lit comme un ticket, avec les pointillés de la carte : Plats, l'offre du commerce sur UNE ligne (et non plus
@@ -1027,7 +970,6 @@ export default function Checkout() {
               {codePromoMontant > 0 && <LigneTicket libelle={!codePromo?.code && devisValide?.promoCode === CODE_AMI ? t('codeAmi.panier') : t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />}
               {devisValide?.giftVoucherDiscount > 0 && <LigneTicket libelle={t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })} montant={`−${euros(devisValide.giftVoucherDiscount)}`} />}
               {soldeTicket > 0 && <LigneTicket libelle={t('checkout.balanceUsedLine')} montant={`−${euros(soldeTicket)}`} />}
-              {pourboireChoisi > 0 && <LigneTicket libelle={t('checkout.tipLine')} montant={euros(pourboireChoisi)} />}
               {/* Sur le site, ce total est celui que l'on regarde (la barre n'y garde que le bouton) : ses chiffres roulent. */}
               <div className="co-t-ligne co-t-total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span className="sc-roulant">{APPLI ? euros(montantDebite) : <ChiffresRoulants valeur={euros(montantDebite)} />}</span></div>
             </div>
@@ -1311,16 +1253,7 @@ export default function Checkout() {
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
               {pendingOrder.promoCodeDiscount > 0 && <div className="line"><span>{pendingOrder.promoCode === CODE_AMI ? t('codeAmi.panier') : t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
-              {(() => {
-                // Même règle que confirmAndPay : le pourboire n'est débité qu'en livraison, sur un total non nul.
-                const tipCarte = pendingOrder.orderType === 'delivery' && pendingOrder.deliveryBy !== 'restaurant' && Number(pendingOrder.total) > 0 ? pourboireChoisi : 0;
-                return (
-                  <>
-                    {tipCarte > 0 && <div className="line"><span>{t('checkout.tipLine')}</span><span>{euros(tipCarte)}</span></div>}
-                    <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(Number(pendingOrder.total) + tipCarte)}</span></div>
-                  </>
-                );
-              })()}
+              <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(Number(pendingOrder.total))}</span></div>
             </div>
           )}
 
