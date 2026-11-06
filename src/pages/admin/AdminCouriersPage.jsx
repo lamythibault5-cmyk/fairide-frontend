@@ -32,7 +32,11 @@ const MODES = (tr) => [{ key: 'cards', icon: '▤', label: tr('adminCommon.viewC
 // CODE-12 : deux statuts, plus d'onglet « précompte » (il n'existait que pour l'économie collaborative, retirée).
 const STATUTS = ['student_independent', 'independent'];
 const ONGLETS = ['dossiers', 'controles', 'parametres', 'exports', 'journal'];
-const couleurCycle = (s) => (s === 'approved' ? 'var(--teal-deep)' : ['rejected', 'suspended', 'blocked_threshold'].includes(s) ? 'var(--red)' : 'inherit');
+/* « À regarder » = ce que l'équipe doit vérifier (teamChecks) ET pourquoi un dossier envoyé attend son bouton Valider même
+ * quand tout est vert (humanReview : revue_equipe, noms, date_naissance ; validationLivreur.raisonsRevueHumaine). Sans le
+ * second, un dossier qui n'attendait plus que la team n'apparaissait ni dans le filtre ni dans le compteur (06/11). */
+const pointsARegarder = (r) => [...(r.teamChecks ?? []), ...(r.lifecycleStatus === 'pending_review' ? r.humanReview ?? [] : [])];
+const couleurCycle = (s) =>(s === 'approved' ? 'var(--teal-deep)' : ['rejected', 'suspended', 'blocked_threshold'].includes(s) ? 'var(--red)' : 'inherit');
 
 // apiDownload et non un fetch à la main : c'est ce qui branche ces exports (précompte, DAC7) sur le
 // traitement centralisé du 401. Une session expirée renvoie désormais vers la connexion au lieu
@@ -91,10 +95,10 @@ export default function AdminCouriersPage() {
         : <span className="small" title={(p.manques || []).filter((m) => m.niveau === 'bloquant').map((m) => m.label).join(' · ')}>{tr('adminCouriers.missingFirst', { what: bloquant?.label || '' })}</span>;
     }, sortValue: (r) => (pretDe(r)?.pret ? 0 : 1) },
     // INSCRIPTION EXPRESS (2026-10-22) : le serveur valide seul un dossier tout vert ; sinon il dit ce que l'équipe doit regarder.
-    { key: 'aRegarder', label: tr('adminCouriers.exARegarder'), get: (r) => (r.teamChecks?.length
-      ? <span className="row" style={{ gap: 4, flexWrap: 'wrap' }}>{r.teamChecks.map((p) => <span key={p} className="pill" style={{ color: 'var(--red)' }}>{tr(`adminCouriers.exPoint_${p}`)}</span>)}</span>
+    { key: 'aRegarder', label: tr('adminCouriers.exARegarder'), get: (r) => (pointsARegarder(r).length
+      ? <span className="row" style={{ gap: 4, flexWrap: 'wrap' }}>{pointsARegarder(r).map((p) => <span key={p} className="pill" style={{ color: 'var(--red)' }}>{tr(`adminCouriers.exPoint_${p}`)}</span>)}</span>
       : r.autoApprovedAt ? <span className="pill" style={{ color: 'var(--green)' }}><Icone nom="valider" taille={14} className="icone-texte" />{' '}{tr('adminCouriers.exAuto')}</span> : '-'),
-      sortValue: (r) => (r.teamChecks?.length ? 0 : 1) },
+      sortValue: (r) => (pointsARegarder(r).length ? 0 : 1) },
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''}</>, sortValue: (r) => r.statusType || '' },
     { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
     { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? <Icone nom="horloge" taille={16} className="icone-texte" /> : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
@@ -102,9 +106,9 @@ export default function AdminCouriersPage() {
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
   ];
-  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || (filtre === 'a_regarder' ? r.teamChecks?.length > 0 : r.lifecycleStatus === filtre)) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), rechercheTel(search), (r) => [r.name, r.email, r.zone, r.statusType, telNational(r.phone)]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
+  const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || (filtre === 'a_regarder' ? pointsARegarder(r).length > 0 : r.lifecycleStatus === filtre)) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), rechercheTel(search), (r) => [r.name, r.email, r.zone, r.statusType, telNational(r.phone)]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps
   const nbReels = useMemo(() => (data?.rows ?? []).filter((r) => estCompteReel(r)).length, [data]);
-  const nbARegarder = useMemo(() => (data?.rows ?? []).filter((r) => r.teamChecks?.length > 0).length, [data]);
+  const nbARegarder = useMemo(() => (data?.rows ?? []).filter((r) => pointsARegarder(r).length > 0).length, [data]);
   const nbSupprimes = useMemo(() => (data?.rows ?? []).filter((r) => estCompteSupprime(r)).length, [data]);
 
   function exportCsv() {
@@ -303,8 +307,10 @@ function VerifierPiece({ d, tr, busy, agir, token, toast, onDocuments, onRefuser
 function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIdentite }) {
   const c = d.courier; const id = c.identity ?? {};
   const points = d.teamChecks ?? [];
+  // Ce qu'aucune machine ne tranche : le dossier attend le bouton Valider, même tout vert (pointsARegarder).
+  const humains = c.lifecycleStatus === 'pending_review' ? d.humanReview ?? [] : [];
   const photo = (d.documents ?? []).find((x) => x.docType === 'profile_photo' && !x.rejectedReason);
-  if (!points.length && !d.autoApprovedAt) return null;
+  if (!points.length && !humains.length && !d.autoApprovedAt) return null;
   const verifier = (corps, ok) => agir(() => api(`/admin/couriers/${c.id}/verify`, { method: 'PATCH', token, body: corps }), ok);
   const chiffres = String(c.independent?.companyNumber || '').replace(/\D/g, '');
   const registre = d.companyRegistry;
@@ -324,7 +330,8 @@ function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIden
           {photo && !photo.verifiedAt && <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>}
         </div>
       )}
-      {points.length > 0 && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
+      {(points.length > 0 || humains.length > 0) && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
+      {humains.map((p) => ligne(p, `${tr(`adminCouriers.exHumain_${p}`)} ${tr('adminCouriers.exHumainValider')}`, null))}
       {points.some((p) => ['identite', 'nationalite', 'titre_sejour'].includes(p)) && <VerifierPiece d={d} tr={tr} busy={busy} agir={agir} token={token} toast={toast} onDocuments={onDocuments} onRefuserIdentite={onRefuserIdentite} />}
       {points.includes('bce') && ligne('bce',
         tr('adminCouriers.exBceDetail', { num: c.independent?.companyNumber || '-', registre: !registre ? tr('adminCouriers.exRegistrePasLu') : registre.valid ? tr('adminCouriers.exRegistreValide', { name: registre.name }) : registre.valid === false ? tr('adminCouriers.exRegistreAbsent') : tr('adminCouriers.exRegistrePasLu'), nom: `${id.firstName || ''} ${id.lastName || ''}`.trim() || '-' }),
