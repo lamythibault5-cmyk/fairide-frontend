@@ -10287,7 +10287,6 @@ export default {
       coNotifExTitre: "Order waiting",
       coNotifExCorps: "An order is waiting for you to accept it.",
       badgePhrase: 'The same price as in the restaurant.',
-      badgeSous: 'Others: never an inflated menu.',
       badgeBtn: 'Got it',
       choisisReponse: 'Pick an answer to continue.',
       cpManque: 'Type the 4 digits of your postcode.',

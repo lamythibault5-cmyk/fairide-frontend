@@ -5285,7 +5285,6 @@ html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
 @keyframes bv-badge-halo { 0% { box-shadow: 0 0 0 0 rgba(200, 240, 60, 1); } 70%, 100% { box-shadow: 0 0 0 26px rgba(200, 240, 60, 0); } }
 @media (prefers-reduced-motion: reduce) { .bv-badge .prix-comptoir.bv-badge-geant { animation: none; box-shadow: 0 0 0 4px var(--lime); } }
 .bv-badge .bv-badge-titre { font-size: 36px; margin: 40px auto 12px; max-width: 12ch; text-wrap: balance; }
-.bv-badge .bv-sous { font-size: 17px; margin: 0; }
 /* L'écran des notifications (AmorceNotifications.jsx, version B de maquettes/notifs-badge) : la même forme que le badge juste
    après, une notification dessinée comme sur l'écran verrouillé d'iOS (fond blanc, coins de 22 px, police du système) au lieu
    de la pastille, et le même halo lime (bv-badge-halo). */

@@ -10356,7 +10356,6 @@ export default {
       coNotifExTitre: "Commande en attente",
       coNotifExCorps: "Une commande attend ton acceptation.",
       badgePhrase: 'Le même prix que sur place.',
-      badgeSous: 'Les autres : jamais une carte gonflée.',
       badgeBtn: 'Compris',
       choisisReponse: 'Choisis une réponse pour continuer.',
       cpManque: 'Tape les 4 chiffres de ton code postal.',
