@@ -6,7 +6,8 @@
 // livreurs roulent). Tout le reste est visible et utilisable avant. Les administrateurs, comptes de test et simulations
 // passent (essais).
 import { useSyncExternalStore } from 'react';
-import { API_BASE } from './api';
+import { adresseApi } from './api';
+import { poserForfaitLivraison } from './livraison';
 
 export const CAMPAGNE_RESEAUX = new Date('2026-10-16T00:00:00+02:00');
 export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
@@ -25,21 +26,27 @@ const CLE = 'fairide_lancement';
 // livraisonMaintenant (audit du 19/10, discovery-02) : après GO, un livreur du pool Fairide est-il libre à l'instant ?
 // Oui/non seulement, jamais un nombre ; null tant qu'on ne sait pas (rien n'est alors retiré de la liste).
 // emporter : l'à emporter payé sur place est-il ouvert ? Une réponse gardée d'avant ce bouton n'en dit rien : fermé.
-const lire = (c) => ({ go: c.go, goAt: c.goAt || null, emporter: c.emporter === true || c.go === true, livraisonMaintenant: typeof c.livraisonMaintenant === 'boolean' ? c.livraisonMaintenant : null });
-let etat = { go: false, goAt: null, emporter: false, livraisonMaintenant: null };
+// livraisonLoinMaintenant / veloMaxKm : la même question au-delà de la distance d'un vélo (comparaison front / serveur, 2026-11-05).
+const oui = (v) => (typeof v === 'boolean' ? v : null);
+const lire = (c) => ({ go: c.go, goAt: c.goAt || null, emporter: c.emporter === true || c.go === true, livraisonMaintenant: oui(c.livraisonMaintenant),
+  livraisonLoinMaintenant: oui(c.livraisonLoinMaintenant), veloMaxKm: Number(c.veloMaxKm) || null });
+let etat = { go: false, goAt: null, emporter: false, livraisonMaintenant: null, livraisonLoinMaintenant: null, veloMaxKm: null };
 try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = lire(c); } catch { /* stockage indisponible */ }
 const abonnes = new Set();
 function poser(suivant) {
-  if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.emporter === etat.emporter && suivant.livraisonMaintenant === etat.livraisonMaintenant) return;
+  if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.emporter === etat.emporter && suivant.livraisonMaintenant === etat.livraisonMaintenant
+    && suivant.livraisonLoinMaintenant === etat.livraisonLoinMaintenant && suivant.veloMaxKm === etat.veloMaxKm) return;
   etat = suivant;
   try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch { /* stockage indisponible */ }
   abonnes.forEach((f) => f());
 }
 export async function chargerLancement() {
   try {
-    const r = await fetch(`${API_BASE}/orders/launch`, { cache: 'no-store' });
+    const r = await fetch(`${adresseApi()}/orders/launch`, { cache: 'no-store' });
     if (!r.ok) return;
     const d = await r.json();
+    // Le forfait de livraison du serveur (livraison.js) : posé avant `poser`, qui redessine la liste et les fiches.
+    if (d?.forfaitLivraison != null) poserForfaitLivraison(d.forfaitLivraison);
     if (typeof d?.go === 'boolean') poser(lire({ ...d, emporter: d.pickupOpen === true }));
   } catch { /* hors ligne : on garde l'état connu */ }
 }
@@ -81,7 +88,13 @@ export function livraisonOuverte(user) { return serviceOuvert('delivery', user);
 // livraison n'est pas promise sur les cartes (le serveur la refuserait : NO_COURIER_AVAILABLE). Un commerce qui livre
 // lui-même garde sa vérification sur sa fiche (GET /orders/delivery-available/:id). Les comptes exemptés passent, comme
 // côté serveur.
-export function livreurFairideLibre(user) { return exempte(user) || etat.livraisonMaintenant !== false; }
+// `km` (distance du client, quand elle est connue) : au-delà de veloMaxKm, seul un livreur qui n'est pas à vélo compte, comme
+// au serveur (lancement.livreursDisponiblesListe).
+export function livreurFairideLibre(user, km = null) {
+  if (exempte(user)) return true;
+  if (km !== null && etat.veloMaxKm && km > etat.veloMaxKm && etat.livraisonLoinMaintenant === false) return false;
+  return etat.livraisonMaintenant !== false;
+}
 
 /* LA LIVRAISON EST-ELLE POSSIBLE CHEZ CE COMMERCE, MAINTENANT ? (GET /orders/delivery-available/:id)
  * Après GO, une livraison demande un livreur disponible à l'instant (lancement.js) : sinon le commerce ne propose que
@@ -91,7 +104,7 @@ export async function livraisonDisponible(restaurantId, km = null) {
   if (!restaurantId) return null;
   try {
     const q = km !== null && km !== undefined && Number.isFinite(Number(km)) ? `?km=${Number(km)}` : '';
-    const r = await fetch(`${API_BASE}/orders/delivery-available/${encodeURIComponent(restaurantId)}${q}`, { cache: 'no-store' });
+    const r = await fetch(`${adresseApi()}/orders/delivery-available/${encodeURIComponent(restaurantId)}${q}`, { cache: 'no-store' });
     if (!r.ok) return null;
     const d = await r.json();
     return typeof d?.available === 'boolean' ? d : null;

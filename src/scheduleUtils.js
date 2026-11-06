@@ -31,6 +31,12 @@ export function getScheduleDateOptions(days = 7, labels = { today: "Aujourd'hui"
  * l'affichage « ouvert / fermé » de la fiche (openingHours.js, heure de Bruxelles). Sans horaires connus : 9 h – 22 h. */
 export function getScheduleTimeOptions(dateStr, ouverture = null) {
   if (!dateStr) return [];
+  /* LES GARDES DE LA COMMANDE (comparaison front / serveur, 2026-11-05 ; routes/orders.js) : interrupteur coupé = aucune
+   * commande, même programmée ; « Stopper pour aujourd'hui » / pause = rien avant la reprise (pausedUntil) ; au plus 7 jours
+   * (168 h) d'avance. Avant, ces créneaux étaient proposés et le devis les refusait. */
+  if (ouverture && ouverture.open === false) return [];
+  const reprise = Number(ouverture?.pausedUntil) || 0;
+  const limite = Date.now() + 7 * 24 * 60 * 60000;
   const avecHoraires = !!(ouverture?.hours && typeof ouverture.hours === 'object');
   const now = new Date();
   const dayStart = avecHoraires ? 0 : 9;
@@ -49,7 +55,8 @@ export function getScheduleTimeOptions(dateStr, ouverture = null) {
   const dayEndTime = avecHoraires ? new Date(y, m - 1, d, 23, 30, 0, 0) : new Date(y, m - 1, d, 22, 0, 0, 0);
   const slots = [];
   while (cursor <= dayEndTime && slots.length < 48) {
-    if (!avecHoraires || getOpenStatus(ouverture.hours, cursor, ouverture.closures || []).isOpen) {
+    const permis = cursor.getTime() >= reprise && cursor.getTime() <= limite;
+    if (permis && (!avecHoraires || getOpenStatus(ouverture.hours, cursor, ouverture.closures || []).isOpen)) {
       const hh = String(cursor.getHours()).padStart(2, '0');
       const mm = String(cursor.getMinutes()).padStart(2, '0');
       slots.push(`${hh}:${mm}`);

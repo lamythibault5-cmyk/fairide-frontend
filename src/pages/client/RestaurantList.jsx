@@ -226,6 +226,8 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
                   <img loading="lazy" decoding="async" {...imgProps(p.imageUrl, 90)} alt="" onError={cacherImageCassee} />
                   <span className="sr-only">{p.name}</span>
                   <span className={`rc-apercu-prix${remise != null ? ' est-remise' : ''}`}>{euros(remise ?? p.price)}</span>
+                  {/* Le prix d'avant d'une réduction, toujours dit (art. VI.18 CDE ; comparaison, 2026-11-05). */}
+                  {remise != null && remise < p.price && <small className="rc-apercu-avant">{t('menuCategories.priceBefore', { price: euros(p.price) })}</small>}
                 </span>
               );
             })}

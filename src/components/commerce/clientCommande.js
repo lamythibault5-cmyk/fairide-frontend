@@ -71,9 +71,12 @@ export function ordinal(n) {
 /* Ce que le commerce garde sur une commande : la même formule que le serveur (RESTAURANT_DUE_SQL, routes/admin.js ;
    virement du commerce, routes/payments.js) — les plats (sous-total, promotions du commerce déjà déduites) moins la
    commission de Fairide et sa TVA, moins la part de livraison que le commerce offre, moins un bon cadeau qu'il a déjà
-   encaissé. Payée sur place : commission 0, il garde les plats. La livraison et le pourboire vont au livreur. */
+   encaissé. Payée sur place : commission 0, il garde les plats. La livraison et le pourboire vont au livreur — sauf livrée par
+   l'équipe du commerce (deliveryBy 'restaurant') : ses frais de livraison lui reviennent, comme au serveur
+   (sqlPartLivraisonCommerce ; « Ce soir » les oubliait, comparaison front / serveur 2026-11-05). */
 export function partCommerce(o) {
-  const v = Number(o.subtotal || 0) - Number(o.commission || 0) - Number(o.commissionVat || 0) - Number(o.deliveryDiscount || 0) - Number(o.giftVoucherDiscount || 0);
+  const livraison = o.orderType === 'delivery' && o.deliveryBy === 'restaurant' ? Number(o.deliveryFee || 0) : 0;
+  const v = Number(o.subtotal || 0) + livraison - Number(o.commission || 0) - Number(o.commissionVat || 0) - Number(o.deliveryDiscount || 0) - Number(o.giftVoucherDiscount || 0);
   return Math.max(0, Math.round(v * 100) / 100);
 }
 

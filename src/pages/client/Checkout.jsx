@@ -144,7 +144,7 @@ export default function Checkout() {
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
   // Les jours et créneaux suivent les horaires du commerce (scheduleUtils.js) : recalculés une fois la fiche chargée.
-  const ouverture = restaurant ? { hours: restaurant.hours, closures: restaurant.closures } : null;
+  const ouverture = restaurant ? { hours: restaurant.hours, closures: restaurant.closures, open: restaurant.open, pausedUntil: restaurant.pausedUntil } : null;
   const dateOptions = useMemo(() => getScheduleDateOptions(7, libellesDates, ouverture), [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
   const [placing, setPlacing] = useState(false);
   const [pendingOrder, setPendingOrder] = useState(null);
@@ -291,7 +291,7 @@ export default function Checkout() {
    * quelques minutes mais restait choisi et envoyé, et le serveur répondait « au moins 30 minutes dans le futur ». */
   useEffect(() => {
     if (!restaurant || !scheduleEnabled || !scheduleDate || !scheduleTime) return;
-    if (!getScheduleTimeOptions(scheduleDate, { hours: restaurant.hours, closures: restaurant.closures }).includes(scheduleTime)) {
+    if (!getScheduleTimeOptions(scheduleDate, ouverture).includes(scheduleTime)) {
       setScheduleTime('');
       toast(t('checkout.slotExpired'), 'erreur');
     }

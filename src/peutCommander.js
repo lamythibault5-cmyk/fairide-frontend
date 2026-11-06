@@ -1,5 +1,5 @@
 import { statutOuverture } from './openingHours';
-import { horsZoneLivraison } from './livraison';
+import { horsZoneLivraison, distanceLivraisonKm } from './livraison';
 import { livraisonOuverte, paiementEnLigneOuvert, livreurFairideLibre, commandesOuvertes } from './launch';
 
 /* PEUT-ON COMMANDER ICI, MAINTENANT ? Les règles de la liste des commerces (RestaurantList.jsx), sorties ici le 2026-10-26
@@ -10,7 +10,7 @@ import { livraisonOuverte, paiementEnLigneOuvert, livreurFairideLibre, commandes
 // (audit du 19/10, discovery-02) — sauf un commerce qui livre avec son équipe : il n'attend aucun livreur.
 export function livraisonPossibleIci(r, user) {
   return !!r.offersDelivery && livraisonOuverte(user) && !horsZoneLivraison(r, user)
-    && (r.deliveredByRestaurant || livreurFairideLibre(user));
+    && (r.deliveredByRestaurant || livreurFairideLibre(user, distanceLivraisonKm(r, user)));
 }
 
 // L'à emporter réellement commandable aujourd'hui : ouvert (bouton « Ouvrir l'à emporter », payé sur place) et, s'il ne se paie qu'en ligne,

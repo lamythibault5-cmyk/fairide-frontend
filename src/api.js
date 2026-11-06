@@ -12,6 +12,36 @@ const SUR_FAIRRIDE = typeof window !== 'undefined' && !estNatif() && /(^|\.)fair
 const API_DIRECT = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
 export const API_BASE = SUR_FAIRRIDE ? `${window.location.origin}/api` : API_DIRECT;
 
+/* L'APPLICATION PASSE PAR LE RELAIS EN SECOURS SEULEMENT (Owen, 2026-11-06). Le 05/11, l'appli installée restait vide sur les
+ * réseaux qui bloquaient Railway, alors que le site passait par son relais. Elle garde l'adresse directe (rien ne change
+ * tant que Railway répond, et Vercel ne devient pas un point de panne de plus) ; quand un appel n'aboutit pas, elle vérifie
+ * une fois que le relais répond (GET /health), et l'utilise alors jusqu'à sa fermeture. Une coupure du réseau du téléphone
+ * fait échouer les deux : rien ne bascule. Ce relais ne sert pas quand Railway lui-même est en panne : il transmet alors à
+ * un serveur arrêté. Seules les LECTURES sont refaites d'elles-mêmes par le relais ; une écriture (commande, paiement) ne
+ * l'est jamais en cachette, on ne sait pas si le serveur l'a reçue : la personne réessaie, et passe alors par le relais.
+ * Les envois de fichiers restent directs (le relais refuse plus de 4,5 Mo, voir API_DIRECT). */
+const RELAIS_APPLI = 'https://fairride.be/api';
+// AbortSignal.timeout n'existe pas avant iOS 16 : la même chose, à la main.
+function signalDelai(ms) {
+  if (typeof AbortController === 'undefined') return undefined;
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+let viaRelais = false;
+let essaiRelais = null;
+async function essayerRelais() {
+  if (!estNatif() || viaRelais) return viaRelais;
+  if (!essaiRelais) {
+    essaiRelais = fetch(`${RELAIS_APPLI}/health`, { cache: 'no-store', signal: signalDelai(6000) })
+      .then((r) => { if (r.ok) viaRelais = true; }, () => {})
+      .then(() => { essaiRelais = null; return viaRelais; });
+  }
+  return essaiRelais;
+}
+// L'adresse à utiliser maintenant : celle du relais une fois l'application basculée dessus.
+export function adresseApi() { return viaRelais ? RELAIS_APPLI : API_BASE; }
+
 // Erreur enrichie du code HTTP : jusqu'ici toute réponse non-OK devenait un Error générique, ce qui
 // rendait un 401 (session expirée) indiscernable d'un 500 côté appelant — l'app affichait donc
 // "Une erreur est survenue" indéfiniment sur toutes les pages, sans jamais renvoyer vers /login, et
@@ -109,10 +139,18 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   const controle = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const minuteur = controle ? setTimeout(() => controle.abort(), delai) : null;
   let res;
+  const envoyer = (base, signal) => fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal });
+  const base = adresseApi();
   try {
-    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: controle?.signal });
+    res = await envoyer(base, controle?.signal);
   } catch {
-    throw erreurReseau(controle, lecture);
+    if (minuteur) clearTimeout(minuteur);
+    // Railway injoignable depuis l'application : le relais, s'il répond (voir RELAIS_APPLI). Une lecture est refaite par lui.
+    if (base !== RELAIS_APPLI && await essayerRelais() && lecture) {
+      try { res = await envoyer(RELAIS_APPLI, signalDelai(DELAI_LECTURE_MS)); } catch { throw erreurReseau(null, true); }
+    } else {
+      throw erreurReseau(controle, lecture);
+    }
   } finally {
     if (minuteur) clearTimeout(minuteur);
   }

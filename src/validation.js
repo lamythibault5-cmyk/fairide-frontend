@@ -59,6 +59,29 @@ export function estMobileBelge(e164) {
   return /^\+324\d{8}$/.test(String(e164 || ''));
 }
 
+/* NUMÉRO QUE LE SERVEUR GARDERA — même règle que phone.js du backend (analyser), à changer aux deux endroits. Belgique par
+ * défaut ; un mobile belge (45… à 49…) a 9 chiffres après +32, tout autre numéro belge 8 ; France 9, Pays-Bas 9 ; ailleurs
+ * 8 à 15 chiffres. Les numéros du commerce et des responsables étaient seulement « plausibles » ici (8 chiffres) : un mobile
+ * auquel il manquait un chiffre passait, puis le serveur le vidait sans rien dire et mettait le numéro du titulaire à la
+ * place, public par défaut (comparaison front / serveur, 2026-11-05). */
+const LONGUEURS_PAYS = { 32: [8, 9], 33: [9], 31: [9] };
+export function telephoneValide(brut) {
+  let s = String(brut ?? '').trim().replace(/\(\s*0\s*\)/g, '');
+  if (!s || s.indexOf('+', 1) !== -1) return false;
+  const plus = s.startsWith('+') || s.startsWith('00');
+  s = s.replace(/^\+/, '').replace(/^00/, '').replace(/\D/g, '');
+  if (!s) return false;
+  if (!plus) s = `32${s.startsWith('0') ? s.slice(1) : s}`;
+  const cc = Object.keys(LONGUEURS_PAYS).find((c) => s.startsWith(c));
+  if (cc) {
+    const reste = s.slice(cc.length).replace(/^0/, '');
+    const longueurBelge = cc === '32' && reste ? (/^4[5-9]/.test(reste) ? 9 : 8) : null;
+    if (!LONGUEURS_PAYS[cc].includes(reste.length) || (longueurBelge && reste.length !== longueurBelge)) return false;
+    s = cc + reste;
+  }
+  return s.length >= 8 && s.length <= 15;
+}
+
 // Téléphone : au moins 8 chiffres une fois les séparateurs retirés (le serveur normalise en +32…).
 export function telephonePlausible(v) {
   const c = String(v || '').replace(/\D/g, '');
