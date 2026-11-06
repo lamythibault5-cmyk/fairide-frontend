@@ -37,7 +37,9 @@ export default function AdminTasksPage() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const [overview, setOverview] = useState(null);
-  const [status, setStatus] = useEtatPage('statut', searchParams.get('status') || '', { forcer: !!(searchParams.get('status') || '') });
+  // Par défaut, les tâches OUVERTES (à faire et en cours), le plus urgent en tête (serveur, G69) : la page s'ouvrait sur tous les
+  // statuts, faites et annulées comprises, et l'alerte de ce soir finissait des pages plus bas.
+  const [status, setStatus] = useEtatPage('statut', searchParams.get('status') || 'ouvertes', { forcer: !!(searchParams.get('status') || '') });
   const [priority, setPriority] = useState('');
   const [due, setDue] = useState(searchParams.get('due') || '');
   const [assignee, setAssignee] = useState('');
@@ -52,7 +54,8 @@ export default function AdminTasksPage() {
   const [selectedId, setSelectedId] = useState(searchParams.get('id') || null);
   const [mode, setMode] = useViewMode('tasks');
   const [showCreate, setShowCreate] = useState(() => searchParams.get('new') === '1');
-  const { sort, toggle } = useTableSort('dueAt', 'asc');
+  // Sans tri imposé : le tableau garde l'ordre du serveur (urgentes d'abord, G69) tant qu'on ne clique pas une colonne.
+  const { sort, toggle } = useTableSort(null, 'asc');
   const sel = useSelection(data?.rows);
   const [bulk, setBulk] = useState(null); // { type: 'done' | 'assign', email? }
   const [bulkBusy, setBulkBusy] = useState(false);
@@ -67,8 +70,9 @@ export default function AdminTasksPage() {
   useEffect(() => { if (idParam) { setSelectedId(idParam); const next = Object.fromEntries([...searchParams.entries()]); delete next.id; setSearchParams(next, { replace: true }); } }, [idParam]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { if (searchParams.get('id') || searchParams.get('new')) { const next = Object.fromEntries([...searchParams.entries()]); delete next.id; delete next.new; setSearchParams(next, { replace: true }); } }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  function load() {
-    setData(null); setErreur(null);
+  // `silencieux` : la relecture de fond garde la liste à l'écran (pas de squelette toutes les 45 s).
+  function load({ silencieux = false } = {}) {
+    if (!silencieux) { setData(null); setErreur(null); }
     const params = new URLSearchParams();
     if (status) params.set('status', status);
     if (priority) params.set('priority', priority);
@@ -78,10 +82,18 @@ export default function AdminTasksPage() {
     if (q) params.set('q', q);
     params.set('limit', PAGE_SIZE);
     params.set('offset', page * PAGE_SIZE);
-    api(`/admin/tasks?${params.toString()}`, { token }).then(setData).catch((e) => setErreur(e.message));
+    api(`/admin/tasks?${params.toString()}`, { token }).then(setData).catch((e) => { if (!silencieux) setErreur(e.message); });
   }
   useEffect(() => { load(); }, [status, priority, due, myTasksOnly, assignee, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => { setPage(0); }, [status, priority, due, myTasksOnly, assignee, q]);
+  // Relue toutes les 45 s tant que l'onglet est visible, et au retour sur l'onglet (G69) : une alerte de la nuit (commande sans
+  // livreur, terminal muet…) apparaît sans recharger la page.
+  useEffect(() => {
+    const relire = () => { if (document.visibilityState === 'visible') { load({ silencieux: true }); loadOverview(); } };
+    const i = setInterval(relire, 45000);
+    document.addEventListener('visibilitychange', relire);
+    return () => { clearInterval(i); document.removeEventListener('visibilitychange', relire); };
+  }, [status, priority, due, myTasksOnly, assignee, q, page]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function refreshAll() { load(); loadOverview(); }
 
@@ -157,7 +169,7 @@ export default function AdminTasksPage() {
       </div>
       <div className="admin-control-panel">
         <div className="role-pick" style={{ margin: 0, flexWrap: 'wrap' }}>
-          {[{ key: '', label: tr('adminTasks.allStatuses') }, ...TASK_STATUSES.map((s) => ({ key: s, label: TASK_STATUS_LABELS[s].label }))].map((f) => (
+          {[{ key: 'ouvertes', label: tr('adminTasks.openStatuses') }, { key: '', label: tr('adminTasks.allStatuses') }, ...TASK_STATUSES.map((s) => ({ key: s, label: TASK_STATUS_LABELS[s].label }))].map((f) => (
             <div key={f.key || 'all'} className={`chip${status === f.key ? ' active' : ''}`} onClick={() => setStatus(f.key)}>{f.label}</div>
           ))}
         </div>
