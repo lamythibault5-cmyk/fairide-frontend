@@ -14,7 +14,7 @@ import AddressSearch from '../../components/AddressSearch';
 import EngagementsInscription from '../../components/commerce/EngagementsInscription';
 import ChoixSpecialites from '../../components/commerce/ChoixSpecialites';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
-import { bceValide, raisonBce, codePostalValide, mdpValide, MDP_LONGUEUR } from '../../validation';
+import { bceValide, raisonBce, codePostalValide, mdpValide, MDP_LONGUEUR, telephoneValide } from '../../validation';
 import { lireBienvenue } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
 import { connexionFournisseur } from '../../natif';
@@ -328,7 +328,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     if (cle === 'commerce') {
       if (!nomCommerce.trim()) e.nomCommerce = requis;
       if (!restoPhone.trim()) e.restoPhone = requis;
-      else if (restoPhone.replace(/\D/g, '').length < 8) e.restoPhone = t('auth.errPhoneInvalid');
+      else if (!telephoneValide(restoPhone)) e.restoPhone = t('auth.errPhoneInvalid'); // la règle du serveur (validation.js)
     }
     if (cle === 'type' && !specialites.length) e.cuisine = t('specialites.aucune');
     if (cle === 'entreprise') {

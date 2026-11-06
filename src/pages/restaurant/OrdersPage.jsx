@@ -564,6 +564,9 @@ export default function OrdersPage() {
       </div>
       <p className="ec-cmd-sous">{sousTitre(o)}</p>
       {/* Adresse changée par le client (2026-10-27) : la vue large du site le disait, pas l'app (comparaison site / app, 2026-11-05). */}
+      {/* Le commerce qui livre avec son équipe (2026-11-02) : l'adresse entière sur la carte, comme la vue large du site — la
+          personne qui part livrer a le téléphone en main, « Molenbeek, 1,2 km » ne lui suffit pas (comparaison, 2026-11-05). */}
+      {o.orderType === 'delivery' && o.deliveryBy === 'restaurant' && o.address && <p className="small sp-cmd-info"><Icone nom="position" taille={14} className="icone-texte" />{' '}{o.address}</p>}
       {o.orderType === 'delivery' && o.addressChangedAt && <p className="small sp-cmd-info">{t('dashDriver.addressChanged')}</p>}
       <BadgeEquipe order={o} t={t} />
       {/* Paiement sur place : encadré, c'est de l'argent à encaisser (fondateur, 2026-10-07). */}

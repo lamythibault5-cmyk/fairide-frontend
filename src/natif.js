@@ -574,6 +574,16 @@ export function prechaufferConnexion() {
 export function appleDisponible() { return estNatif() && plateforme() === 'ios'; }
 
 export async function connexionFournisseur(fournisseur) {
+  /* HORS DE L'APPLICATION (2026-11-06) : Apple par sa fenêtre (appleSignInWeb.js). Google ne s'ouvre que par son bouton
+   * officiel (BoutonGoogleWeb), jamais d'ici : le jeton arrive alors déjà obtenu à l'appelant. */
+  if (!estNatif()) {
+    if (fournisseur !== 'apple') throw new Error('Connexion annulée.');
+    const { connexionAppleWeb } = await import('./appleSignInWeb');
+    const r = await connexionAppleWeb();
+    if (!r) throw new Error('Connexion annulée.');
+    if (r.code) codesApple.set(r.jeton, r.code);
+    return { fournisseur: 'apple', jeton: r.jeton, prenom: r.prenom || '', nom: r.nom || '' };
+  }
   const { SocialLogin } = await preparerConnexion();
   // Google sur Android : pas de liste « scopes ». E-mail + profil + openid sont déjà demandés par défaut
   // (GoogleProvider.java), et le greffon refuse toute liste si MainActivity n'implémente pas son interface.

@@ -32,8 +32,9 @@ export default function EcranLivreurs({ restaurant, restoId, loadDashboard, onFe
   const arrete = !!restaurant.restaurantDelivery?.suspenduLe;
   const montant = Number(String(frais).replace(',', '.'));
   const montantValable = frais.trim() !== '' && Number.isFinite(montant) && montant >= 0 && montant <= 20;
-  // Ce que le commerce reçoit par livraison : ses frais moins 10 %, la même règle que ses plats (déclaration, point 2).
-  const recu = montantValable ? (montant * 0.9).toFixed(2).replace('.', ',') : null;
+  // Ce que le commerce reçoit par livraison : ses frais moins 10 %, la même règle que ses plats (déclaration, point 2). Les
+  // 10 % arrondis au centime D'ABORD, comme le serveur (pricing.commissionFairide) : 2,45 € donnait 2,21 € ici, 2,20 € versés.
+  const recu = montantValable ? (montant - +(montant * 0.1).toFixed(2)).toFixed(2).replace('.', ',') : null;
 
   async function envoyer(body, message) {
     setEnCours(true);

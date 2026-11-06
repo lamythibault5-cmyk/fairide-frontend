@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { fraisService } from '../fraisService';
-import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
+import { tarifLivraison } from '../livraison';
 import { remiseLigne } from '../prixPlat';
 import { prixActuelLigne } from '../panierDisponible';
 import { oublierSaisiePaiement } from '../saisiePaiement';
@@ -12,7 +12,6 @@ const CartContext = createContext(null);
 // Exporté depuis que la fiche d'un commerce l'annonce elle aussi (« Livraison dès 4,50 € ») :
 // deux écrans qui affichent le même chiffre doivent le lire au même endroit, sinon l'un des deux
 // finit par mentir le jour où le tarif bouge.
-export const DELIVERY_FEE = FORFAIT_LIVRAISON; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
 const STORAGE_KEY = 'fairide_cart';
 // Copie du panier mise de côté pendant un paiement en cours — voir stashForPayment() plus bas.
 const PENDING_KEY = 'fairide_cart_pending';

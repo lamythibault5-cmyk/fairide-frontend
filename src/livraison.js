@@ -10,12 +10,20 @@
 //     en moins sur son virement, et le livreur touche sa part complète.
 import { getLocale } from './context/LanguageContext';
 import { haversineDistanceKm } from './menuCategories';
-// Miroir de pricing.js DEFAULTS.deliveryBaseFee (réglable par l'admin) : aucune route publique ne l'expose, à garder alignés.
-export const FORFAIT_LIVRAISON = 5;
+/* LE FORFAIT DE LIVRAISON VIENT DU SERVEUR (comparaison front / serveur, 2026-11-05). La copie fixe d'ici disait encore 5 € le
+ * 06/11 alors que le serveur facture 5,80 € depuis le 31/10 (pricing.js, migration 101) : « Livraison dès 5 € » partout, et
+ * davantage au paiement. Il est réglable dans Admin : GET /orders/launch l'envoie (forfaitLivraison), launch.js le pose ici.
+ * 5,80 € en attendant la première réponse (et pour un serveur plus ancien). */
+let forfait = 5.8;
+export function forfaitLivraison() { return forfait; }
+export function poserForfaitLivraison(v) {
+  const n = Number(v);
+  if (Number.isFinite(n) && n > 0) forfait = n;
+}
 
 export function tarifLivraison(r) {
   const propre = !!r?.deliveredByRestaurant && r?.ownDeliveryFee != null;
-  const base = propre ? Number(r.ownDeliveryFee) : FORFAIT_LIVRAISON;
+  const base = propre ? Number(r.ownDeliveryFee) : forfaitLivraison();
   const offerte = !!r?.freeDelivery;
   const remise = Math.min(Number(r?.deliveryFeeDiscount) || 0, base);
   const depart = offerte ? 0 : +(base - remise).toFixed(2);

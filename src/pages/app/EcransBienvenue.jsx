@@ -4,7 +4,6 @@ import BrandMark from '../../components/BrandMark';
 import MotMarque from '../../components/MotMarque';
 import Icone from '../../components/Icone';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
-import { estNatif } from '../../natif';
 import { restaurantTypeLabel, illustrationCuisine } from '../../menuCategories';
 import { famille, libelleFamille } from '../../specialites';
 import AvecMarque from '../../components/AvecMarque';
@@ -527,8 +526,9 @@ export function EcranCompte({ role, resultats, envies = [], listeEchec = false, 
       <Feuille>
         {liste}
         <div className="bv-grandit" />
-        {/* Feuille Apple/Google native : dans la vraie application seulement ; sur l'écran d'accueil, l'e-mail (et Google sur la page de connexion). */}
-        {estNatif() && <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />}
+        {/* Apple / Google : feuille native dans l'application ; sur le site ajouté à l'écran d'accueil, les boutons du site
+            (2026-11-06 : avant, l'e-mail seul). */}
+        <BoutonsConnexionNative onChoix={onFournisseur} disabled={attente} />
         {/* En lime, sous Apple et Google aussi (fondateur, 2026-10-27, maquettes/badge-position) : avant, un filet dans l'app.
             Apple reste en premier et de la même taille (règle 4.8 de l'App Store). */}
         <button type="button" className="bv-btn btn-gold" disabled={attente} onClick={onEmail}><Icone nom="courrier" /> {t('appli.continueEmail')}</button>

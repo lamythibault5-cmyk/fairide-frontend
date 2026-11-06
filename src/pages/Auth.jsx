@@ -6,7 +6,8 @@ import urlSure from '../urlSure';
 import { chargerGoogleSignIn } from '../googleSignIn';
 import { estNatif, connexionFournisseur } from '../natif';
 import { lireBienvenue } from '../bienvenue';
-import BoutonsConnexionNative, { LogoGoogle } from '../components/BoutonsConnexionNative';
+import BoutonsConnexionNative, { LogoGoogle, LogoApple } from '../components/BoutonsConnexionNative';
+import { appleWebDisponible } from '../appleSignInWeb';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -25,7 +26,7 @@ import OpeningHoursEditor from '../components/OpeningHoursEditor';
 import { attendrePage, espaceApresConnexion, prechargerPage } from '../routePrefetch';
 import usePageMeta from '../hooks/usePageMeta';
 import { suivre } from '../analytics';
-import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS, mdpValide } from '../validation';
+import { bceValide, raisonBce, codePostalValide, CHAMP_CODE_SECOURS, mdpValide, telephoneValide } from '../validation';
 import { lireAdresseAccueil } from '../adresseAccueil';
 import RedirectionRole from '../components/RedirectionRole';
 
@@ -629,7 +630,7 @@ export default function Auth() {
       if (role === 'restaurant') responsables.forEach((r, i) => {
         if (!r.name.trim() && !r.phone.trim()) return;
         if (!r.name.trim()) e[`resp${i}`] = t('auth.errManagerName');
-        else if (r.phone.trim().replace(/\D/g, '').length < 8) e[`resp${i}`] = t('auth.errPhoneInvalid');
+        else if (!telephoneValide(r.phone)) e[`resp${i}`] = t('auth.errPhoneInvalid');
       });
     }
     // « business » (fondateur, 2026-10-13) : le nom du commerce et son numéro sur place, saisis à la main — plus de recherche
@@ -637,7 +638,7 @@ export default function Auth() {
     if (key === 'business' && role === 'restaurant') {
       if (!nomCommerce.trim()) e.nomCommerce = required;
       if (!restoPhone.trim()) e.restoPhone = required;
-      else if (restoPhone.trim().replace(/\D/g, '').length < 8) e.restoPhone = t('auth.errPhoneInvalid');
+      else if (!telephoneValide(restoPhone)) e.restoPhone = t('auth.errPhoneInvalid'); // la règle du serveur (validation.js)
     }
     if (key === 'details') {
       if (!cuisine) e.cuisine = t('specialites.aucune');
@@ -919,6 +920,15 @@ export default function Auth() {
     }
     await handleGoogleCredential({ credential: fed.jeton }, fed);
   }
+
+  // « Continuer avec Apple » sur le site (2026-11-06, appleSignInWeb.js) : au-dessus de Google, comme dans l'application
+  // (règle 4.8). connexionNative ouvre alors la fenêtre d'Apple au lieu de la feuille native. Absent tant que le site n'est
+  // pas configuré chez Apple (VITE_APPLE_SERVICES_ID).
+  const boutonAppleSite = appleWebDisponible() && (
+    <div className="connexion-native" style={{ maxWidth: 320 }}>
+      <button type="button" className="btn-connexion btn-connexion-apple" disabled={loading} onClick={() => connexionNative('apple')}><LogoApple /> {t('appli.continueApple')}</button>
+    </div>
+  );
 
   // Arrivée depuis l'accueil de l'application (pages/app/Bienvenue.jsx) avec un jeton Apple ou Google déjà obtenu :
   // on le traite une fois, comme si le bouton avait été touché ici — pas de second geste à demander.
@@ -1562,8 +1572,8 @@ export default function Auth() {
               <>
                 {GOOGLE_CLIENT_ID && (
                   <>
-                    <div style={{ display: 'flex', justifyContent: 'center', margin: '0 0 10px' }}>
-                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, margin: '0 0 10px' }}>
+                      {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : <>{boutonAppleSite}{googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}</>}
                     </div>
                     <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                       <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />
@@ -1673,8 +1683,8 @@ export default function Auth() {
           <>
             {GOOGLE_CLIENT_ID && (
               <>
-                <div style={{ display: 'flex', justifyContent: 'center', margin: '4px 0 10px' }}>
-                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, margin: '4px 0 10px' }}>
+                  {estNatif() ? <BoutonsConnexionNative onChoix={connexionNative} disabled={loading} /> : <>{boutonAppleSite}{googleDemande ? <div ref={googleBtnRef} /> : (<div className="connexion-native" style={{ maxWidth: 320 }}><button type="button" className="btn-connexion btn-connexion-google" onClick={demanderGoogle}><LogoGoogle /> {t('appli.continueGoogle')}</button></div>)}</>}
                 </div>
                 <div className="row" style={{ alignItems: 'center', gap: 8, margin: '4px 0 14px' }}>
                   <div style={{ flex: 1, height: 1, background: 'var(--line)' }} />

@@ -702,7 +702,7 @@ export default function RestaurantMenu({ id }) {
         : t('restaurantMenu.feeFrom', { amount: eurosCourts(tarifLivraison(restaurant).depart) });
   const libelleFrais = modeActif === 'pickup' ? t('restaurantMenu.feePickupLabel')
     : restaurant.deliveredByRestaurant ? t('livraisonEquipe.ficheLabel', { name: restaurant.name }) : t('restaurantMenu.feeLabel');
-  /* Le panneau gris des frais. Il dit « dès » parce que DELIVERY_FEE est une estimation
+  /* Le panneau gris des frais. Il dit « dès » parce que le forfait (forfaitLivraison, livraison.js) est une estimation
      forfaitaire côté client : le montant exact dépend de la distance et se calcule au
      serveur, exactement comme l'annonce déjà le paiement.
      LE TEMPS D'ATTENTE (fondateur, 2026-10-29, maquettes/delai-estime, version F1) : il prend la case de la distance (ou
@@ -779,6 +779,9 @@ export default function RestaurantMenu({ id }) {
                 <span className="fiche-apercu-photo"><img loading="lazy" decoding="async" {...imgProps(item.imageUrl, 320)} alt="" onError={cacherImageCassee} /></span>
                 <b>{name}</b>
                 {prix && <span className={remisee ? 'est-remise' : undefined}>{prix}</span>}
+                {/* Le prix d'avant, comme dans la carte (MenuCategorySections, art. VI.18 CDE) : l'aperçu montrait le prix réduit
+                    seul (comparaison site / téléphone, 2026-11-05). */}
+                {prix && remisee && <small className="plat-prix-avant">{t('menuCategories.priceBefore', { price: euros(item.price) })}</small>}
               </button>
               {!onlineOrderingDisabled && (
                 <button type="button" className="fiche-apercu-plus" onClick={(e) => ajoutDirect(item, e.currentTarget.getBoundingClientRect(), item.imageUrl)} aria-label={t('menuCategories.quickAdd', { name })}>
