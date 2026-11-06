@@ -1,4 +1,4 @@
-import { api, API_BASE } from './api';
+import { api, adresseApi, API_DIRECT } from './api';
 import { imprimerSurGoodcom, serviceGoodcomDisponible } from './goodcomWebPrinter';
 
 // TERMINAL « NAVIGATEUR » : sur un Goodcom, tant que la coque Android n'existe pas, la PWA ouverte dans le navigateur
@@ -124,13 +124,29 @@ export async function traiterFile() {
 export const EVENEMENT_COMMANDE = 'fairide:commande-arrivee';
 
 // Flux SSE lu avec fetch (EventSource ne sait pas envoyer l'en-tête Authorization).
+/* LE FLUX VA DIRECTEMENT À RAILWAY, LE RELAIS EN SECOURS (G130, 2026-11-06). Depuis que le site passe par fairride.be/api
+ * (2026-11-05), le flux passait aussi par le relais Vercel, qui coupe les réponses longues : chaque coupure laissait passer une
+ * commande sans faire sonner le terminal tout de suite (le relevé de 15 s la rattrapait). Le flux part donc vers Railway
+ * (API_DIRECT, comme les envois de fichiers) ; s'il ne s'ouvre pas — réseau qui bloque Railway, ou pas de réponse en
+ * DELAI_OUVERTURE_MS —, l'adresse suivante (le relais du site, ou celui de l'application s'il a pris le relais : adresseApi)
+ * est essayée. Un flux qui a tenu longtemps puis s'est fermé est rouvert tout de suite, sans attente. */
+const DELAI_OUVERTURE_MS = 10000;
+const FLUX_LONG_MS = 60000;
 async function ecouter() {
   let attente = 1000;
+  let source = 0;
   while (config) {
-    fluxCtrl = new AbortController();
+    const ctrl = new AbortController();
+    fluxCtrl = ctrl;
+    const adresses = [...new Set([API_DIRECT, adresseApi()])];
+    const base = adresses[source % adresses.length];
+    let delaiDepasse = false;
+    let ouvertA = 0;
+    const ouverture = setTimeout(() => { delaiDepasse = true; ctrl.abort(); }, DELAI_OUVERTURE_MS);
     try {
       const jetonFlux = config.token;
-      const r = await fetch(`${API_BASE}/terminal/events`, { headers: { Authorization: `Bearer ${jetonFlux}`, Accept: 'text/event-stream' }, signal: fluxCtrl.signal });
+      const r = await fetch(`${base}/terminal/events`, { headers: { Authorization: `Bearer ${jetonFlux}`, Accept: 'text/event-stream' }, signal: ctrl.signal });
+      clearTimeout(ouverture);
       if (r.status === 401) {
         // Même règle que sessionPerdue : si le jeton a changé entre-temps (reprise), on se reconnecte avec le nouveau.
         if (!config) return;
@@ -139,6 +155,7 @@ async function ecouter() {
       }
       if (!r.ok || !r.body) throw new Error(`flux ${r.status}`);
       attente = 1000;
+      ouvertA = Date.now();
       const lecteur = r.body.getReader(); const dec = new TextDecoder(); let tampon = '';
       for (;;) {
         const { value, done } = await lecteur.read();
@@ -154,7 +171,12 @@ async function ecouter() {
         }
       }
     } catch (e) {
-      if (e?.name === 'AbortError' || !config) return;
+      clearTimeout(ouverture);
+      // Arrêt voulu (arreter) : on s'en va. Un délai d'ouverture dépassé, lui, est un échec comme un autre.
+      if ((e?.name === 'AbortError' && !delaiDepasse) || !config) return;
+      if (ouvertA && Date.now() - ouvertA >= FLUX_LONG_MS) { traiterFile(); continue; }
+      // Pas pu l'ouvrir (ou fermé aussitôt) : l'autre adresse au prochain essai.
+      source += 1;
       await new Promise((res) => setTimeout(res, attente));
       attente = Math.min(30000, attente * 2);
       traiterFile();

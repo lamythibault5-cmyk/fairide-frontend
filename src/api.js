@@ -8,8 +8,9 @@ const SUR_FAIRRIDE = typeof window !== 'undefined' && !estNatif() && /(^|\.)fair
 // Les ENVOIS DE FICHIERS vont toujours directement à Railway, jamais par le relais : Vercel refuse un corps de plus de
 // 4,5 Mo (413 FUNCTION_PAYLOAD_TOO_LARGE, constaté le 2026-11-05) et une photo de téléphone dépasse souvent (pièce
 // d'identité d'un livreur, carte, photo de plat : jusqu'à 15 Mo côté serveur). Pendant un blocage de Railway, seuls ces
-// envois échouent ; tout le reste du site passe par le relais.
-const API_DIRECT = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
+// envois échouent ; tout le reste du site passe par le relais. Exception : la photo de dépôt du livreur, réduite et refaite
+// par le relais (apiUpload, `relaisSecours`, G122).
+export const API_DIRECT = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
 export const API_BASE = SUR_FAIRRIDE ? `${window.location.origin}/api` : API_DIRECT;
 
 /* L'APPLICATION PASSE PAR LE RELAIS EN SECOURS SEULEMENT (Owen, 2026-11-06). Le 05/11, l'appli installée restait vide sur les
@@ -232,7 +233,12 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
 // `fields` (optionnel) ajoute des champs texte au FormData (ex: module Documents, POST /admin/documents
 // qui a besoin de targetType/targetId/title en plus du fichier) — undefined/absent pour tous les autres
 // appelants existants, aucun changement de comportement pour eux.
-export async function apiUpload(path, { file, files, token, fieldName = 'image', fields }) {
+/* `relaisSecours` (G122, 2026-11-06) : un envoi qui ne peut pas attendre — la photo de dépôt devant la porte, seule façon de
+ * clore ces livraisons. Quand Railway est injoignable, il est refait UNE fois par le relais (fairride.be/api : celui du site,
+ * ou celui de l'application s'il répond), à condition de tenir sous sa limite (LIMITE_RELAIS) : d'où la photo réduite avant
+ * (reduirePhoto.js). Jamais après un délai dépassé : le serveur a peut-être reçu le premier envoi. */
+const LIMITE_RELAIS = 4 * 1024 * 1024;
+export async function apiUpload(path, { file, files, token, fieldName = 'image', fields, relaisSecours = false }) {
   const formData = new FormData();
   // Un fichier (`file`) ou plusieurs (`files`, même nom de champ répété).
   if (files && files.length) files.forEach((f) => formData.append(fieldName, f));
@@ -247,7 +253,12 @@ export async function apiUpload(path, { file, files, token, fieldName = 'image',
   try {
     res = await fetch(API_DIRECT + path, { method: 'POST', headers, body: formData, signal: controle?.signal });
   } catch {
-    throw erreurReseau(controle, false);
+    if (minuteur) clearTimeout(minuteur);
+    const poids = (files && files.length ? files : [file]).reduce((s, f) => s + (f?.size || 0), 0);
+    const relais = relaisSecours && !controle?.signal.aborted && poids <= LIMITE_RELAIS
+      ? (SUR_FAIRRIDE ? API_BASE : (await essayerRelais() ? RELAIS_APPLI : null)) : null;
+    if (!relais) throw erreurReseau(controle, false);
+    try { res = await fetch(relais + path, { method: 'POST', headers, body: formData, signal: signalDelai(DELAI_ENVOI_FICHIER_MS) }); } catch { throw erreurReseau(null, false); }
   } finally {
     if (minuteur) clearTimeout(minuteur);
   }

@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { apiUpload } from '../../api';
+import { reduirePhoto } from '../../reduirePhoto';
 import Icone from '../Icone';
 import { useLanguage } from '../../context/LanguageContext';
 
@@ -10,7 +11,10 @@ import { useLanguage } from '../../context/LanguageContext';
  * la porte. Pour cette consigne seulement — jamais avec de l'alcool, que le serveur refuse aussi —, il photographie le sac
  * déposé et la course se termine. Le champ du code reste au-dessus : si le client ouvre quand même, le code marche.
  * L'appareil photo s'ouvre directement (capture), la photo part au serveur et nulle part ailleurs : le livreur ne la garde
- * pas, le client la voit dans Mes commandes, elle est effacée après 30 jours. */
+ * pas, le client la voit dans Mes commandes, elle est effacée après 30 jours.
+ * RÉSEAU QUI BLOQUE RAILWAY (G122, 2026-11-06) : la photo partait toujours directement à Railway ; pendant un blocage, ces
+ * livraisons ne se fermaient plus. Elle est réduite (quelques centaines de Ko, reduirePhoto.js) puis, si Railway ne répond pas,
+ * refaite par le relais (apiUpload, relaisSecours). */
 export default function PhotoDepot({ order, token, toast, onLivree }) {
   const { t } = useLanguage();
   const entree = useRef(null);
@@ -23,7 +27,8 @@ export default function PhotoDepot({ order, token, toast, onLivree }) {
     if (!fichier) return;
     setEnvoi(true);
     try {
-      await apiUpload(`/orders/${order.id}/deliver-photo`, { file: fichier, token, fieldName: 'photo' });
+      const photo = await reduirePhoto(fichier);
+      await apiUpload(`/orders/${order.id}/deliver-photo`, { file: photo, token, fieldName: 'photo', relaisSecours: true });
       toast(t('dashDriver.toastDelivered'));
       onLivree();
     } catch (err) {
