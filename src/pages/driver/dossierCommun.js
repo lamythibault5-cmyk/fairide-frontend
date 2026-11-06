@@ -16,8 +16,6 @@ export const MANQUES_INFORMATIFS = ['statut_non_verifie'];
 export const MANQUES_APRES_ENVOI = ['bce', 'tva_numero'];
 // Échecs de Stripe Identity que l'on sait expliquer (code renvoyé par le serveur, courier.identity.error).
 export const ERREURS_IDENTITE = ['document_expired', 'document_unverified_other', 'document_type_not_supported', 'selfie_face_mismatch', 'selfie_document_missing_photo', 'selfie_unverified_other', 'under_supported_age', 'consent_declined'];
-// Caisses d'assurances sociales agréées en Belgique (noms propres, pas de traduction).
-export const CAISSES = ['Liantis', 'Acerta', 'Xerius', 'Partena', 'Securex', 'UCM', 'Group S', 'Caisse nationale auxiliaire'];
 // Attestations d'assurance, permis, titre de séjour : date d'échéance demandée, Fairide rappelle le renouvellement.
 // Carte professionnelle (CODE-14) : sa date d'expiration est exigée — sans carte valide, un livreur hors UE ne prend pas de course.
 export const AVEC_ECHEANCE = ['liability_insurance', 'vehicle_insurance', 'driving_licence', 'residence_permit', 'professional_card'];
