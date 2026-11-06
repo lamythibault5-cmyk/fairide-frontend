@@ -76,7 +76,8 @@ Fairride picks a fight with a norm: paying the platform's ~30 % cut hidden in th
   « retire la ligne Détails sur demande, ça fait trop de texte »): still one tap away, never removed.
 - **Fairride's own markup, to customers (founder, 2026-11-02, maquettes/prix-client)**: the cap became 11.11 % and « +11,11 % »
   sounded bad, so the website, e-mails, Google and « Notre histoire » give NO figure for Fairride (« le restaurant ne gonfle
-  plus sa carte »); the badge screen says « Les autres : jamais une carte gonflée. »; only the app onboarding keeps a figure,
+  plus sa carte »); the badge screen says only « Le même prix que sur place. » (its line « Les autres : jamais une carte gonflée. » removed by
+  the founder on 2026-11-06); only the app onboarding keeps a figure,
   in euros on the measured dish: « Sur un plat à 15 € : ailleurs +8,25 €, Fairride +1,70 € au plus » (16,70 € on the first
   screen). Never « +11 % au plus » (11.11 > 11) nor « +10 % » (both false). Shops always read « 11,11 %, arrondis aux 10
   cents supérieurs : tu reçois ton prix entier ». The FAQ that explains the mechanism keeps its worked example (13,40 €).

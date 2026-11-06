@@ -10296,7 +10296,6 @@ export default {
       coNotifExTitre: "Bestelling wacht",
       coNotifExCorps: "Een bestelling wacht op je aanvaarding.",
       badgePhrase: 'Dezelfde prijs als ter plaatse.',
-      badgeSous: 'De andere: nooit een opgeblazen kaart.',
       badgeBtn: 'Begrepen',
       choisisReponse: 'Kies een antwoord om verder te gaan.',
       cpManque: 'Typ de 4 cijfers van je postcode.',
