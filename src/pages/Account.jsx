@@ -1089,14 +1089,17 @@ export default function Account({ integre = false, milieu = null }) {
             {offersPickup && (
               <fieldset className="paiement-encart" style={{ margin: '12px 0', border: 0 }}>
                 <legend style={{ fontWeight: 700, padding: 0, marginBottom: 6 }}><Icone nom="euro" taille={16} className="icone-texte" />{' '}{t('accountUi.pickupPayTitle')}</legend>
+                {/* « En ligne uniquement » demande des paiements actifs (G7, fondateur 2026-11-06 ; le serveur le refuse sans eux,
+                    EN_LIGNE_SANS_PAIEMENTS) : grisé tant que Stripe n'est pas actif, sauf pour un commerce déjà dans ce mode. */}
                 {[
-                  { v: 'online', titre: t('accountUi.pickupPayOnline'), texte: t('accountUi.pickupPayOnlineText') },
+                  { v: 'online', titre: t('accountUi.pickupPayOnline'), texte: t('accountUi.pickupPayOnlineText'),
+                    bloque: restaurant.stripeConnectStatus !== 'active' && (restaurant.pickupPaymentMode || (restaurant.pickupPayOnSite ? 'both' : 'online')) !== 'online' },
                   { v: 'on_site', titre: t('accountUi.pickupPayOnSiteOnly'), texte: t('accountUi.pickupPayOnSiteOnlyText') },
                   { v: 'both', titre: t('accountUi.pickupPayBoth'), texte: t('accountUi.pickupPayBothText') }
                 ].map((o) => (
-                  <label key={o.v} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', margin: '0 0 8px', cursor: 'pointer' }}>
-                    <input type="radio" name="pickup-payment-mode" style={{ width: 'auto', marginTop: 3 }} checked={pickupPaymentMode === o.v} disabled={savingServices} onChange={() => setPickupPaymentMode(o.v)} />
-                    <span><b>{o.titre}</b><br /><span className="small">{o.texte}</span></span>
+                  <label key={o.v} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', margin: '0 0 8px', cursor: o.bloque ? 'default' : 'pointer', opacity: o.bloque ? 0.6 : 1 }}>
+                    <input type="radio" name="pickup-payment-mode" style={{ width: 'auto', marginTop: 3 }} checked={pickupPaymentMode === o.v} disabled={savingServices || o.bloque} onChange={() => setPickupPaymentMode(o.v)} />
+                    <span><b>{o.titre}</b><br /><span className="small">{o.bloque ? t('accountUi.pickupPayOnlineNeedsStripe') : o.texte}</span></span>
                   </label>
                 ))}
                 {pickupPaymentMode !== 'online' && <p className="small" style={{ margin: '4px 0 0' }}><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('accountUi.pickupPayNoShowWarn')}</p>}

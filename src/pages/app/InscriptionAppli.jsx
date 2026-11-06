@@ -174,6 +174,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [choixJour, setChoixJour] = useState(false);
   const creneauxDuJour = (d) => autresHeures[d] || creneaux;
   const [services, setServices] = useState(() => ({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: modeEmporterParDefaut() }));
+  // Un brouillon d'avant peut encore porter « en ligne » (G7) : il compte « au choix », le seul mode possible sans paiements.
+  const modeEmporter = services.pickupPaymentMode === 'on_site' ? 'on_site' : 'both';
   // Dernier écran
   const [accepteCgu, setAccepteCgu] = useState(false);
   const [accepteEngagements, setAccepteEngagements] = useState(false);
@@ -429,7 +431,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       managerContacts: [{ name: `${firstName} ${lastName}`.trim(), phone: phone.trim(), role: 'owner' }],
       email: email.trim(), emailSecondary: '', website: '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
-      pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
+      pickupPaymentMode: services.pickup ? modeEmporter : undefined,
       deliveryMode: services.deliveryMode === 'restaurant' ? 'restaurant' : 'fairide',
       businessSource: 'manuel',
       ...regimes
@@ -734,16 +736,16 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       contenu = (
         <>
           <Option multi on={services.delivery} icone="velo" titre={t('auth.serviceDelivery')} onClick={() => setServices((s) => ({ ...s, delivery: !s.delivery }))} />
-          {services.delivery && (
-            <Segments label={t('auth.serviceDelivery')} valeur={services.deliveryMode} onChoix={(v) => setServices((s) => ({ ...s, deliveryMode: v }))}
-              options={[['fairide', t('appli.insLivFairide')], ['restaurant', t('appli.insLivPropres')]]} />
-          )}
+          {/* Plus de choix « mes livreurs » ici (G127, 2026-11-06) : le serveur l'ignorait et rien ne disait de signer la
+              déclaration. Le commerce démarre avec les livreurs Fairride ; son équipe se choisit dans Mon commerce › Livraison. */}
+          {services.delivery && <p className="bv-aide">{t('auth.serviceDeliveryOwnLater')}</p>}
           <Option multi on={services.pickup} icone="maison" titre={t('auth.servicePickup')} onClick={() => setServices((s) => ({ ...s, pickup: !s.pickup }))} />
           {services.pickup && (
             <>
-              <Segments label={t('accountUi.pickupPayTitle')} valeur={services.pickupPaymentMode} onChoix={(v) => setServices((s) => ({ ...s, pickupPaymentMode: v }))}
-                options={[['on_site', t('appli.insSurPlace')], ['online', t('appli.insEnLigne')], ['both', t('appli.insAuChoix')]]} />
-              <p className="bv-aide">{t(`accountUi.${{ on_site: 'pickupPayOnSiteOnly', online: 'pickupPayOnline', both: 'pickupPayBoth' }[services.pickupPaymentMode]}Text`)}</p>
+              {/* « En ligne uniquement » demande des paiements actifs (G7) : il se choisit dans Mon compte, une fois Stripe activé. */}
+              <Segments label={t('accountUi.pickupPayTitle')} valeur={modeEmporter} onChoix={(v) => setServices((s) => ({ ...s, pickupPaymentMode: v }))}
+                options={[['on_site', t('appli.insSurPlace')], ['both', t('appli.insAuChoix')]]} />
+              <p className="bv-aide">{t(`accountUi.${{ on_site: 'pickupPayOnSiteOnly', both: 'pickupPayBoth' }[modeEmporter]}Text`)} {t('auth.pickupPayOnlineLater')}</p>
             </>
           )}
           {erreurs.services && <p className="field-error" role="alert">{erreurs.services}</p>}
