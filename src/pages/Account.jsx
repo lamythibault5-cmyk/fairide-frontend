@@ -336,7 +336,8 @@ export default function Account({ integre = false, milieu = null }) {
 
   async function handleRedeemCode(e) {
     e.preventDefault();
-    if (!redeemCode.trim()) return;
+    // Champ vide : le toucher mène au champ (design.md, règle 4) au lieu de ne rien faire (sonde des nouveaux comptes, 05/11).
+    if (!redeemCode.trim()) { e.currentTarget.querySelector('input')?.focus(); return; }
     setRedeeming(true);
     try {
       const result = await api('/auth/balance/redeem', { method: 'POST', token, body: { code: redeemCode.trim() } });
@@ -353,7 +354,7 @@ export default function Account({ integre = false, milieu = null }) {
   async function handleConvert(e) {
     e.preventDefault();
     const amount = Number(String(convertAmount).replace(',', '.'));
-    if (!amount || amount <= 0) return;
+    if (!amount || amount <= 0) { e.currentTarget.querySelector('input')?.focus(); return; }
     setConverting(true);
     try {
       const result = await api('/auth/balance/convert', { method: 'POST', token, body: { amount } });
