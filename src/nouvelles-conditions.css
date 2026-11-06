@@ -1,0 +1,12 @@
+/* NOUVELLES CONDITIONS (NouvellesConditions.jsx ; fondateur, 2026-11-06, maquettes/nouvelles-conditions, version C). L'écran
+ * reprend la famille de l'accueil et du mur du numéro (.bv-ecran, .bv-titre, .bv-option, .bv-btn, .bv-lien) ; ici seulement
+ * ce qui lui est propre : la phrase qui dit ce que vaut le bouton, la ligne de la hausse et la liste « Ce qui change ».
+ * Sur le site aussi (fondateur : « le même écran sur le site ») : la colonne de .bv-ecran (520 px) reste au centre. */
+
+.nc-ecran .bv-form { flex: 1; }
+/* Juste au-dessus du bouton : c'est elle qui fait du toucher une acceptation (et, pour le commerce, la renonciation au
+   préavis). Lisible, pas en légende : --ink-soft, pas --ink-faint. */
+.nc-mention { font-size: 13px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 2px; text-align: center; }
+.nc-hausse { font-size: 14px; line-height: 1.45; margin: -6px 0 16px; padding: 12px 14px; border-radius: var(--radius-card-sm); background: var(--iris-tint); color: var(--ink); }
+.nc-changements { margin: -2px 0 12px; padding: 0 4px 0 20px; font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+.nc-changements li + li { margin-top: 8px; }

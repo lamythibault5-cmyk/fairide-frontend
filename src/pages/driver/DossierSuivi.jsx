@@ -90,7 +90,8 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
     if (r.ancre) document.getElementById(r.ancre)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
     else setFeuille(r.cle);
   };
-  // « Lire et signer » de la feuille ouverte sur n'importe quel onglet (FeuilleTextesLivreur) : on arrive ici, la feuille des textes ouverte.
+  // « Lire le contrat et les textes » de l'écran « On a mis à jour ton contrat » (NouvellesConditions.jsx) : on arrive ici, la feuille des
+  // textes ouverte.
   const location = useLocation();
   useEffect(() => { if (location.state?.ouvrir === 'textes' && textesARelire) setFeuille('textes'); }, [location.key]); // eslint-disable-line react-hooks/exhaustive-deps
 

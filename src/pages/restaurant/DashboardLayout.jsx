@@ -31,6 +31,8 @@ import '../../site-pro.css';
 // pages/app/InscriptionAppli.jsx) et bannières (validation/Stripe).
 // Les écrans de l'inscription ne servent qu'à un compte sans commerce : chargés à la demande.
 const InscriptionAppli = lazy(() => import('../app/InscriptionAppli'));
+// Nouveau contrat : un écran plein à l'ouverture, « Accepter et continuer » (2026-11-06, maquettes/nouvelles-conditions).
+const NouvellesConditions = lazy(() => import('../../components/conformite/NouvellesConditions'));
 // Promotions et Factures les ont rejointes dans l'app aussi le 2026-10-19 (fondateur, finitions-appli.html, section 4 :
 // CadreSite `appli`).
 // Questions, Mode d'emploi et Aperçu client aussi depuis le 2026-10-25 (maquettes/une-action/panier-et-site, réponse 9 :
@@ -481,6 +483,10 @@ export default function DashboardLayout() {
       {/* La commande qui vient d'arriver, affichée d'elle-même (fondateur, 2026-10-01). */}
       {restaurant && <NouvelleCommandeModale orders={orders} ready={ordersLoaded} restoId={restoId} loadDashboard={loadDashboard} modifierCommandes={modifierCommandes}
         ouverte={feuilleCommande} setOuverte={setFeuilleCommande} />}
+      {/* Jamais devant une commande qui attend (commandeAAccepter, l'état « occupé » de miseAJour.js), ni pour un membre de
+          l'équipe, ni en « agir pour » : ni l'un ni l'autre ne signe pour le commerce. Monté sous la page : les commandes, le son
+          et la feuille d'une nouvelle commande continuent derrière. */}
+      {restaurant && <Suspense fallback={null}><NouvellesConditions role="restaurant" restoId={restoId} nomCommerce={restaurant.name} membreEquipe={membreEquipe} /></Suspense>}
 
       {/* Accès perdu (membre retiré, commerce fermé, shop-403) : un seul message, et le chemin vers la vue client. */}
       {etatCommandes.accesPerdu && (

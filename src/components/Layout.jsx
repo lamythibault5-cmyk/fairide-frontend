@@ -29,8 +29,9 @@ const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
 const EcranBadge = lazy(() => import('./EcranBadge'));
 // Le code ami, une fois, sur la liste : après le badge dans l'app, après la carte des cookies sur le site (CodeAmi.jsx).
 const FeuilleCodeAmi = lazy(() => import('./CodeAmi'));
-// Livreur : « Ton contrat a changé » sur n'importe quel onglet, tant qu'il n'a pas signé (2026-11-03, maquettes/dossier-livreur-simple).
-const FeuilleTextesLivreur = lazy(() => import('./livreur/FeuilleTextesLivreur'));
+// Nouvelles conditions ou nouveau contrat : un écran plein à l'ouverture, « Accepter et continuer » (2026-11-06,
+// maquettes/nouvelles-conditions). Client et livreur ici ; le commerce dans DashboardLayout, qui connaît le commerce choisi.
+const NouvellesConditions = lazy(() => import('./conformite/NouvellesConditions'));
 // PAS DE RETOUR PAR GLISSEMENT (fondateur, 2026-10-23) : le glissement vers la droite pour reculer (bord gauche, puis de
 // n'importe où) a été retiré — sur la liste, la page partait de côté sur un fond vide « à l'infini ». On recule par les
 // boutons retour / fermer ; Android garde le geste du système.
@@ -259,7 +260,7 @@ export default function Layout() {
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
         {experienceApp() && role === 'client' && <Suspense fallback={null}><EcranBadge /></Suspense>}
         {role === 'client' && <Suspense fallback={null}><FeuilleCodeAmi /></Suspense>}
-        {role === 'driver' && <Suspense fallback={null}><FeuilleTextesLivreur /></Suspense>}
+        {(role === 'client' || role === 'driver') && <Suspense fallback={null}><NouvellesConditions role={role} /></Suspense>}
       </>
     );
   }
