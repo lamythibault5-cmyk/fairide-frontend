@@ -954,8 +954,9 @@ export default function DriverDashboard() {
   /* ---------- Le site (jamais l'app) : le bandeau du tableau de bord, la liste et le détail d'une course ---------- */
   const site = !appli;
   // Les courses livrées aujourd'hui, pourboires compris (100 % au livreur) : ce qu'il a gagné dans la journée. Les mêmes
-  // montants que la liste « Livrées aujourd'hui » plus bas ; Gains reste la page qui fait foi (année, mois, relevés).
-  const gainsJour = livreesAujourdhui.reduce((s, o) => s + Number(o.driverFee ?? o.deliveryFee ?? 0) + Number(o.tipAmount || 0), 0);
+  // montants que la liste « Livrées aujourd'hui » plus bas ; Gains reste la page qui fait foi (année, mois, relevés). Un
+  // pourboire ne compte que payé (G59, 2026-11-06) : tip_amount est posé avant le paiement, qui peut ne jamais aboutir.
+  const gainsJour = livreesAujourdhui.reduce((s, o) => s + Number(o.driverFee ?? o.deliveryFee ?? 0) + (o.tipPaid ? Number(o.tipAmount || 0) : 0), 0);
   const vehiculeNom = vehicule?.type ? t(`courierOnboarding.vehicle_${vehicule.type}`) : null;
   const contexte = [user?.name, vehiculeNom].filter(Boolean).join(' · ');
   const titreSite = titreBandeau || (peutRouler ? (enPause ? t('siteLivreur.enPause') : t('siteLivreur.disponible')) : titreDossier || t('nav.rides'));

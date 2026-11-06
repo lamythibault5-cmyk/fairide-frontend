@@ -129,6 +129,9 @@ export default function InvoicesPage() {
       <div className="eb-feuille"><div className="compte-sous-page">{corps}</div></div>
     </div>
   );
+  // Ce que la carte a payé : le total plus le pourboire payé avec la commande, la même règle que Mes commandes (Orders.jsx,
+  // debite). Le montant affiché différait de la carte bancaire (G115, 2026-11-06).
+  const debite = (o) => o.total + (o.tipPaid && o.tipAtCheckout > 0 ? o.tipAtCheckout : 0);
   if (!orders) return ecran(<SkeletonCards count={3} />);
   if (echec) return ecran(<ErreurChargement onReessayer={charger} />);
 
@@ -154,7 +157,7 @@ export default function InvoicesPage() {
               )}
               <div className="facture-ligne-texte">
                 <b>{o.restaurantName}</b>
-                <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {euros(o.total)}{etatRemboursement(o) ? ` · ${etatRemboursement(o)}` : ''}</span>
+                <span className="small">{new Date(o.createdAt).toLocaleDateString(getLocale(), { day: 'numeric', month: 'long', year: 'numeric' })} · {euros(debite(o))}{etatRemboursement(o) ? ` · ${etatRemboursement(o)}` : ''}</span>
               </div>
               {aUnRecu(o) ? (
                 <button type="button" className="btn-outline btn-sm" onClick={() => ouvrirPdf(`${API_BASE}/orders/${o.id}/receipt`, token, t('invoicesClient.downloadFailed'), nomRecu(o))}>{t('invoicesClient.viewInvoice')}</button>

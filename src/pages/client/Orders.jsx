@@ -332,9 +332,13 @@ export default function Orders() {
     setCancellingId(orderId);
     try {
       const updated = await api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
-      setOrders((prev) => prev.map((x) => (x.id === orderId ? updated : x)));
       // Payée en ligne : on dit aussi que l'argent revient, et qu'un e-mail le confirme (audit du 19/10, AO-10).
       const rendu = updated?.paid && updated.paymentMode !== 'on_site' && !updated.refundPending;
+      /* LE REMBOURSEMENT SE VOIT TOUT DE SUITE (G114, 2026-11-06). La réponse de l'annulation n'a pas refundedAmount (le
+       * remboursement est inscrit par le webhook Stripe quelques secondes après) : la commande restait « Payée 25,00 € ».
+       * « Remboursement en cours » jusqu'à la relecture de la liste, 4 puis 12 secondes plus tard. */
+      setOrders((prev) => prev.map((x) => (x.id === orderId ? { ...updated, ...(rendu ? { refundPending: true } : {}) } : x)));
+      if (rendu) for (const ms of [4000, 12000]) setTimeout(() => relirePremierePage().catch(() => {}), ms);
       toast(t(rendu ? 'orders.toastCancelledRefund' : 'orders.toastCancelled'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
