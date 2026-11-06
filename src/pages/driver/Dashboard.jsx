@@ -42,6 +42,7 @@ import '../../site-livreur.css';
 import { telephoneLisible } from '../../validation';
 import { haversineDistanceKm } from '../../menuCategories';
 import { signalerOccupe } from '../../miseAJour';
+import { EVENEMENT_CONDITIONS_ACCEPTEES } from '../../conformite';
 
 /* LA TOURNÉE DU LIVREUR (fondateur, 2026-10-30, maquettes/tournee-livreur : toutes les recommandations). Les chiffres viennent
    de sources publiées (backend docs/delais.md) : vol d'oiseau ×1,3 pour les rues, 16 km/h à vélo, 19 à vélo électrique,
@@ -326,6 +327,12 @@ export default function DriverDashboard() {
       });
     }).catch(() => setDossier({ erreur: true }));
   }, [token, essaiDossier]);
+  // Contrat accepté sur l'écran plein (NouvellesConditions.jsx) : le dossier est relu, « Signe ton nouveau contrat » s'en va.
+  useEffect(() => {
+    const relire = (e) => { if (e.detail?.role === 'driver') setEssaiDossier((n) => n + 1); };
+    window.addEventListener(EVENEMENT_CONDITIONS_ACCEPTEES, relire);
+    return () => window.removeEventListener(EVENEMENT_CONDITIONS_ACCEPTEES, relire);
+  }, []);
 
   async function load() {
     try {
