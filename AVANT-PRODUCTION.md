@@ -147,8 +147,9 @@ T = l'administrateur seul (titulaire des comptes), J = juriste, C = comptable, D
 
 **Livreurs**
 - [ ] 🔴 **F — Assurance accidents + protection juridique souscrite**, références saisies (paramètre
-      `courier_insurance_policy`) : le contrat les promet avant la première course. Le bilan « Prêt au lancement »
-      le signale tant que c'est vide. *Vérifié le 24/10 : toujours vide.* C'est aussi une obligation légale pour une
+      `courier_insurance_policy`) : le contrat les promet avant la première course. La carte GO (Admin › Aujourd'hui)
+      l'affiche en rouge tant que c'est vide, mais **ne bloque pas le GO** (fondateur, 06/11) : rien dans le code ne
+      l'empêche, c'est à l'équipe de la souscrire avant. *Vérifié le 24/10 : toujours vide.* C'est aussi une obligation légale pour une
       plateforme (loi du 3/10/2022, art. 19-21, et arrêté royal du 12/08/2024 : assurance accidents du travail au moins
       équivalente à la loi de 1971) ; sans elle, le Fonds des accidents du travail indemnise puis se retourne contre
       Fairide. Avant la première course payée.
