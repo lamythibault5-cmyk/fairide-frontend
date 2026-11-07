@@ -19,7 +19,9 @@ function bloquee(o, enLigne) {
   if (!p) return null;
   if (p.pending > 0 && !enLigne) return 'horsLigne';
   if (p.pending > 0 && p.lastError) return 'incident';
-  if (p.failed > 0 && !p.pending) return 'abandon';
+  // `lastError` : le dernier ticket de la commande a échoué. Un ticket réimprimé et sorti depuis le remet à null (backend
+  // resumeImpressions) : sans ce test, la carte restait, avec son son et son bouton, après la réimpression qui l'avait réglée.
+  if (p.failed > 0 && !p.pending && p.lastError) return 'abandon';
   return null;
 }
 
@@ -41,7 +43,9 @@ export default function TicketsBloques({ commandes, aTerminal, terminalEnLigne, 
   }, [n]);
   if (!n) return null;
   const abandons = liste.filter((x) => x.cas === 'abandon').map((x) => x.o);
-  const aide = liste.some((x) => x.cas === 'horsLigne') ? t('ordersResto.ticketsTerminalMuet') : t('ordersResto.ticketsVerifier');
+  // Incident seul (papier, capot) : les tickets repartent d'eux-mêmes, « puis réimprime » les aurait fait sortir deux fois.
+  const aide = liste.some((x) => x.cas === 'horsLigne') ? t('ordersResto.ticketsTerminalMuet')
+    : abandons.length ? t('ordersResto.ticketsVerifier') : t('ordersResto.ticketsRepartent');
   return (
     <div className="ec-alerte" role="alert">
       <b>{n === 1 ? t('ordersResto.ticketsBloquesUn') : t('ordersResto.ticketsBloques', { n })}</b>

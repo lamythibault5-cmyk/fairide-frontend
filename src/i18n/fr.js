@@ -6483,6 +6483,7 @@ export default {
       ticketsBloques: '{n} tickets ne sont pas sortis de l’imprimante.',
       ticketsTerminalMuet: 'Ton terminal ne répond plus : rallume-le ou rouvre sa page.',
       ticketsVerifier: 'Vérifie le papier et le capot, puis réimprime.',
+      ticketsRepartent: 'Vérifie le papier et le capot : ils sortiront d’eux-mêmes.',
       ticketsReimprimer: 'Réimprimer',
       terminalOnline: 'terminal en ligne',
       terminalOffline: 'terminal hors ligne',
@@ -10288,6 +10289,7 @@ export default {
       printer_low_battery: 'batterie faible',
       printer_unknown: 'incident inconnu',
       printer_printer_refused: 'refusé par l’imprimante (papier ?)',
+      printer_expired: 'trop ancien, pas imprimé',
       printer_render_error: 'erreur d\'impression'
     },
     adminTerminals: {

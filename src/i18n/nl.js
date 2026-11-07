@@ -6468,6 +6468,7 @@ export default {
       ticketsBloques: '{n} tickets zijn niet uit de printer gekomen.',
       ticketsTerminalMuet: 'Je terminal reageert niet meer: zet hem weer aan of open zijn pagina opnieuw.',
       ticketsVerifier: 'Controleer het papier en het deksel, en druk dan opnieuw af.',
+      ticketsRepartent: 'Controleer het papier en het deksel: ze worden vanzelf afgedrukt.',
       ticketsReimprimer: 'Opnieuw afdrukken',
       terminalOnline: 'terminal online',
       terminalOffline: 'terminal offline',
@@ -10228,6 +10229,7 @@ export default {
       printer_low_battery: 'batterij bijna leeg',
       printer_unknown: 'onbekend probleem',
       printer_printer_refused: 'geweigerd door de printer (papier?)',
+      printer_expired: 'te oud, niet afgedrukt',
       printer_render_error: 'afdrukfout'
     },
     adminTerminals: {

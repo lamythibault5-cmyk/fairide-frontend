@@ -6459,6 +6459,7 @@ export default {
       ticketsBloques: '{n} tickets did not come out of the printer.',
       ticketsTerminalMuet: 'Your terminal stopped responding: turn it back on or reopen its page.',
       ticketsVerifier: 'Check the paper and the cover, then reprint.',
+      ticketsRepartent: 'Check the paper and the cover: they will print on their own.',
       ticketsReimprimer: 'Reprint',
       terminalOnline: 'terminal online',
       terminalOffline: 'terminal offline',
@@ -10219,6 +10220,7 @@ export default {
       printer_low_battery: 'low battery',
       printer_unknown: 'unknown issue',
       printer_printer_refused: 'refused by the printer (paper?)',
+      printer_expired: 'too old, not printed',
       printer_render_error: 'print error'
     },
     adminTerminals: {
