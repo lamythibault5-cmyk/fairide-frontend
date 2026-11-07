@@ -50,8 +50,10 @@ export default function AdminCouriersPage() {
   const location = useLocation();
   const [data, setData] = useState(null);
   const [erreur, setErreur] = useState(null);
-  // Arrivé d'un livreur (« Ouvrir le dossier ») : tous les dossiers, sinon un brouillon serait caché par le filtre « à valider ».
-  const [filtre, setFiltre] = useEtatPage('filtre', location.state?.presetSearch ? 'all' : 'pending_review', { forcer: !!location.state?.presetSearch });
+  // Arrivé d'un livreur (« Ouvrir le dossier ») : tous les dossiers, sinon un brouillon serait caché par le filtre.
+  // Sinon « À toi de décider » d'abord (Owen, 06/11 : « it needs to be very simple ») : seulement les dossiers qui
+  // l'attendent, lui ; un dossier envoyé à qui il manque encore quelque chose attend le livreur, pas l'équipe.
+  const [filtre, setFiltre] = useEtatPage('filtre', location.state?.presetSearch ? 'all' : 'a_regarder', { forcer: !!location.state?.presetSearch });
   const [typeFiltre, setTypeFiltre] = useEtatPage('type', 'all');
   const [nature, setNature] = useEtatPage('nature', 'all');
   const [search, setSearch] = useState(location.state?.presetSearch || '');
@@ -161,7 +163,9 @@ export default function AdminCouriersPage() {
           </div>
           {erreur && <ErrorCard message={erreur} onRetry={load} />}
           {!data && !erreur && <SkeletonCards count={3} />}
-          {data && lignes.length === 0 && <div className="empty">{tr('adminCouriers.none')}</div>}
+          {data && lignes.length === 0 && <div className="empty">{filtre === 'a_regarder' && !search
+            ? tr('adminCouriers.exRienPourToi', { n: (data.rows ?? []).filter((r) => estCompteReel(r) && ['draft', 'pending_review'].includes(r.lifecycleStatus)).length })
+            : tr('adminCouriers.none')}</div>}
           {data && mode === 'table' && lignes.length > 0 && (
             <AdminDataTable rows={lignes} sort={sort} onSort={toggle} onRowClick={(r) => setSelection(r.id)} columns={colonnes} rowClassName={(r) => (estCompteTest(r) ? 'row-test-account' : '')} emptyLabel={tr('adminCouriers.none')} />
           )}
@@ -304,7 +308,7 @@ function VerifierPiece({ d, tr, busy, agir, token, toast, onDocuments, onRefuser
   );
 }
 
-function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIdentite }) {
+function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIdentite, onValider }) {
   const c = d.courier; const id = c.identity ?? {};
   const points = d.teamChecks ?? [];
   // Ce qu'aucune machine ne tranche : le dossier attend le bouton Valider, même tout vert (pointsARegarder).
@@ -346,7 +350,16 @@ function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIden
         </div>
       )}
       {(points.length > 0 || humains.length > 0) && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
-      {humains.map((p) => ligne(p, `${texteHumain(p)} ${tr('adminCouriers.exHumainValider')}`, null))}
+      {humains.map((p) => ligne(p, texteHumain(p), null))}
+      {/* LA DÉCISION SUR LA CARTE (Owen, 06/11 : « it doesn't look easy for me to approve them »). Elle était dans l'onglet
+          Décision, la carte disait seulement d'aller la chercher. Valider, ou faire refaire la pièce (motif envoyé au livreur) ;
+          un refus du dossier reste dans Décision. Après les points de l'équipe (pièce, BCE), qui ont leurs propres boutons. */}
+      {humains.length > 0 && !points.length && (
+        <div className="row" style={{ gap: 6, flexWrap: 'wrap', marginBottom: 12 }}>
+          <button className="btn-teal" disabled={busy} onClick={onValider}>{tr('adminCouriers.exApprouver')}</button>
+          {id.status === 'verified' && humains.some((p) => p !== 'revue_equipe') && <button className="btn-danger-ghost" disabled={busy} onClick={onRefuserIdentite}>{tr('adminCouriers.exRefairePiece')}</button>}
+        </div>
+      )}
       {points.some((p) => ['identite', 'nationalite', 'titre_sejour'].includes(p)) && <VerifierPiece d={d} tr={tr} busy={busy} agir={agir} token={token} toast={toast} onDocuments={onDocuments} onRefuserIdentite={onRefuserIdentite} />}
       {points.includes('bce') && ligne('bce',
         tr('adminCouriers.exBceDetail', { num: c.independent?.companyNumber || '-', registre: !registre ? tr('adminCouriers.exRegistrePasLu') : registre.valid ? tr('adminCouriers.exRegistreValide', { name: registre.name }) : registre.valid === false ? tr('adminCouriers.exRegistreAbsent') : tr('adminCouriers.exRegistrePasLu'), nom: `${id.firstName || ''} ${id.lastName || ''}`.trim() || '-' }),
@@ -450,7 +463,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
     <>
       {onglet === 'dossier' && (
         <>
-          <ARegarder d={d} tr={tr} token={token} toast={toast} busy={busy} agir={agir} onDocuments={() => setOnglet('documents')} onRefuserIdentite={refuserIdentite} />
+          <ARegarder d={d} tr={tr} token={token} toast={toast} busy={busy} agir={agir} onDocuments={() => setOnglet('documents')} onRefuserIdentite={refuserIdentite} onValider={() => validerDossier('', false)} />
           <h4 className="drawer-section-title">{tr('adminCouriers.secStatus')}</h4>
           <DrawerRow label={tr('adminCouriers.colStatus')} value={`${statut(c.statusType)}${c.statusVerifiedAt ? ` · ${tr('adminCouriers.statusVerifiedAt')} ${fmt(c.statusVerifiedAt)}` : ` · ${tr('adminCouriers.statusNotVerified')}`}`} strong />
           <DrawerRow label={tr('adminCouriers.zoneVehicle')} value={`${c.zone || '-'} · ${c.vehicleType ? tr(`courierOnboarding.vehicle_${c.vehicleType}`) : '-'}${c.licencePlate ? ` · ${c.licencePlate}` : ''}`} />
