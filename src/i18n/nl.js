@@ -6434,6 +6434,7 @@ export default {
       refuseReason3: "Onverwachte sluiting",
       refuseReason2: "Keuken overbevraagd",
       refuseReason1: "Gerecht uitverkocht",
+      outOfStockNow: "· uitverkocht op je menu",
       openButHoursShort: "Buiten openingsuren",
       openButHoursNone: "Gesloten volgens je openingsuren",
       openButHours: "Gesloten volgens je openingsuren · opent weer om {time}",

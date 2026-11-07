@@ -6449,6 +6449,7 @@ export default {
       refuseReason3: "Fermeture imprévue",
       refuseReason2: "Cuisine débordée",
       refuseReason1: "Plat épuisé",
+      outOfStockNow: "· épuisé sur ta carte",
       openButHoursShort: "Hors horaires",
       openButHoursNone: "Fermé selon tes horaires",
       openButHours: "Fermé selon tes horaires · rouvre à {time}",

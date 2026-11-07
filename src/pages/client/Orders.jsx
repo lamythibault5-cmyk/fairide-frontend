@@ -318,7 +318,11 @@ export default function Orders() {
     setAdresseDe(null);
     toast(t('orders.addrPaid'), 'succes');
     const relire = () => relirePremierePage().catch(() => {});
-    relire();
+    /* Sans attendre le webhook (pré-GO 2026-11-06, G79) : le serveur relit la page du supplément chez Stripe et, payée, change
+       l'adresse tout de suite, avant que le livreur parte vers l'ancienne. Un serveur d'avant cette route : 404 ignoré. */
+    const commande = searchParams.get('order');
+    if (commande) api(`/orders/${encodeURIComponent(commande)}/address/confirm`, { method: 'POST', token }).catch(() => {}).finally(relire);
+    else relire();
     const id = setTimeout(relire, 4000);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -380,8 +384,12 @@ export default function Orders() {
         setPayingId(null);
       }
     } catch (e) {
+      /* LA PAGE DE PAIEMENT D'AVANT A ÉTÉ PAYÉE (pré-GO 2026-11-06, G20) : le serveur n'en rouvre pas une seconde. Payée, ou
+         encore en cours à la banque : l'écran de confirmation, qui attend et redemande au serveur. Close : la liste relue. */
+      if (e.code === 'ALREADY_PAID' || e.code === 'PAYMENT_IN_PROGRESS') { setPayingId(null); navigate(`/order-success?order=${o.id}`); return; }
       toast(e.message, 'erreur');
       setPayingId(null);
+      if (e.code === 'ORDER_CLOSED') relirePremierePage().catch(() => {});
     }
   }
   // Retour arrière depuis Stripe sur le site : le navigateur peut rendre la page telle qu'il l'avait gardée (bfcache),
@@ -402,6 +410,8 @@ export default function Orders() {
       else navigate(cheminFiche({ id: o.restaurantId, slug: o.restaurantSlug }));
     } catch (e) {
       toast(e.message, 'erreur');
+      // Payée entre-temps, ou déjà close (G20/G40) : la liste relue montre où elle en est.
+      if (e.code === 'ALREADY_PAID' || e.code === 'ORDER_CLOSED') relirePremierePage().catch(() => {});
     } finally {
       setCancellingId(null);
     }

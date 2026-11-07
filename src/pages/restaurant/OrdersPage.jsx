@@ -580,7 +580,7 @@ export default function OrdersPage() {
       )}
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
       {!nouvelle && !close && <div className="ec-route-blanc"><RouteSuivi status={o.status} orderType={o.orderType} /></div>}
-      <ListePlats items={o.items} />
+      <ListePlats items={o.items} epuises={nouvelle} />
       <PastilleCouverts order={o} />
       {close && <DeliveryTiming order={o} />}
       <BandeauAllergie order={o} />
@@ -849,7 +849,7 @@ export default function OrdersPage() {
           </span>
         )}
         <BadgeEquipe order={o} t={t} />
-        <ListePlats items={o.items} />
+        <ListePlats items={o.items} epuises={nouvelle} />
         <PastilleCouverts order={o} />
         <div className="sp-cmd-paiement">
           {o.paymentMode === 'on_site' && rienAEncaisser(o) && !o.pickupNoShow ? null : o.paymentMode === 'on_site' ? (
