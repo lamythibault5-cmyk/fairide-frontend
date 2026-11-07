@@ -41,7 +41,9 @@ import '../../nouvelles-conditions.css';
  *   - Qui signe : le commerce, au nom tapé à sa dernière signature (comme le bouton de RenouvellementContrat) ; sans nom connu,
  *     le bouton mène à la page Engagements (case et nom). Le livreur, au nom de sa pièce vérifiée : le serveur le prend lui-même
  *     quand aucun nom n'est envoyé (POST /couriers/me/engagements). Jamais l'équipe en « agir pour », jamais un membre de
- *     l'équipe du commerce (staffRole « service »), jamais un compte de test ni la simulation.
+ *     l'équipe du commerce (staffRole « service »), jamais la simulation.
+ *   - Les comptes de test, eux, le voient (fondateur, 2026-11-07 : « je veux voir si tout marche » avec son compte de test,
+ *     comme un client). Rien n'y est faux : le compte accepte pour lui-même. Les comptes admin restent dehors.
  *
  * JAMAIS AU MILIEU DE QUELQUE CHOSE : pas pendant qu'une commande du client est suivie, qu'un livreur a une course en main ou
  * qu'une commande attend d'être acceptée au commerce (l'état « occupé » de miseAJour.js, le même que pour la mise à jour) ; ni
@@ -106,7 +108,7 @@ export default function NouvellesConditions({ role, restoId = null, nomCommerce 
   const [voirTout, setVoirTout] = useState(false);
   const [enCours, setEnCours] = useState(false);
   const libre = PAGES_LIBRES.some((p) => pathname === p || pathname.startsWith(`${p}/`));
-  const concerne = !!token && !!user && !user.isAdmin && !user.isTest && !user.simulation && !actingAdminEmail && !membreEquipe;
+  const concerne = !!token && !!user && !user.isAdmin && !user.simulation && !actingAdminEmail && !membreEquipe;
 
   // Relu à l'ouverture et en quittant une page où l'on a pu accepter (Mes documents, Engagements, le dossier, le paiement).
   useEffect(() => {
