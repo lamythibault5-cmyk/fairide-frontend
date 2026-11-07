@@ -483,7 +483,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       await arriver(data.user);
     } catch (err) {
       const champ = err.field || err.data?.field;
-      if (fed && err.message !== 'INCOMPLETE_PROFILE' && /google|apple|token|jeton|expir/i.test(err.message || '')) {
+      if (fed && err.code === 'FED_TOKEN_INVALID') { // le code, pas le texte (G151, 2026-11-06)
         /* JETON APPLE / GOOGLE EXPIRÉ AVANT LA FIN (audit du 19/10, auth-08). On repartait de l'écran du compte (onQuitter) :
          * tout ce qui avait été tapé était perdu, et un utilisateur Apple lisait « reclique sur Continuer avec Google ». On
          * reste ici, réponses gardées, on nomme le bon fournisseur et on rouvre sa feuille ; un nouveau « Créer mon compte »

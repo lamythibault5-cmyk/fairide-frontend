@@ -63,7 +63,7 @@ export default function OrderResult({ success }) {
 function ResultatCommande({ success }) {
   const [params] = useSearchParams();
   const orderId = params.get('order');
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const cart = useCart();
   const { t } = useLanguage();
 
@@ -248,6 +248,11 @@ function ResultatCommande({ success }) {
             </div>
           )}
           <InfosRetrait order={commande} />
+          {/* L'ADRESSE DU REÇU (fondateur, 2026-11-06, G52) : l'adresse n'est pas prouvée à l'inscription, et une faute de frappe
+              envoyait les reçus à un inconnu sans que personne le voie. Payée en ligne seulement : c'est elle qui a un reçu. */}
+          {commande && !surPlace && user?.email && (
+            <p className="small ec-merci-recu">{t('orderResult.recuEnvoye', { email: user.email })} · <Link to="/account">{t('orderResult.recuChanger')}</Link></p>
+          )}
           {/* Le code ami, une fois par téléphone, au moment où l'on est content (maquettes/parrainage-visible, question 5). */}
           {commande && <RappelCodeAmi />}
           </div>

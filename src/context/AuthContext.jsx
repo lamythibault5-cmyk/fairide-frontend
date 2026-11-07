@@ -115,6 +115,11 @@ export function AuthProvider({ children }) {
    * d'aller à l'accueil, sans `from` ; il retombe dès qu'une session s'ouvre. Une session EXPIRÉE garde le `from` (USR-6). */
   const [deconnexionVoulue, setDeconnexionVoulue] = useState(false);
   useEffect(() => { if (session?.user) setDeconnexionVoulue(false); }, [session?.user]);
+  /* COMPTE REPRIS PAR GOOGLE OU APPLE (fondateur, 2026-11-06, G51). Une adresse jamais confirmée, puis « Continuer avec Google » :
+   * le serveur efface le mot de passe et ferme les autres sessions (contre l'inscription d'avance avec l'adresse d'un autre,
+   * routes/auth.js › connexionFederee) et répond `credentialsReset`, qu'aucun écran ne lisait : la tablette de la cuisine se
+   * retrouvait déconnectée sans explication. { fournisseur, twoFactor } ; la fenêtre AvisReprise.jsx le dit, une fois. */
+  const [avisReprise, setAvisReprise] = useState(null);
 
   useEffect(() => {
     if (simuRef.current) {
@@ -323,6 +328,15 @@ export function AuthProvider({ children }) {
     return api('/auth/forgot-password/confirm', { method: 'POST', body: { email, code } });
   }
 
+  // Retrouver son compte par SMS (G52 / G147) : un code au numéro prouvé du compte, puis le lien de réinitialisation et
+  // l'adresse du compte (routes/auth.js, /forgot-password/phone).
+  async function recupererParSms(phone) {
+    return api('/auth/forgot-password/phone', { method: 'POST', body: { phone } });
+  }
+  async function confirmerRecuperationSms(phone, code) {
+    return api('/auth/forgot-password/phone/confirm', { method: 'POST', body: { phone, code } });
+  }
+
   async function resetPassword(token, password) {
     return api('/auth/reset-password', { method: 'POST', body: { token, password } });
   }
@@ -330,6 +344,7 @@ export function AuthProvider({ children }) {
   async function loginWithGoogle(credential, role, extra) {
     const data = await api('/auth/google', { method: 'POST', body: { credential, role, ...extra } });
     if (data.token) setSession(data);
+    if (data.credentialsReset) setAvisReprise({ fournisseur: 'Google', twoFactor: !!data.credentialsReset.twoFactor });
     return data;
   }
 
@@ -341,6 +356,7 @@ export function AuthProvider({ children }) {
     const data = await api('/auth/apple', { method: 'POST', body: { idToken, authorizationCode: codeApple(idToken), role, ...extra } });
     oublierCodeApple(idToken);
     if (data.token) setSession(data);
+    if (data.credentialsReset) setAvisReprise({ fournisseur: 'Apple', twoFactor: !!data.credentialsReset.twoFactor });
     return data;
   }
 
@@ -509,7 +525,11 @@ export function AuthProvider({ children }) {
     register,
     forgotPassword,
     confirmForgotPassword,
+    recupererParSms,
+    confirmerRecuperationSms,
     resetPassword,
+    avisReprise,
+    fermerAvisReprise: () => setAvisReprise(null),
     loginWithGoogle,
     loginWithApple,
     updateProfile,

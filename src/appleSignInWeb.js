@@ -7,7 +7,9 @@
  * le domaine fairride.be et l'adresse de retour https://fairride.be/ — puis VITE_APPLE_SERVICES_ID dans Vercel. Sans cette
  * variable, aucun bouton Apple sur le site : rien ne s'affiche qui ne marcherait pas.
  *
- * Comme Google (googleSignIn.js), le script d'Apple ne part qu'au clic : aucune requête vers Apple sur les autres pages. */
+ * Le script d'Apple part quand le bouton s'affiche (prechargerApple, G148, 2026-11-06), jamais sur les autres pages : chargé
+ * seulement au clic, il arrivait après la fenêtre d'activation de Safari sur un réseau lent, et la fenêtre d'Apple était
+ * bloquée au premier toucher (un second toucher marchait). */
 const SERVICES_ID = import.meta.env.VITE_APPLE_SERVICES_ID || '';
 const SRC = 'https://appleid.cdn-apple.com/appleauth/static/jsapi/appleid/1/fr_FR/appleid.auth.js';
 
@@ -29,6 +31,11 @@ function chargerApple() {
     document.head.appendChild(s);
   });
   return promesse;
+}
+
+// Appelé à l'affichage du bouton : au toucher, le script est déjà là et la fenêtre s'ouvre dans le geste.
+export function prechargerApple() {
+  if (appleWebDisponible()) chargerApple().catch(() => { /* réessayé au toucher, qui affichera l'erreur */ });
 }
 
 /* Ouvre la fenêtre d'Apple. Rend { fournisseur: 'apple', jeton, code, prenom, nom } — la même forme que la feuille native

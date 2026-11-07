@@ -19,8 +19,9 @@ components live in [src/components/conformite/](../../src/components/conformite/
   the SMS code once ([VerifTelephone](../../src/components/VerifTelephone.jsx): top of the « Avant de commander » sheet in
   the app, a window on the site; the order then leaves by itself when nothing else is to tick). The backend refuses an order
   otherwise (`PHONE_VERIFICATION_REQUIRED`, routes/orders.js; the quote passes). « Je n'ai pas reçu le SMS » gives an e-mail
-  code after 30 s that lets the order through without proving the number (`users.phone_email_fallback_at`); the sign-up
-  promo code is credited only when the number is proven by SMS (one account per number).
+  code after 30 s that lets the order through without proving the number (`users.phone_email_fallback_at`, cleared when the
+  number changes); the sign-up promo code and both code ami rewards are credited only when the number is proven by SMS (one
+  account per number, G38 2026-11-06).
   **Shops and couriers prove their number at sign-up** (founder, 2026-11-05: « only the client can wait until he has to
   order »): [ProtectedRoute](../../src/components/ProtectedRoute.jsx) puts [MurTelephone](../../src/components/MurTelephone.jsx)
   in front of every `/dashboard` and `/driver` page while the number is unproven (no « later », only « Se déconnecter »).

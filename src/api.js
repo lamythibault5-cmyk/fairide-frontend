@@ -164,7 +164,17 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   } finally {
     if (minuteur) clearTimeout(minuteur);
   }
-  const data = await res.json().catch(() => ({}));
+  let sansJson = false;
+  const data = await res.json().catch(() => { sansJson = true; return {}; });
+  /* PASSERELLE QUI N'A PAS EU LA RÉPONSE (G135 / G151, 2026-11-06). Un 502 / 504 sans corps JSON (page de Vercel quand le relais
+   * dépasse son délai) ou le 502 du relais lui-même (RELAY_UNREACHABLE, middleware.js) : ce n'est pas le serveur Fairride qui
+   * a répondu. Une lecture dit « serveur injoignable » ; une écriture dit qu'elle est peut-être passée, comme un délai dépassé. */
+  if (!res.ok && (res.status === 502 || res.status === 504) && (sansJson || data.code === 'RELAY_UNREACHABLE')) {
+    if (lecture) throw new ApiError(traduire('common.serverUnreachable'), res.status);
+    const e = new ApiError(traduire('common.writeTimeout'), res.status);
+    e.code = 'WRITE_TIMEOUT';
+    throw e;
+  }
   const corps = handleResponse(res, data, !!token, logoutOn401);
   return withHeaders ? { data: corps, headers: res.headers } : corps;
 }

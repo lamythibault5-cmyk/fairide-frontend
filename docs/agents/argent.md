@@ -74,7 +74,9 @@ food or more** (subtotal, delivery not counted): applied by the order route by i
 promo row `CODE-AMI` of type `order_referral` (backend migration 107, `referrals.CODE_AMI`; typed at checkout it « doesn't
 exist »; the team turns it off in Admin › Promotions). A typed code wins (one code per order) and the code ami waits; paid at
 the shop it doesn't apply, and the quote's `codeAmi` says why so the cart can explain it. The sharer gets **€5 on the
-balance per friend, no cap** (founder: each fake friend needs a real phone and a real paid order), when that friend's first
+balance per friend, no cap** (founder: each fake friend needs a real phone and a real paid order; since 2026-11-06, G38,
+the friend's €5, the sharer's €5 and the sign-up code credit all need the number proven **by SMS**
+(`phone_verified_via = 'sms'`): the e-mail code still lets the order through, without the reward), when that friend's first
 qualifying order is handed over, **only if it was paid online** (`maybeAwardClientReferralReward`: a takeaway paid at the
 shop earns Fairride nothing, so it no longer credits anyone). Before GO nothing can be paid online: the screens that promise
 the friend's €5 wait for GO (`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged.
