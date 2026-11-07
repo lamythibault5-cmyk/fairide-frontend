@@ -384,16 +384,24 @@ try {
     await deux.ctx.close();
   }
   // Commerce au numéro pas encore prouvé (fondateur, 2026-11-05) : le mur du numéro, en écran plein de l'app, à la place du
-  // tableau de bord ; il garde une sortie (« Se déconnecter »).
+  // tableau de bord ; il garde une sortie (« Se déconnecter ») et le chemin vers les commandes. La page Commandes, elle, reste
+  // ouverte avec le bandeau « Prouve ton numéro » (chasse aux bugs avant GO, G16, 2026-11-06).
   {
     const { ctx, page } = await ouvrir(navigateur, base, { profil: 'murNumero' });
-    await page.goto(`${base}/dashboard/orders`);
+    await page.goto(`${base}/dashboard`);
     await page.locator('.bv-plein .bv-titre').waitFor({ timeout: 8000 }).catch(() => {});
     const r = await examiner(page, { profil: 'murNumero', appli: true });
     const titre = await page.locator('.bv-plein .bv-titre').textContent().catch(() => '');
     if (titre !== 'Confirme ton numéro') r.problemes.push(`mur du numéro absent (titre : « ${titre || 'aucun'} »)`);
     if (!(await page.locator('.bv-plein').getByRole('button', { name: 'Se déconnecter' }).count())) r.problemes.push('mur du numéro sans « Se déconnecter »');
-    resultats.push({ profil: 'murNumero', page: '/dashboard/orders (numéro à prouver)', ...r });
+    if (!(await page.locator('.bv-plein').getByRole('button', { name: 'Voir mes commandes' }).count())) r.problemes.push('mur du numéro sans « Voir mes commandes »');
+    resultats.push({ profil: 'murNumero', page: '/dashboard (numéro à prouver)', ...r });
+    await page.goto(`${base}/dashboard/orders`);
+    await page.locator('.agir-bandeau').filter({ hasText: 'Prouve ton numéro' }).waitFor({ timeout: 8000 }).catch(() => {});
+    const r2 = await examiner(page, { profil: 'murNumero', appli: true });
+    if (await page.locator('.bv-plein .bv-titre').count()) r2.problemes.push('Commandes cachées par le mur du numéro');
+    if (!(await page.locator('.agir-bandeau').filter({ hasText: 'Prouve ton numéro' }).count())) r2.problemes.push('Commandes sans le bandeau « Prouve ton numéro »');
+    resultats.push({ profil: 'murNumero', page: '/dashboard/orders (numéro à prouver)', ...r2 });
     await ctx.close();
   }
   // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
