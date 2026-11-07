@@ -614,6 +614,8 @@ export default function OrdersPage() {
       {/* RETRAIT SANS RIEN TAPER (simulation du 10 oct. 2026) : le commerce compare à l'œil le code que le livreur lui
           montre avec celui-ci ; c'est le livreur qui confirme le retrait de son côté (PATCH /orders/:id/picked-up). */}
       <CodeRetrait order={o} t={t} />
+      {/* Retirée par le livreur avec le code avant « Prête » (G142, décision d'Owen du 06/11/2026) : le commerce le lit. */}
+      {o.retireeAvantPret && o.status === 'livraison' && <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.retireeAvantPret')}</p>}
       {/* Le livreur, une personne : qui vient, s'il est là (et depuis quand), son pourboire. */}
       <LivreurCommande order={o} />
       {o.status === 'pret' && o.orderType === 'delivery' && o.deliveryBy !== 'restaurant' && !o.driverId && (

@@ -41,7 +41,7 @@ function Ligne({ l, t }) {
   return <div className="ec-vir-ligne"><span>{t('virements.autre')}</span><b>{eur(l.montant)}</b></div>;
 }
 
-function Semaine({ titre, sous, montant, etat, lignes, comptoir, ouvertDepart, t }) {
+function Semaine({ titre, sous, montant, etat, lignes, comptoir, attente, ouvertDepart, t }) {
   const [ouvert, setOuvert] = useState(ouvertDepart);
   return (
     <div className={`ec-vir-semaine${ouvert ? ' ouvert' : ''}`}>
@@ -55,6 +55,8 @@ function Semaine({ titre, sous, montant, etat, lignes, comptoir, ouvertDepart, t
           {lignes.length ? lignes.map((l, k) => <Ligne key={`${l.orderId || 'x'}-${k}`} l={l} t={t} />) : <p className="ec-aide">{t('virements.rien')}</p>}
           <div className="ec-vir-ligne total"><span>{t('virements.surTonCompte')}</span><b>{eur(montant)}</b></div>
           {comptoir?.nombre > 0 && <p className="ec-aide">{t(comptoir.nombre === 1 ? 'virements.comptoirUne' : 'virements.comptoirN', { n: comptoir.nombre, montant: eur(comptoir.montant) })}</p>}
+          {/* Parts pas encore parties (compte de paiement pas actif, virement à retenter) : hors du total (G24, 06/11/2026). */}
+          {attente?.nombre > 0 && <p className="ec-aide">{t(attente.nombre === 1 ? 'virements.attenteUne' : 'virements.attenteN', { n: attente.nombre, montant: eur(attente.montant) })}</p>}
         </div>
       )}
     </div>
@@ -79,7 +81,7 @@ export default function VirementsCommerce({ restoId, token }) {
       <p className="ec-feuille-titre">{t('virements.chaqueLundi')}</p>
       <p className="ec-aide">{t('virements.toucheSemaine')}</p>
       <Semaine t={t} ouvertDepart titre={majuscule(jourLong(lundi))} sous={t('virements.depuisDernier')} montant={prochain.montant}
-        etat={{ texte: t('virements.aVenir'), classe: '' }} lignes={prochain.lignes} comptoir={prochain.comptoir} />
+        etat={{ texte: t('virements.aVenir'), classe: '' }} lignes={prochain.lignes} comptoir={prochain.comptoir} attente={prochain.attente} />
       {d.versements.map((v) => {
         const [cle, classe] = STATUT[v.statut] || ['virements.enRoute', ''];
         return (

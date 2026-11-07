@@ -607,14 +607,23 @@ export default function DriverDashboard() {
    * Le glisser (app) ou le bouton (site) ouvre d'abord la question « Tu as bien la commande ? », avec le nombre d'articles et le
    * commerce ; seul « Oui, j'ai la commande » la marque récupérée — le client voit alors qu'elle est en route. */
   const [retraitAConfirmer, setRetraitAConfirmer] = useState(null);
+  /* LE CODE DE RETRAIT, TOUJOURS (G142, décision d'Owen du 06/11/2026). Un glisser de travers disait au client « en route »
+   * pendant que la commande cuisait : la question « Tu as bien la commande ? » demande maintenant les 4 chiffres du code
+   * montré au comptoir, vérifiés par le serveur. Retirée avant « Prête », le commerce lit « retirée par le livreur ». */
+  const [codeRetraitSaisi, setCodeRetraitSaisi] = useState('');
+  const [codeRetraitManque, setCodeRetraitManque] = useState(false);
+  function demanderRetrait(o) { setCodeRetraitSaisi(''); setCodeRetraitManque(false); setRetraitAConfirmer(o); }
   async function confirmerRetrait(order) {
+    if (codeRetraitSaisi.length !== 4) { setCodeRetraitManque(true); toast(t('dashDriver.pickupCodeMissing'), 'erreur'); return false; }
     setRetraitEnCours(order.id);
     try {
-      await api(`/orders/${order.id}/picked-up`, { method: 'PATCH', token });
+      await api(`/orders/${order.id}/picked-up`, { method: 'PATCH', token, body: { code: codeRetraitSaisi } });
       toast(t('dashDriver.toastPickedUp'));
       load();
+      return true;
     } catch (e) {
       toast(e.message, 'erreur');
+      return false;
     } finally {
       setRetraitEnCours(null);
     }
@@ -810,8 +819,8 @@ export default function DriverDashboard() {
       <DeliveryTiming order={o} />
       {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
       <div className="ecl-glisser">
-        <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => setRetraitAConfirmer(o)}>
-          <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => setRetraitAConfirmer(o)}>
+        <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => demanderRetrait(o)}>
+          <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => demanderRetrait(o)}>
             {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
           </button>
         </GlisserPourConfirmer>
@@ -825,9 +834,13 @@ export default function DriverDashboard() {
         confirmLabel={t('dashDriver.pickupConfirmYes')}
         cancelLabel={t('dashDriver.pickupConfirmNo')}
         loading={retraitEnCours === o.id}
-        onConfirm={async () => { await confirmerRetrait(o); setRetraitAConfirmer(null); }}
+        onConfirm={async () => { if (await confirmerRetrait(o)) setRetraitAConfirmer(null); }}
         onCancel={() => setRetraitAConfirmer(null)}
-      />
+      >
+        <p className="small" style={{ margin: '10px 0 6px' }}>{t('dashDriver.pickupCodeLabel')}</p>
+        <CodeCases id={`code-retrait-${o.id}`} libelle={t('dashDriver.pickupCodeLabel')} valeur={codeRetraitSaisi} manque={codeRetraitManque}
+          onChange={(v) => { setCodeRetraitSaisi(v); if (v.length === 4) setCodeRetraitManque(false); }} onValider={() => confirmerRetrait(o).then((ok) => { if (ok) setRetraitAConfirmer(null); })} />
+      </ConfirmDialog>
     </>
   );
 

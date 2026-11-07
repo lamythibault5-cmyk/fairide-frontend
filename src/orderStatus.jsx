@@ -281,6 +281,8 @@ export function ProchaineEtape({ order }) {
   // juste dessous, « une commande non réceptionnée reste due » (orders.noCourier_incident_client_absent, conforme aux CGU).
   // Le texte de l'incident, affiché partout où la commande l'est (Orders.jsx), suffit : pas de note « remboursé ».
   if (status === 'annule' && order.deliveryIncident === 'client_absent') return null;
+  // Absent au contrôle d'âge (G154, 06/11/2026) : pas de remboursement, la ligne de l'issue le dit (Orders.jsx).
+  if (status === 'annule' && order.ageCheck === 'refused_absent') return null;
   if (status === 'nouveau') cle = 'next_nouveau';
   else if (status === 'preparation') cle = livraison ? 'next_preparation_delivery' : 'next_preparation_pickup';
   else if (status === 'pret') cle = livraison ? 'next_pret_delivery' : 'next_pret_pickup';

@@ -21,7 +21,8 @@ import Icone from './Icone';
 // dans l'app (html.appli), la fenêtre est une feuille posée en bas (elle apparaît en place, sans monter) — poignée, tuile d'icône (`icone`, nom d'Icone.jsx), titre,
 // message, ce qui va changer dans un encart (`detail`), le bouton d'action sur toute la largeur et l'annulation en texte
 // dessous. Le site garde sa fenêtre centrée. Styles dans client-ui.css (.confirm-feuille).
-function Corps({ title, message, detail, icone, confirmLabel = 'Confirmer', cancelLabel, danger, loading, onConfirm, onCancel }) {
+// `children` : un champ à remplir avant de confirmer (le code de retrait du livreur, G142), posé sous le message.
+function Corps({ title, message, detail, icone, confirmLabel = 'Confirmer', cancelLabel, danger, loading, onConfirm, onCancel, children }) {
   const { t } = useLanguage();
   const racine = useRef(null);
   /* Cette fenêtre garde la porte de toutes les actions irréversibles du dépôt — supprimer une
@@ -41,6 +42,7 @@ function Corps({ title, message, detail, icone, confirmLabel = 'Confirmer', canc
         <h3 className="modal-titre" id="confirm-titre">{title}</h3>
         {message && <p className="small" style={{ margin: '0 0 4px' }}>{message}</p>}
         {detail && <p className="confirm-detail"><Icone nom="croix" taille={15} />{detail}</p>}
+        {children}
         {/* Pied collant : l'action décisive barre toute la largeur, l'annulation est un lien en
             dessous. Les deux boutons étaient auparavant alignés à droite, à la suite du message —
             dans une modale un peu longue, ils passaient sous la ligne de flottaison. */}
