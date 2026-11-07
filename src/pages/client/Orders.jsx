@@ -21,6 +21,8 @@ import SignalerProbleme from '../../components/client/SignalerProbleme';
 import SansLivreur from '../../components/client/SansLivreur';
 import LivreurALaPorte from '../../components/client/LivreurALaPorte';
 import ChangerAdresse from '../../components/client/ChangerAdresse';
+import { ChoixPourboire, FeuillePourboire } from '../../components/client/Pourboire';
+import { pourboirePossible } from '../../pourboirePossible';
 import ReglageNotifications from '../../components/ReglageNotifications';
 import { RappelEmail } from '../../components/EmailConfirmation';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -95,71 +97,8 @@ function NomCommerce({ order }) {
   return <Link to={cheminFiche({ id: order.restaurantId, slug: order.restaurantSlug })} className="lien-commerce">{order.restaurantName}</Link>;
 }
 
-/* LE POURBOIRE APRÈS LA LIVRAISON. Il vivait dans le formulaire d'avis (étoiles + commentaire + pourboire) ; les avis
- * clients ont été retirés le 22/10/2026 (fondateur : « pas assez d'utilisateurs, des commerces avec peu d'étoiles
- * feraient mauvaise impression ; on les refera peut-être plus tard »). Il reste seul : « Laisser un pourboire » sur une
- * commande livrée par un livreur et dont le pourboire n'est pas encore payé, autant de fois qu'il le faut — un paiement
- * abandonné chez Stripe laisse le bouton en place (c'était le rôle de l'ancien mode `pourboireSeul`). Pas de choix
- * « Aucun » ici : ne rien laisser, c'est simplement ne pas ouvrir le formulaire ; l'envoi attend un montant. */
-function PourboireForm({ order, token, toast, onDone, t }) {
-  const [tipChoice, setTipChoice] = useState(0);
-  const [tipInput, setTipInput] = useState('');
-  const [saving, setSaving] = useState(false);
-  // « 2,50 » est lu comme 2,50 € (audit du 19/10, CROSS-62) : Number('2,50') donnait NaN, et le pourboire tombait sans un mot.
-  const tip = tipInput.trim() ? +(Number(tipInput.trim().replace(',', '.')) || 0).toFixed(2) : tipChoice;
-
-  async function submit() {
-    if (!(tip > 0)) return;
-    setSaving(true);
-    try {
-      await api(`/orders/${order.id}/tip`, { method: 'PATCH', token, body: { tip } });
-      const pay = await api(`/payments/tip-checkout/${order.id}`, { method: 'POST', token });
-      if (pay.simulated) {
-        toast(t('pourboire.toastThanks'), 'succes');
-        // Pourboire acquis : le bouton « Laisser un pourboire » ne doit pas rester affiché (plan de test SIM-9).
-        onDone({ tipPaid: true, tipAmount: tip });
-      } else {
-        await allerAuPaiement(pay.checkoutUrl, { retour: '/orders' });
-      }
-    } catch (e) {
-      toast(e.message, 'erreur');
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  return (
-    <div style={{ background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 }}>
-      <div style={{ marginBottom: 12 }}>
-        <div className="small" style={{ marginBottom: 4, fontWeight: 600 }}>{t('pourboire.prompt', { name: order.driverName })}</div>
-        <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-          {[1, 2, 3].map((amount) => (
-            <button
-              key={amount}
-              type="button"
-              className={tipChoice === amount && !tipInput.trim() ? 'btn-teal' : 'btn-ghost'}
-              aria-pressed={tipChoice === amount && !tipInput.trim()}
-              onClick={() => { setTipChoice(amount); setTipInput(''); }}
-              style={{ padding: '6px 12px', fontSize: 13 }}
-            >
-              {`${amount}€`}
-            </button>
-          ))}
-          <input aria-label={t('pourboire.otherPlaceholder')}
-            type="text"
-            inputMode="decimal"
-            autoComplete="off"
-            placeholder={t('pourboire.otherPlaceholder')}
-            value={tipInput}
-            onChange={(e) => setTipInput(e.target.value)}
-            style={{ width: 110, padding: '6px 10px', fontSize: 13 }}
-          />
-        </div>
-      </div>
-      <button className="btn-teal" disabled={saving || !(tip > 0)} onClick={submit}>{saving ? '...' : t('pourboire.send')}</button>
-    </div>
-  );
-}
+/* LE POURBOIRE APRÈS LA LIVRAISON : components/client/Pourboire.jsx (en un geste, fondateur 2026-11-06). Il vivait ici, dans
+   l'ancien formulaire d'avis puis seul, avec une seconde page Stripe à chaque fois. */
 
 export default function Orders() {
   const [orders, setOrders] = useState([]);
@@ -322,6 +261,34 @@ export default function Orders() {
     relirePremierePage().catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
+  /* LA FEUILLE DU POURBOIRE À L'ARRIVÉE (fondateur, 2026-11-06, maquettes/pourboire version A). Elle s'ouvre une seule fois par
+   * commande : à la notification « Karim t'a livré » (/orders?pourboire=<id>, backend pushFile.js), ou quand une commande
+   * livrée depuis moins de deux heures apparaît sans pourboire. « Pas cette fois » la ferme pour de bon ; la ligne reste sur
+   * la carte de la commande pendant sept jours. Les commandes déjà proposées sont retenues sur l'appareil (fairide_pourboire_vu). */
+  const pourboireDemande = searchParams.get('pourboire');
+  // Ouvertes pendant cette visite : une feuille fermée ne se rouvre pas à la relecture suivante, notification comprise.
+  const pourboiresOuverts = useRef(new Set());
+  useEffect(() => {
+    if ((previewMode && role === 'restaurant') || pourboireId || !orders.length) return;
+    let vus = [];
+    try { vus = JSON.parse(localStorage.getItem('fairide_pourboire_vu') || '[]'); } catch { /* stockage indisponible */ }
+    // La notification touchée l'ouvre toujours ; sinon, une commande livrée il y a moins de deux heures, jamais proposée.
+    const demandee = pourboireDemande ? orders.find((o) => o.id === pourboireDemande && pourboirePossible(o)) : null;
+    const a = (demandee && !pourboiresOuverts.current.has(demandee.id)) ? demandee
+      : orders.find((o) => pourboirePossible(o) && o.deliveredAt && Date.now() - o.deliveredAt < 2 * 3600 * 1000
+        && !vus.includes(o.id) && !pourboiresOuverts.current.has(o.id));
+    if (!a) return;
+    pourboiresOuverts.current.add(a.id);
+    try { localStorage.setItem('fairide_pourboire_vu', JSON.stringify([...vus.filter((x) => x !== a.id), a.id].slice(-30))); } catch { /* stockage indisponible */ }
+    setPourboireId(a.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders, pourboireDemande]);
+  // Ouverte seulement sur une commande où le pourboire est possible (effet ci-dessus, « Laisser un pourboire ») ; une fois
+  // payé, elle reste le temps du merci puis se ferme d'elle-même (FeuillePourboire).
+  const pourboireOuvert = pourboireId ? orders.find((o) => o.id === pourboireId) : null;
+  // Pourboires donnés depuis la ligne de la carte pendant cette visite : la ligne garde son merci au lieu de disparaître.
+  const [pourboiresDonnes, setPourboiresDonnes] = useState(() => new Set());
+  const pourboirePaye = (id) => (maj) => setOrders((prev) => prev.map((x) => (x.id === id ? { ...x, ...maj } : x)));
   /* RETOUR DU PAIEMENT D'UN CHANGEMENT D'ADRESSE (/orders?adresse=payee) : l'adresse change à l'arrivée du paiement chez le
    * serveur (webhook), quelques secondes après ; on relit tout de suite, puis encore une fois un peu plus tard. */
   useEffect(() => {
@@ -681,6 +648,8 @@ export default function Orders() {
       )}
       {o.tipPaid && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.tipIncluded', { amount: euros(o.tipAtCheckout) })}</div>}
       {o.tipRefunded && o.tipAtCheckout > 0 && <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('orders.tipRefunded', { amount: euros(o.tipAtCheckout) })}</div>}
+      {/* Pourboire donné après la livraison (Pourboire.jsx) : payé à part, il n'entre pas dans le montant de la commande. */}
+      {o.tipPaid && !(o.tipAtCheckout > 0) && o.tipAmount > 0 && <div className="small" style={{ textAlign: avecMontant ? 'right' : undefined }}>{t('pourboire.donne', { amount: euros(o.tipAmount), name: String(o.driverName || '').split(' ')[0] })}</div>}
       {/* Déposée devant la porte : la photo prise par le livreur (lien signé, valable quelques minutes ; effacée après 30 jours). */}
       {o.deliveredPhoto?.url && (
         <a className="small" href={o.deliveredPhoto.url} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 6 }}>
@@ -745,22 +714,14 @@ export default function Orders() {
   // LE PIED D'UNE COMMANDE : pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
   // alignée sur le texte de la carte (audit design 2 : les deux liens étaient décalés l'un par rapport à l'autre).
   // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.
-  // Plus d'avis (« Laisser un avis », l'avis envoyé et la réponse du commerce) depuis le 22/10/2026 : voir PourboireForm.
+  // Plus d'avis (« Laisser un avis », l'avis envoyé et la réponse du commerce) depuis le 22/10/2026. Le pourboire : la feuille
+  // (dialogues, plus bas) et la ligne sur la carte de la commande (Pourboire.jsx).
   const blocPied = (o, avecRecommander = true) => (
     <>
-      {pourboireId === o.id && (() => {
-        const formulaire = (
-          <PourboireForm
-            order={o} token={token} toast={toast} t={t}
-            onDone={(maj = {}) => { setPourboireId(null); setOrders((prev) => prev.map((x) => (x.id === o.id ? { ...x, ...maj } : x))); }}
-          />
-        );
-        return APPLI ? <SousEcran titre={t('orders.leaveTip')} onFermer={() => setPourboireId(null)}>{formulaire}</SousEcran> : formulaire;
-      })()}
       {/* « Un souci ? » à chaque étape — sauf là où « Signaler un problème » est déjà proposé. */}
       {!(o.paid && ['livre', 'livraison'].includes(o.status)) && <AideCommande order={o} />}
       <div className="suivi-pied">
-        {o.status === 'livre' && o.driverName && !o.tipPaid && pourboireId !== o.id && (
+        {pourboirePossible(o) && pourboireId !== o.id && (
           <button type="button" className="suivi-lien" onClick={() => setPourboireId(o.id)}>{t('orders.leaveTip')}</button>
         )}
         {/* Signaler un problème (USR-10) : commande payée et terminée ; « jamais reçue » aussi pendant la livraison. */}
@@ -794,6 +755,10 @@ export default function Orders() {
   );
   const dialogues = (
     <>
+      {pourboireOuvert && (
+        <FeuillePourboire order={pourboireOuvert} token={token} toast={toast} t={t}
+          onFermer={() => setPourboireId(null)} onPaye={pourboirePaye(pourboireOuvert.id)} />
+      )}
       <ConfirmDialog
         open={!!aAnnuler}
         title={t('orders.cancelConfirmTitle')}
@@ -1021,11 +986,14 @@ export default function Orders() {
               </thead>
               <tbody>
                 {passees.map((o) => {
-                  const ouvert = ouvertes.has(o.id) || pourboireId === o.id;
+                  const ouvert = ouvertes.has(o.id);
                   const n = nbArticles(o);
+                  // Le pourboire sur la carte, sans ouvrir « Détails » (maquettes/pourboire version B) : tant qu'il est possible,
+                  // et le merci juste après (tipPaid posé par onPaye, la ligne reste le temps de la visite).
+                  const lignePourboire = pourboirePossible(o) || pourboiresDonnes.has(o.id);
                   return (
                     <Fragment key={o.id}>
-                      <tr className={`sc-passee${ouvert ? ' ouverte' : ''}`}>
+                      <tr className={`sc-passee${ouvert ? ' ouverte' : ''}${lignePourboire ? ' avec-pourboire' : ''}`}>
                         <td className="sc-c-nom">
                           <span className="sc-nom-c">
                             <PhotoCommerce order={o} />
@@ -1042,6 +1010,14 @@ export default function Orders() {
                             onClick={() => basculerDetails(o.id)}>{t('siteCommande.details')}<span className="sc-chevron" aria-hidden="true" /></button>
                         </td>
                       </tr>
+                      {lignePourboire && (
+                        <tr className="sc-passee-pourboire">
+                          <td colSpan={6}>
+                            <ChoixPourboire order={o} token={token} toast={toast} t={t} variante="ligne"
+                              onPaye={(maj) => { setPourboiresDonnes((avant) => new Set(avant).add(o.id)); pourboirePaye(o.id)(maj); }} />
+                          </td>
+                        </tr>
+                      )}
                       {ouvert && (
                         <tr className="sc-passee-detail" id={`sc-detail-${o.id}`}>
                           <td colSpan={6}>

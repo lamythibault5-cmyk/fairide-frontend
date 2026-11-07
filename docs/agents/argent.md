@@ -61,6 +61,19 @@ The courier and restaurant contracts, the T&Cs and the courier texts promise it.
 setting** (founder): `REGLES_FIXES` in `../fairide-backend/pricing.js` forces `tipFairideRate` 0 and `deliveryFairideRate` 0.10 (the
 courier's 90 %) whatever `platform_settings` says, Admin › Paramètres no longer shows either field, and `PATCH /admin/settings`
 refuses another value (`FIXED_RULE`).
+
+**The tip is given at arrival, in one tap, never at checkout** (founder, 2026-11-06, `maquettes/pourboire`: all the
+recommendations, no tip on the payment page). The checkout card is kept by Stripe (`setup_future_usage: 'on_session'` on the
+card only, never Bancontact: it would become a SEPA mandate the founder refused; if Stripe ever refuses the setting the
+order page opens without it). At arrival a sheet (`components/client/Pourboire.jsx`, opened by the push « Karim t'a livré »
+→ `/orders?pourboire=<id>`, or once when a delivered order shows up) and a row on the order card offer 1 / 2 / 3 € or
+« Autre », **minimum 1 €**, **7 days** after delivery; « Donner 2 € » calls `POST /api/payments/tip/:id`, which charges
+the saved card (backend `pourboireApres.js`); Bancontact, an order from before, a removed card or a bank confirmation
+open today's Stripe page with the amount filled in. Whatever the path, `pourboireApres.enregistrerPaye` records it,
+pays the courier the whole tip through `courierPay.payerPourboire`, books Stripe's fee as Fairride's cost
+(`stripe_fee_tip`, shown in Rentabilité), and pushes « Pourboire reçu » to the courier (no customer name). Fairride
+absorbs the fee (~€0.28 by card, €0.35 by Bancontact on a €2 tip). The backend still accepts a tip sent with the checkout
+for apps not yet updated (`pourboireCommande.js`). Courier monthly statements wait until the 8th so late tips are in them.
 **Delivery distance: 6 km by default**, or what the business sets (1–15 km since 2026-10-21, founder: 30 km was ~1 h 50 by bike and
 ~28 € of delivery fee; 15 km covers the whole Brussels region) in « Commandes et capacité » (`../fairide-backend/rayonLivraison.js`;
 NULL used to mean « no limit » and accepted Antwerp). Backend migration 080 clamped settings above 15 km (one `admin_actions` row
