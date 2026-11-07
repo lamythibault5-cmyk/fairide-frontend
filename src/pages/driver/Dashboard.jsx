@@ -199,6 +199,8 @@ export default function DriverDashboard() {
   const [lastPositionAt, setLastPositionAt] = useState(null);
   // Le suivi a été refusé par le téléphone (G42 : position approximative ou bloquée) : dit tant que la livraison dure.
   const [suiviRefuse, setSuiviRefuse] = useState(false);
+  // Relance du suivi quand la position revient (réglages du téléphone) : le greffon refusé ne repart pas tout seul.
+  const [relanceSuivi, setRelanceSuivi] = useState(0);
   const [connecting, setConnecting] = useState(false);
   // Selfie de contrôle demandé (SelfieControle.jsx) : null, ou { dueAt, blocking }. Sert au bandeau (LIVE-25).
   const [selfie, setSelfie] = useState(null);
@@ -431,6 +433,10 @@ export default function DriverDashboard() {
    * watchPosition posait lui-même la question du système dès l'ouverture de la page, avant que le livreur ait lu
    * l'explication. Sans course en main, il ne sert de toute façon qu'à tenir la position prête (rien n'est envoyé). */
   const suiviUtile = mine.length > 0 || (user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused && etatPos === 'granted');
+  /* Revenu des réglages avec la position exacte (G42, « Ouvrir les réglages ») : le greffon qui avait refusé ne reprend pas
+   * seul, le suivi repart. Seulement sur un vrai changement vers 'granted' (useEtatPosition relit au retour) : jamais de
+   * nouvelle question du système en boucle. */
+  useEffect(() => { if (suiviRefuse && etatPos === 'granted') setRelanceSuivi((n) => n + 1); }, [etatPos]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user?.locationSharingEnabled === false || !suiviUtile) {
       setSharingLocation(false);
@@ -496,7 +502,7 @@ export default function DriverDashboard() {
       clearInterval(heartbeat);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile]);
+  }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile, relanceSuivi]);
 
   // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
   // autre décision (docs/dispatch.md côté serveur). Un seul envoi par course (audit du 19/10, CROSS-36) : un deuxième appui,

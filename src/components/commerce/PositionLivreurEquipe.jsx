@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../../api';
-import { estNatif, ouvrirReglagesAppli, refusPosition, suivrePositionCourse } from '../../natif';
+import { estNatif, etatPosition, ouvrirReglagesAppli, refusPosition, suivrePositionCourse } from '../../natif';
 import { useLanguage } from '../../context/LanguageContext';
 
 // Toutes les 12 s au plus, et au moins une fois toutes les 12 s à l'arrêt : le rythme du livreur Fairride (driver/Dashboard.jsx).
@@ -21,6 +21,15 @@ export default function PositionLivreurEquipe({ orders, moi, token }) {
   const ids = useRef(miennes);
   ids.current = miennes;
   const [refuse, setRefuse] = useState(false);
+  // Revenu des réglages avec la position exacte : le greffon qui avait refusé ne reprend pas seul, le suivi repart (jamais sur
+  // un simple retour à l'écran, qui reposerait la question du système en boucle).
+  const [relance, setRelance] = useState(0);
+  useEffect(() => {
+    if (!refuse) return undefined;
+    const auRetour = async () => { if (document.visibilityState === 'visible' && (await etatPosition({ precise: true })) === 'granted') setRelance((n) => n + 1); };
+    document.addEventListener('visibilitychange', auRetour);
+    return () => document.removeEventListener('visibilitychange', auRetour);
+  }, [refuse]);
 
   useEffect(() => {
     if (!cle) { setRefuse(false); return undefined; }
@@ -38,7 +47,7 @@ export default function PositionLivreurEquipe({ orders, moi, token }) {
     }).then((stop) => { if (fini) stop(); else arreter = stop; });
     const battement = setInterval(() => { if (dernieres && Date.now() - dernierEnvoi >= INTERVALLE_MS) envoyer(dernieres); }, INTERVALLE_MS);
     return () => { fini = true; clearInterval(battement); arreter?.(); };
-  }, [cle, token]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cle, token, relance]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!cle || !refuse) return null;
   return (
