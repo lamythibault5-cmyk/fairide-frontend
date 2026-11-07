@@ -7,7 +7,7 @@ import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
 import { codeApple, estNatif, oublierCodeApple } from '../natif';
 import { desabonnerNatif, rattacherAppareilSiAutorise, suivrePermissionNative } from '../pushNatif';
-import { desabonner, reabonnerSiDejaAutorise } from '../push';
+import { reabonnerSiDejaAutorise, retirerAbonnementDuServeur } from '../push';
 import { cleDuFragment, lancementAttendu } from '../lancementOnglet';
 
 const AuthContext = createContext(null);
@@ -223,15 +223,18 @@ export function AuthProvider({ children }) {
     if (!session?.token || session.actingAs || simuRef.current) return undefined;
     let fini = false;
     let enCours = false;
+    let pasAvant = 0;
     const emisA = (() => { try { return JSON.parse(atob(session.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).iat || 0; } catch { return 0; } })();
     const renouveler = () => {
-      if (fini || enCours || document.visibilityState === 'hidden' || Date.now() / 1000 - emisA < 24 * 3600) return;
+      if (fini || enCours || Date.now() < pasAvant || document.visibilityState === 'hidden' || Date.now() / 1000 - emisA < 24 * 3600) return;
       enCours = true;
       api('/auth/session/renew', { method: 'POST', token: session.token, logoutOn401: false })
         .then((r) => {
-          // token: null = le serveur refuse pour cette session (administrateur, 12 h fermes) : on ne redemande plus.
+          /* token: null = rien à renouveler pour le serveur : administrateur (12 h fermes), ou une horloge du téléphone en
+             avance de quelques minutes sur la sienne (même seuil de 24 h des deux côtés). Pas un arrêt pour de bon, sinon
+             l'écran du comptoir retombait dans le cas G119 : une nouvelle demande dans une heure au plus tôt. */
           if (r?.token) setSession((prev) => (prev && prev.token === session.token ? { ...prev, token: r.token } : prev));
-          else fini = true;
+          else pasAvant = Date.now() + 60 * 60 * 1000;
         })
         .catch(() => { /* on réessaiera au prochain retour ou dans l'heure */ })
         .finally(() => { enCours = false; });
@@ -416,9 +419,10 @@ export function AuthProvider({ children }) {
     // précédent jusqu'à la connexion suivante (2026-10-26). Pendant que la session est encore valide ; sans attendre.
     if (estNatif() && session?.token) desabonnerNatif(session.token).catch(() => {});
     // Sur le site aussi (bug hunt avant GO, G109) : sur un ordinateur partagé, la personne suivante recevait les
-    // notifications de commande du compte précédent. Ligne du serveur retirée, puis abonnement du navigateur (push.js).
+    // notifications de commande du compte précédent. Seule la ligne du serveur part (push.js, retirerAbonnementDuServeur) :
+    // l'abonnement du navigateur reste, pour revenir au compte qui se reconnecte ici (reabonnerSiDejaAutorise).
     // Jamais pour « Fairide agit comme… » : ce navigateur est celui de l'équipe, son abonnement n'est pas celui du compte.
-    else if (session?.token && !session.actingAs) desabonner(session.token).catch(() => {});
+    else if (session?.token && !session.actingAs) retirerAbonnementDuServeur(session.token);
     setDeconnexionVoulue(true);
     setSession(null);
     // La casquette active appartient à la session qui s'en va : sans cet oubli, le compte suivant

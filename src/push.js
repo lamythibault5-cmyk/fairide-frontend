@@ -100,6 +100,22 @@ export async function reabonnerSiDejaAutorise(token) {
   } catch { /* silencieux : la personne peut toujours réactiver depuis ses réglages */ }
 }
 
+/* DÉCONNEXION SUR LE SITE (bug hunt avant GO, G109) : la ligne du SERVEUR part, l'abonnement du navigateur reste. Sur un
+ * ordinateur partagé, la personne suivante ne reçoit donc plus les notifications du compte qui s'en va (le serveur n'a plus
+ * rien vers ce navigateur). Désabonner aussi le navigateur ferait perdre ses notifications au commerce qui se déconnecte
+ * puis se reconnecte au comptoir : reabonnerSiDejaAutorise (plus haut) ne renvoie qu'un abonnement encore présent.
+ * logoutOn401: false : la session s'en va de toute façon, un 401 ne doit pas relancer une déconnexion. */
+export async function retirerAbonnementDuServeur(token) {
+  if (!token || estNatif() || !estSupporte()) return;
+  try {
+    // getRegistration et non `ready` : sans service worker enregistré, `ready` attendrait pour toujours.
+    const enregistrement = await navigator.serviceWorker.getRegistration();
+    const abonnement = await enregistrement?.pushManager.getSubscription();
+    if (!abonnement) return;
+    await api('/push/subscribe', { method: 'DELETE', token, body: { endpoint: abonnement.endpoint }, logoutOn401: false });
+  } catch { /* au mieux : la déconnexion ne dépend pas de cet appel */ }
+}
+
 export async function desabonner(token) {
   if (estNatif()) return desabonnerNatif(token);
   const abonnement = await abonnementCourant();
