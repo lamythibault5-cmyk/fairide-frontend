@@ -8915,6 +8915,7 @@ export default {
       firstGoNote: "Bij de eerste GO gaat de aankondiging naar {commerces} zaak/zaken die alles kunnen verkopen, {emporter} zaak/zaken met alleen afhalen en {livreurs} koerier(s) die klaar zijn. De anderen krijgen niets.",
       announceLeft: "Aankondiging van GO: nog {n} te verwittigen (verzending mislukt, of klaar sinds GO).",
       announceDone: "Aankondiging van GO: iedereen die klaar is, heeft ze gekregen.",
+      announceSending: "Aankondiging van GO wordt verstuurd. Het verslag komt bij de taken.",
       announceButton: "Aankondiging opnieuw sturen",
       announceConfirm: "De GO-aankondiging sturen naar de {n} zaak/zaken en koerier(s) die klaar zijn en ze nog niet kregen?",
       announceSent: "De aankondiging vertrekt. Het verslag komt bij de taken.",

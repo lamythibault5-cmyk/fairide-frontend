@@ -8973,6 +8973,7 @@ export default {
       firstGoNote: "Au premier GO, l'annonce part à {commerces} commerce(s) qui peuvent tout vendre, à {emporter} commerce(s) en à emporter seulement et à {livreurs} livreur(s) prêt(s). Les autres ne reçoivent rien.",
       announceLeft: "Annonce du GO : {n} encore à prévenir (envoi raté, ou prêt depuis le GO).",
       announceDone: "Annonce du GO : tous ceux qui sont prêts l'ont reçue.",
+      announceSending: "Annonce du GO en cours d'envoi. Le compte rendu arrive dans les tâches.",
       announceButton: "Renvoyer l'annonce",
       announceConfirm: "Envoyer l'annonce du GO aux {n} commerce(s) et livreur(s) prêts qui ne l'ont pas encore reçue ?",
       announceSent: "L'annonce part. Le compte rendu arrive dans les tâches.",

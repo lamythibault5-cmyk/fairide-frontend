@@ -104,8 +104,9 @@ export default function BoutonGo() {
       {/* Après le premier GO : l'annonce, à ceux qui ne l'ont pas encore reçue (G12). */}
       {etat.goAt && etat.annonce && (
         <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', margin: '0 0 12px' }}>
-          <p className="small" style={{ margin: 0 }}>{etat.annonce.aPrevenir > 0 ? tr('adminGo.announceLeft', { n: etat.annonce.aPrevenir }) : tr('adminGo.announceDone')}</p>
-          {peutAppuyer && etat.annonce.aPrevenir > 0 && <button type="button" className="btn-outline" disabled={enCours} onClick={() => setConfirmerRenvoi(true)}>{tr('adminGo.announceButton')}</button>}
+          {/* Pendant l'envoi (premier GO ou renvoi), « à prévenir » compte ceux qui l'attendent encore : pas de bouton. */}
+          <p className="small" style={{ margin: 0 }}>{etat.annonce.enCours ? tr('adminGo.announceSending') : etat.annonce.aPrevenir > 0 ? tr('adminGo.announceLeft', { n: etat.annonce.aPrevenir }) : tr('adminGo.announceDone')}</p>
+          {peutAppuyer && !etat.annonce.enCours && etat.annonce.aPrevenir > 0 && <button type="button" className="btn-outline" disabled={enCours} onClick={() => setConfirmerRenvoi(true)}>{tr('adminGo.announceButton')}</button>}
         </div>
       )}
       {!peutAppuyer ? (

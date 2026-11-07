@@ -8906,6 +8906,7 @@ export default {
       firstGoNote: "On the first GO, the announcement goes to {commerces} business(es) that can sell everything, {emporter} business(es) with takeaway only and {livreurs} ready courier(s). The others get nothing.",
       announceLeft: "GO announcement: {n} still to notify (sending failed, or ready since GO).",
       announceDone: "GO announcement: everyone who is ready has received it.",
+      announceSending: "GO announcement is being sent. The report will be in the tasks.",
       announceButton: "Send the announcement again",
       announceConfirm: "Send the GO announcement to the {n} ready business(es) and courier(s) who haven't received it yet?",
       announceSent: "The announcement is going out. The report will be in the tasks.",
