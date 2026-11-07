@@ -381,6 +381,12 @@ export function ParametersTab() {
             <textarea id={`${id}-assur`} rows={2} maxLength={500} value={champ('courier_insurance_policy')} onChange={changer('courier_insurance_policy')} />
             <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramInsuranceHelp')}</p>
           </div>
+          {/* Numéro d'astreinte (G15, urgenceLivreur.prevenirAstreinte) : SMS quand une alerte à l'équipe n'a sonné nulle part. */}
+          <div className="field">
+            <label htmlFor={`${id}-astreinte`}>{t('conformite.paramOnCall')}</label>
+            <input id={`${id}-astreinte`} type="tel" inputMode="tel" autoComplete="off" placeholder="+32 4…" value={champ('equipe_telephone_astreinte')} onChange={changer('equipe_telephone_astreinte')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramOnCallHelp')}</p>
+          </div>
           <div className="field">
             <label htmlFor={`${id}-selfie`}>{t('conformite.paramSelfieRate')}</label>
             <input id={`${id}-selfie`} inputMode="decimal" value={champ('selfie_check_rate') || '0.2'} onChange={changer('selfie_check_rate')} />

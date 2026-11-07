@@ -9,6 +9,8 @@ import { api } from './api';
 import { plateforme } from './natif';
 
 const CLE_JETON = 'fairide_push_natif';
+// Jeton retiré parce que la permission du téléphone l'a été (suivrePermissionNative, plus bas, G39).
+const CLE_COUPE = 'fairide_push_natif_coupe';
 
 export function jetonNatifCourant() {
   try { return localStorage.getItem(CLE_JETON); } catch { return null; }
@@ -52,15 +54,49 @@ export async function abonnerNatif(token) {
   }
   if (permission.receive !== 'granted') return 'refuse';
 
-  // Android 8+ : un canal avec son et importance haute, sinon la notification arrive muette et repliée.
-  if (plateforme() === 'android') {
-    await PushNotifications.createChannel({
-      id: 'commandes', name: 'Commandes', description: 'Nouvelles commandes et livraisons',
-      importance: 5, visibility: 1, sound: 'default', vibration: true
-    }).catch(() => {});
-  }
-
   return enregistrerAppareil(PushNotifications, token);
+}
+
+/* LES CANAUX ANDROID ET LE SON LONG D'UNE NOUVELLE COMMANDE.
+ *
+ * Android 8+ : un canal avec son et importance haute, sinon la notification arrive muette et repliée. Créé à CHAQUE
+ * enregistrement du jeton (bug hunt avant GO, G110) : il ne l'était qu'à l'activation par la personne, et un téléphone
+ * rattaché sans demande (permission déjà accordée : réinstallation, second compte) recevait tout dans le canal par défaut,
+ * sans bandeau. Créer un canal qui existe déjà ne change rien.
+ *
+ * LE SON LONG (bug hunt avant GO, G43 ; décision d'Owen, 2026-11-06). Téléphone verrouillé, la sonnerie de la page se tait
+ * et il ne restait qu'un « ding » court. Une nouvelle commande sonne maintenant ~14 s (scripts/son-nouvelle-commande.mjs) :
+ *   - Android : le canal « commandes2 » et son son res/raw/nouvelle_commande.wav, seulement dans une app qui a ce fichier.
+ *     Le greffon EcranAllume arrive dans la même version du store : sa présence le dit (une mise à jour directe de ces
+ *     écrans sur une app plus ancienne créerait sinon un canal au son introuvable, donc muet).
+ *   - iPhone : le son est copié dans Library/Sounds, où iOS le cherche (aucune nouvelle version du store nécessaire).
+ * Le serveur ne l'envoie qu'aux appareils qui le déclarent (POST /push/native-token › alarmeLongue, fairide-backend/fcm.js). */
+let sonIos = null;
+async function preparerSonIos() {
+  sonIos ||= (async () => {
+    const { Filesystem, Directory } = await import('@capacitor/filesystem');
+    const blob = await (await fetch('/sons/nouvelle_commande.wav')).blob();
+    const base64 = await new Promise((resolve, reject) => { const l = new FileReader(); l.onload = () => resolve(String(l.result).split(',')[1] || ''); l.onerror = reject; l.readAsDataURL(blob); });
+    if (!base64) return false;
+    await Filesystem.writeFile({ path: 'Sounds/nouvelle_commande.wav', data: base64, directory: Directory.Library, recursive: true });
+    return true;
+  })().catch(() => { sonIos = null; return false; });
+  return sonIos;
+}
+async function preparerCanaux(PushNotifications) {
+  if (plateforme() === 'ios') return preparerSonIos();
+  if (plateforme() !== 'android') return false;
+  await PushNotifications.createChannel({
+    id: 'commandes', name: 'Commandes', description: 'Nouvelles commandes et livraisons',
+    importance: 5, visibility: 1, sound: 'default', vibration: true
+  }).catch(() => {});
+  let Capacitor;
+  try { ({ Capacitor } = await import('@capacitor/core')); } catch { return false; }
+  if (!Capacitor.isPluginAvailable('EcranAllume')) return false;
+  return PushNotifications.createChannel({
+    id: 'commandes2', name: 'Nouvelles commandes', description: 'Sonnerie longue pour chaque nouvelle commande',
+    importance: 5, visibility: 1, sound: 'nouvelle_commande.wav', vibration: true
+  }).then(() => true, () => false);
 }
 
 /* Le jeton de l'appareil, confié au serveur POUR LE COMPTE DE `token`.
@@ -69,7 +105,8 @@ export async function abonnerNatif(token) {
  * même téléphone), l'événement « registration » réveillait aussi ceux d'avant, qui renvoyaient le jeton avec la session
  * d'avant — rattachant le téléphone à l'ancien compte, ou, cette session étant fermée, recevant un 401 qui déconnectait
  * le nouveau compte (api.js). Chaque demande retire maintenant les siens dès qu'elle a sa réponse. */
-function enregistrerAppareil(PushNotifications, token) {
+async function enregistrerAppareil(PushNotifications, token) {
+  const alarmeLongue = await preparerCanaux(PushNotifications).catch(() => false);
   return new Promise((resolve) => {
     let fini = false;
     const poses = [];
@@ -82,8 +119,8 @@ function enregistrerAppareil(PushNotifications, token) {
     poses.push(PushNotifications.addListener('registration', async ({ value }) => {
       if (fini) return;
       try {
-        await api('/push/native-token', { method: 'POST', token, body: { token: value, platform: plateforme() } });
-        try { localStorage.setItem(CLE_JETON, value); } catch { /* rien */ }
+        await api('/push/native-token', { method: 'POST', token, body: { token: value, platform: plateforme(), alarmeLongue: alarmeLongue === true } });
+        try { localStorage.setItem(CLE_JETON, value); localStorage.removeItem(CLE_COUPE); } catch { /* rien */ }
         terminer('ok');
       } catch { terminer('erreur'); }
     }));
@@ -109,6 +146,37 @@ export async function rattacherAppareilSiAutorise(token) {
   const { enabled, native } = await api('/push/key').catch(() => ({ enabled: false }));
   if (!enabled || !native) return 'indisponible';
   return enregistrerAppareil(PushNotifications, token);
+}
+
+/* NOTIFICATIONS COUPÉES DANS LES RÉGLAGES DU TÉLÉPHONE (bug hunt avant GO, G39). Le jeton reste valable : Firebase accepte
+ * l'envoi et le téléphone n'affiche rien, et le serveur, voyant un appareil, ne faisait pas partir les e-mails de secours
+ * (prête à retirer, livreur en route, nouvelle commande au commerce…). L'écran, lui, disait les notifications actives.
+ * À l'ouverture de session et à chaque retour au premier plan (AuthContext.jsx) : permission retirée → le jeton est
+ * retiré du serveur (les e-mails reprennent) ; permission rendue → il revient, seulement s'il était parti pour cette raison
+ * (CLE_COUPE) : « Désactiver » dans l'app reste respecté. Jamais de demande de permission ici. */
+export async function permissionNativeAccordee() {
+  try {
+    const { PushNotifications } = await import('@capacitor/push-notifications');
+    return (await PushNotifications.checkPermissions())?.receive === 'granted';
+  } catch { return false; }
+}
+export async function suivrePermissionNative(token) {
+  if (!token) return;
+  let PushNotifications;
+  try { ({ PushNotifications } = await import('@capacitor/push-notifications')); } catch { return; }
+  const permission = await PushNotifications.checkPermissions().catch(() => null);
+  if (!permission) return;
+  let coupe = false;
+  try { coupe = localStorage.getItem(CLE_COUPE) === '1'; } catch { /* sans stockage */ }
+  if (permission.receive === 'granted') {
+    if (coupe && !jetonNatifCourant() && (await rattacherAppareilSiAutorise(token)) === 'ok') {
+      try { localStorage.removeItem(CLE_COUPE); } catch { /* rien */ }
+    }
+    return;
+  }
+  if (!jetonNatifCourant()) return;
+  try { localStorage.setItem(CLE_COUPE, '1'); } catch { /* rien */ }
+  await desabonnerNatif(token);
 }
 
 export async function desabonnerNatif(token) {

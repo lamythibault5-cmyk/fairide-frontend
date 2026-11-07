@@ -12,7 +12,7 @@
 
 import { api } from './api';
 import { estNatif } from './natif';
-import { abonnerNatif, desabonnerNatif, jetonNatifCourant } from './pushNatif';
+import { abonnerNatif, desabonnerNatif, jetonNatifCourant, permissionNativeAccordee } from './pushNatif';
 
 // La clé publique VAPID arrive en base64url ; l'API du navigateur veut un tableau d'octets.
 function base64UrlVersOctets(base64) {
@@ -30,9 +30,10 @@ export function estSupporte() {
     && 'Notification' in window;
 }
 
-// L'abonnement déjà en place sur CE navigateur, ou null.
+// L'abonnement déjà en place sur CE navigateur, ou null. Dans l'app, un jeton ET la permission du téléphone (G39) : coupées
+// dans les réglages, les notifications n'arrivent plus, et l'écran ne doit plus les dire actives.
 export async function abonnementCourant() {
-  if (estNatif()) return jetonNatifCourant() ? { natif: true } : null;
+  if (estNatif()) return jetonNatifCourant() && (await permissionNativeAccordee()) ? { natif: true } : null;
   if (!estSupporte()) return null;
   try {
     const enregistrement = await navigator.serviceWorker.ready;
@@ -97,6 +98,22 @@ export async function reabonnerSiDejaAutorise(token) {
     // logoutOn401: false : un renvoi en arrière-plan ne décide pas d'une déconnexion (la relecture de /auth/me s'en charge).
     await api('/push/subscribe', { method: 'POST', token, body: { subscription: abonnement.toJSON() }, logoutOn401: false });
   } catch { /* silencieux : la personne peut toujours réactiver depuis ses réglages */ }
+}
+
+/* DÉCONNEXION SUR LE SITE (bug hunt avant GO, G109) : la ligne du SERVEUR part, l'abonnement du navigateur reste. Sur un
+ * ordinateur partagé, la personne suivante ne reçoit donc plus les notifications du compte qui s'en va (le serveur n'a plus
+ * rien vers ce navigateur). Désabonner aussi le navigateur ferait perdre ses notifications au commerce qui se déconnecte
+ * puis se reconnecte au comptoir : reabonnerSiDejaAutorise (plus haut) ne renvoie qu'un abonnement encore présent.
+ * logoutOn401: false : la session s'en va de toute façon, un 401 ne doit pas relancer une déconnexion. */
+export async function retirerAbonnementDuServeur(token) {
+  if (!token || estNatif() || !estSupporte()) return;
+  try {
+    // getRegistration et non `ready` : sans service worker enregistré, `ready` attendrait pour toujours.
+    const enregistrement = await navigator.serviceWorker.getRegistration();
+    const abonnement = await enregistrement?.pushManager.getSubscription();
+    if (!abonnement) return;
+    await api('/push/subscribe', { method: 'DELETE', token, body: { endpoint: abonnement.endpoint }, logoutOn401: false });
+  } catch { /* au mieux : la déconnexion ne dépend pas de cet appel */ }
 }
 
 export async function desabonner(token) {

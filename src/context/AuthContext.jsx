@@ -6,8 +6,8 @@ import { useLanguage } from './LanguageContext';
 import { languePreferee, SUPPORTED_LANGUAGES } from '../i18n/routing';
 import { effacerReprise } from '../bienvenue';
 import { codeApple, estNatif, oublierCodeApple } from '../natif';
-import { desabonnerNatif, rattacherAppareilSiAutorise } from '../pushNatif';
-import { reabonnerSiDejaAutorise } from '../push';
+import { desabonnerNatif, rattacherAppareilSiAutorise, suivrePermissionNative } from '../pushNatif';
+import { reabonnerSiDejaAutorise, retirerAbonnementDuServeur } from '../push';
 import { cleDuFragment, lancementAttendu } from '../lancementOnglet';
 
 const AuthContext = createContext(null);
@@ -167,9 +167,19 @@ export function AuthProvider({ children }) {
    * Une fois par compte, pas à chaque renouvellement de session (le jeton de session change, le compte non). Jamais pour
    * « Fairide agit comme… » ni la simulation, qui n'existent que sur le site. */
   const userId = session?.user?.id;
+  /* Et la permission du téléphone est suivie (bug hunt avant GO, G39, pushNatif.suivrePermissionNative) : retirée dans les
+   * réglages, le jeton quitte le serveur pour que les e-mails de secours reprennent ; rendue, il revient. À l'ouverture de
+   * session et à chaque retour au premier plan, avec le jeton de session du moment (jetonSessionRef). */
+  const jetonSessionRef = useRef(null);
+  jetonSessionRef.current = session?.token || null;
   useEffect(() => {
-    if (!userId || !session?.token || !estNatif() || session.actingAs) return;
-    rattacherAppareilSiAutorise(session.token).catch(() => {});
+    if (!userId || !session?.token || !estNatif() || session.actingAs) return undefined;
+    rattacherAppareilSiAutorise(session.token)
+      .then((issue) => { if (issue === 'refuse') return suivrePermissionNative(jetonSessionRef.current); return null; })
+      .catch(() => {});
+    const auRetour = () => { if (!document.hidden && jetonSessionRef.current) suivrePermissionNative(jetonSessionRef.current).catch(() => {}); };
+    document.addEventListener('visibilitychange', auRetour);
+    return () => document.removeEventListener('visibilitychange', auRetour);
     // eslint-disable-next-line react-hooks/exhaustive-deps -- le compte, pas le jeton de session qui se renouvelle
   }, [userId]);
 
@@ -205,20 +215,34 @@ export function AuthProvider({ children }) {
    * chaque jour, l'application déconnectait quand même le 31e. Au plus une fois par jour (à l'ouverture, au retour au
    * premier plan), une session de plus d'un jour est échangée contre une neuve (POST /auth/session/renew). Le serveur
    * refuse pour un administrateur (12 h fermes), « Fairide agit comme… » et la simulation : il rend alors token: null. */
+  /* UN ÉCRAN TOUJOURS ALLUMÉ SE RENOUVELLE AUSSI (bug hunt avant GO, G119). Le renouvellement ne partait qu'à l'ouverture et
+   * au retour au premier plan, et un seul échec l'arrêtait pour de bon : l'écran du comptoir, gardé allumé jour et nuit
+   * (wakeLock), était déconnecté le 31e jour, alarme et acceptation comprises. Maintenant une vérification chaque heure, et
+   * un échec (réseau, serveur) est retenté à la suivante : « enCours » n'empêche que deux demandes à la fois. */
   useEffect(() => {
     if (!session?.token || session.actingAs || simuRef.current) return undefined;
     let fini = false;
+    let enCours = false;
+    let pasAvant = 0;
     const emisA = (() => { try { return JSON.parse(atob(session.token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).iat || 0; } catch { return 0; } })();
     const renouveler = () => {
-      if (fini || document.visibilityState === 'hidden' || Date.now() / 1000 - emisA < 24 * 3600) return;
-      fini = true;
+      if (fini || enCours || Date.now() < pasAvant || document.visibilityState === 'hidden' || Date.now() / 1000 - emisA < 24 * 3600) return;
+      enCours = true;
       api('/auth/session/renew', { method: 'POST', token: session.token, logoutOn401: false })
-        .then((r) => { if (r?.token) setSession((prev) => (prev && prev.token === session.token ? { ...prev, token: r.token } : prev)); })
-        .catch(() => { /* on réessaiera à la prochaine ouverture */ });
+        .then((r) => {
+          /* token: null = rien à renouveler pour le serveur : administrateur (12 h fermes), ou une horloge du téléphone en
+             avance de quelques minutes sur la sienne (même seuil de 24 h des deux côtés). Pas un arrêt pour de bon, sinon
+             l'écran du comptoir retombait dans le cas G119 : une nouvelle demande dans une heure au plus tôt. */
+          if (r?.token) setSession((prev) => (prev && prev.token === session.token ? { ...prev, token: r.token } : prev));
+          else pasAvant = Date.now() + 60 * 60 * 1000;
+        })
+        .catch(() => { /* on réessaiera au prochain retour ou dans l'heure */ })
+        .finally(() => { enCours = false; });
     };
     renouveler();
     document.addEventListener('visibilitychange', renouveler);
-    return () => { fini = true; document.removeEventListener('visibilitychange', renouveler); };
+    const horloge = setInterval(renouveler, 60 * 60 * 1000);
+    return () => { fini = true; clearInterval(horloge); document.removeEventListener('visibilitychange', renouveler); };
   }, [session?.token, session?.actingAs]);
 
   /* LES DROITS DE LA SESSION SE METTENT À JOUR (audit du 19/10, LIVE-19). Le compte gardé dans le téléphone n'était relu
@@ -394,6 +418,11 @@ export function AuthProvider({ children }) {
     // Le téléphone cesse de recevoir les notifications du compte qui s'en va : sans cela, il gardait celles du compte
     // précédent jusqu'à la connexion suivante (2026-10-26). Pendant que la session est encore valide ; sans attendre.
     if (estNatif() && session?.token) desabonnerNatif(session.token).catch(() => {});
+    // Sur le site aussi (bug hunt avant GO, G109) : sur un ordinateur partagé, la personne suivante recevait les
+    // notifications de commande du compte précédent. Seule la ligne du serveur part (push.js, retirerAbonnementDuServeur) :
+    // l'abonnement du navigateur reste, pour revenir au compte qui se reconnecte ici (reabonnerSiDejaAutorise).
+    // Jamais pour « Fairide agit comme… » : ce navigateur est celui de l'équipe, son abonnement n'est pas celui du compte.
+    else if (session?.token && !session.actingAs) retirerAbonnementDuServeur(session.token);
     // Un livreur qui se déconnecte ne travaille plus : en pause, il ne compte plus « libre » pour vendre une livraison et ne
     // reçoit plus « Nouvelle course » (fondateur, 2026-11-06, G1). Il se remet disponible lui-même à son retour.
     const sesRoles = session?.user?.roles?.length ? session.user.roles : [session?.user?.role];

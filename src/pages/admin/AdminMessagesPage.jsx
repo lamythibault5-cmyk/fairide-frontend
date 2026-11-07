@@ -268,6 +268,9 @@ function ComposeTab({ token, tr, toast, onSent }) {
   const userQ = useDebouncedValue(userQuery, 300);
   const [userResults, setUserResults] = useState(null);
   const [notifyByEmail, setNotifyByEmail] = useState(false);
+  // Annonce de service (G178, backend routes/adminMessages.js › operational) : notification + e-mail prouvé à chaque
+  // commerce et livreur de l'audience, même sans accord marketing. Mêmes rôles que l'e-mail d'une annonce.
+  const [operationnelle, setOperationnelle] = useState(false);
   const [preview, setPreview] = useState(null); // { count, sample }
   const [previewErr, setPreviewErr] = useState(false);
   const [confirm, setConfirm] = useState(false);
@@ -336,15 +339,18 @@ function ComposeTab({ token, tr, toast, onSent }) {
         // `emailed` vaut 0 ou 1 (adresse non confirmée = pas d'e-mail, audit sécurité 2026-10-31) : dit quand il est donné.
         toast(notifyByEmail && Number.isFinite(r?.emailed) ? tr('adminMessages.sentToastEmails', { n: 1, m: r.emailed }) : tr('adminMessages.sentToast', { n: 1 }));
       } else {
-        r = await api('/admin/messages/broadcast', { method: 'POST', token, body: { subject: subject.trim(), body: body.trim(), audience, notifyByEmail: notifyByEmail && emailAnnoncePermis } });
+        const operational = operationnelle && emailAnnoncePermis;
+        r = await api('/admin/messages/broadcast', { method: 'POST', token, body: { subject: subject.trim(), body: body.trim(), audience, notifyByEmail: notifyByEmail && emailAnnoncePermis, ...(operational ? { operational: true } : {}) } });
         /* Le nombre d'e-mails réellement partis (`emailed`, backend routes/adminMessages.js : adresses prouvées, sans les
            désinscrits), quand le serveur le donne : il peut être bien plus petit que le nombre de comptes, et l'équipe doit
            le savoir. Serveur d'avant, sans le champ : le message d'avant. */
-        toast(notifyByEmail && emailAnnoncePermis && Number.isFinite(r?.emailed)
-          ? tr('adminMessages.sentToastEmails', { n: r.recipients, m: r.emailed })
-          : tr('adminMessages.sentToast', { n: r.recipients }));
+        toast(r?.operational
+          ? tr('adminMessages.sentToastOperational', { n: r.recipients, p: r.professionals, d: r.pushTargets, m: r.emailed })
+          : notifyByEmail && emailAnnoncePermis && Number.isFinite(r?.emailed)
+            ? tr('adminMessages.sentToastEmails', { n: r.recipients, m: r.emailed })
+            : tr('adminMessages.sentToast', { n: r.recipients }));
       }
-      setSubject(''); setBody(''); setRoles([]); setCommunes([]); setUsers([]); setNotifyByEmail(false);
+      setSubject(''); setBody(''); setRoles([]); setCommunes([]); setUsers([]); setNotifyByEmail(false); setOperationnelle(false);
       onSent?.(r);
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoi(false); setConfirm(false); }
   }
@@ -379,6 +385,12 @@ function ComposeTab({ token, tr, toast, onSent }) {
             <input type="checkbox" checked={notifyByEmail && emailPossible} disabled={!emailPossible} onChange={(e) => setNotifyByEmail(e.target.checked)} />
             <span><b>{tr('adminMessages.notifyByEmail')}</b><br /><span className="small">{tr(emailPossible ? 'adminMessages.notifyHint' : 'adminMessages.notifyRoleOnly')}</span></span>
           </label>
+          {!compteDirect && emailAnnoncePermis && (
+            <label className="msg-notify">
+              <input type="checkbox" checked={operationnelle} onChange={(e) => setOperationnelle(e.target.checked)} />
+              <span><b>{tr('adminMessages.operational')}</b><br /><span className="small">{tr('adminMessages.operationalHint')}</span></span>
+            </label>
+          )}
           <div className="msg-compose-actions">
             <button type="button" className="btn-teal" disabled={!(pret || (compteDirect && subject.trim() && body.trim())) || envoi} onClick={() => setConfirm(true)}>{tr('adminMessages.sendBroadcast')}</button>
           </div>
@@ -443,7 +455,7 @@ function ComposeTab({ token, tr, toast, onSent }) {
       <ConfirmDialog
         open={confirm}
         title={tr('adminMessages.confirmTitle', { n: nombre ?? 0 })}
-        message={`${tr('adminMessages.confirmBody')}${notifyByEmail && emailPossible ? ` ${tr('adminMessages.confirmBodyEmail')}` : ''}`}
+        message={`${tr('adminMessages.confirmBody')}${notifyByEmail && emailPossible ? ` ${tr('adminMessages.confirmBodyEmail')}` : ''}${operationnelle && !compteDirect && emailAnnoncePermis ? ` ${tr('adminMessages.confirmBodyOperational')}` : ''}`}
         confirmLabel={tr('adminMessages.send')}
         loading={envoi}
         onConfirm={envoyer}

@@ -33,7 +33,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import { RouteVelo } from '../../components/TeteListe';
 import { vibrer } from '../../gestes';
-import { experienceApp, estNatif } from '../../natif';
+import { experienceApp, estNatif, garderEcranAllume } from '../../natif';
 import { raisonFermeture } from '../../components/commerce/raisonFermeture';
 import MiseEnLigne, { RouteMiseEnLigne, EtapesMiseEnLigne } from '../../components/commerce/MiseEnLigne';
 import useMiseEnLigne from '../../components/commerce/useMiseEnLigne';
@@ -143,8 +143,11 @@ export default function OrdersPage() {
      et ne voit plus les commandes : après 15 minutes elles sont annulées (acceptation.js), et le commerce mis en pause.
      Seulement sur cette page (pas tout le tableau de bord : un téléphone laissé sur « Ma carte » viderait sa batterie),
      redemandé au retour sur l'onglet — le navigateur relâche le verrou dès que la page est cachée. Sans l'API (anciens
-     navigateurs), rien ne change. */
+     navigateurs), rien ne change. Dans l'app, le greffon natif d'abord (natif.js, garderEcranAllume, G43) : la vue web
+     Android n'a souvent pas wakeLock. */
   useEffect(() => {
+    const rendreEcran = garderEcranAllume();
+    if (rendreEcran) return rendreEcran;
     if (!('wakeLock' in navigator)) return undefined;
     let verrou = null;
     let actif = true;

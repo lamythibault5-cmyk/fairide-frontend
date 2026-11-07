@@ -205,6 +205,29 @@ function preparerHaptique() {
   }, { capture: true, passive: true });
 }
 
+/* L'ÉCRAN RESTE ALLUMÉ SUR LES COMMANDES, DANS L'APP (bug hunt avant GO, G43 ; décision d'Owen, 2026-11-06). navigator.wakeLock
+ * manque souvent dans la vue web Android : le téléphone du comptoir se verrouillait, la sonnerie de la page se taisait. Le
+ * greffon EcranAllume (android/…/EcranAllumePlugin.java, ios/App/App/FairideViewController.swift) garde l'écran allumé tant
+ * qu'au moins une page le demande (un compteur : la page Commandes et l'écran du terminal). Rend la fonction qui le rend, ou
+ * null sans le greffon (site, version plus ancienne de l'app) : l'appelant garde alors navigator.wakeLock. */
+let ecranAllume = null; // enregistré une seule fois, comme RetourNatif
+let demandesEcranAllume = 0;
+export function garderEcranAllume() {
+  if (!estNatif() || !Capacitor.isPluginAvailable('EcranAllume')) return null;
+  const envoyer = (actif) => {
+    try { ecranAllume ||= registerPlugin('EcranAllume'); ecranAllume.activer({ actif }).catch(() => {}); } catch { /* greffon absent */ }
+  };
+  demandesEcranAllume += 1;
+  if (demandesEcranAllume === 1) envoyer(true);
+  let rendu = false;
+  return () => {
+    if (rendu) return;
+    rendu = true;
+    demandesEcranAllume -= 1;
+    if (demandesEcranAllume === 0) envoyer(false);
+  };
+}
+
 /* LE BALAYAGE RETOUR D'IOS, COUPÉ PENDANT QU'UNE FENÊTRE EST OUVERTE (2026-10-27, fondateur : « dans Mon compte, les écrans
  * n'ont pas le retour par balayage »). Le balayage depuis le bord gauche est celui de WebKit (FairideViewController.swift) :
  * il remonte l'historique, et ignore une feuille dessinée par la page. Feuille ouverte, il reculait SOUS elle (ou ne
