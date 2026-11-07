@@ -16,7 +16,9 @@ Real, verified as absent on 2026-09-22 — not speculation.
 
 1. **Background geolocation exists in the app only** (2026-10-15). Driver tracking goes through `suivrePositionCourse`
    ([natif.js](../../src/natif.js)), used by [driver/Dashboard.jsx](../../src/pages/driver/Dashboard.jsx) and
-   [driver/MapPage.jsx](../../src/pages/driver/MapPage.jsx): in the native app, while an order is « livraison », the
+   [driver/MapPage.jsx](../../src/pages/driver/MapPage.jsx), and on every other page of a courier account by
+   [SuiviCoursesHorsEcran](../../src/components/livreur/SuiviCoursesHorsEcran.jsx) (G41, 2026-11-06: opening Gains or Mon compte
+   mid-delivery used to stop it): in the native app, while an order is « livraison », the
    `@capacitor-community/background-geolocation` plugin runs a foreground service (notification « Fairide : livraison en
    cours ») that keeps sending when the phone locks; otherwise, and on the website, `watchPosition`, which stops when the
    phone locks — there is no web fix. Not yet tried on a real phone; iOS needs the Info.plist / Background Modes steps in
@@ -26,7 +28,8 @@ Real, verified as absent on 2026-09-22 — not speculation.
    then wants a declaration with a video of the feature. **Back on Android since 2026-11-02** (`capacitor.config.json` ›
    `android.includePlugins`): the Play Store build that carries it needs Play Console › App content › Foreground service
    permissions › Location, with an unlisted YouTube screen recording of a test delivery (Admin › Simulation) showing the
-   « livraison en cours » notification while the app is in the background. Android phones still on 1.0 keep `watchPosition`.
+   « livraison en cours » notification while the app is in the background. Android phones still on 1.0 keep `watchPosition`. Couriers are asked for PRECISE location (G42, 2026-11-06): on Android the plugin refuses
+   to start with « approximate » only, so `useEtatPosition` reports `approximate` as missing and the screens say where to fix it.
 2. **No SSR.** `npm run build` runs a prerender ([scripts/prerender.mjs](../../scripts/prerender.mjs)) that writes
    static HTML for the public pages (three languages) and the restaurant pages, and a `dist/sitemap.xml`
    (138 addresses on 2026-09-23). Pages added after the build list are not prerendered.

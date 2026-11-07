@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
-import { demanderPosition, plateforme } from '../../natif';
+import { demanderPosition, estNatif, ouvrirReglagesAppli, plateforme } from '../../natif';
 import useEtatPosition from '../../hooks/useEtatPosition';
 
 /* Bloque les courses disponibles tant que la position du livreur n'est pas autorisée (fondateur, 2026-10-11 : « ce qui
@@ -43,28 +43,36 @@ export function ExplicationPosition({ etat, verifier, onAutorisee, children }) {
   const { t } = useLanguage();
   const toast = useToast();
   const [attente, setAttente] = useState(false);
+  /* LA POSITION EXACTE (G42, 2026-11-06). Sur Android, un livreur qui garde « approximative » voyait son suivi refusé par le
+   * greffon en pleine livraison, sans rien d'autre qu'un toast. La question demande donc l'exacte (`precise`), et une position
+   * approximative ne compte pas comme un oui : on le dit, avec le chemin des réglages et le bouton qui les ouvre. */
   async function autoriser() {
     setAttente(true);
-    const position = await demanderPosition();
+    const position = await demanderPosition({ precise: true });
     const nouvel = await verifier();
     setAttente(false);
-    if (position || nouvel === 'granted') onAutorisee?.();
+    if (nouvel === 'granted' || (position && nouvel !== 'approximate')) onAutorisee?.();
     else toast(t('dashDriver.posReqToujours'), 'erreur');
   }
   async function reverifier() {
     if ((await verifier()) === 'granted') onAutorisee?.();
   }
   const refuse = etat === 'denied';
+  const approx = etat === 'approximate';
   const p = plateforme();
   const consigne = p === 'ios' ? t('dashDriver.posReqIos') : p === 'android' ? t('dashDriver.posReqAndroid') : t('dashDriver.posReqWeb');
   return (
     <>
       {refuse && <p className="small" style={{ margin: '6px 0 10px' }}>{t('dashDriver.posReqRefuse')}<br /><b>{consigne}</b></p>}
+      {approx && <p className="small" style={{ margin: '6px 0 10px' }}>{t('dashDriver.posReqApprox')}<br /><b>{t('dashDriver.posReqApproxAndroid')}</b></p>}
       {/* `children` : un second bouton à côté (« Pas maintenant » dans la feuille de l'interrupteur). */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: refuse ? 0 : 10 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: refuse || approx ? 0 : 10 }}>
         <button type="button" className="btn-teal" disabled={attente} onClick={refuse ? reverifier : autoriser}>
           {attente ? t('common.loading') : refuse ? t('dashDriver.posReqVerifier') : t('appli.continuer')}
         </button>
+        {(refuse || approx) && estNatif() && (
+          <button type="button" className="btn-outline" onClick={() => ouvrirReglagesAppli()}>{t('dashDriver.posReqReglages')}</button>
+        )}
         {children}
       </div>
     </>
@@ -96,7 +104,7 @@ export default function PositionRequise({ children, repli }) {
 
   return (
     <div className="card position-requise" role="alert">
-      <b>{t('dashDriver.posReqTitre')}</b>
+      <b>{t(etat === 'approximate' ? 'dashDriver.posReqExacteTitre' : 'dashDriver.posReqTitre')}</b>
       <ExplicationPosition etat={etat} verifier={verifier} onAutorisee={() => setObtenue(true)} />
     </div>
   );

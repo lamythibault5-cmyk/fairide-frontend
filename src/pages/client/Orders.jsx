@@ -611,8 +611,12 @@ export default function Orders() {
         {...(APPLI ? {} : { height: 320 })}
       />
       <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
-        {/* Plus de 2 min sans nouvelle position (même seuil que la carte) : pas « en direct » (audit du 19/10, AO-17). */}
-        {o.driverLat
+        {/* Plus de 2 min sans nouvelle position (même seuil que la carte) : pas « en direct » (audit du 19/10, AO-17).
+            TOURNÉE (G55, fondateur, 2026-11-06) : un autre arrêt passe avant cette commande ; le serveur ne donne pas la position
+            du livreur (il serait chez un autre client), mais l'heure prévue ici d'après sa tournée (backend arretsAvantClient). */}
+        {o.courierOtherStop
+          ? (o.courierPlannedAt ? t('orders.courierOtherStopAt', { time: heureCourte(o.courierPlannedAt) }) : t('orders.courierOtherStop'))
+          : o.driverLat
           ? t(o.driverLocationUpdatedAt && Date.now() - new Date(o.driverLocationUpdatedAt).getTime() > 120000 ? 'orders.driverLastLocation' : 'orders.driverLiveLocation')
           : t('orders.driverWaitingLocation')}
       </div>
