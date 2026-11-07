@@ -6420,6 +6420,7 @@ export default {
       refuseReason3: "Unexpected closure",
       refuseReason2: "Kitchen overwhelmed",
       refuseReason1: "Dish sold out",
+      outOfStockNow: "· sold out on your menu",
       openButHoursShort: "Outside hours",
       openButHoursNone: "Closed according to your hours",
       openButHours: "Closed according to your hours · reopens at {time}",

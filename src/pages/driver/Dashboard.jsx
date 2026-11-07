@@ -248,6 +248,8 @@ export default function DriverDashboard() {
     });
   }
 
+  // Compte Stripe à relire chez Stripe : « en attente », ou « à compléter » (restricted, pré-GO 2026-11-06, G25).
+  const connectARelire = user?.stripeConnectStatus === 'pending' || user?.stripeConnectStatus === 'restricted';
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('connect')) {
       toast(t('dashDriver.toastPaymentsValidating'));
@@ -255,9 +257,10 @@ export default function DriverDashboard() {
       // Le statut Stripe Connect n'est pas suivi par webhook pour ce type de compte (voir backend) —
       // on le relit activement au retour de l'onboarding avant de rafraîchir l'utilisateur en contexte.
       api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {}).finally(() => refreshUser().catch(() => {}));
-    } else if (user?.stripeConnectStatus === 'pending') {
+    } else if (connectARelire) {
       // Même filet que côté commerce (DashboardLayout.jsx) : un compte resté « en attente » est relu à l'ouverture, au cas où
-      // le livreur n'est pas repassé par le lien de retour de Stripe, ou si l'activation est arrivée après.
+      // le livreur n'est pas repassé par le lien de retour de Stripe, ou si l'activation est arrivée après. « À compléter »
+      // aussi (pré-GO 2026-11-06, G25) : les pièces fournies, il repasse actif sans attendre la relecture du serveur.
       api('/auth/me/connect/refresh', { method: 'POST', token }).then(() => refreshUser().catch(() => {})).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -270,7 +273,7 @@ export default function DriverDashboard() {
   const connectLance = useRef(false);
   const location = useLocation();
   function relireConnect() {
-    if (!connectLance.current && user?.stripeConnectStatus !== 'pending') return undefined;
+    if (!connectLance.current && !connectARelire) return undefined;
     connectLance.current = false;
     return api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {}).finally(() => refreshUser().catch(() => {}));
   }
@@ -385,7 +388,7 @@ export default function DriverDashboard() {
   useRevalidation(() => { load(); return relireConnect() || refreshUser(); });
   // Retour de Stripe dans l'app, compte encore « en attente » : relu à chaque retour (même raison que DashboardLayout.jsx).
   useRevalidation(() => api('/auth/me/connect/refresh', { method: 'POST', token }).then(() => refreshUser()),
-    { actif: user?.stripeConnectStatus === 'pending', absenceMin: 0 });
+    { actif: connectARelire, absenceMin: 0 });
 
   useEffect(() => {
     activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);

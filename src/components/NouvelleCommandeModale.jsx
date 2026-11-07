@@ -134,7 +134,7 @@ export default function NouvelleCommandeModale({ orders, ready, restoId, loadDas
             </div>
           </div>
 
-          <ListePlats items={o.items} />
+          <ListePlats items={o.items} epuises />
           <PastilleCouverts order={o} />
           {o.deliveryNote && <p className="nc-note"><Icone nom="document" taille={16} />{o.deliveryNote}</p>}
           <BandeauAllergie order={o} />

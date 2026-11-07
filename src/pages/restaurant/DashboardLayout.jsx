@@ -215,11 +215,14 @@ export default function DashboardLayout() {
   // secondes après, restait « Paiements à configurer » alors que Stripe le disait actif. Un effet sur la fiche (et non dans
   // loadDashboard : la fiche arrive par pickResto, que loadDashboard ne relit pas) — un appel Stripe, rien de plus.
   const stripeStatut = restaurant?.stripeConnectStatus;
+  // « À compléter » (restricted) aussi (pré-GO 2026-11-06, G25) : une fois les pièces fournies chez Stripe, le compte repasse
+  // actif sans attendre la relecture quotidienne du serveur.
+  const statutARelire = stripeStatut === 'pending' || stripeStatut === 'restricted';
   useEffect(() => {
-    if (!restoId || stripeStatut !== 'pending' || statutReluRef.current) return;
+    if (!restoId || !statutARelire || statutReluRef.current) return;
     statutReluRef.current = true;
     api(`/restaurants/${restoId}/connect/refresh`, { method: 'POST', token })
-      .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== 'pending') setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); })
+      .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== stripeStatut) setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId, stripeStatut]);
@@ -228,8 +231,8 @@ export default function DashboardLayout() {
   // « Paiements à configurer » restait jusqu'au redémarrage (Stripe Connect n'a pas de webhook ici). Tant que le statut est
   // « en attente », chaque retour au premier plan le relit.
   useRevalidation(() => api(`/restaurants/${restoId}/connect/refresh`, { method: 'POST', token })
-    .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== 'pending') setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); }),
-  { actif: !!restoId && stripeStatut === 'pending', absenceMin: 0 });
+    .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== stripeStatut) setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); }),
+  { actif: !!restoId && statutARelire, absenceMin: 0 });
   // Retour sur l'onglet, focus, connexion retrouvée : relecture silencieuse (voir useRevalidation.js).
   useRevalidation(() => { if (restoId) return loadDashboard(restoId); return undefined; }, { actif: !!restoId && !etatCommandes.accesPerdu });
   // Changement d'onglet : on relit les données en arrière-plan (sans squelette — l'ancien état reste
