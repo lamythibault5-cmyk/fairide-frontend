@@ -52,8 +52,13 @@ function vignettePhoto(url, taille, carre = true) {
 }
 const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 // L'issue d'une commande close lue par le client (orders.noCourier_incident_*). Absent au contrôle d'âge : son propre texte,
-// pas de remboursement comme un client absent (G154, décision d'Owen du 06/11/2026).
-const issueCommande = (o) => (o.ageCheck === 'refused_absent' ? 'age_absent' : o.deliveryIncident);
+// pas de remboursement comme un client absent (G154, décision d'Owen du 06/11/2026) ; à emporter payée sur place, rien n'était
+// payé : un texte sans « elle reste due ». Close d'office après 12 h (G26) : pickupAutoClosed, que deliveryIncident ne porte pas
+// (les applis déjà installées l'affichaient comme une clé de traduction brute).
+const issueCommande = (o) => {
+  if (o.ageCheck === 'refused_absent') return o.orderType === 'pickup' && o.paymentMode === 'on_site' ? 'age_absent_on_site' : 'age_absent';
+  return o.pickupAutoClosed ? 'pickup_auto_closed' : o.deliveryIncident;
+};
 
 /* MES COMMANDES PAR PAGES (tenir la charge, 2026-11-02). GET /orders/mine rendait tout l'historique, plats et photos, à chaque
  * relecture (toutes les 15 s). Les 30 plus récentes d'abord, puis « Voir plus de commandes » pour les précédentes
@@ -663,7 +668,7 @@ export default function Orders() {
           LIVE-11). Rien n'a été payé, rien n'est à payer : on le dit, sans montant. */}
       {/* À payer sur place et close d'office faute d'avoir été marquée remise (G26) : on ne sait pas si elle a été payée au
           comptoir, aucune ligne d'argent. */}
-      {avecMontant && o.deliveryIncident === 'pickup_auto_closed' ? null : avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
+      {avecMontant && o.pickupAutoClosed ? null : avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
         <div className="suivi-total"><span className="small">{t('orders.payNothing')}</span></div>
       ) : avecMontant && (
         <div className="suivi-total">

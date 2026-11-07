@@ -3,7 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useRevalidation from '../useRevalidation';
 import { signalerOccupe } from '../miseAJour';
-import { programmeeLointaine } from '../orderStatus';
+import { programmeeLointaine } from '../commandeProgrammee';
 
 // Les commandes du client pour la bande « commande en cours » (SuiviCommande.jsx), sur tous les écrans sauf Mes commandes.
 //

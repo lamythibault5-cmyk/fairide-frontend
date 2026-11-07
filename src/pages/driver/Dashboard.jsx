@@ -241,6 +241,13 @@ export default function DriverDashboard() {
    * devinette, sans second GET ; un refus le remet comme avant avec le message d'erreur (actionOptimiste.js). La réponse du
    * PATCH ne porte que le rôle d'origine du compte (publicUser sans lireRoles, routes/auth.js) : les rôles déjà connus sont
    * gardés, sinon un livreur aussi client perdrait sa casquette « client » jusqu'au relevé suivant. */
+  // Le profil renvoyé par PATCH /auth/me remplace la devinette ; ni jeton (seul un changement de mot de passe en renvoie un, et
+  // la session garde le sien) ni rôles perdus (voir plus haut).
+  function garderProfilServeur(profil) {
+    const lu = { ...(profil || {}) };
+    delete lu.token;
+    modifierUtilisateur((u) => ({ ...u, ...lu, roles: u.roles?.length ? u.roles : lu.roles }));
+  }
   function basculerPause() {
     const voulu = !user?.driverPaused;
     agirOptimiste('pause', {
@@ -248,9 +255,7 @@ export default function DriverDashboard() {
       envoyer: () => api('/auth/me', { method: 'PATCH', token, body: { driverPaused: voulu } }),
       annuler: (avant) => modifierUtilisateur((u) => ({ ...u, driverPaused: avant })),
       confirmer: (profil) => {
-        const lu = { ...(profil || {}) };
-        delete lu.token; // jamais ici (seul un changement de mot de passe en renvoie un), et la session garde le sien
-        modifierUtilisateur((u) => ({ ...u, ...lu, roles: u.roles?.length ? u.roles : lu.roles }));
+        garderProfilServeur(profil);
         // Reprise : les courses tout de suite, sans attendre le prochain relevé de 15 secondes (audit du 19/10, LIVE-26).
         load();
       }
@@ -263,7 +268,10 @@ export default function DriverDashboard() {
    * autorisation jamais donnée aussi (sur le site, Safari peut répondre « prompt » après un oui : seul « denied » compte).
    * Il se remet disponible lui-même avec l'interrupteur, qui redemande la position.
    * Une seule tentative par état de position : un envoi raté (hors ligne, serveur en erreur) remettait « disponible », ce
-   * qui relançait aussitôt l'effet, en boucle. `pauseAutoRef` garde l'état déjà essayé ; un envoi réussi l'efface. */
+   * qui relançait aussitôt l'effet, en boucle. `pauseAutoRef` garde l'état déjà essayé ; un envoi réussi l'efface.
+   * Les relevés de /auth/me partis juste avant la pause (ouverture de l'écran) revenaient APRÈS elle avec « disponible » et
+   * l'écran le montrait ~15 s, pendant que le serveur l'avait déjà mis en pause (revue de la chasse, 2026-11-07). La réponse
+   * du PATCH réécrit donc le profil, puis un relevé parti après lui confirme. */
   const pauseAutoRef = useRef(null);
   useEffect(() => {
     if (!user || user.driverPaused || user.adminStatus !== 'approved' || pauseAutoRef.current === etatPos) return;
@@ -271,7 +279,12 @@ export default function DriverDashboard() {
     pauseAutoRef.current = etatPos;
     modifierUtilisateur((u) => ({ ...u, driverPaused: true }));
     api('/auth/me', { method: 'PATCH', token, body: { driverPaused: true }, logoutOn401: false })
-      .then(() => { pauseAutoRef.current = null; toast(t('dashDriver.toastPauseSansPosition')); })
+      .then((profil) => {
+        pauseAutoRef.current = null;
+        garderProfilServeur(profil);
+        refreshUser().catch(() => {});
+        toast(t('dashDriver.toastPauseSansPosition'));
+      })
       .catch(() => modifierUtilisateur((u) => ({ ...u, driverPaused: false })));
   }, [etatPos, user?.driverPaused, user?.adminStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 

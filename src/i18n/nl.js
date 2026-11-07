@@ -8696,6 +8696,7 @@ export default {
       noCourier_incident_pickup_not_collected: "Niet opgehaald: de zaak heeft op je gewacht. Zoals onze voorwaarden bepalen, blijft een niet-afgehaalde bestelling verschuldigd.",
       noCourier_incident_pickup_auto_closed: "Automatisch afgesloten: de zaak heeft ze nooit als afgegeven gemarkeerd. Een probleem? Schrijf ons.",
       noCourier_incident_age_absent: "Niet overhandigd: je was er niet om je identiteitskaart te tonen, verplicht voor alcohol. Zoals een niet in ontvangst genomen bestelling blijft ze verschuldigd.",
+      noCourier_incident_age_absent_on_site: "Niet overhandigd: je was er niet om je identiteitskaart te tonen, verplicht voor alcohol. De zaak heeft ze afgesloten.",
       noCourier_incident_courier_stuck_after_pickup: "Je koerier had onderweg een probleem: het Fairride-team regelt het en houdt je op de hoogte.",
       reorder: "Opnieuw bestellen",
       reorderDone: "Winkelmandje opnieuw samengesteld met de kaart van vandaag: controleer de prijzen voor je bestelt.",

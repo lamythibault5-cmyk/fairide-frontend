@@ -8687,6 +8687,7 @@ export default {
       noCourier_incident_pickup_not_collected: "Not collected: the business waited for you. As our terms provide, an order that is not collected remains due.",
       noCourier_incident_pickup_auto_closed: "Closed automatically: the business never marked it handed over. A problem? Write to us.",
       noCourier_incident_age_absent: "Not handed over: you were not there to show your ID, required for alcohol. Like an order that was not received, it remains due.",
+      noCourier_incident_age_absent_on_site: "Not handed over: you were not there to show your ID, required for alcohol. The business closed it.",
       noCourier_incident_courier_stuck_after_pickup: "Your courier had a problem on the way: the Fairride team is handling it and will keep you posted.",
       reorder: "Order again",
       reorderDone: "Cart rebuilt with today's menu: check the prices before ordering.",

@@ -8757,6 +8757,7 @@ export default {
       noCourier_incident_pickup_not_collected: "Non récupérée : le commerce t'a attendu. Comme le prévoient nos conditions, une commande non récupérée reste due.",
       noCourier_incident_pickup_auto_closed: "Close d’office : le commerce ne l’a jamais marquée remise. Un souci ? Écris-nous.",
       noCourier_incident_age_absent: "Non remise : tu n'étais pas là pour montrer ta pièce d'identité, obligatoire pour l'alcool. Comme une commande non réceptionnée, elle reste due.",
+      noCourier_incident_age_absent_on_site: "Non remise : tu n'étais pas là pour montrer ta pièce d'identité, obligatoire pour l'alcool. Le commerce l'a close.",
       noCourier_incident_courier_stuck_after_pickup: "Ton livreur a eu un problème en route : l'équipe Fairride s'en occupe et te tient au courant.",
       reorder: "Commander à nouveau",
       reorderDone: "Panier refait avec la carte d'aujourd'hui : vérifie les prix avant de commander.",

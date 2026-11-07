@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from './context/LanguageContext';
 import Icone from './components/Icone';
+import { programmeeLointaine } from './commandeProgrammee';
 
 // `icon` porte maintenant un NOM DE TRACÉ (voir components/Icone.jsx) et non plus un emoji : les
 // consignes s'affichent côte à côte dans une rangée de pastilles au paiement, et quatre emoji
@@ -198,15 +199,6 @@ export function DeliveryTiming({ order }) {
   );
 }
 
-/* COMMANDE PROGRAMMÉE LOINTAINE (chasse aux bogues d'avant GO, 2026-11-06, G153). Acceptée mardi pour jeudi, elle disait
- * « C'est en cuisine » pendant deux jours, l'app relisait le serveur toutes les 15 s et retenait ses mises à jour
- * (useCommandeEnCours). Prévue dans plus de PROGRAMMEE_LOINTAINE_MS : rien ne cuit encore, rien à suivre de près. */
-const PROGRAMMEE_LOINTAINE_MS = 90 * 60000;
-export function programmeeLointaine(order) {
-  if (!order?.scheduledFor || !['nouveau', 'preparation'].includes(order.status)) return false;
-  return new Date(order.scheduledFor).getTime() - Date.now() > PROGRAMMEE_LOINTAINE_MS;
-}
-
 /* SUIVI EN BANDEAU IRIS (fondateur, 2026-10-16, version 1C de maquettes/autres-idees/autres-idees.html). Une commande en cours s'ouvre
    sur un bandeau iris : le statut en grand (titreSuivi), l'heure, et une route où le vélo de la marque, en lime, roule
    d'arrêt en arrêt — chaque étape passée garde une coche lime, la route défile sous les roues pendant la livraison. Le
@@ -289,8 +281,8 @@ export function ProchaineEtape({ order }) {
   }
   // Close après une attente sans client (livraison « client absent », à emporter non récupérée, audit du 19/10, shop-206) :
   // la ligne de l'incident dit déjà que la commande reste due (Orders.jsx) ; « un paiement éventuel est remboursé » serait faux.
-  // Close d'office faute d'avoir été marquée remise (G26, pickup_auto_closed) : la ligne de l'incident le dit, sans parler d'argent.
-  if (status === 'annule' && ['client_absent', 'pickup_not_collected', 'pickup_auto_closed'].includes(order.deliveryIncident)) return null;
+  // Close d'office faute d'avoir été marquée remise (G26, pickupAutoClosed) : la ligne de l'incident le dit, sans parler d'argent.
+  if (status === 'annule' && (order.pickupAutoClosed || ['client_absent', 'pickup_not_collected'].includes(order.deliveryIncident))) return null;
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
   }
