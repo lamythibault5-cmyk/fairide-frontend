@@ -55,7 +55,9 @@ self.addEventListener('push', (event) => {
       // La commande doit réveiller : sans cela Android peut l'afficher sans bruit ni écran allumé,
       // c'est-à-dire exactement le problème que le push est censé résoudre.
       // Une étiquette par commande depuis le 2026-10-17 (« fairide-commande-<id> ») : deux commandes ne se remplacent plus.
-      requireInteraction: String(donnees.tag || '').startsWith('fairide-commande'),
+      // Les alertes de l'équipe aussi (« fairide-urgence-<id> » : urgence livreur, livreur bloqué, commande pas acceptée ;
+      // bug hunt avant GO, G15) : elles se fermaient seules, sans que personne les ait lues.
+      requireInteraction: /^fairide-(commande|urgence)/.test(String(donnees.tag || '')),
       // Sans adresse dans la charge, la page se déduit de l'étiquette (cibleDe, plus bas) : jamais celle d'un commerce
       // pour une course de livreur.
       data: { url: charge.url || cibleDe({ tag: donnees.tag }) }

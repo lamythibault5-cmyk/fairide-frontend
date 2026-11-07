@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getLocale, useLanguage } from '../../context/LanguageContext';
 import useAdminRole from '../../hooks/useAdminRole';
+import usePushNotifications from '../../hooks/usePushNotifications';
 import { chargerLancement } from '../../launch';
 import ConfirmDialog from '../ConfirmDialog';
 import Icone from '../Icone';
@@ -70,6 +71,7 @@ export default function BoutonGo() {
         {tr('adminGo.ready', { prets: etat.livreursPrets, total: etat.livreursTotal, commerces: etat.commercesPrets, commercesTotal: etat.commercesTotal, dispo: etat.livreursDisponiblesMaintenant })}
       </p>
       <p className="small" style={{ margin: '0 0 12px', color: 'var(--ink-soft)' }}>{tr('adminGo.readyHint')}</p>
+      <EquipeJoignable n={etat.equipeJoignable} relire={lire} />
       {!peutAppuyer ? (
         <p className="small" style={{ margin: 0 }}>{tr('adminGo.roleOnly')}</p>
       ) : etat.force ? null : etat.go ? (
@@ -91,6 +93,34 @@ export default function BoutonGo() {
       />
     </section>
     </>
+  );
+}
+
+/* L'ÉQUIPE JOIGNABLE PAR NOTIFICATION (bug hunt avant GO, G15 ; lancement.bilan › equipeJoignable). Les alertes à l'équipe
+ * (urgence livreur, livreur bloqué, commande pas acceptée) sonnent sur les appareils des comptes de l'équipe : en rouge à 0,
+ * puisqu'il ne reste alors que l'e-mail et le SMS d'astreinte. Les comptes de l'équipe ne sont jamais invités à activer les
+ * notifications : le bouton le fait pour CET appareil (téléphone de garde), avec le même abonnement que partout ailleurs.
+ * Serveur d'avant, sans le chiffre : rien. */
+function EquipeJoignable({ n, relire }) {
+  const { t: tr } = useLanguage();
+  const { token } = useAuth();
+  const toast = useToast();
+  const push = usePushNotifications(token);
+  if (typeof n !== 'number') return null;
+  async function activer() {
+    const issue = await push.activer();
+    if (issue === 'ok') { toast(tr('adminGo.teamAlertsOn'), 'succes'); relire(); }
+    else toast(tr(issue === 'refuse' ? 'adminGo.teamAlertsRefused' : 'adminGo.teamAlertsUnavailable'), 'erreur');
+  }
+  return (
+    <div style={{ margin: '0 0 12px' }}>
+      <p className={`small${n === 0 ? ' texte-erreur' : ''}`} style={{ margin: '0 0 4px' }}>
+        {n === 0 ? <b>{tr('adminGo.teamReachableNone')}</b> : tr('adminGo.teamReachable', { n })}
+      </p>
+      {push.supporte && (push.abonne
+        ? <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>{tr('adminGo.teamAlertsOn')}</p>
+        : <button type="button" className="btn-outline btn-sm" disabled={push.occupe} onClick={activer}>{tr('adminGo.teamAlertsButton')}</button>)}
+    </div>
   );
 }
 
