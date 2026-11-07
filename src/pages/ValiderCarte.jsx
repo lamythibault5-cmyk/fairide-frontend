@@ -11,6 +11,7 @@ import Icone from '../components/Icone';
 import { OptionCommande } from '../components/EcranCommande';
 import { BandeauGeneral, FeuilleGenerale, SectionGenerale } from '../components/EcranGeneral';
 import QuestionsCarte, { reponseAffichee } from '../components/commerce/QuestionsCarte';
+import ListeEngagements from '../components/commerce/ListeEngagements';
 import '../ecran-commerce.css';
 
 /* « C'est bon » en un geste (CODE-3, 8 octobre 2026, DEC-25) — /carte/valider/:token.
@@ -57,6 +58,18 @@ export default function ValiderCarte() {
   const [nom, setNom] = useState('');
   const [envoi, setEnvoi] = useState(false);
   const [fait, setFait] = useState(null);
+  /* LES ENGAGEMENTS SUR LA MÊME PAGE (fondateur, 2026-11-07, maquettes/un-seul-lien, version A). Le serveur dit ce qui manque
+   * encore des trois textes (contrat, procédure allergènes, déclaration de professionnel ; `carte.engagements`, null s'il ne
+   * manque rien). Ils s'affichent entre la carte et « C'est bon », et une case + le nom signent le tout : plus de connexion, de
+   * code SMS ni de page « Tes engagements » après la carte. Le numéro allergènes se remplit avec celui du commerce. */
+  const [coche, setCoche] = useState(false);
+  const [tel, setTel] = useState('');
+  const [referent, setReferent] = useState('');
+  const [manque, setManque] = useState('');
+  const [toutSigne, setToutSigne] = useState(false);
+  const champTel = useRef(null);
+  const champCase = useRef(null);
+  const eng = carte?.engagements?.aSigner?.length ? carte.engagements : null;
   // Ce qu'il reste au commerce après « C'est bon » ({ step, to, listed } ou null), renvoyé par le serveur avec la validation.
   const [suite, setSuite] = useState(null);
   const [ajouter, setAjouter] = useState(false);
@@ -88,7 +101,11 @@ export default function ValiderCarte() {
   }
 
   const charger = () => api(`/menu-validation/${encodeURIComponent(token)}`)
-    .then((c) => { setCarte(c); setNom((n) => n || c.restaurant.responsibleName || ''); setErreur(''); })
+    .then((c) => {
+      setCarte(c); setNom((n) => n || c.restaurant.responsibleName || ''); setErreur('');
+      setTel((x) => x || c.engagements?.allergens?.contactPhone || c.engagements?.allergens?.fallbackPhone || '');
+      setReferent((x) => x || c.engagements?.allergens?.referentName || '');
+    })
     .catch((e) => setErreur(e.message));
   useEffect(() => { charger(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -106,11 +123,25 @@ export default function ValiderCarte() {
      champ « Ton nom » au lieu d'un bouton mort. */
   const champNom = useRef(null);
   async function valider() {
-    if (nom.trim().length < 3) { champNom.current?.focus(); champNom.current?.scrollIntoView({ block: 'center' }); return; }
+    // Le premier point qui manque, dans l'ordre de l'écran : le numéro allergènes, la case, le nom. Même règle que « Tes
+    // engagements » (EngagementsPage.jsx) ; sans engagements, seul le nom compte, comme avant.
+    const m = eng?.aSigner.includes('allergenes') && !tel.trim() ? 'tel' : eng && !coche ? 'case' : nom.trim().length < 3 ? 'nom' : null;
+    if (m) {
+      setManque(m);
+      const el = { tel: champTel, case: champCase, nom: champNom }[m].current;
+      el?.focus(); el?.scrollIntoView({ block: 'center' });
+      return;
+    }
+    setManque('');
     setEnvoi(true);
     try {
-      const r = await api(`/menu-validation/${encodeURIComponent(token)}`, { method: 'POST', body: { name: nom, sha256: carte.sha256, ...(choixOffert ? { addFairideRate: ajouter } : {}) } });
+      const r = await api(`/menu-validation/${encodeURIComponent(token)}`, { method: 'POST', body: {
+        name: nom, sha256: carte.sha256, ...(choixOffert ? { addFairideRate: ajouter } : {}),
+        ...(eng ? { engagements: { accepte: coche, contactPhone: tel.trim(), referentName: referent.trim() } } : {})
+      } });
       setSuite(r.next || null);
+      // Carte et engagements signés : l'écran de fin le dit, il ne reste rien à signer.
+      setToutSigne(!!(eng && r.signed?.length && !r.next));
       setFait(r.version);
     } catch (e) {
       setErreur(e.message);
@@ -137,9 +168,13 @@ export default function ValiderCarte() {
   if (fait) {
     return (
       <div className="gn-page">
-        <BandeauGeneral icone="valider" titre={t('validerCarte.doneTitle')} sous={nomCommerce} />
+        <BandeauGeneral icone="valider" titre={t(toutSigne ? 'validerCarte.doneAllTitle' : 'validerCarte.doneTitle')} sous={nomCommerce} />
         <FeuilleGenerale>
-          <p className="gn-texte gn-texte--encre" role="status">{t(commercant || suite ? 'validerCarte.doneTextConnected' : 'validerCarte.doneText', { name: nomCommerce })}</p>
+          <p className="gn-texte gn-texte--encre" role="status">
+            {toutSigne
+              ? t(commercant ? 'validerCarte.doneAllTextConnected' : 'validerCarte.doneAllText', { name: nomCommerce })
+              : t(commercant || suite ? 'validerCarte.doneTextConnected' : 'validerCarte.doneText', { name: nomCommerce })}
+          </p>
           {/* Il lui reste ses engagements (commerces inscrits avant le 13/10, ou nouveau contrat ; maquettes/etapes-commerce,
               option A) : la prochaine étape et le bouton qui y mène, connexion d'abord s'il ne l'est pas. */}
           {suite && (
@@ -228,7 +263,7 @@ export default function ValiderCarte() {
     <div className="gn-page">
       <BandeauGeneral icone="document" titre={t('validerCarte.pageTitle')} sous={<b>{nomCommerce}</b>} />
       <FeuilleGenerale>
-        <p className="gn-texte">{t(prixAVerifier ? 'validerCarte.introPricesToCheck' : 'validerCarte.intro')}</p>
+        <p className="gn-texte">{t(prixAVerifier ? 'validerCarte.introPricesToCheck' : eng ? 'validerCarte.introCommitments' : 'validerCarte.intro')}</p>
         {/* Prix repris d'une plateforme, pas encore relevés au comptoir (fondateur, 22/10/2026) : pas de « C'est bon », le
             serveur le refuserait (PRIX_A_VERIFIER). On le dit en tête, et la fin de page le redit à la place du bouton. */}
         {prixAVerifier && <p className="gn-note" role="note"><Icone nom="etiquette" taille={18} />{t('validerCarte.pricesToCheck')}</p>}
@@ -309,21 +344,53 @@ export default function ValiderCarte() {
         ))}
 
         {prixAVerifier && <p className="gn-note" role="note"><Icone nom="horloge" taille={18} />{t('validerCarte.pricesToCheckEnd')}</p>}
+        {/* Les engagements qui manquent, après la carte et avant la signature : les mêmes textes que « Tes engagements »
+            (ListeEngagements), sans PDF (il demande une session ; le texte entier est ici, à un toucher). */}
+        {!prixAVerifier && eng && (
+          <section aria-labelledby={`${id}-eng`}>
+            <SectionGenerale id={`${id}-eng`}>{t('validerCarte.commitmentsTitle')}</SectionGenerale>
+            <p className="gn-texte" style={{ marginTop: 0 }}>{t(eng.aSigner.length > 1 ? 'validerCarte.commitmentsIntro' : 'validerCarte.commitmentsIntroOne', { n: eng.aSigner.length })}</p>
+            <ListeEngagements aSigner={eng.aSigner} contrat={eng.contrat} conf={eng}
+              champsAllergenes={(
+                <div className="eg-champs">
+                  <div className={`field${manque === 'tel' ? ' eg-manque' : ''}`}>
+                    <label htmlFor={`${id}-tel`}>{t('engagementsCommerce.tel')}</label>
+                    <input id={`${id}-tel`} ref={champTel} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" autoComplete="tel" aria-describedby={`${id}-tel-aide`} />
+                    <p id={`${id}-tel-aide`} className="champ-aide">{t('engagementsCommerce.telAide')}</p>
+                  </div>
+                  <div className="field">
+                    <label htmlFor={`${id}-ref`}>{t('conformite.allergenReferent')}</label>
+                    <input id={`${id}-ref`} value={referent} onChange={(e) => setReferent(e.target.value)} />
+                  </div>
+                </div>
+              )} />
+          </section>
+        )}
         {!prixAVerifier && blocPlusBas && (
           <div className="gn-raccourci">
             <button type="button" className="gn-raccourci-pilule" onClick={allerAuBloc}>
-              <Icone nom="bas" taille={18} />{t('validerCarte.goToCestBon')}
+              <Icone nom="bas" taille={18} />{t(eng ? 'validerCarte.goToCestBonSign' : 'validerCarte.goToCestBon')}
             </button>
           </div>
         )}
         {!prixAVerifier && <div className="gn-valider" ref={blocValider}>
-          <p className="gn-texte gn-texte--encre">{t('validerCarte.commitment')}</p>
-          <div className="field">
-            <label htmlFor={`${id}-nom`}>{t('validerCarte.yourName')}</label>
+          <p className="gn-texte gn-texte--encre">{t(eng ? 'validerCarte.commitmentAll' : 'validerCarte.commitment')}</p>
+          {/* Une case pour la carte et les textes (version A) ; elle vaut renonciation au préavis quand une version dépassée du
+              contrat est remplacée, comme la case de « Tes engagements » (caseNow). */}
+          {eng && (
+            <label className={`eg-case${manque === 'case' ? ' eg-manque' : ''}`}>
+              <input type="checkbox" ref={champCase} checked={coche} onChange={(e) => { setCoche(e.target.checked); if (e.target.checked && manque === 'case') setManque(''); }} />
+              <span>{t(eng.renonciationPreavis ? 'validerCarte.caseAllNow' : 'validerCarte.caseAll')}</span>
+            </label>
+          )}
+          <div className={`field${eng && manque === 'nom' ? ' eg-manque' : ''}`}>
+            <label htmlFor={`${id}-nom`}>{t(eng ? 'engagementsCommerce.nom' : 'validerCarte.yourName')}</label>
             <input id={`${id}-nom`} ref={champNom} value={nom} onChange={(e) => setNom(e.target.value)} autoComplete="name" />
           </div>
+          {eng && manque && <p className="small eg-message" role="alert">{t(`engagementsCommerce.manque_${manque}`)}</p>}
+          {eng && erreur && !manque && <p className="small eg-message" role="alert">{erreur}</p>}
           <button type="button" className="btn-gold gn-action" disabled={envoi} onClick={valider}>
-            {envoi ? '…' : t('validerCarte.cestBon')}
+            {envoi ? '…' : t(eng ? 'validerCarte.cestBonSign' : 'validerCarte.cestBon')}
           </button>
           <p className="gn-texte" style={{ margin: '12px 0 0', fontSize: 13.5 }}>{t('validerCarte.notRight')}</p>
         </div>}

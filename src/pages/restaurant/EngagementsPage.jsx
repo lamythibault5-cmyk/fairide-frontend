@@ -7,7 +7,7 @@ import { useToast } from '../../context/ToastContext';
 import { useLanguage } from '../../context/LanguageContext';
 import { ouvrirPdf } from '../../pdf';
 import { defilement, vibrer } from '../../gestes';
-import Icone from '../../components/Icone';
+import ListeEngagements from '../../components/commerce/ListeEngagements';
 import { BandeauCommerce, FeuilleCommerce, RetourCommerce, CocheTrait } from '../../components/commerce/BandeauCommerce';
 import { SITE } from '../../components/commerce/CadreSite';
 
@@ -29,7 +29,7 @@ import { SITE } from '../../components/commerce/CadreSite';
  * avant dans ConformiteCarte. Ma carte ne signe plus rien depuis le 2026-10-27 (revue des doublons) : elle montre ce qui est
  * signé et mène ici, ou à « C'est bon » pour la carte elle-même (étape « Relis et valide ta carte »). */
 export default function EngagementsPage() {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const { token } = useAuth();
   const toast = useToast();
   const navigate = useNavigate();
@@ -38,7 +38,6 @@ export default function EngagementsPage() {
   const [contrat, setContrat] = useState(null);
   const [conf, setConf] = useState(null);
   const [erreur, setErreur] = useState('');
-  const [ouvert, setOuvert] = useState(null);
   const [tel, setTel] = useState('');
   const [referent, setReferent] = useState('');
   const [nom, setNom] = useState('');
@@ -72,7 +71,6 @@ export default function EngagementsPage() {
   }, [contrat, conf]);
 
   if (!restaurant) return null;
-  const traduit = (bloc) => (language !== 'fr' && bloc?.translations?.[language]) || null;
   const pro = conf?.professional;
   const aSigner = !contrat || !conf ? [] : [
     (!contrat.acceptedAt || (contrat.acceptedVersion && contrat.acceptedVersion !== contrat.version)) && 'contrat',
@@ -119,50 +117,24 @@ export default function EngagementsPage() {
     }
   }
 
-  const s = contrat?.summary;
-  const textes = {
-    contrat: {
-      icone: 'contrat', titre: t('engagementsCommerce.contrat'),
-      resume: s ? t('engagementsCommerce.contratResume', { pct: s.commissionPct }) : '',
-      note: contrat?.acceptedVersion && contrat.acceptedVersion !== contrat.version ? t('engagementsCommerce.contratNouveau', { version: contrat.version }) : '',
-      lire: (
-        <>
-          {Array.isArray(contrat?.changes) && contrat.changes.length > 0 && contrat.acceptedVersion !== contrat.version && (
-            <ul className="small">{contrat.changes.map((c) => <li key={c}>{c}</li>)}</ul>
-          )}
-          <ol className="resto-contract-clauses">{(contrat?.clauses || []).map((c) => <li key={c.titre}><b>{c.titre}.</b> {c.corps}</li>)}</ol>
-          <button type="button" className="ec-lien" onClick={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))}>
-            <Icone nom="document" taille={15} className="icone-texte" />{' '}{t('engagementsCommerce.pdf')}
-          </button>
-        </>
-      )
-    },
-    allergenes: {
-      icone: 'alerte', titre: t('conformite.allergenAttestTitle'), resume: t('engagementsCommerce.allergenesResume'),
-      lire: <ul className="small">{(traduit(conf?.allergens?.attestation) || conf?.allergens?.attestation?.text || []).map((l) => <li key={l}>{l}</li>)}</ul>,
-      champs: (
-        <div className="eg-champs">
-          <div className={`field${manque === 'tel' ? ' eg-manque' : ''}`}>
-            <label htmlFor={`${id}-tel`}>{t('engagementsCommerce.tel')}</label>
-            <input id={`${id}-tel`} ref={champs.tel} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" autoComplete="tel" aria-describedby={`${id}-tel-aide`} />
-            {/* « Numéro pour les allergènes » seul ne disait pas à quoi il sert : un restaurateur a demandé où trouver « les
-                14 allergènes » (Pizza Marhaba, 2026-11-01). L'étiquette tient dans le champ (une ligne, coupée au-delà) : la
-                phrase qui explique va dessous. Le numéro est bien affiché au client : FicheVendeur.jsx et CheckoutConformite.jsx. */}
-            <p id={`${id}-tel-aide`} className="champ-aide">{t('engagementsCommerce.telAide')}</p>
-          </div>
-          <div className="field">
-            <label htmlFor={`${id}-ref`}>{t('conformite.allergenReferent')}</label>
-            <input id={`${id}-ref`} value={referent} onChange={(e) => setReferent(e.target.value)} />
-          </div>
-        </div>
-      )
-    },
-    pro: {
-      icone: 'bouclier', titre: t('conformite.proTitle'), resume: t('engagementsCommerce.proResume'),
-      note: pro?.declaredAt ? t('conformite.proNewVersion') : '',
-      lire: <ul className="small">{(traduit(pro) || pro?.text || []).map((l) => <li key={l}>{l}</li>)}</ul>
-    }
-  };
+  // Les champs du numéro allergènes, sous la procédure allergènes de la liste (ListeEngagements, partagée avec le lien
+  // « C'est bon » depuis le 2026-11-07).
+  const champsAllergenes = (
+    <div className="eg-champs">
+      <div className={`field${manque === 'tel' ? ' eg-manque' : ''}`}>
+        <label htmlFor={`${id}-tel`}>{t('engagementsCommerce.tel')}</label>
+        <input id={`${id}-tel`} ref={champs.tel} value={tel} onChange={(e) => setTel(e.target.value)} inputMode="tel" autoComplete="tel" aria-describedby={`${id}-tel-aide`} />
+        {/* « Numéro pour les allergènes » seul ne disait pas à quoi il sert : un restaurateur a demandé où trouver « les
+            14 allergènes » (Pizza Marhaba, 2026-11-01). L'étiquette tient dans le champ (une ligne, coupée au-delà) : la
+            phrase qui explique va dessous. Le numéro est bien affiché au client : FicheVendeur.jsx et CheckoutConformite.jsx. */}
+        <p id={`${id}-tel-aide`} className="champ-aide">{t('engagementsCommerce.telAide')}</p>
+      </div>
+      <div className="field">
+        <label htmlFor={`${id}-ref`}>{t('conformite.allergenReferent')}</label>
+        <input id={`${id}-ref`} value={referent} onChange={(e) => setReferent(e.target.value)} />
+      </div>
+    </div>
+  );
 
   const pret = contrat && conf;
   const libelleBas = premierManque() ? t('engagementsCommerce.allerSigner') : t('engagementsCommerce.signer');
@@ -190,26 +162,8 @@ export default function EngagementsPage() {
         )}
         {pret && aSigner.length > 0 && (
           <>
-            <ol className="eg-liste">
-              {aSigner.map((cle, k) => {
-                const x = textes[cle];
-                return (
-                  <li key={cle} className="eg-texte">
-                    <span className="eg-numero" aria-hidden="true">{k + 1}</span>
-                    <div className="eg-corps">
-                      <b className="eg-titre"><Icone nom={x.icone} taille={16} className="icone-texte" />{' '}{x.titre}</b>
-                      {x.note && <p className="small eg-note">{x.note}</p>}
-                      <p className="small eg-resume">{x.resume}</p>
-                      <button type="button" className="ec-lien" aria-expanded={ouvert === cle} onClick={() => setOuvert(ouvert === cle ? null : cle)}>
-                        {ouvert === cle ? t('engagementsCommerce.replier') : t('engagementsCommerce.lire')}
-                      </button>
-                      {ouvert === cle && <div className="eg-lire">{x.lire}</div>}
-                      {x.champs}
-                    </div>
-                  </li>
-                );
-              })}
-            </ol>
+            <ListeEngagements aSigner={aSigner} contrat={contrat} conf={conf} champsAllergenes={champsAllergenes}
+              onPdf={() => ouvrirPdf(`${API_BASE}/restaurants/${restoId}/contract/pdf`, token, t('restoContract.pdfFailed'))} />
 
             <section ref={signature} className="eg-signature" aria-labelledby={`${id}-sig`}>
               <p className="ec-feuille-titre" id={`${id}-sig`}>{t('engagementsCommerce.signature')}</p>
