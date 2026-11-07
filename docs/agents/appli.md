@@ -206,7 +206,11 @@ member keeps Commandes · Compte; computers (≥ 900 px) keep four entries and t
 with the lime button, the rest under it: OrdersPage + useMiseEnLigne); the computer keeps its board. « Signe tes engagements »
 opens **one screen** for the contract, the allergen procedure and the professional declaration (`/dashboard/engagements`,
 EngagementsPage.jsx: one-line summary each, « Lire le texte », one box, the name, the floating lime « ↓ Cocher et signer »);
-after signing it goes back to Commandes, whose next step is then on top. **The courier has no « Carte » tab since 2026-10-27**
+after signing it goes back to Commandes, whose next step is then on top. **The « C'est bon » link signs them too since
+2026-11-07** (Owen, version A of the workspace mockup `maquettes/un-seul-lien`): when the server says texts are missing
+(`engagements` in `GET /menu-validation/:token`), ValiderCarte.jsx shows the same list (ListeEngagements.jsx, shared with
+EngagementsPage) between the menu and the button, and one box + the name sign the menu and the texts together, without
+logging in, an SMS code or the page above. The page above stays for shops that open their dashboard first. **The courier has no « Carte » tab since 2026-10-27**
 (founder: not needed; `/driver/map` still answers). **Going back never leaves the role's space** ([GardeRetourEspace](../../src/components/GardeRetourEspace.jsx),
 2026-10-27): history keeps the visitor list seen before signing in, and the iOS back swipe took a shop to the client front
 page; a back (POP) onto `/`, `/restaurants`, `/map`, `/recherche`, `/bienvenue` or `/login` for a shop or courier (not in

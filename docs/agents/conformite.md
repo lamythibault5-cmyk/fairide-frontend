@@ -54,6 +54,12 @@ components live in [src/components/conformite/](../../src/components/conformite/
   (typed name + box = simple e-signature, eIDAS art. 25); a drawing sent anyway must be a valid PNG. Still required,
   because the law targets Fairide itself: courier ID check, non-EEA residence permit + professional card (CPS 175/1),
   biometric consent as its own box (GDPR art. 9), business number before publication, the menu's « C'est bon ».
+  **The menu link signs the business's missing texts too (Owen, 2026-11-07, `maquettes/un-seul-lien`, version A):** the
+  e-mailed « C'est bon » page shows the contract, allergen procedure and professional declaration still unsigned, and one box
+  + the typed name sign the menu and them (backend `routes/validationCarte.js`, `signerEngagementsLien`: the same writes as
+  their own routes, the box checked and the allergen phone verified BEFORE the menu is signed). Same legal value as the
+  dashboard page: typed name + box (eIDAS art. 25), IP and browser kept, single-use link sent to the owner's address only.
+  AFSCA asks nothing more of the shop: the professional declaration is its word, the team's register check is optional.
   Signup shape (2026-10-13): no « confirm password »; the business gives its **company number at signup** (legal name and
   VAT derived; representative = the person signing up, one line), so « Configurer mes paiements » goes straight to Stripe;
   the services screen ends with one « offert pendant le lancement » note (no formulas box, no terminal). Courier screen 2
