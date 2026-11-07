@@ -50,6 +50,9 @@ function vignettePhoto(url, taille, carre = true) {
   return url.replace('/image/upload/', carre ? `/image/upload/c_fill,w_${taille},h_${taille},f_auto,q_auto/` : `/image/upload/c_limit,w_${taille},f_auto,q_auto/`);
 }
 const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
+// L'issue d'une commande close lue par le client (orders.noCourier_incident_*). Absent au contrôle d'âge : son propre texte,
+// pas de remboursement comme un client absent (G154, décision d'Owen du 06/11/2026).
+const issueCommande = (o) => (o.ageCheck === 'refused_absent' ? 'age_absent' : o.deliveryIncident);
 
 /* MES COMMANDES PAR PAGES (tenir la charge, 2026-11-02). GET /orders/mine rendait tout l'historique, plats et photos, à chaque
  * relecture (toutes les 15 s). Les 30 plus récentes d'abord, puis « Voir plus de commandes » pour les précédentes
@@ -567,7 +570,7 @@ export default function Orders() {
       )}
       <VendeurLivraison order={o} />
       <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
-      {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
+      {issueCommande(o) && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${issueCommande(o)}`)}</p>}
     </>
   );
   /* LIVRÉE PAR UN LIVREUR DU RESTAURANT (fondateur, 2026-11-02 : « le client doit savoir pourquoi il ne voit pas la position en
@@ -873,7 +876,7 @@ export default function Orders() {
         {!enRoute && blocPhoto(o)}
         {rangeeLivreur(o)}
         <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
-        {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
+        {issueCommande(o) && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${issueCommande(o)}`)}</p>}
         {codeDeRemise(o)}
         {rangeeAdresse(o)}
         {enRoute && blocPhoto(o)}

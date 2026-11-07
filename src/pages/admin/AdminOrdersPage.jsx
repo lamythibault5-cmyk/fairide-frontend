@@ -500,7 +500,15 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       message: tr('adminOrders.confirmRefundWords', { amount: money(amount), who: libelle(REFUND_RESPONSIBILITY_LABELS, refundResponsibility) }),
       danger: true,
       successMessage: tr('adminOrders.toastRefunded'),
-      messageApres: (rep) => (rep && rep.reprisSurVirement === 0 ? tr('adminOrders.refundNothingReclaimed') : null),
+      // Repris moins que sa part (virement trop petit, reprise refusée : G70, 06/11/2026) : « X € repris sur Y € ».
+      messageApres: (rep) => {
+        if (!rep || typeof rep.reprisSurVirement !== 'number') return null;
+        if (typeof rep.repriseAttendue === 'number') {
+          return rep.reprisSurVirement < rep.repriseAttendue - 0.005
+            ? tr('adminOrders.refundPartReclaimed', { repris: money(rep.reprisSurVirement), attendu: money(rep.repriseAttendue) }) : null;
+        }
+        return rep.reprisSurVirement === 0 ? tr('adminOrders.refundNothingReclaimed') : null; // serveur d'avant le 06/11
+      },
       run: () => api(`/admin/orders/${selected.id}/refund`, { method: 'POST', token, body: { amount, responsibility: refundResponsibility, reason: refundReason.trim() || undefined } })
     });
   }
