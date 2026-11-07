@@ -255,17 +255,18 @@ export default function DriverDashboard() {
    * quand même, il comptait « libre » côté serveur et recevait « Nouvelle course » pour une liste vide. Au chargement et à
    * chaque retour dans l'app (useEtatPosition relit l'état), une autorisation refusée le met en pause ; dans l'app, une
    * autorisation jamais donnée aussi (sur le site, Safari peut répondre « prompt » après un oui : seul « denied » compte).
-   * Il se remet disponible lui-même avec l'interrupteur, qui redemande la position. */
-  const pauseAutoRef = useRef(false);
+   * Il se remet disponible lui-même avec l'interrupteur, qui redemande la position.
+   * Une seule tentative par état de position : un envoi raté (hors ligne, serveur en erreur) remettait « disponible », ce
+   * qui relançait aussitôt l'effet, en boucle. `pauseAutoRef` garde l'état déjà essayé ; un envoi réussi l'efface. */
+  const pauseAutoRef = useRef(null);
   useEffect(() => {
-    if (!user || user.driverPaused || user.adminStatus !== 'approved' || pauseAutoRef.current) return;
+    if (!user || user.driverPaused || user.adminStatus !== 'approved' || pauseAutoRef.current === etatPos) return;
     if (!(etatPos === 'denied' || (estNatif() && etatPos === 'prompt'))) return;
-    pauseAutoRef.current = true;
+    pauseAutoRef.current = etatPos;
     modifierUtilisateur((u) => ({ ...u, driverPaused: true }));
     api('/auth/me', { method: 'PATCH', token, body: { driverPaused: true }, logoutOn401: false })
-      .then(() => toast(t('dashDriver.toastPauseSansPosition')))
-      .catch(() => modifierUtilisateur((u) => ({ ...u, driverPaused: false })))
-      .finally(() => { pauseAutoRef.current = false; });
+      .then(() => { pauseAutoRef.current = null; toast(t('dashDriver.toastPauseSansPosition')); })
+      .catch(() => modifierUtilisateur((u) => ({ ...u, driverPaused: false })));
   }, [etatPos, user?.driverPaused, user?.adminStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
