@@ -6,6 +6,7 @@ import { useToast } from '../context/ToastContext';
 import SousEcran from './SousEcran';
 import AddressSearch from './AddressSearch';
 import Icone from './Icone';
+import { positionPrecise } from '../natif';
 
 // LE CARNET D'ADRESSES : choisir où livrer, ou en ajouter une.
 //
@@ -35,6 +36,9 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
   // jamais. Et même visible, le bon endroit pour dire « ce numéro n'existe pas » est sous le champ
   // qui le porte, pas une bulle qui disparaît au bout de cinq secondes.
   const [erreur, setErreur] = useState('');
+  // « Utiliser ma position » : la recherche en cours, puis ce qui l'a fait échouer (affiché sous la rangée).
+  const [chercheIci, setChercheIci] = useState(false);
+  const [erreurIci, setErreurIci] = useState('');
 
   useEffect(() => {
     api('/auth/me/addresses', { token })
@@ -83,6 +87,32 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
     enregistrer(suggestion);
   }
 
+  // UTILISER MA POSITION (fondateur, 2026-11-07 : « quand je cherche une adresse, qu'il prenne juste ma position, je l'ai
+  // activée »). Comme la rangée « Position actuelle » d'Uber Eats, sous la recherche. La position PRÉCISE (natif.js ›
+  // positionPrecise) : l'approximative d'Android ou d'iPhone tombe à un ou deux kilomètres, ce serait la rue d'un voisin.
+  // Le serveur la change en adresse (GET /restaurants/lookup/reverse, celui de l'inscription « Où te livrer ? »), puis on
+  // passe par l'étape du numéro, PRÉREMPLI : on voit la rue trouvée et on vérifie la porte avant d'enregistrer — une
+  // position prise au salon peut tomber sur la maison d'à côté. L'enregistrement reste celui d'une adresse tapée : le
+  // serveur la vérifie et la géocode (POST /auth/me/addresses).
+  async function depuisMaPosition() {
+    if (occupe || chercheIci) return;
+    setChercheIci(true); setErreurIci('');
+    try {
+      const p = await positionPrecise();
+      if (!p) { setErreurIci(t('adresses.hereFailed')); return; }
+      // Au-delà de 200 m, c'est la position approximative (ou un GPS qui cherche encore) : pas de quoi trouver une porte.
+      if (p.precision > 200) { setErreurIci(t('adresses.hereVague')); return; }
+      const r = await api(`/restaurants/lookup/reverse?lat=${p.lat.toFixed(6)}&lng=${p.lng.toFixed(6)}`);
+      if (!r?.found) { setErreurIci(t('adresses.hereNotFound')); return; }
+      setACompleter({ street: r.street, postalCode: r.postalCode, city: r.city, parPosition: true });
+      setNumero(r.number || ''); setErreur('');
+    } catch {
+      setErreurIci(t('adresses.hereNotFound'));
+    } finally {
+      setChercheIci(false);
+    }
+  }
+
   async function enregistrer(adresse) {
     setOccupe(true);
     try {
@@ -121,6 +151,7 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
             {aCompleter.street}
             <span className="adresse-sous">{`${aCompleter.postalCode} ${aCompleter.city}`.trim()}</span>
           </p>
+          {aCompleter.parPosition && <p className="small adresse-ici-trouvee">{t('adresses.hereFound')}</p>}
           <div className="field">
             <label htmlFor="adresse-numero-champ">{t('adresses.numberLabel')}</label>
             <input
@@ -151,6 +182,16 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
       ) : (
       <>
       <AddressSearch onSelect={ajouter} />
+      <div className="adresse-ligne adresse-ici">
+        <button type="button" className="adresse-choisir" onClick={depuisMaPosition} disabled={occupe || chercheIci} aria-busy={chercheIci || undefined}>
+          <Icone nom="cible" taille={20} />
+          <span className="adresse-texte">
+            <span className="adresse-nom">{t('adresses.here')}</span>
+            {chercheIci && <span className="adresse-sous">{t('adresses.hereLoading')}</span>}
+          </span>
+        </button>
+      </div>
+      {erreurIci && <p className="champ-erreur" role="alert">{erreurIci}</p>}
       {/* L'aide de la recherche disait « remplis les champs à la main ci-dessous » alors qu'il n'y en avait pas : une rue
           récente ou absente d'OpenStreetMap laissait le client sans issue (audit du 15/10/2026). */}
       {onSaisieManuelle && (

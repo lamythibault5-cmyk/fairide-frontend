@@ -8395,6 +8395,12 @@ export default {
     },
     adresses: {
       typeManually: "My street is not listed: type the address by hand",
+      here: "Use my location",
+      hereLoading: "Finding your location…",
+      hereFound: "Found with your location: check the number.",
+      hereFailed: "Location not found. Allow Fairride to use your location, or search for your address above.",
+      hereVague: "Your location is too approximate to find your door. Turn on precise location for Fairride, or search for your address above.",
+      hereNotFound: "No address found at your location. Search for it above.",
       numberTitle: "Number",
       numberLabel: "Street number",
       numberPlaceholder: "E.g. 12, 12A, 30/2",
