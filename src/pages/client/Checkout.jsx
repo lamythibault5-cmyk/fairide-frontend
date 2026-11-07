@@ -274,14 +274,15 @@ export default function Checkout() {
   const kmLivraison = distanceLivraisonKm(restaurant, user);
   // Le code postal de livraison, une fois complet (G68) : une commune suspendue ne reçoit plus de livraison.
   const cpLivraison = /^\d{4}$/.test(addressPostalCode.trim()) ? addressPostalCode.trim() : '';
+  const villeLivraison = cpLivraison ? addressCity.trim() : '';
   useEffect(() => {
     if (!verifierLivraison) { setLivraisonDispo(null); return undefined; }
     let fini = false;
-    const lire = () => livraisonDisponible(restaurantId, kmLivraison, cpLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
+    const lire = () => livraisonDisponible(restaurantId, kmLivraison, cpLivraison, villeLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
     lire();
     const id = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
     return () => { fini = true; clearInterval(id); };
-  }, [verifierLivraison, restaurantId, kmLivraison, cpLivraison]);
+  }, [verifierLivraison, restaurantId, kmLivraison, cpLivraison, villeLivraison]);
   /* PLUS DE BASCULE SILENCIEUSE (audit du 19/10, checkout-02). Le contrôle de chaque minute passait la commande en « À emporter »
    * sans un mot, en plein paiement : un client qui ne relisait pas payait un retrait qu'il ne ferait pas. Le mode choisi reste ;
    * la barre dit qu'aucun livreur n'est libre et propose « Passer à l'emporter » (le client décide), et un message le signale
