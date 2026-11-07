@@ -109,6 +109,9 @@ function GestesEquipe({ order, t, occupe, classe, onAction, moi }) {
     );
   }
   if (order.status === 'pret') return <button type="button" className={classe} disabled={occupe} onClick={() => onAction(order.id, 'shop-departed')}>{t('livraisonEquipe.partie')}</button>;
+  // Partie sans passer par « Prête » (chasse aux bogues d'avant GO, 2026-11-06, G33) : le serveur l'accepte depuis la
+  // préparation ; le bouton y est en contour, « Marquer prête » garde la place principale.
+  if (order.status === 'preparation') return <button type="button" className="ec-bouton ec-bouton--contour" disabled={occupe} onClick={() => onAction(order.id, 'shop-departed')}>{t('livraisonEquipe.partie')}</button>;
   if (order.status === 'livraison') return <button type="button" className={classe} disabled={occupe} onClick={() => onAction(order.id, 'shop-delivered')}>{t('livraisonEquipe.livree')}</button>;
   return null;
 }

@@ -3905,6 +3905,9 @@ export default {
       closeTonightHelp: "Zaak zonder verwittiging gesloten: ze blijft zichtbaar maar staat als gesloten, neemt geen bestellingen meer aan en gaat om de eerstvolgende 6 u 's ochtends vanzelf weer open.",
 
       closedTonightToast: "Zaak gesloten tot morgen 6 u.",
+      closeTonightConfirmTitle: "{name} sluiten tot morgen?",
+      closeTonightConfirmText: "De zaak neemt geen bestellingen meer tot de volgende 6 u en krijgt een melding. Al aanvaarde bestellingen moeten nog gebeuren: je ziet de lijst meteen daarna.",
+      closedTonightOpenOrders: "Bestellingen die nog moeten gebeuren: {list}. Houd wat de zaak nog maakt, annuleer en betaal de rest terug via Bestellingen. Er is een taak geopend.",
 
       reopenedToast: "Zaak heropend.",
 
@@ -4693,6 +4696,7 @@ export default {
       closedAfterAccept: 'Bestelling van {client} geannuleerd: stop met klaarmaken.',
       closedRefused: 'Geweigerd: {reason}',
       closedNoShow: 'Klant niet gekomen: bestelling niet opgehaald.',
+      closedAutoPickup: 'Automatisch afgesloten: nooit als afgegeven gemarkeerd.',
       closedAgeAbsent: 'Overhandiging geweigerd: leeftijd niet gecontroleerd.'
     },
     errorPage: {
@@ -6435,6 +6439,12 @@ export default {
       openButClosure: "Uitzonderlijke sluiting vandaag: er komen geen bestellingen binnen",
       stopTodayBtn: 'Bestellingen stoppen voor vandaag',
       stopTodayHelp: 'Niets meer te bereiden vandaag? Klanten kunnen niet meer bestellen, al ontvangen bestellingen gaan door. Om de eerstvolgende 6 u \'s ochtends gaan de bestellingen VANZELF weer open: jij hoeft niets te doen. Je kunt ook vroeger heropenen met één tik.',
+      openOrdersTitle: "Bestellingen die nog moeten gebeuren",
+      openOrdersHelp: "Deze bestellingen zijn al aanvaard. Houd wat je nog maakt; annuleer de rest, je klant wordt terugbetaald.",
+      openOrdersKeep: "Ik maak ze",
+      openOrdersCancel: "Annuleren en terugbetalen",
+      openOrdersNow: "bezig",
+      openOrdersReason: "De zaak is vanavond vroeger gesloten.",
       stoppedTodayTitle: 'Bestellingen gestopt voor vandaag',
       stoppedTodaySub: 'Gaat {day} om {time} vanzelf weer open · tik om nu te heropenen',
       stockPanelTitle: 'Vandaag uitverkocht',
@@ -8275,6 +8285,8 @@ export default {
         pretPickup: 'Klaar, je kunt ze komen halen',
         arriveVers: 'Bij jou rond {time}',
         pretVers: 'Klaar rond {time}',
+        enRetard: "Iets later dan gepland, we volgen je bestelling",
+        programmee: "Aanvaard · gepland {date}",
         livraison: 'Onderweg naar jou'
       },
       acceptBefore: 'Te aanvaarden vóór {time} (nog {min} min) — zonder antwoord wordt de bestelling geannuleerd en de klant automatisch terugbetaald.',
@@ -8336,6 +8348,7 @@ export default {
         pickupEstimate: 'Geschatte afhaaltijd om',
         deliveryEstimate: 'Geschatte levering om',
         minutesLeft: ' (~{min} min)',
+        late: " (iets later dan gepland, we volgen je bestelling)",
         encore: 'nog ~{min} min',
         imminent: ' (zo dadelijk)'
       },
@@ -8570,6 +8583,7 @@ export default {
       cancelConfirmPaid: "De zaak bereidt ze niet. Je wordt automatisch terugbetaald, binnen 5 tot 10 werkdagen afhankelijk van je bank.",
       cancelConfirmBody: "De zaak bereidt ze niet.",
       cancelConfirmOnSite: "De zaak bereidt ze niet. Je zou bij het afhalen betalen: er werd niets aangerekend.",
+      cancelUntil: "Je kunt ze nog annuleren tot {time}, volledig terugbetaald.",
       notifHelp: 'Op deze telefoon verwittigd worden bij elke stap: bestelling aanvaard, koerier onderweg, aan je deur.',
       notifOn: 'Je krijgt de opvolging van je bestellingen op dit toestel.',
       notifyMe: 'Houd me op de hoogte van elke stap',
@@ -8624,6 +8638,7 @@ export default {
       doorDropPhoto: 'Bekijk de foto van de afgifte aan je deur',
       noCourier_searching: "We zoeken nog een koerier. Is er tegen {time} geen beschikbaar, dan kun je annuleren en word je volledig terugbetaald.",
       noCourier_stillNone: "Er is nu geen koerier beschikbaar. Je kunt nog wachten, of annuleren: je wordt volledig terugbetaald.",
+      noCourier_noShow: "Je koerier is je bestelling nog niet komen ophalen. Je kunt nog wachten, of annuleren: je wordt volledig terugbetaald.",
       noCourier_cancelButton: "Annuleren, terugbetaald",
       noCourier_cancelTitle: "Annuleren bij gebrek aan koerier?",
       noCourier_cancelText: "Je bestelling wordt geannuleerd en volledig terugbetaald. De zaak, die ze klaarmaakte, wordt door Fairride betaald.",
@@ -8635,6 +8650,7 @@ export default {
       courierAtDoorCall: 'Mijn koerier bellen',
       noCourier_incident_client_absent: "Niet geleverd: de koerier wachtte aan je deur en belde je, zonder antwoord. Zoals onze voorwaarden bepalen, blijft een niet in ontvangst genomen bestelling verschuldigd.",
       noCourier_incident_pickup_not_collected: "Niet opgehaald: de zaak heeft op je gewacht. Zoals onze voorwaarden bepalen, blijft een niet-afgehaalde bestelling verschuldigd.",
+      noCourier_incident_pickup_auto_closed: "Automatisch afgesloten: de zaak heeft ze nooit als afgegeven gemarkeerd. Een probleem? Schrijf ons.",
       noCourier_incident_courier_stuck_after_pickup: "Je koerier had onderweg een probleem: het Fairride-team regelt het en houdt je op de hoogte.",
       reorder: "Opnieuw bestellen",
       reorderDone: "Winkelmandje opnieuw samengesteld met de kaart van vandaag: controleer de prijzen voor je bestelt.",
@@ -8908,6 +8924,7 @@ export default {
       ready: "{prets} van {total} koerier(s) klaar · {commerces} van {commercesTotal} zaak/zaken klaar · {dispo} koerier(s) nu beschikbaar",
       readyHint: "Klaar = dezelfde controles als een bestelling en een rit: goedgekeurd, Stripe-betalingen actief, contract getekend, niets blokkerend.",
       firstGoNote: "Bij de eerste GO krijgen de goedgekeurde zaken en koeriers een e-mail.",
+      noCourierCancelMissing: "Annuleringstermijn zonder koerier is leeg (Admin › Conformiteit › Dispatch): stel hem in vóór de GO, anders blijft een levering die niemand neemt voor altijd open.",
       confirmLabel: "Typ GO om te openen",
       goButton: "GO: levering en online betalen openen",
       closeButton: "Opnieuw sluiten",

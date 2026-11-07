@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useRevalidation from '../useRevalidation';
 import { signalerOccupe } from '../miseAJour';
+import { programmeeLointaine } from '../orderStatus';
 
 // Les commandes du client pour la bande « commande en cours » (SuiviCommande.jsx), sur tous les écrans sauf Mes commandes.
 //
@@ -20,8 +21,21 @@ const abonnes = new Set();
 const EN_COURS = ['nouveau', 'preparation', 'pret', 'livraison'];
 // Une commande « nouveau » non payée n'est pas encore partie au commerce (paiement en ligne pas fini, ou sur place jamais
 // envoyée : même règle que titreSuivi dans orderStatus.jsx) : rien à suivre.
+// Pas non plus (chasse aux bogues d'avant GO, 2026-11-06) :
+//   - une commande programmée dans plus de 90 minutes (G153, programmeeLointaine) : rien ne cuit encore, et la relecture toutes
+//     les 15 s retenait les mises à jour de l'app pendant des jours ; elle redevient suivie à l'approche (relecture au
+//     changement d'écran et au retour dans l'app) ;
+//   - une commande à emporter ouverte depuis plus de 12 heures (G26) : le commerce a oublié « Remis au client », le serveur la
+//     clôt seul (orderTimeouts.surveillerRetraitsOublies) ; la bande « prête à retirer » ne reste pas jusque-là.
+const EMPORTER_OUBLIEE_MS = 12 * 3600 * 1000;
 export function commandeSuivie(o) {
-  return EN_COURS.includes(o.status) && !(o.status === 'nouveau' && o.paid === false);
+  if (!EN_COURS.includes(o.status) || (o.status === 'nouveau' && o.paid === false)) return false;
+  if (programmeeLointaine(o)) return false;
+  if (o.orderType === 'pickup') {
+    const depuis = Math.max(new Date(o.createdAt).getTime() || 0, o.scheduledFor ? new Date(o.scheduledFor).getTime() : 0);
+    if (depuis && Date.now() - depuis > EMPORTER_OUBLIEE_MS) return false;
+  }
+  return true;
 }
 
 function publier(commandes) {

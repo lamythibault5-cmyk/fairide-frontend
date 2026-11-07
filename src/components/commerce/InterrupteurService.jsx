@@ -4,6 +4,7 @@ import { useActionOptimiste } from '../../actionOptimiste';
 import { vibrer } from '../../gestes';
 import { prochain6h } from './majLocale';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
+import { useToast } from '../../context/ToastContext';
 import { getOpenStatus } from '../../openingHours';
 import SousEcran from '../SousEcran';
 import Icone from '../Icone';
@@ -18,7 +19,11 @@ const DUREES = [15, 30, 60];
 // interrupteur lime qui rebondit (ecran-commerce.css).
 export default function InterrupteurService({ restaurant, restoId, token, loadDashboard, modifierRestaurant, surBandeau = false, compact = false }) {
   const { t } = useLanguage();
+  const toast = useToast();
   const [choix, setChoix] = useState(false);
+  // Commandes encore dues après « Stopper pour aujourd'hui » (G66) : à garder ou annuler une à une.
+  const [aHonorer, setAHonorer] = useState([]);
+  const [annulation, setAnnulation] = useState(null);
   const [maintenant, setMaintenant] = useState(() => Date.now());
   // L'heure de reprise passe toute seule : on relit l'horloge chaque minute pour rebasculer l'affichage.
   useEffect(() => { const id = setInterval(() => setMaintenant(Date.now()), 30000); return () => clearInterval(id); }, []);
@@ -65,6 +70,11 @@ export default function InterrupteurService({ restaurant, restoId, token, loadDa
       // Pause et « stopper pour aujourd'hui » rendent l'heure de reprise calculée par le serveur.
       confirmer: (rep) => {
         if (champ === 'pausedUntil' && rep && rep.pausedUntil !== undefined) modifierRestaurant?.((r) => (r ? { ...r, pausedUntil: rep.pausedUntil } : r));
+        /* CE QUI RESTE DÛ CE SOIR (chasse aux bogues d'avant GO, 2026-11-06, G66 ; fondateur : le commerce garde ou annule
+         * chacune). « Stopper pour aujourd'hui » laissait courir sans un mot les commandes déjà acceptées, programmées plus
+         * tard dans la soirée : le client payé et le livreur se rendaient chez un commerce fermé. Le serveur les rend
+         * (openOrders, PUT /restaurants/:id/close-today) ; la feuille les liste. */
+        if (Array.isArray(rep?.openOrders) && rep.openOrders.length) setAHonorer(rep.openOrders);
       },
       rafraichir: () => loadDashboard(restoId, { silencieux: true })
     });
@@ -73,6 +83,19 @@ export default function InterrupteurService({ restaurant, restoId, token, loadDa
     () => api(`/restaurants/${restoId}/pause`, { method: 'PUT', token, body: { minutes } }));
   const stopperJour = (closed) => agir('pausedUntil', closed ? prochain6h() : null,
     () => api(`/restaurants/${restoId}/close-today`, { method: 'PUT', token, body: { closed } }));
+  // « Annuler et rembourser » : le refus du commerce (PATCH /orders/:id/refuse), motif dit au client, remboursé en entier.
+  async function annulerDue(o) {
+    setAnnulation(o.id);
+    try {
+      await api(`/orders/${o.id}/refuse`, { method: 'PATCH', token, body: { reason: t('ordersResto.openOrdersReason'), expectedStatus: o.status } });
+      setAHonorer((l) => l.filter((x) => x.id !== o.id));
+      loadDashboard(restoId, { silencieux: true });
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setAnnulation(null);
+    }
+  }
   const ouvrir = (open) => agir('open', open, () => api(`/restaurants/${restoId}`, { method: 'PATCH', token, body: { open } }));
 
   function toucher() {
@@ -127,6 +150,21 @@ export default function InterrupteurService({ restaurant, restoId, token, loadDa
             <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.stopTodayHelp')}</p>
           </div>
           <button type="button" className="btn-outline" style={{ width: '100%', minHeight: 48 }} onClick={() => ouvrir(false)}>{t('ordersResto.closeUntilReopen')}</button>
+        </SousEcran>
+      )}
+      {aHonorer.length > 0 && (
+        <SousEcran titre={t('ordersResto.openOrdersTitle')} onFermer={() => setAHonorer([])}>
+          <p className="small" style={{ margin: '0 0 12px' }}>{t('ordersResto.openOrdersHelp')}</p>
+          {aHonorer.map((o) => (
+            <div key={o.id} className="paiement-encart" style={{ marginBottom: 10 }}>
+              <b>{o.orderNumber ? `n° ${o.orderNumber} · ` : ''}{o.clientName}</b>
+              <div className="small">{o.scheduledFor ? new Date(o.scheduledFor).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) : t('ordersResto.openOrdersNow')}</div>
+              <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
+                <button type="button" className="btn-outline" style={{ minHeight: 44 }} disabled={annulation === o.id} onClick={() => setAHonorer((l) => l.filter((x) => x.id !== o.id))}>{t('ordersResto.openOrdersKeep')}</button>
+                <button type="button" className="btn-ghost" style={{ minHeight: 44 }} disabled={annulation === o.id} onClick={() => annulerDue(o)}>{annulation === o.id ? '…' : t('ordersResto.openOrdersCancel')}</button>
+              </div>
+            </div>
+          ))}
         </SousEcran>
       )}
     </>

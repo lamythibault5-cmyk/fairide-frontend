@@ -70,6 +70,8 @@ export default function BoutonGo() {
         {tr('adminGo.ready', { prets: etat.livreursPrets, total: etat.livreursTotal, commerces: etat.commercesPrets, commercesTotal: etat.commercesTotal, dispo: etat.livreursDisponiblesMaintenant })}
       </p>
       <p className="small" style={{ margin: '0 0 12px', color: 'var(--ink-soft)' }}>{tr('adminGo.readyHint')}</p>
+      {/* Délai d'annulation faute de livreur vide : le serveur refuse le GO (chasse aux bogues d'avant GO, 2026-11-06, G4). */}
+      {!etat.go && etat.annulationSansLivreurMin === null && <p className="small texte-erreur" style={{ margin: '0 0 12px' }}>{tr('adminGo.noCourierCancelMissing')}</p>}
       {!peutAppuyer ? (
         <p className="small" style={{ margin: 0 }}>{tr('adminGo.roleOnly')}</p>
       ) : etat.force ? null : etat.go ? (

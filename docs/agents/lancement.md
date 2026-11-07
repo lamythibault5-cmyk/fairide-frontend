@@ -34,6 +34,9 @@ ignored since, and can be deleted.
   roles and audit (`pickup_go` / `pickup_closed`); its first opening e-mails approved real shops
   (`lancement.annoncerEmporter`, report in a task), not couriers. The card shows couriers/businesses ready (same checks as
   `pretLancement.js`) and couriers free right now, which is what the decision rests on.
+  GO is refused (409 `DELAI_SANS_LIVREUR_VIDE`) while `delivery_no_courier_cancel_min` (Admin › Conformité › Dispatch) is
+  empty: without it a paid delivery nobody takes never closes (pre-GO bug hunt, 2026-11-06, G4). The card says so in red
+  (`bilan().annulationSansLivreurMin` null). Closing stays possible.
 - **First GO only**: an e-mail to approved real businesses and couriers (`annoncerOuverture`; the contract says the
   date is « announced by e-mail »). It used to push back the trial end of every shop subscription (`prolongerEssais`):
   gone with the subscription on 2026-11-04.
