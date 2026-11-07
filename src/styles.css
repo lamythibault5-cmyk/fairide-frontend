@@ -5136,6 +5136,30 @@ html.clavier-ouvert body::after { content: ''; display: block; height: var(--cla
 /* Les écrans pleins (accueil, inscription, dossier : .bv) défilent eux-mêmes : ils s'arrêtent au-dessus du clavier, et leur
    bouton du bas reste à portée de pouce. */
 html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
+/* LES FEUILLES S'ARRÊTENT AU-DESSUS DU CLAVIER AUSSI (fondateur, 2026-11-07, iPhone : « Demander un restaurant », le champ
+   « Nom du restaurant » de la fenêtre « Lequel ? » était sous les touches, on ne voyait plus rien). Sur iPhone l'écran ne
+   rapetisse pas quand le clavier s'ouvre (clavier.js) : tout ce qui est fixé au bas de l'écran restait dessous.
+   - les fenêtres (.modal-overlay : ConfirmDialog, « Lequel ? », raisons, vérification du téléphone…) : le voile garde tout
+     l'écran (pas de bande de page claire le temps que le clavier monte), la feuille se pose sur les touches et rapetisse
+     à la place qui reste ; elle défile dedans ;
+   - les feuilles plein écran (.plat-feuille : fiche d'un plat, PageFeuille, SousEcran — adresse, contact, signaler un
+     problème…) : le panneau blanc garde sa hauteur, son contenu et son bouton du bas s'arrêtent au-dessus des touches.
+   La marge du bas pour la barre d'accueil de l'iPhone tombe : le clavier la recouvre. Android rapetisse lui-même la vue
+   (--clavier n'y est pas posé) : rien ne change là-bas. */
+html.clavier-ouvert .modal-overlay { padding-bottom: var(--clavier, 0px); }
+html.clavier-ouvert .modal-box { max-height: calc(100% - 12px); }
+html.clavier-ouvert .modal-box.drawer-box { max-height: 100%; }
+html.clavier-ouvert .plat-pied { padding-bottom: 12px; }
+@media (max-width: 640px) {
+  html.clavier-ouvert .modal-box { padding-bottom: 20px; }
+  html.clavier-ouvert .modal-pied { bottom: -20px; margin-bottom: -20px; padding-bottom: 14px; }
+}
+@media (max-width: 900px) {
+  html.clavier-ouvert .plat-panneau { padding-bottom: var(--clavier, 0px); }
+}
+@media (min-width: 901px) {
+  html.clavier-ouvert .plat-feuille { padding-bottom: calc(24px + var(--clavier, 0px)); }
+}
 /* iOS seul (-webkit-touch-callout n'existe que là) : Safari zoome sur tout champ dont la police fait moins
    de 16px, et ne dézoome pas toujours en sortant. Les champs gardent leur taille là où elle est déjà ≥ 16px. */
 @supports (-webkit-touch-callout: none) {
