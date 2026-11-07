@@ -8,9 +8,40 @@ const SUR_FAIRRIDE = typeof window !== 'undefined' && !estNatif() && /(^|\.)fair
 // Les ENVOIS DE FICHIERS vont toujours directement à Railway, jamais par le relais : Vercel refuse un corps de plus de
 // 4,5 Mo (413 FUNCTION_PAYLOAD_TOO_LARGE, constaté le 2026-11-05) et une photo de téléphone dépasse souvent (pièce
 // d'identité d'un livreur, carte, photo de plat : jusqu'à 15 Mo côté serveur). Pendant un blocage de Railway, seuls ces
-// envois échouent ; tout le reste du site passe par le relais.
-const API_DIRECT = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
+// envois échouent ; tout le reste du site passe par le relais. Exception : la photo de dépôt du livreur, réduite et refaite
+// par le relais (apiUpload, `relaisSecours`, G122).
+export const API_DIRECT = import.meta.env.VITE_API_BASE || 'https://fairide-backend-production.up.railway.app/api';
 export const API_BASE = SUR_FAIRRIDE ? `${window.location.origin}/api` : API_DIRECT;
+
+/* L'APPLICATION PASSE PAR LE RELAIS EN SECOURS SEULEMENT (Owen, 2026-11-06). Le 05/11, l'appli installée restait vide sur les
+ * réseaux qui bloquaient Railway, alors que le site passait par son relais. Elle garde l'adresse directe (rien ne change
+ * tant que Railway répond, et Vercel ne devient pas un point de panne de plus) ; quand un appel n'aboutit pas, elle vérifie
+ * une fois que le relais répond (GET /health), et l'utilise alors jusqu'à sa fermeture. Une coupure du réseau du téléphone
+ * fait échouer les deux : rien ne bascule. Ce relais ne sert pas quand Railway lui-même est en panne : il transmet alors à
+ * un serveur arrêté. Seules les LECTURES sont refaites d'elles-mêmes par le relais ; une écriture (commande, paiement) ne
+ * l'est jamais en cachette, on ne sait pas si le serveur l'a reçue : la personne réessaie, et passe alors par le relais.
+ * Les envois de fichiers restent directs (le relais refuse plus de 4,5 Mo, voir API_DIRECT). */
+const RELAIS_APPLI = 'https://fairride.be/api';
+// AbortSignal.timeout n'existe pas avant iOS 16 : la même chose, à la main.
+function signalDelai(ms) {
+  if (typeof AbortController === 'undefined') return undefined;
+  const c = new AbortController();
+  setTimeout(() => c.abort(), ms);
+  return c.signal;
+}
+let viaRelais = false;
+let essaiRelais = null;
+async function essayerRelais() {
+  if (!estNatif() || viaRelais) return viaRelais;
+  if (!essaiRelais) {
+    essaiRelais = fetch(`${RELAIS_APPLI}/health`, { cache: 'no-store', signal: signalDelai(6000) })
+      .then((r) => { if (r.ok) viaRelais = true; }, () => {})
+      .then(() => { essaiRelais = null; return viaRelais; });
+  }
+  return essaiRelais;
+}
+// L'adresse à utiliser maintenant : celle du relais une fois l'application basculée dessus.
+export function adresseApi() { return viaRelais ? RELAIS_APPLI : API_BASE; }
 
 // Erreur enrichie du code HTTP : jusqu'ici toute réponse non-OK devenait un Error générique, ce qui
 // rendait un 401 (session expirée) indiscernable d'un 500 côté appelant — l'app affichait donc
@@ -31,6 +62,13 @@ export class ApiError extends Error {
 let onSessionExpired = null;
 export function setSessionExpiredHandler(fn) {
   onSessionExpired = fn;
+}
+
+// Refus « pas encore ouvert » (PICKUP_NOT_OPEN, DELIVERY_NOT_OPEN, ONLINE_PAYMENT_NOT_OPEN) : launch.js s'y abonne pour relire
+// l'état d'ouverture tout de suite (G100, 2026-11-06). Même raison que plus haut : launch.js importe api.js, pas l'inverse.
+let surRefusOuverture = null;
+export function siRefusOuverture(fn) {
+  surRefusOuverture = fn;
 }
 
 // Un 401 sur une requête SANS token n'est pas une session expirée mais un échec de connexion
@@ -54,6 +92,7 @@ function handleResponse(res, data, hadToken, logoutOn401) {
     if (onSessionExpired) onSessionExpired(data.code);
     throw error;
   }
+  if (surRefusOuverture && typeof data.code === 'string' && data.code.endsWith('_NOT_OPEN')) surRefusOuverture(data.code);
   const error = new ApiError(data.error || traduire('common.genericError'), res.status);
   if (data.code) error.code = data.code;
   if (data.field) error.field = data.field;
@@ -86,7 +125,7 @@ function erreurReseau(controle, lecture) {
 // `withHeaders: true` renvoie { data, headers } au lieu du seul corps : les listes admin paginées
 // annoncent leur total dans l'en-tête X-Total-Count tout en gardant un tableau en réponse (voir
 // GET /admin/restaurants|drivers|clients côté serveur). Sans l'option, comportement inchangé.
-export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false, delai: delaiDemande } = {}) {
+export async function api(path, { method = 'GET', body, token, logoutOn401 = true, withHeaders = false, delai: delaiDemande, cache } = {}) {
   // Langue de l'interface : le backend en fait la langue des e-mails déclenchés par cette requête
   // (code de vérification, bienvenue...) — voir userLang.js côté serveur.
   const headers = { 'Content-Type': 'application/json', 'X-Fairide-Lang': getLanguage() };
@@ -109,14 +148,33 @@ export async function api(path, { method = 'GET', body, token, logoutOn401 = tru
   const controle = typeof AbortController !== 'undefined' ? new AbortController() : null;
   const minuteur = controle ? setTimeout(() => controle.abort(), delai) : null;
   let res;
+  // `cache` (facultatif) : 'no-store' pour une lecture qui doit venir du serveur (l'état d'ouverture, src/launch.js).
+  const envoyer = (base, signal) => fetch(base + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal, ...(cache ? { cache } : {}) });
+  const base = adresseApi();
   try {
-    res = await fetch(API_BASE + path, { method, headers, body: body ? JSON.stringify(body) : undefined, signal: controle?.signal });
+    res = await envoyer(base, controle?.signal);
   } catch {
-    throw erreurReseau(controle, lecture);
+    if (minuteur) clearTimeout(minuteur);
+    // Railway injoignable depuis l'application : le relais, s'il répond (voir RELAIS_APPLI). Une lecture est refaite par lui.
+    if (base !== RELAIS_APPLI && await essayerRelais() && lecture) {
+      try { res = await envoyer(RELAIS_APPLI, signalDelai(DELAI_LECTURE_MS)); } catch { throw erreurReseau(null, true); }
+    } else {
+      throw erreurReseau(controle, lecture);
+    }
   } finally {
     if (minuteur) clearTimeout(minuteur);
   }
-  const data = await res.json().catch(() => ({}));
+  let sansJson = false;
+  const data = await res.json().catch(() => { sansJson = true; return {}; });
+  /* PASSERELLE QUI N'A PAS EU LA RÉPONSE (G135 / G151, 2026-11-06). Un 502 / 504 sans corps JSON (page de Vercel quand le relais
+   * dépasse son délai) ou le 502 du relais lui-même (RELAY_UNREACHABLE, middleware.js) : ce n'est pas le serveur Fairride qui
+   * a répondu. Une lecture dit « serveur injoignable » ; une écriture dit qu'elle est peut-être passée, comme un délai dépassé. */
+  if (!res.ok && (res.status === 502 || res.status === 504) && (sansJson || data.code === 'RELAY_UNREACHABLE')) {
+    if (lecture) throw new ApiError(traduire('common.serverUnreachable'), res.status);
+    const e = new ApiError(traduire('common.writeTimeout'), res.status);
+    e.code = 'WRITE_TIMEOUT';
+    throw e;
+  }
   const corps = handleResponse(res, data, !!token, logoutOn401);
   return withHeaders ? { data: corps, headers: res.headers } : corps;
 }
@@ -194,7 +252,12 @@ export async function apiDownload(path, { token, filename, method = 'GET', body,
 // `fields` (optionnel) ajoute des champs texte au FormData (ex: module Documents, POST /admin/documents
 // qui a besoin de targetType/targetId/title en plus du fichier) — undefined/absent pour tous les autres
 // appelants existants, aucun changement de comportement pour eux.
-export async function apiUpload(path, { file, files, token, fieldName = 'image', fields }) {
+/* `relaisSecours` (G122, 2026-11-06) : un envoi qui ne peut pas attendre — la photo de dépôt devant la porte, seule façon de
+ * clore ces livraisons. Quand Railway est injoignable, il est refait UNE fois par le relais (fairride.be/api : celui du site,
+ * ou celui de l'application s'il répond), à condition de tenir sous sa limite (LIMITE_RELAIS) : d'où la photo réduite avant
+ * (reduirePhoto.js). Jamais après un délai dépassé : le serveur a peut-être reçu le premier envoi. */
+const LIMITE_RELAIS = 4 * 1024 * 1024;
+export async function apiUpload(path, { file, files, token, fieldName = 'image', fields, relaisSecours = false }) {
   const formData = new FormData();
   // Un fichier (`file`) ou plusieurs (`files`, même nom de champ répété).
   if (files && files.length) files.forEach((f) => formData.append(fieldName, f));
@@ -209,7 +272,12 @@ export async function apiUpload(path, { file, files, token, fieldName = 'image',
   try {
     res = await fetch(API_DIRECT + path, { method: 'POST', headers, body: formData, signal: controle?.signal });
   } catch {
-    throw erreurReseau(controle, false);
+    if (minuteur) clearTimeout(minuteur);
+    const poids = (files && files.length ? files : [file]).reduce((s, f) => s + (f?.size || 0), 0);
+    const relais = relaisSecours && !controle?.signal.aborted && poids <= LIMITE_RELAIS
+      ? (SUR_FAIRRIDE ? API_BASE : (await essayerRelais() ? RELAIS_APPLI : null)) : null;
+    if (!relais) throw erreurReseau(controle, false);
+    try { res = await fetch(relais + path, { method: 'POST', headers, body: formData, signal: signalDelai(DELAI_ENVOI_FICHIER_MS) }); } catch { throw erreurReseau(null, false); }
   } finally {
     if (minuteur) clearTimeout(minuteur);
   }

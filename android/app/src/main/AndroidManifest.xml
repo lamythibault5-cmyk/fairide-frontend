@@ -32,6 +32,29 @@
                      Android refuse alors de les vérifier, et jusqu'à Android 11 un seul hôte refusé annule la vérification de
                      tous. Stripe ne renvoie que vers fairride.be. Avant, fairide.be seul (2026-10-21). -->
                 <data android:scheme="https" android:host="fairride.be" />
+                <!-- Seulement les pages que l'app ouvre (G118, comme les « components » de l'iPhone dans
+                     public/.well-known/apple-app-site-association). Sans chemin, l'app prenait TOUT fairride.be : le retour
+                     Stripe d'un client du SITE (/order-success, /order-cancelled) pouvait s'ouvrir dans l'app installée, et
+                     l'onglet du navigateur ne recevait jamais le résultat. L'app, elle, revient par /retour-appli
+                     (backend config.js cheminRetourStripe, en-tête X-Fairide-Appli). -->
+                <data android:pathPrefix="/retour-appli" />
+                <data android:pathPrefix="/orders" />
+                <data android:pathPrefix="/account" />
+                <data android:pathPrefix="/restaurants" />
+                <data android:pathPrefix="/nl/restaurants" />
+                <data android:pathPrefix="/en/restaurants" />
+                <data android:pathPrefix="/groupe" />
+                <data android:pathPrefix="/nl/groupe" />
+                <data android:pathPrefix="/en/groupe" />
+                <data android:pathPrefix="/reset-password" />
+                <data android:pathPrefix="/driver" />
+                <data android:pathPrefix="/dashboard" />
+                <data android:pathPrefix="/carte" />
+                <data android:pathPrefix="/equipe" />
+                <data android:pathPrefix="/documents" />
+                <data android:pathPrefix="/invoices" />
+                <data android:pathPrefix="/demandes" />
+                <data android:pathPrefix="/preuve" />
             </intent-filter>
         </activity>
 

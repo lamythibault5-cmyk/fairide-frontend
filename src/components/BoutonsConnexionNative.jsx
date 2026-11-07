@@ -1,8 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
-import { appleDisponible, prechaufferConnexion } from '../natif';
+import { appleDisponible, prechaufferConnexion, estNatif } from '../natif';
+import { appleWebDisponible, prechargerApple } from '../appleSignInWeb';
+import BoutonGoogleWeb from './BoutonGoogleWeb';
 
-/* « Continuer avec Apple » / « Continuer avec Google », DANS L'APPLICATION seulement (estNatif()).
+/* « Continuer avec Apple » / « Continuer avec Google », DANS L'APPLICATION (estNatif()) — et, depuis le 2026-11-06, sur les
+ * écrans de l'application ouverts hors d'elle (site ajouté à l'écran d'accueil) : Google par son bouton officiel
+ * (BoutonGoogleWeb), Apple par sa fenêtre (appleSignInWeb.js, quand le site y est configuré). `onChoix(fournisseur, jeton)` :
+ * sur le site, le jeton arrive déjà obtenu ; dans l'application, l'appelant ouvre la feuille native (connexionFournisseur).
  *
  * Sur fairride.be, c'est le bouton officiel de Google (googleSignIn.js) qui s'affiche ; dans l'application il ne
  * fonctionne pas (Google refuse les WebView), d'où ces deux boutons qui ouvrent la feuille native du téléphone
@@ -47,23 +52,28 @@ export default function BoutonsConnexionNative({ onChoix, disabled = false }) {
     setAttenteVue(disabled);
     if (!disabled) setChoisi(null);
   }
-  useEffect(() => { prechaufferConnexion(); }, []);
-  const choisir = (fournisseur) => { setChoisi(fournisseur); onChoix(fournisseur); };
+  // Sur le site, le script d'Apple aussi (G148) : chargé au toucher, Safari bloquait sa fenêtre.
+  useEffect(() => { prechaufferConnexion(); if (!estNatif()) prechargerApple(); }, []);
+  const choisir = (fournisseur, jeton) => { setChoisi(fournisseur); onChoix(fournisseur, jeton); };
+  const natif = estNatif();
+  const apple = natif ? appleDisponible() : appleWebDisponible();
   const contenu = (fournisseur, logo, libelle) => (disabled && choisi === fournisseur
     ? <><span className="btn-connexion-roue" aria-hidden="true" />{t('appli.connexionEnCours')}</>
     : <>{logo} {libelle}</>);
   return (
     <div className="connexion-native">
-      {appleDisponible() && (
+      {apple && (
         <button type="button" className={`btn-connexion btn-connexion-apple${disabled && choisi === 'apple' ? ' en-cours' : ''}`} disabled={disabled}
           aria-busy={disabled && choisi === 'apple'} onClick={() => choisir('apple')}>
           {contenu('apple', <LogoApple />, t('appli.continueApple'))}
         </button>
       )}
-      <button type="button" className={`btn-connexion btn-connexion-google${disabled && choisi === 'google' ? ' en-cours' : ''}`} disabled={disabled}
-        aria-busy={disabled && choisi === 'google'} onClick={() => choisir('google')}>
-        {contenu('google', <LogoGoogle />, t('appli.continueGoogle'))}
-      </button>
+      {natif ? (
+        <button type="button" className={`btn-connexion btn-connexion-google${disabled && choisi === 'google' ? ' en-cours' : ''}`} disabled={disabled}
+          aria-busy={disabled && choisi === 'google'} onClick={() => choisir('google')}>
+          {contenu('google', <LogoGoogle />, t('appli.continueGoogle'))}
+        </button>
+      ) : <BoutonGoogleWeb disabled={disabled} onJeton={(jeton) => choisir('google', jeton)} />}
     </div>
   );
 }

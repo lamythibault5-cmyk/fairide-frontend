@@ -8,6 +8,7 @@ class FairideViewController: CAPBridgeViewController {
     override open func capacitorDidLoad() {
         bridge?.registerPluginInstance(HaptiquePlugin())
         bridge?.registerPluginInstance(RetourNatifPlugin())
+        bridge?.registerPluginInstance(EcranAllumePlugin())
         // iOS's own back swipe from the left edge (2026-10-23, version A of maquettes/transitions-appli): WebKit shows the
         // previous screen under the finger, with Apple's parallax and shadow. It walks the web history (pushState), so it
         // works with the app's router. Kept when the JavaScript swipe-back was removed (PR #217): this one shows the real
@@ -39,6 +40,28 @@ public class RetourNatifPlugin: CAPPlugin, CAPBridgedPlugin {
         let actif = call.getBool("actif") ?? true
         DispatchQueue.main.async {
             self.bridge?.webView?.allowsBackForwardNavigationGestures = actif
+            call.resolve()
+        }
+    }
+}
+
+/* THE SCREEN STAYS ON WHILE THE ORDERS PAGE IS OPEN (pre-GO bug hunt, G43; Owen's decision, 2026-11-06). A locked
+ * counter phone silences the page's ring and leaves only the notification. The Orders page asks for this
+ * (src/natif.js, garderEcranAllume) and lets go when it closes; iOS ignores it while the app is in the background. Kept
+ * in this file, like RetourNatifPlugin, so the Xcode project needs no new entry. Without it (an older build) the page
+ * falls back to navigator.wakeLock. */
+@objc(EcranAllumePlugin)
+public class EcranAllumePlugin: CAPPlugin, CAPBridgedPlugin {
+    public let identifier = "EcranAllumePlugin"
+    public let jsName = "EcranAllume"
+    public let pluginMethods: [CAPPluginMethod] = [
+        CAPPluginMethod(name: "activer", returnType: CAPPluginReturnPromise)
+    ]
+
+    @objc func activer(_ call: CAPPluginCall) {
+        let actif = call.getBool("actif") ?? true
+        DispatchQueue.main.async {
+            UIApplication.shared.isIdleTimerDisabled = actif
             call.resolve()
         }
     }

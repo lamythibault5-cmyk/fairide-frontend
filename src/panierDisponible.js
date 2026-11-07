@@ -2,11 +2,46 @@
 // change dans la journée (rupture, plat retiré). Le client ne l'apprenait qu'en payant (le serveur refuse : ITEM_UNAVAILABLE).
 // Mêmes cas que le serveur refuse (routes/orders.js) : plat absent de la carte, indisponible, en rupture aujourd'hui, retiré,
 // allergènes non déclarés, alcool non vendable. Sans carte chargée (null), on ne dit rien : rien n'est encore connu.
-export function ligneIndisponible(ligne, menu) {
-  if (!Array.isArray(menu)) return false;
+// `jourPlusTard` : la commande est programmée pour un jour suivant (G165). Un plat épuisé AUJOURD'HUI seulement (pas retiré)
+// se commande alors, comme le serveur l'accepte (routes/orders.js, ruptureDuJourSeulement) : il revient tout seul demain.
+export function ligneIndisponible(ligne, menu, options) {
+  const motif = motifLigne(ligne, menu, options);
+  return motif === 'indisponible' || motif === 'options';
+}
+
+/* CE QUE LA LIGNE DIT AU CLIENT : 'indisponible' (« Plus disponible aujourd'hui »), 'options' (ses choix ne respectent plus
+ * les règles du plat, G166 : à refaire), 'plusTard' (épuisé aujourd'hui seulement, commandable pour un autre jour, G165), ou
+ * null. Seuls 'indisponible' et 'options' bloquent la commande (ligneIndisponible). */
+export function motifLigne(ligne, menu, { jourPlusTard = false } = {}) {
+  if (!Array.isArray(menu)) return null;
   const plat = menu.find((m) => m.id === ligne.itemId);
-  return !plat || plat.available === false || !!plat.outOfStockToday || !!plat.withdrawn || !!plat.allergensMissing || !!plat.alcoholUnavailable
-    || prixActuelLigne(ligne, plat) === false;
+  if (!plat) return 'indisponible';
+  const pourPlusTard = jourPlusTard && ruptureDuJourSeulement(plat);
+  if ((plat.available === false && !pourPlusTard) || (!!plat.outOfStockToday && !pourPlusTard) || !!plat.withdrawn || !!plat.allergensMissing || !!plat.alcoholUnavailable
+    || prixActuelLigne(ligne, plat) === false) return 'indisponible';
+  if (!optionsValides(ligne, plat)) return 'options';
+  return pourPlusTard ? 'plusTard' : null;
+}
+
+// Épuisé pour aujourd'hui seulement, pas retiré de la carte (G165) : commandable pour un autre jour.
+export function ruptureDuJourSeulement(plat) {
+  return !!plat && !!plat.outOfStockToday && !plat.withdrawn;
+}
+
+/* LES RÈGLES D'OPTIONS DU PLAT (G166). L'équipe peut rendre un groupe obligatoire, ou limiter le nombre de choix, après qu'une
+ * ligne est entrée au panier : le serveur la refusait alors (OPTION_INVALID) et le paiement butait sans dire quelle ligne
+ * refaire. Mêmes règles que le serveur (routes/orders.js, resolveOptions) ; sans les groupes du plat (carte de la liste), on
+ * ne juge pas. */
+function optionsValides(ligne, plat) {
+  if (!Array.isArray(plat.optionGroups)) return true;
+  const choisies = new Set(ligne.optionItemIds || []);
+  return plat.optionGroups.every((g) => {
+    const n = (g.items || []).filter((i) => choisies.has(i.id)).length;
+    if (g.required && n === 0) return false;
+    if (g.type === 'single' && n > 1) return false;
+    if (g.type === 'multiple' && g.maxSelections && n > g.maxSelections) return false;
+    return true;
+  });
 }
 
 /* LE PRIX D'AUJOURD'HUI D'UNE LIGNE (audit du 19/10, discovery-15). Le panier garde le prix vu à l'ajout ; le serveur, lui,
@@ -30,6 +65,6 @@ export function prixActuelLigne(ligne, plat) {
   return +(Number(plat.price) + delta).toFixed(2);
 }
 
-export function lignesIndisponibles(lignes, menu) {
-  return Object.entries(lignes || {}).filter(([, l]) => ligneIndisponible(l, menu)).map(([cle]) => cle);
+export function lignesIndisponibles(lignes, menu, options) {
+  return Object.entries(lignes || {}).filter(([, l]) => ligneIndisponible(l, menu, options)).map(([cle]) => cle);
 }

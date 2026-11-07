@@ -19,8 +19,9 @@ components live in [src/components/conformite/](../../src/components/conformite/
   the SMS code once ([VerifTelephone](../../src/components/VerifTelephone.jsx): top of the « Avant de commander » sheet in
   the app, a window on the site; the order then leaves by itself when nothing else is to tick). The backend refuses an order
   otherwise (`PHONE_VERIFICATION_REQUIRED`, routes/orders.js; the quote passes). « Je n'ai pas reçu le SMS » gives an e-mail
-  code after 30 s that lets the order through without proving the number (`users.phone_email_fallback_at`); the sign-up
-  promo code is credited only when the number is proven by SMS (one account per number).
+  code after 30 s that lets the order through without proving the number (`users.phone_email_fallback_at`, cleared when the
+  number changes); the sign-up promo code and both code ami rewards are credited only when the number is proven by SMS (one
+  account per number, G38 2026-11-06).
   **Shops and couriers prove their number at sign-up** (founder, 2026-11-05: « only the client can wait until he has to
   order »): [ProtectedRoute](../../src/components/ProtectedRoute.jsx) puts [MurTelephone](../../src/components/MurTelephone.jsx)
   in front of every `/dashboard` and `/driver` page while the number is unproven (no « later », only « Se déconnecter »).
@@ -141,3 +142,23 @@ components live in [src/components/conformite/](../../src/components/conformite/
   `node scripts/empreinte-cgu.js <your front path>`. Bump the date in
   `terms.draftWarning` and register the new version and hash in the backend (`scripts/empreinte-cgu.js`,
   `cgu.js`) — the backend test fails until you do.
+- **New terms or a new contract: one screen at opening** (founder, 2026-11-06, workspace mockup
+  `maquettes/nouvelles-conditions`, version C). [NouvellesConditions](../../src/components/conformite/NouvellesConditions.jsx)
+  is a full screen for anyone who had accepted an EARLIER version: a customer whose T&Cs changed, a shop whose contract
+  changed, an approved courier whose contract or pre-ride texts changed. Title, the texts one tap away, one sentence saying
+  what the button is worth, « Accepter et continuer » (no box). Website and app alike. Mounted by Layout.jsx (customer,
+  courier; it replaced FeuilleTextesLivreur) and DashboardLayout.jsx (shop). It never shows while something is in progress
+  (the `occupe` state of `miseAJour.js`: a customer order followed, a ride in hand, a shop order waiting to be accepted),
+  at checkout, on the pages where the texts are read and signed, to the team acting for an account, to a shop's staff
+  member, to test accounts or in simulation. No backend change: it calls `/auth/terms/accept` (`reaccept`),
+  `/restaurants/:id/contract/accept` (name of the last signature, notice waiver) and `/couriers/me/engagements` (no name:
+  the server signs with the verified ID name).
+  **« Je n'accepte pas » must stay**, for the three roles (founder asked « make sure my decisions hold legally »; he had
+  chosen no « Plus tard » for shops). Shops: their contract (clause « Modification du contrat », since RESTO-2026.23)
+  promises that an unaccepted version changes nothing and that continuing is not accepting; and accepting « dès
+  maintenant » waives the P2B 15-day notice (art. 3 §2), which a screen with no other way out would make forced, so the
+  change void (art. 3 §3). Couriers keep their earnings, invoices and account (no rides, as before). Customers can browse
+  or delete their account (GDPR art. 17) without accepting. After a refusal, the old reminders take over for the session:
+  the box at checkout (the server refuses an order without the current T&Cs), the card at the top of Commandes
+  (RenouvellementContrat, which the shop clause names), « Signe ton nouveau contrat » on Courses. The screen comes back at
+  the next opening. The privacy policy is « prise en connaissance », never « acceptée » (information, not consent).

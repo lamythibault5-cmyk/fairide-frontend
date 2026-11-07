@@ -381,6 +381,12 @@ export function ParametersTab() {
             <textarea id={`${id}-assur`} rows={2} maxLength={500} value={champ('courier_insurance_policy')} onChange={changer('courier_insurance_policy')} />
             <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramInsuranceHelp')}</p>
           </div>
+          {/* Numéro d'astreinte (G15, urgenceLivreur.prevenirAstreinte) : SMS quand une alerte à l'équipe n'a sonné nulle part. */}
+          <div className="field">
+            <label htmlFor={`${id}-astreinte`}>{t('conformite.paramOnCall')}</label>
+            <input id={`${id}-astreinte`} type="tel" inputMode="tel" autoComplete="off" placeholder="+32 4…" value={champ('equipe_telephone_astreinte')} onChange={changer('equipe_telephone_astreinte')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramOnCallHelp')}</p>
+          </div>
           <div className="field">
             <label htmlFor={`${id}-selfie`}>{t('conformite.paramSelfieRate')}</label>
             <input id={`${id}-selfie`} inputMode="decimal" value={champ('selfie_check_rate') || '0.2'} onChange={changer('selfie_check_rate')} />
@@ -390,6 +396,18 @@ export function ParametersTab() {
             <label htmlFor={`${id}-cap`}>{t('conformite.paramFloorCap')}</label>
             <input id={`${id}-cap`} type="number" min="0" max="2000" value={champ('delivery_courier_floor_cap_cents') || '300'} onChange={changer('delivery_courier_floor_cap_cents')} />
             <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramFloorCapHelp')}</p>
+          </div>
+          {/* Livreur « libre » et livraisons par livreur libre (fondateur, 2026-11-06, G1 et G6 ; backend couriers.minutesPresence,
+              lancement.capaciteParLivreur). */}
+          <div className="field">
+            <label htmlFor={`${id}-presence`}>{t('conformite.paramPresence')}</label>
+            <input id={`${id}-presence`} type="number" min="5" max="120" step="1" inputMode="numeric" value={champ('courier_presence_min') || '15'} onChange={changer('courier_presence_min')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramPresenceHelp')}</p>
+          </div>
+          <div className="field">
+            <label htmlFor={`${id}-capacite`}>{t('conformite.paramCapacity')}</label>
+            <select id={`${id}-capacite`} value={champ('delivery_orders_per_free_courier') || '1'} onChange={changer('delivery_orders_per_free_courier')}><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramCapacityHelp')}</p>
           </div>
           {/* Mise à jour obligatoire des applis (2026-11-03, components/MiseAJourObligatoire.jsx) : sous ce build, l'app ne
               montre plus qu'« Mets à jour Fairride ». 0 ou vide = rien de forcé. */}

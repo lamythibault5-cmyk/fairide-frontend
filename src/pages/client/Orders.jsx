@@ -8,6 +8,7 @@ const APPLI = experienceApp();
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { vibrer } from '../../gestes';
 import useRevalidation from '../../useRevalidation';
+import { nourrirSuivi } from '../../hooks/useCommandeEnCours';
 import EtatVide from '../../components/EtatVide';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import ErreurChargement from '../../components/ErreurChargement';
@@ -52,6 +53,14 @@ function vignettePhoto(url, taille, carre = true) {
   return url.replace('/image/upload/', carre ? `/image/upload/c_fill,w_${taille},h_${taille},f_auto,q_auto/` : `/image/upload/c_limit,w_${taille},f_auto,q_auto/`);
 }
 const heureCourte = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
+// L'issue d'une commande close lue par le client (orders.noCourier_incident_*). Absent au contrôle d'âge : son propre texte,
+// pas de remboursement comme un client absent (G154, décision d'Owen du 06/11/2026) ; à emporter payée sur place, rien n'était
+// payé : un texte sans « elle reste due ». Close d'office après 12 h (G26) : pickupAutoClosed, que deliveryIncident ne porte pas
+// (les applis déjà installées l'affichaient comme une clé de traduction brute).
+const issueCommande = (o) => {
+  if (o.ageCheck === 'refused_absent') return o.orderType === 'pickup' && o.paymentMode === 'on_site' ? 'age_absent_on_site' : 'age_absent';
+  return o.pickupAutoClosed ? 'pickup_auto_closed' : o.deliveryIncident;
+};
 
 /* MES COMMANDES PAR PAGES (tenir la charge, 2026-11-02). GET /orders/mine rendait tout l'historique, plats et photos, à chaque
  * relecture (toutes les 15 s). Les 30 plus récentes d'abord, puis « Voir plus de commandes » pour les précédentes
@@ -103,6 +112,8 @@ export default function Orders() {
   const relirePremierePage = () => api(CHEMIN_COMMANDES, { token }).then((l) => {
     const page = Array.isArray(l) ? l : [];
     setOrders((avant) => fusionnerPremierePage(page, avant));
+    // La bande « commande en cours » ne relit plus pendant qu'on est ici : elle prend cette lecture (G156).
+    nourrirSuivi(page, token);
     return page;
   });
   async function voirPlus() {
@@ -285,7 +296,11 @@ export default function Orders() {
     setAdresseDe(null);
     toast(t('orders.addrPaid'), 'succes');
     const relire = () => relirePremierePage().catch(() => {});
-    relire();
+    /* Sans attendre le webhook (pré-GO 2026-11-06, G79) : le serveur relit la page du supplément chez Stripe et, payée, change
+       l'adresse tout de suite, avant que le livreur parte vers l'ancienne. Un serveur d'avant cette route : 404 ignoré. */
+    const commande = searchParams.get('order');
+    if (commande) api(`/orders/${encodeURIComponent(commande)}/address/confirm`, { method: 'POST', token }).catch(() => {}).finally(relire);
+    else relire();
     const id = setTimeout(relire, 4000);
     return () => clearTimeout(id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -299,9 +314,14 @@ export default function Orders() {
     setCancellingId(orderId);
     try {
       const updated = await api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
-      setOrders((prev) => prev.map((x) => (x.id === orderId ? updated : x)));
       // Payée en ligne : on dit aussi que l'argent revient, et qu'un e-mail le confirme (audit du 19/10, AO-10).
       const rendu = updated?.paid && updated.paymentMode !== 'on_site' && !updated.refundPending;
+      /* LE REMBOURSEMENT SE VOIT TOUT DE SUITE (G114, 2026-11-06). La réponse de l'annulation n'a pas refundedAmount (le
+       * remboursement est inscrit par le webhook Stripe quelques secondes après) : la commande restait « Payée 25,00 € ».
+       * « Remboursement en cours » jusqu'à la relecture de la liste, 4 puis 12 secondes plus tard. Un drapeau local, pas
+       * refundPending : celui-là veut dire « remboursement en échec » et ferait dire que l'équipe s'en occupe. */
+      setOrders((prev) => prev.map((x) => (x.id === orderId ? { ...updated, ...(rendu ? { remboursementLance: true } : {}) } : x)));
+      if (rendu) for (const ms of [4000, 12000]) setTimeout(() => relirePremierePage().catch(() => {}), ms);
       toast(t(rendu ? 'orders.toastCancelledRefund' : 'orders.toastCancelled'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
@@ -347,8 +367,12 @@ export default function Orders() {
         setPayingId(null);
       }
     } catch (e) {
+      /* LA PAGE DE PAIEMENT D'AVANT A ÉTÉ PAYÉE (pré-GO 2026-11-06, G20) : le serveur n'en rouvre pas une seconde. Payée, ou
+         encore en cours à la banque : l'écran de confirmation, qui attend et redemande au serveur. Close : la liste relue. */
+      if (e.code === 'ALREADY_PAID' || e.code === 'PAYMENT_IN_PROGRESS') { setPayingId(null); navigate(`/order-success?order=${o.id}`); return; }
       toast(e.message, 'erreur');
       setPayingId(null);
+      if (e.code === 'ORDER_CLOSED') relirePremierePage().catch(() => {});
     }
   }
   // Retour arrière depuis Stripe sur le site : le navigateur peut rendre la page telle qu'il l'avait gardée (bfcache),
@@ -369,6 +393,8 @@ export default function Orders() {
       else navigate(cheminFiche({ id: o.restaurantId, slug: o.restaurantSlug }));
     } catch (e) {
       toast(e.message, 'erreur');
+      // Payée entre-temps, ou déjà close (G20/G40) : la liste relue montre où elle en est.
+      if (e.code === 'ALREADY_PAID' || e.code === 'ORDER_CLOSED') relirePremierePage().catch(() => {});
     } finally {
       setCancellingId(null);
     }
@@ -524,7 +550,7 @@ export default function Orders() {
       )}
       <VendeurLivraison order={o} />
       <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
-      {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
+      {issueCommande(o) && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${issueCommande(o)}`)}</p>}
     </>
   );
   /* LIVRÉE PAR UN LIVREUR DU RESTAURANT (fondateur, 2026-11-02 : « le client doit savoir pourquoi il ne voit pas la position en
@@ -553,11 +579,16 @@ export default function Orders() {
         deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
         driverLat={o.driverLat} driverLng={o.driverLng}
         lastUpdatedAt={o.driverLocationUpdatedAt}
+        velo={o.driverVelo ?? null} voiture={o.driverVoiture ?? null}
         {...(APPLI ? {} : { height: 320 })}
       />
       <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
-        {/* Plus de 2 min sans nouvelle position (même seuil que la carte) : pas « en direct » (audit du 19/10, AO-17). */}
-        {o.driverLat
+        {/* Plus de 2 min sans nouvelle position (même seuil que la carte) : pas « en direct » (audit du 19/10, AO-17).
+            TOURNÉE (G55, fondateur, 2026-11-06) : un autre arrêt passe avant cette commande ; le serveur ne donne pas la position
+            du livreur (il serait chez un autre client), mais l'heure prévue ici d'après sa tournée (backend arretsAvantClient). */}
+        {o.courierOtherStop
+          ? (o.courierPlannedAt ? t('orders.courierOtherStopAt', { time: heureCourte(o.courierPlannedAt) }) : t('orders.courierOtherStop'))
+          : o.driverLat
           ? t(o.driverLocationUpdatedAt && Date.now() - new Date(o.driverLocationUpdatedAt).getTime() > 120000 ? 'orders.driverLastLocation' : 'orders.driverLiveLocation')
           : t('orders.driverWaitingLocation')}
       </div>
@@ -585,6 +616,8 @@ export default function Orders() {
   const etatRemboursement = (o) => {
     if (o.refundPending) return 'en_cours';
     const rendu = Number(o.refundedAmount || 0);
+    // Annulée à l'instant, remboursement parti mais pas encore inscrit par le webhook (cancelOrder, G114).
+    if (o.remboursementLance && rendu <= 0) return 'en_cours';
     if (rendu <= 0) return null;
     return rendu >= Number(o.total) - 0.005 ? 'total' : 'partiel';
   };
@@ -600,7 +633,9 @@ export default function Orders() {
     <>
       {/* Payée sur place puis annulée : « À payer sur place 4,50 € » restait affiché sous une commande close (audit du 19/10,
           LIVE-11). Rien n'a été payé, rien n'est à payer : on le dit, sans montant. */}
-      {avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
+      {/* À payer sur place et close d'office faute d'avoir été marquée remise (G26) : on ne sait pas si elle a été payée au
+          comptoir, aucune ligne d'argent. */}
+      {avecMontant && o.pickupAutoClosed ? null : avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
         <div className="suivi-total"><span className="small">{t('orders.payNothing')}</span></div>
       ) : avecMontant && (
         <div className="suivi-total">
@@ -661,13 +696,21 @@ export default function Orders() {
   );
   // Annuler, tant que le commerce n'a pas accepté. La règle est dite UNE fois, dans la note au-dessus (ProchaineEtape : « tu peux
   // aussi l'annuler toi-même d'ici là ») ; la phrase qui la répétait sous le bouton est partie (audit design 2).
-  const boutonAnnuler = (o) => (o.status === 'nouveau' && !impayeeEnLigne(o) && !nonEnvoyee(o) ? (
-    <button type="button" className="btn-ghost suivi-annuler" disabled={cancellingId === o.id} onClick={() => setAAnnuler(o)}>
-      {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
-    </button>
+  // Commande programmée déjà acceptée : annulable, remboursée en entier, jusqu'à ce que la cuisine commence (chasse aux bogues
+  // d'avant GO, 2026-11-06, G92 ; backend cancelUntil, PATCH /orders/:id/cancel). L'heure limite est dite sous le bouton.
+  const programmeeAnnulable = (o) => o.status === 'preparation' && Number(o.cancelUntil) > Date.now();
+  const heureLimite = (ms) => (new Date(ms).toDateString() === new Date().toDateString() ? heureCourte(ms)
+    : new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
+  const boutonAnnuler = (o) => ((o.status === 'nouveau' && !impayeeEnLigne(o) && !nonEnvoyee(o)) || programmeeAnnulable(o) ? (
+    <>
+      <button type="button" className="btn-ghost suivi-annuler" disabled={cancellingId === o.id} onClick={() => setAAnnuler(o)}>
+        {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
+      </button>
+      {programmeeAnnulable(o) && <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelUntil', { time: heureLimite(o.cancelUntil) })}</div>}
+    </>
   ) : null);
   // En route, « le commerce la prépare » était faux (audit du 19/10, AO-15) : une phrase pour la livraison.
-  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t(o.status === 'livraison' ? 'orders.cancelLockedOnTheWay' : 'orders.cancelLocked')}</div> : null);
+  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) && !programmeeAnnulable(o) ? <div className="small" style={{ marginTop: 6 }}>{t(o.status === 'livraison' ? 'orders.cancelLockedOnTheWay' : 'orders.cancelLocked')}</div> : null);
   // LE PIED D'UNE COMMANDE : pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
   // alignée sur le texte de la carte (audit design 2 : les deux liens étaient décalés l'un par rapport à l'autre).
   // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.
@@ -818,7 +861,7 @@ export default function Orders() {
         {!enRoute && blocPhoto(o)}
         {rangeeLivreur(o)}
         <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
-        {o.deliveryIncident && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${o.deliveryIncident}`)}</p>}
+        {issueCommande(o) && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${issueCommande(o)}`)}</p>}
         {codeDeRemise(o)}
         {rangeeAdresse(o)}
         {enRoute && blocPhoto(o)}
@@ -908,7 +951,16 @@ export default function Orders() {
         {vedette && corpsEnCours(vedette)}
         {arretee && (
           <div className="sc-arret">
-            {arretee.status === 'refuse' ? blocRefus(arretee) : <ProchaineEtape order={arretee} />}
+            {/* Annulée : ce qui s'est passé ET l'argent (G58). Close « client absent » ou « non récupérée », ProchaineEtape ne dit
+                rien (la ligne de l'incident le dit) ; cette ligne et le montant manquaient ici : le client croyait la commande
+                remboursée, puis trouvait le débit. */}
+            {arretee.status === 'refuse' ? blocRefus(arretee) : (
+              <>
+                <ProchaineEtape order={arretee} />
+                {issueCommande(arretee) && <p className="small">{t(`orders.noCourier_incident_${issueCommande(arretee)}`)}</p>}
+                {blocTotal(arretee)}
+              </>
+            )}
             <Link to="/restaurants" className="btn-gold sc-arret-action">{t('orders.voirAutres')}</Link>
           </div>
         )}

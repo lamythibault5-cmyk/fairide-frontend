@@ -163,9 +163,8 @@ async function sonderRole(navigateur, role) {
     window.__erreurs = [];
     const ce = console.error.bind(console);
     console.error = (...a) => { window.__erreurs.push(a.map((x) => (x instanceof Error ? x.message : String(x))).join(' ').slice(0, 300)); ce(...a); };
-    // « Ton contrat a changé » (FeuilleTextesLivreur) : fermé par « Plus tard », comme le ferait le livreur ; sinon il
-    // arrive un instant après la page et couvre ce qu'on allait toucher. Par onglet : chaque page de la sonde en est un.
-    try { sessionStorage.setItem('fairide_textes_livreur_plus_tard', '1'); } catch { /* sans stockage */ }
+    // L'écran « On a mis à jour… » (NouvellesConditions.jsx) ne vient qu'à un compte qui avait accepté une version ANTÉRIEURE :
+    // les comptes de la sonde, tout neufs, ont accepté celle du jour à l'inscription, il ne les couvre donc jamais.
     if (localStorage.getItem('__sonde')) return;
     localStorage.setItem('__sonde', '1');
     localStorage.setItem('fairide_bienvenue', JSON.stringify({ vu: true, role: role || 'client', commune: 'Ixelles' }));

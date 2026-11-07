@@ -6,7 +6,8 @@ import { etatPosition } from '../natif';
  * courses (components/livreur/PositionRequise.jsx) et l'interrupteur « Disponible » du tableau de bord (driver/Dashboard.jsx). */
 export default function useEtatPosition() {
   const [etat, setEtat] = useState('verification');
-  const verifier = useCallback(async () => { const e = await etatPosition(); setEtat(e); return e; }, []);
+  // Un livreur : la position EXACTE (G42) — « approximate » sur Android si elle manque, traitée comme absente.
+  const verifier = useCallback(async () => { const e = await etatPosition({ precise: true }); setEtat(e); return e; }, []);
   useEffect(() => {
     verifier();
     const auRetour = () => { if (document.visibilityState === 'visible') verifier(); };

@@ -1,0 +1,9 @@
+{
+  "niveau": "conseillee",
+  "raison": "Commerces (G43) : sonnerie longue d'une nouvelle commande téléphone verrouillé (canal Android commandes2) et écran gardé allumé sur Commandes ; il faut la coque native du store.",
+  "lignes": {
+    "fr": ["Commerces : une sonnerie longue pour chaque nouvelle commande", "Commerces : l'écran reste allumé sur Commandes"],
+    "nl": ["Zaken: een lange beltoon voor elke nieuwe bestelling", "Zaken: het scherm blijft aan op Bestellingen"],
+    "en": ["Shops: a long ring for every new order", "Shops: the screen stays on in Orders"]
+  }
+}

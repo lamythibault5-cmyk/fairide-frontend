@@ -14,7 +14,7 @@ import AddressSearch from '../../components/AddressSearch';
 import EngagementsInscription from '../../components/commerce/EngagementsInscription';
 import ChoixSpecialites from '../../components/commerce/ChoixSpecialites';
 import { DAY_ORDER, dayLabel } from '../../openingHours';
-import { bceValide, raisonBce, codePostalValide, mdpValide, MDP_LONGUEUR } from '../../validation';
+import { bceValide, raisonBce, codePostalValide, mdpValide, MDP_LONGUEUR, telephoneValide } from '../../validation';
 import { lireBienvenue } from '../../bienvenue';
 import { attendrePage } from '../../routePrefetch';
 import { connexionFournisseur } from '../../natif';
@@ -174,6 +174,8 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
   const [choixJour, setChoixJour] = useState(false);
   const creneauxDuJour = (d) => autresHeures[d] || creneaux;
   const [services, setServices] = useState(() => ({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: modeEmporterParDefaut() }));
+  // Un brouillon d'avant peut encore porter « en ligne » (G7) : il compte « au choix », le seul mode possible sans paiements.
+  const modeEmporter = services.pickupPaymentMode === 'on_site' ? 'on_site' : 'both';
   // Dernier écran
   const [accepteCgu, setAccepteCgu] = useState(false);
   const [accepteEngagements, setAccepteEngagements] = useState(false);
@@ -328,7 +330,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
     if (cle === 'commerce') {
       if (!nomCommerce.trim()) e.nomCommerce = requis;
       if (!restoPhone.trim()) e.restoPhone = requis;
-      else if (restoPhone.replace(/\D/g, '').length < 8) e.restoPhone = t('auth.errPhoneInvalid');
+      else if (!telephoneValide(restoPhone)) e.restoPhone = t('auth.errPhoneInvalid'); // la règle du serveur (validation.js)
     }
     if (cle === 'type' && !specialites.length) e.cuisine = t('specialites.aucune');
     if (cle === 'entreprise') {
@@ -429,7 +431,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       managerContacts: [{ name: `${firstName} ${lastName}`.trim(), phone: phone.trim(), role: 'owner' }],
       email: email.trim(), emailSecondary: '', website: '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
-      pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
+      pickupPaymentMode: services.pickup ? modeEmporter : undefined,
       deliveryMode: services.deliveryMode === 'restaurant' ? 'restaurant' : 'fairide',
       businessSource: 'manuel',
       ...regimes
@@ -481,7 +483,7 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       await arriver(data.user);
     } catch (err) {
       const champ = err.field || err.data?.field;
-      if (fed && err.message !== 'INCOMPLETE_PROFILE' && /google|apple|token|jeton|expir/i.test(err.message || '')) {
+      if (fed && err.code === 'FED_TOKEN_INVALID') { // le code, pas le texte (G151, 2026-11-06)
         /* JETON APPLE / GOOGLE EXPIRÉ AVANT LA FIN (audit du 19/10, auth-08). On repartait de l'écran du compte (onQuitter) :
          * tout ce qui avait été tapé était perdu, et un utilisateur Apple lisait « reclique sur Continuer avec Google ». On
          * reste ici, réponses gardées, on nomme le bon fournisseur et on rouvre sa feuille ; un nouveau « Créer mon compte »
@@ -734,16 +736,16 @@ export default function InscriptionAppli({ role, fed, depuis, codeParrain, onQui
       contenu = (
         <>
           <Option multi on={services.delivery} icone="velo" titre={t('auth.serviceDelivery')} onClick={() => setServices((s) => ({ ...s, delivery: !s.delivery }))} />
-          {services.delivery && (
-            <Segments label={t('auth.serviceDelivery')} valeur={services.deliveryMode} onChoix={(v) => setServices((s) => ({ ...s, deliveryMode: v }))}
-              options={[['fairide', t('appli.insLivFairide')], ['restaurant', t('appli.insLivPropres')]]} />
-          )}
+          {/* Plus de choix « mes livreurs » ici (G127, 2026-11-06) : le serveur l'ignorait et rien ne disait de signer la
+              déclaration. Le commerce démarre avec les livreurs Fairride ; son équipe se choisit dans Mon commerce › Livraison. */}
+          {services.delivery && <p className="bv-aide">{t('auth.serviceDeliveryOwnLater')}</p>}
           <Option multi on={services.pickup} icone="maison" titre={t('auth.servicePickup')} onClick={() => setServices((s) => ({ ...s, pickup: !s.pickup }))} />
           {services.pickup && (
             <>
-              <Segments label={t('accountUi.pickupPayTitle')} valeur={services.pickupPaymentMode} onChoix={(v) => setServices((s) => ({ ...s, pickupPaymentMode: v }))}
-                options={[['on_site', t('appli.insSurPlace')], ['online', t('appli.insEnLigne')], ['both', t('appli.insAuChoix')]]} />
-              <p className="bv-aide">{t(`accountUi.${{ on_site: 'pickupPayOnSiteOnly', online: 'pickupPayOnline', both: 'pickupPayBoth' }[services.pickupPaymentMode]}Text`)}</p>
+              {/* « En ligne uniquement » demande des paiements actifs (G7) : il se choisit dans Mon compte, une fois Stripe activé. */}
+              <Segments label={t('accountUi.pickupPayTitle')} valeur={modeEmporter} onChoix={(v) => setServices((s) => ({ ...s, pickupPaymentMode: v }))}
+                options={[['on_site', t('appli.insSurPlace')], ['both', t('appli.insAuChoix')]]} />
+              <p className="bv-aide">{t(`accountUi.${{ on_site: 'pickupPayOnSiteOnly', both: 'pickupPayBoth' }[modeEmporter]}Text`)} {t('auth.pickupPayOnlineLater')}</p>
             </>
           )}
           {erreurs.services && <p className="field-error" role="alert">{erreurs.services}</p>}

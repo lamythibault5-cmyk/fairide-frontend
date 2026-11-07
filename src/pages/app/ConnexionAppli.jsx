@@ -5,7 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import PasswordInput from '../../components/PasswordInput';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
-import { estNatif, connexionFournisseur } from '../../natif';
+import RecuperationSms from '../../components/RecuperationSms';
+import { connexionFournisseur } from '../../natif';
 import { attendrePage, espaceApresConnexion } from '../../routePrefetch';
 import { lireBienvenue } from '../../bienvenue';
 import { Haut } from './EcransBienvenue';
@@ -136,11 +137,12 @@ export default function ConnexionAppli() {
   }
 
   // Apple / Google (application native) : compte existant → connecté ; pas encore de compte → l'inscription de l'app.
-  async function viaFournisseur(fournisseur) {
+  // `obtenu` : le jeton déjà rendu par le bouton Google du site (hors de l'application, BoutonsConnexionNative).
+  async function viaFournisseur(fournisseur, obtenu) {
     setAttente(true);
     let reussi = false;
     try {
-      const jeton = await connexionFournisseur(fournisseur);
+      const jeton = obtenu || await connexionFournisseur(fournisseur);
       try {
         const data = jeton.fournisseur === 'apple'
           ? await loginWithApple(jeton.jeton, 'client', { givenName: jeton.prenom || undefined, familyName: jeton.nom || undefined })
@@ -216,6 +218,8 @@ export default function ConnexionAppli() {
             <input id="bv-c-email-oubli" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false}
               className={erreurs.email ? 'input-invalid' : undefined} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
           </Champ>
+          {/* Plus accès à l'adresse (faute de frappe, relais Apple d'un compte ouvert sur iPhone) : par SMS (G52 / G147). */}
+          <RecuperationSms classeBouton="btn-ghost" classeLien="bv-lien" />
         </>
       );
       break;
@@ -249,8 +253,9 @@ export default function ConnexionAppli() {
         <form className="bv-form bv-feuille" onSubmit={valider} noValidate>
           {contenu}
           <div className="bv-grandit" />
-          {/* Apple / Google : dans la vraie application seulement, au-dessus du bouton (comme l'écran du compte). */}
-          {ecran === 'connexion' && estNatif() && <BoutonsConnexionNative onChoix={viaFournisseur} disabled={attente} />}
+          {/* Apple / Google au-dessus du bouton (comme l'écran du compte) : feuille native dans l'application, boutons du site
+              ailleurs (site ajouté à l'écran d'accueil, 2026-11-06 : un compte Google sans mot de passe y restait bloqué). */}
+          {ecran === 'connexion' && <BoutonsConnexionNative onChoix={viaFournisseur} disabled={attente} />}
           {/* Un code e-mail incomplet ne part plus au serveur (audit du 19/10, LIVE-28) : six chiffres d'abord. */}
           <button type="submit" className="bv-btn btn-gold" disabled={attente || (ecran === 'oubliCode' && code.length !== 6)}>{attente ? t('common.loading') : bouton}</button>
           {/* Pas en double : après « aucun compte », le lien est déjà sous le champ e-mail. */}

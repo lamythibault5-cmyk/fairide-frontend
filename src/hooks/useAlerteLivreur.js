@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { playChime, notifier } from './useNewOrderAlert';
 import { vibrer } from '../gestes';
+import { estNatif } from '../natif';
 
 // Alertes du livreur. Jusqu'ici, une course disponible n'était signalée par RIEN : ni son, ni notification — le
 // livreur devait fixer son écran. Même principe que l'alerte du restaurateur (useNewOrderAlert.js), sur ses
@@ -32,7 +33,8 @@ export function sonActifMemorise() {
 
 
 // `surAnnulee` (facultatif) : appelé avec la course annulée, pour l'écrire aussi à l'écran (Dashboard.jsx).
-export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif, surAnnulee }) {
+// `titreOnglet` : false hors de l'écran des courses (SuiviCoursesHorsEcran.jsx) — la page affichée garde son titre.
+export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif, surAnnulee, titreOnglet = true }) {
   const { t } = useLanguage();
   const [sonActif, setSonActifEtat] = useState(sonActifMemorise);
   const [permission, setPermission] = useState(() => (typeof Notification === 'undefined' ? 'unsupported' : Notification.permission));
@@ -69,22 +71,45 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     const debloquer = () => { if (ctx.state === 'suspended') ctx.resume().catch(() => {}); };
     const evts = ['pointerdown', 'keydown', 'touchstart'];
     evts.forEach((e) => window.addEventListener(e, debloquer, { passive: true }));
+    /* DANS L'APP, LE SON REPART TOUT SEUL (bug hunt avant GO, G120), comme chez le commerce (useNewOrderAlert.js) : iOS
+     * suspend le son d'une app en arrière-plan, et au retour de Waze ou de Plans le livreur, téléphone sur le guidon, ne
+     * touchait pas l'écran : « course prête » et les courses au premier arrivé restaient muettes. Capacitor permet de
+     * jouer sans geste : on reprend à l'ouverture et à chaque retour au premier plan. */
+    const reprendreNatif = () => { if (!document.hidden) debloquer(); };
+    if (estNatif()) {
+      debloquer();
+      document.addEventListener('visibilitychange', reprendreNatif);
+    }
     return () => {
       evts.forEach((e) => window.removeEventListener(e, debloquer));
+      document.removeEventListener('visibilitychange', reprendreNatif);
       ctxRef.current = null;
       ctx.close().catch(() => {});
     };
   }, []);
 
-  const alerter = useCallback((notes, motifVibration, titre, corps, tag) => {
+  /* Contexte suspendu au moment de sonner (G120) : on le relance, puis on joue, comme ring() chez le commerce. Une seule
+   * demande à la fois : sur le site sans geste, Chrome laisse resume() en attente, et les sons manqués ne doivent pas tous
+   * partir d'un coup au premier toucher. */
+  const repriseRef = useRef(false);
+  const jouer = useCallback((notes) => {
     const ctx = ctxRef.current;
-    if (sonActif && ctx && ctx.state === 'running') { try { playChime(ctx, notes, sortieRef.current || ctx.destination); } catch { /* contexte fermé */ } }
+    if (!sonActif || !ctx || ctx.state === 'closed') return;
+    const sonner = () => { try { playChime(ctx, notes, sortieRef.current || ctx.destination); } catch { /* contexte fermé */ } };
+    if (ctx.state === 'running') { sonner(); return; }
+    if (repriseRef.current) return;
+    repriseRef.current = true;
+    ctx.resume().then(() => { if (ctx.state === 'running') sonner(); }).catch(() => {}).finally(() => { repriseRef.current = false; });
+  }, [sonActif]);
+
+  const alerter = useCallback((notes, motifVibration, titre, corps, tag) => {
+    jouer(notes);
     vibrer(motifVibration);
     // `data.url` : la page que le service worker ouvre au toucher (public/sw.js). Sans elle, il ouvrait son défaut, la
     // page des commandes d'un COMMERCE : le livreur, sans rôle commerce, atterrissait sur Mon compte et pouvait rater une
     // course prise au premier arrivé (revue du 24/10). Les notifications envoyées par le serveur portent déjà `/driver`.
     notifier(titre, { body: corps, icon: '/icons/icon.svg', tag, data: { url: '/driver' } });
-  }, [sonActif]);
+  }, [jouer]);
 
   // 1. Nouvelles courses disponibles.
   useEffect(() => {
@@ -147,24 +172,22 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
   const nbPretes = mesCourses.filter((o) => o.status === 'pret').length;
   useEffect(() => {
     if (!nbPretes) return undefined;
-    const id = setInterval(() => {
-      const ctx = ctxRef.current;
-      if (sonActif && ctx && ctx.state === 'running') { try { playChime(ctx, NOTES_PRETE, sortieRef.current || ctx.destination); } catch { /* contexte fermé */ } }
-    }, 30000);
+    const id = setInterval(() => jouer(NOTES_PRETE), 30000);
     return () => clearInterval(id);
-  }, [nbPretes, sonActif]);
+  }, [nbPretes, jouer]);
 
   // Compteur dans le titre de l'onglet.
   const baseTitre = useRef(null);
   if (baseTitre.current === null && typeof document !== 'undefined') baseTitre.current = document.title;
   const nbDispo = actif ? disponibles.length : 0;
   useEffect(() => {
+    if (!titreOnglet) return undefined;
     const base = baseTitre.current || 'Fairride';
     if (nbPretes) document.title = `(${nbPretes}) ${t(nbPretes === 1 ? 'driverAlert.titleReadyOne' : 'driverAlert.titleReady')} · ${base}`;
     else if (nbDispo) document.title = `(${nbDispo}) ${t(nbDispo === 1 ? 'driverAlert.titleAvailableOne' : 'driverAlert.titleAvailable')} · ${base}`;
     else document.title = base;
     return () => { document.title = base; };
-  }, [nbPretes, nbDispo, t]);
+  }, [nbPretes, nbDispo, t, titreOnglet]);
 
   return { sonActif, setSonActif, permission, demanderPermission, nbDispo, nbPretes };
 }

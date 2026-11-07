@@ -4,7 +4,7 @@ import Modale from './Modale';
 import MenuCategorySections from './MenuCategorySections';
 import { resolveItemImage } from '../menuCategories';
 import { useLanguage } from '../context/LanguageContext';
-import { DELIVERY_FEE } from '../context/CartContext';
+import { forfaitLivraison } from '../livraison';
 import { fraisService } from '../fraisService';
 import { euros } from '../prixPlat';
 
@@ -62,7 +62,7 @@ export default function RestaurantPreview({ restaurant }) {
   Object.values(lines).forEach((l) => { subtotal += l.unitPrice * l.qty; });
   subtotal = +subtotal.toFixed(2);
   // À emporter : pas de frais de livraison, comme dans le vrai checkout (voir Checkout.jsx estimatedTotalBeforeBalance).
-  const deliveryFee = fulfillmentType === 'delivery' ? DELIVERY_FEE : 0;
+  const deliveryFee = fulfillmentType === 'delivery' ? forfaitLivraison() : 0;
   // Frais de système : 10 % de la livraison, compris dedans (src/fraisService.js) — même règle que le checkout.
   const serviceFee = deliveryFee ? fraisService(deliveryFee) : 0;
   const total = +(subtotal + deliveryFee).toFixed(2);

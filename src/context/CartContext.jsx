@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import { fraisService } from '../fraisService';
-import { FORFAIT_LIVRAISON, tarifLivraison } from '../livraison';
+import { fraisService, partCommerce } from '../fraisService';
+import { tarifLivraison } from '../livraison';
 import { remiseLigne } from '../prixPlat';
 import { prixActuelLigne } from '../panierDisponible';
 import { oublierSaisiePaiement } from '../saisiePaiement';
@@ -12,7 +12,6 @@ const CartContext = createContext(null);
 // Exporté depuis que la fiche d'un commerce l'annonce elle aussi (« Livraison dès 4,50 € ») :
 // deux écrans qui affichent le même chiffre doivent le lire au même endroit, sinon l'un des deux
 // finit par mentir le jour où le tarif bouge.
-export const DELIVERY_FEE = FORFAIT_LIVRAISON; // estimation "à partir de" — le montant exact dépend de la distance, calculé côté serveur
 const STORAGE_KEY = 'fairide_cart';
 // Copie du panier mise de côté pendant un paiement en cours — voir stashForPayment() plus bas.
 const PENDING_KEY = 'fairide_cart_pending';
@@ -34,9 +33,28 @@ function nouvelIdDemande() {
 /* GARDÉ 24 HEURES, MÊME APPLI OU ONGLET FERMÉ (audit UX du 15/10/2026). Il ne vivait que dans sessionStorage, perdu à la
    fermeture de l'onglet ou de l'application — alors que la fiche d'un commerce fermé promet « ton panier est gardé jusqu'à
    la réouverture ». localStorage, daté, oublié au-delà de 24 h ; vidé à la déconnexion volontaire (plus bas). Déclaré dans
-   la politique des cookies (cookiesPolicy.technical). La copie mise de côté pendant un paiement reste, elle, propre à
-   l'onglet (PENDING_KEY, sessionStorage). */
+   la politique des cookies (cookiesPolicy.technical). La copie mise de côté pendant un paiement aussi depuis le 2026-11-06
+   (pré-GO, G111 : voir lireMiseDeCote). */
 const PANIER_MAX_MS = 24 * 3600 * 1000;
+/* LA COPIE MISE DE CÔTÉ PENDANT UN PAIEMENT SURVIT À L'APPLI TUÉE (pré-GO 2026-11-06, G111). Elle ne vivait que dans
+   sessionStorage, qui meurt avec la vue de l'appli : l'appli de la banque (3-D Secure) ou le manque de mémoire tuait
+   l'appli, et un paiement abandonné ensuite ne rendait rien, le client refaisait toute sa commande. localStorage, avec la
+   commande et le compte qu'elle concerne, oubliée au-delà de 24 h comme le panier ; une copie d'avant ce changement, encore
+   dans l'onglet, est reprise. Illisible, trop vieille ou d'un autre compte : null. */
+function lireMiseDeCote(userId) {
+  let raw = null;
+  try { raw = localStorage.getItem(PENDING_KEY) || sessionStorage.getItem(PENDING_KEY); } catch { return null; }
+  try {
+    const p = JSON.parse(raw || 'null');
+    if (!p) return null;
+    if ((p.at && Date.now() - p.at > PANIER_MAX_MS) || (p.userId && userId && p.userId !== userId)) { oublierMiseDeCote(); return null; }
+    return p;
+  } catch { return null; }
+}
+function oublierMiseDeCote() {
+  try { localStorage.removeItem(PENDING_KEY); } catch { /* stockage indisponible */ }
+  try { sessionStorage.removeItem(PENDING_KEY); } catch { /* stockage indisponible */ }
+}
 // Le panier tel qu'il est enregistré (localStorage) : le même format à la lecture au démarrage et à la réception d'un autre
 // onglet (discovery-13). `at` = dernière modification du CONTENU, `userId` = le compte qui l'a rempli (discovery-14).
 function lirePanier(raw) {
@@ -128,7 +146,8 @@ export function CartProvider({ children }) {
   const avertirVidage = useRef(null);
   avertirVidage.current = Object.keys(lines).length > 0 ? () => toast(t('panier.clearedOnLogout')) : null;
   useEffect(() => {
-    const vider = () => { avertirVidage.current?.(); setLines({}); setRestaurantId(null); setRestaurantName(''); };
+    // La copie mise de côté pendant un paiement part aussi (localStorage depuis G111 : « vidé à la déconnexion »).
+    const vider = () => { avertirVidage.current?.(); setLines({}); setRestaurantId(null); setRestaurantName(''); oublierMiseDeCote(); };
     window.addEventListener('fairide:deconnexion', vider);
     return () => window.removeEventListener('fairide:deconnexion', vider);
   }, []);
@@ -232,6 +251,39 @@ export function CartProvider({ children }) {
     });
   }
 
+  /* LES PARTS D'UNE COMMANDE GROUPÉE (G60). « Commander » les ajoutait avec addMany, qui additionne les quantités d'une même
+   * ligne : après « Rouvrir » puis « Commander » (ou un onglet fermé entre les deux), chaque plat était compté deux fois, et
+   * une ligne retirée par un invité restait. Les lignes importées portent le code du groupe (`groupe`) et sont REMPLACÉES :
+   * celles de ce groupe partent, les nouvelles arrivent avec leur quantité. Le panier passe à ce commerce s'il en avait un
+   * autre (l'appelant a demandé confirmation, comme pour addMany). `ancienne` (facultatif) reconnaît une ligne importée
+   * avant ce marquage (sa consigne « Pour <prénom> »). */
+  function replaceGroupLines({ restaurantId: newRestaurantId, restaurantName: newRestaurantName, groupe, lignes: nouvelles, ancienne = () => false }) {
+    const switching = restaurantId !== newRestaurantId || count === 0;
+    if (switching) { setRestaurantId(newRestaurantId); setRestaurantName(newRestaurantName || ''); }
+    setLines((prev) => {
+      const next = {};
+      if (!switching) for (const [cle, l] of Object.entries(prev)) if (l.groupe !== groupe && !(!l.groupe && ancienne(l))) next[cle] = l;
+      for (const l of nouvelles) {
+        const consigne = String(l.note || '').trim().slice(0, 140);
+        const key = lineKeyFor(l.itemId, l.optionItemIds, consigne);
+        const n = Math.min(99, Math.max(1, Math.floor(Number(l.qty) || 1)));
+        // Deux parts identiques d'un même invité restent additionnées ; une ligne à soi du même plat garde la sienne à part
+        // (sa consigne n'a pas « Pour <prénom> »).
+        const deja = next[key]?.groupe === groupe ? next[key].qty : 0;
+        next[key] = { itemId: l.itemId, name: l.name, imageUrl: l.imageUrl, optionItemIds: l.optionItemIds || [], optionsSnapshot: l.optionsSnapshot || [], unitPrice: l.unitPrice, note: consigne || undefined, groupe, qty: Math.min(99, deja + n) };
+      }
+      return next;
+    });
+  }
+  // Groupe rouvert (G60) : ses parts quittent le panier de l'hôte ; elles reviendront, à jour, au prochain « Commander ».
+  function removeGroupLines(groupe, ancienne = () => false) {
+    setLines((prev) => {
+      const next = {};
+      for (const [cle, l] of Object.entries(prev)) if (l.groupe !== groupe && !(!l.groupe && ancienne(l))) next[cle] = l;
+      return Object.keys(next).length === Object.keys(prev).length ? prev : next;
+    });
+  }
+
   // Modifie la quantité d'une ligne déjà présente dans le panier (utilisé par le stepper +/- du récap panier).
   function changeLineQty(lineKey, delta) {
     setLines((prev) => {
@@ -267,7 +319,7 @@ export function CartProvider({ children }) {
   function clear() {
     setLines({});
     setRestaurantId(null);
-    try { sessionStorage.removeItem(PENDING_KEY); } catch { /* stockage indisponible */ }
+    oublierMiseDeCote();
   }
 
   // Mise de côté du panier au moment de partir vers le prestataire de paiement.
@@ -286,7 +338,8 @@ export function CartProvider({ children }) {
   // celui d'une autre tentative (audit du 15/10/2026).
   function stashForPayment(orderId = null) {
     try {
-      sessionStorage.setItem(PENDING_KEY, JSON.stringify({ restaurantId, restaurantName, lines, orderId }));
+      localStorage.setItem(PENDING_KEY, JSON.stringify({ restaurantId, restaurantName, lines, orderId, userId: user?.id || proprietaire || null, at: Date.now() }));
+      sessionStorage.removeItem(PENDING_KEY);
     } catch { /* stockage indisponible : le panier sera simplement perdu en cas d'abandon */ }
     setLines({});
     setRestaurantId(null);
@@ -295,7 +348,7 @@ export function CartProvider({ children }) {
   // Un panier attend-il l'issue d'un paiement ? Avec `orderId`, seulement s'il a été mis de côté pour cette commande-là.
   function hasStashed(orderId = null) {
     try {
-      const parsed = JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null');
+      const parsed = lireMiseDeCote(user?.id);
       if (!parsed?.lines || Object.keys(parsed.lines).length === 0) return false;
       return !orderId || !parsed.orderId || String(parsed.orderId) === String(orderId);
     } catch {
@@ -307,11 +360,10 @@ export function CartProvider({ children }) {
   // Retourne true si quelque chose a effectivement été restauré. Avec `orderId`, ne rend que le panier de cette commande.
   function restoreStashed(orderId = null) {
     try {
-      const raw = sessionStorage.getItem(PENDING_KEY);
-      if (!raw) return false;
-      const parsed = JSON.parse(raw);
+      const parsed = lireMiseDeCote(user?.id);
+      if (!parsed) return false;
       if (orderId && parsed?.orderId && String(parsed.orderId) !== String(orderId)) return false;
-      sessionStorage.removeItem(PENDING_KEY);
+      oublierMiseDeCote();
       if (!parsed?.lines || Object.keys(parsed.lines).length === 0) return false;
       setRestaurantId(parsed.restaurantId ?? null);
       setRestaurantName(parsed.restaurantName ?? '');
@@ -325,8 +377,8 @@ export function CartProvider({ children }) {
   // Paiement confirmé : la copie mise de côté n'a plus lieu d'être.
   function discardStashed() {
     // Payée par carte : l'allergie, la note, le pourboire de cette commande ne reviennent pas sur la suivante (saisiePaiement.js).
-    try { oublierSaisiePaiement(JSON.parse(sessionStorage.getItem(PENDING_KEY) || 'null')?.restaurantId); } catch { /* illisible */ }
-    try { sessionStorage.removeItem(PENDING_KEY); } catch { /* stockage indisponible */ }
+    try { oublierSaisiePaiement(lireMiseDeCote(user?.id)?.restaurantId); } catch { /* illisible */ }
+    oublierMiseDeCote();
   }
 
   function totals(menu, cartPromo, deliveryOffer) {
@@ -366,9 +418,11 @@ export function CartProvider({ children }) {
     // Base : le forfait Fairide, ou les frais fixés par le commerce s'il livre lui-même (livraison.js).
     const baseLivraison = tarifLivraison(deliveryOffer).base;
     const qualifiesForThresholdFreeDelivery = deliveryOffer?.freeDeliveryMinOrder != null && subtotal >= Number(deliveryOffer.freeDeliveryMinOrder);
-    const deliveryDiscount = (deliveryOffer?.freeDelivery || qualifiesForThresholdFreeDelivery)
+    // Plafonnée à la part du commerce (plats moins la part de Fairide), comme le serveur (routes/orders.js, 2026-10-24) : sur
+    // un petit panier, « livraison offerte » n'en offre qu'une partie, et l'estimation le disait gratuite (G164).
+    const deliveryDiscount = Math.min(partCommerce(subtotal), (deliveryOffer?.freeDelivery || qualifiesForThresholdFreeDelivery)
       ? baseLivraison
-      : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, baseLivraison);
+      : Math.min(Number(deliveryOffer?.deliveryFeeDiscount) || 0, baseLivraison));
     const clientDeliveryFee = +(baseLivraison - deliveryDiscount).toFixed(2);
     // Frais de système sur la livraison seulement, calculés sur le tarif complet et COMPRIS dedans (fondateur, 2026-10-08 ;
     // même règle que routes/orders.js : ce que le commerce offre de la livraison ne réduit pas la part de Fairide). Ligne
@@ -391,9 +445,10 @@ export function CartProvider({ children }) {
      fonctions de l'ancien rendu sont exactement aussi justes que les nouvelles. Une fonction qui lirait un autre état
      devrait l'ajouter ici. */
   const valeur = useMemo(
-    () => ({ restaurantId, restaurantName, lines, count, requestId, rawTotal, sousTotal, nouvelleDemande, hasConflict, switchRestaurant, addOne, addMany, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals, actualiserPrix }),
+    () => ({ restaurantId, restaurantName, lines, count, requestId, rawTotal, sousTotal, nouvelleDemande, hasConflict, switchRestaurant, addOne, addMany, replaceGroupLines, removeGroupLines, changeLineQty, removeLine, clear, clearLines, stashForPayment, hasStashed, restoreStashed, discardStashed, totals, actualiserPrix }),
+    // user?.id et proprietaire : la copie mise de côté pendant un paiement est rangée au nom du compte (G111).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [restaurantId, restaurantName, lines, count, requestId, rawTotal, sousTotal]
+    [restaurantId, restaurantName, lines, count, requestId, rawTotal, sousTotal, user?.id, proprietaire]
   );
 
   return (

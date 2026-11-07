@@ -3,6 +3,7 @@ import { api } from '../api';
 import { useAuth } from '../context/AuthContext';
 import useRevalidation from '../useRevalidation';
 import { signalerOccupe } from '../miseAJour';
+import { programmeeLointaine } from '../commandeProgrammee';
 
 // Les commandes du client pour la bande « commande en cours » (SuiviCommande.jsx), sur tous les écrans sauf Mes commandes.
 //
@@ -15,13 +16,28 @@ let etat = VIDE;
 let jeton = null;
 let minuterie = null;
 let derniereLecture = 0;
+// L'écran affiché (le `chemin` du crochet monté par la Layout) : sur Mes commandes, la page relit elle-même (G156).
+let cheminCourant = null;
 const abonnes = new Set();
 
 const EN_COURS = ['nouveau', 'preparation', 'pret', 'livraison'];
 // Une commande « nouveau » non payée n'est pas encore partie au commerce (paiement en ligne pas fini, ou sur place jamais
 // envoyée : même règle que titreSuivi dans orderStatus.jsx) : rien à suivre.
+// Pas non plus (chasse aux bogues d'avant GO, 2026-11-06) :
+//   - une commande programmée dans plus de 90 minutes (G153, programmeeLointaine) : rien ne cuit encore, et la relecture toutes
+//     les 15 s retenait les mises à jour de l'app pendant des jours ; elle redevient suivie à l'approche (relecture au
+//     changement d'écran et au retour dans l'app) ;
+//   - une commande à emporter ouverte depuis plus de 12 heures (G26) : le commerce a oublié « Remis au client », le serveur la
+//     clôt seul (orderTimeouts.surveillerRetraitsOublies) ; la bande « prête à retirer » ne reste pas jusque-là.
+const EMPORTER_OUBLIEE_MS = 12 * 3600 * 1000;
 export function commandeSuivie(o) {
-  return EN_COURS.includes(o.status) && !(o.status === 'nouveau' && o.paid === false);
+  if (!EN_COURS.includes(o.status) || (o.status === 'nouveau' && o.paid === false)) return false;
+  if (programmeeLointaine(o)) return false;
+  if (o.orderType === 'pickup') {
+    const depuis = Math.max(new Date(o.createdAt).getTime() || 0, o.scheduledFor ? new Date(o.scheduledFor).getTime() : 0);
+    if (depuis && Date.now() - depuis > EMPORTER_OUBLIEE_MS) return false;
+  }
+  return true;
 }
 
 function publier(commandes) {
@@ -32,7 +48,9 @@ function publier(commandes) {
   // Une commande suivie : la mise à jour de l'app attend la fin (Owen, 2026-11-03, src/miseAJour.js).
   signalerOccupe('commande', enCours);
   // Pas pendant que l'app est en arrière-plan (tenir la charge, 2026-11-02) : le retour la relit (useRevalidation).
-  if (enCours && !minuterie) minuterie = setInterval(() => { if (document.visibilityState === 'visible') relireAvec(jeton); }, 15000);
+  // Ni sur Mes commandes (G156) : la page relit déjà sa propre liste toutes les 15 s et la donne ici (nourrirSuivi) ; la même
+  // liste était lue deux fois toutes les 15 s sur l'écran le plus fréquenté pendant les commandes.
+  if (enCours && !minuterie) minuterie = setInterval(() => { if (document.visibilityState === 'visible' && cheminCourant !== '/orders') relireAvec(jeton); }, 15000);
   if (!enCours && minuterie) { clearInterval(minuterie); minuterie = null; }
 }
 
@@ -45,6 +63,14 @@ function relireAvec(token) {
     // Une réponse arrivée après une déconnexion ou un changement de compte ne doit pas montrer les commandes de l'autre.
     .then((liste) => { if (token === jeton && Array.isArray(liste)) publier(liste); })
     .catch(() => {});
+}
+
+/* MES COMMANDES NOURRIT LA BANDE (G156). Sa première page (les plus récentes d'abord, comme ?suivi=1) arrive ici à chaque
+ * relecture : la bande y lit le refus pour le noter vu, et l'état « commande en cours » reste juste sans seconde lecture. */
+export function nourrirSuivi(liste, token) {
+  if (!token || token !== jeton || !Array.isArray(liste)) return;
+  derniereLecture = Date.now();
+  publier(liste);
 }
 
 function sAbonner(f) {
@@ -74,9 +100,11 @@ export default function useCommandeEnCours(chemin) {
     };
   }, [actif, token]);
 
-  // À chaque changement d'écran, au plus une fois toutes les 10 s.
+  // À chaque changement d'écran, au plus une fois toutes les 10 s. Mes commandes lit sa liste en arrivant et la donne ici.
   useEffect(() => {
+    cheminCourant = chemin;
     if (!actif) return;
+    if (chemin === '/orders') return;
     if (Date.now() - derniereLecture > 10000) relireAvec(token);
   }, [actif, token, chemin]);
 

@@ -6,7 +6,8 @@
 // livreurs roulent). Tout le reste est visible et utilisable avant. Les administrateurs, comptes de test et simulations
 // passent (essais).
 import { useSyncExternalStore } from 'react';
-import { API_BASE } from './api';
+import { adresseApi, api, siRefusOuverture } from './api';
+import { poserForfaitLivraison } from './livraison';
 
 export const CAMPAGNE_RESEAUX = new Date('2026-10-16T00:00:00+02:00');
 export const APP_STORES = new Date('2026-10-06T00:00:00+02:00');
@@ -25,21 +26,28 @@ const CLE = 'fairide_lancement';
 // livraisonMaintenant (audit du 19/10, discovery-02) : après GO, un livreur du pool Fairide est-il libre à l'instant ?
 // Oui/non seulement, jamais un nombre ; null tant qu'on ne sait pas (rien n'est alors retiré de la liste).
 // emporter : l'à emporter payé sur place est-il ouvert ? Une réponse gardée d'avant ce bouton n'en dit rien : fermé.
-const lire = (c) => ({ go: c.go, goAt: c.goAt || null, emporter: c.emporter === true || c.go === true, livraisonMaintenant: typeof c.livraisonMaintenant === 'boolean' ? c.livraisonMaintenant : null });
-let etat = { go: false, goAt: null, emporter: false, livraisonMaintenant: null };
+// livraisonLoinMaintenant / veloMaxKm : la même question au-delà de la distance d'un vélo (comparaison front / serveur, 2026-11-05).
+const oui = (v) => (typeof v === 'boolean' ? v : null);
+const lire = (c) => ({ go: c.go, goAt: c.goAt || null, emporter: c.emporter === true || c.go === true, livraisonMaintenant: oui(c.livraisonMaintenant),
+  livraisonLoinMaintenant: oui(c.livraisonLoinMaintenant), veloMaxKm: Number(c.veloMaxKm) || null });
+let etat = { go: false, goAt: null, emporter: false, livraisonMaintenant: null, livraisonLoinMaintenant: null, veloMaxKm: null };
 try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = lire(c); } catch { /* stockage indisponible */ }
 const abonnes = new Set();
 function poser(suivant) {
-  if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.emporter === etat.emporter && suivant.livraisonMaintenant === etat.livraisonMaintenant) return;
+  if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.emporter === etat.emporter && suivant.livraisonMaintenant === etat.livraisonMaintenant
+    && suivant.livraisonLoinMaintenant === etat.livraisonLoinMaintenant && suivant.veloMaxKm === etat.veloMaxKm) return;
   etat = suivant;
   try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch { /* stockage indisponible */ }
   abonnes.forEach((f) => f());
 }
+// Par api() (G100, 2026-11-06) : un fetch direct ne passait jamais par le relais, et une appli sur un réseau qui bloque
+// Railway restait sur « bientôt » après le GO. Une réponse en erreur (503 quand le serveur n'a pas pu lire l'état, G99)
+// laisse l'état connu tel quel.
 export async function chargerLancement() {
   try {
-    const r = await fetch(`${API_BASE}/orders/launch`, { cache: 'no-store' });
-    if (!r.ok) return;
-    const d = await r.json();
+    const d = await api('/orders/launch', { cache: 'no-store' });
+    // Le forfait de livraison du serveur (livraison.js) : posé avant `poser`, qui redessine la liste et les fiches.
+    if (d?.forfaitLivraison != null) poserForfaitLivraison(d.forfaitLivraison);
     if (typeof d?.go === 'boolean') poser(lire({ ...d, emporter: d.pickupOpen === true }));
   } catch { /* hors ligne : on garde l'état connu */ }
 }
@@ -50,6 +58,11 @@ function suivre() {
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') chargerLancement(); });
   chargerLancement();
 }
+// Un refus « pas encore ouvert » (PICKUP_NOT_OPEN, DELIVERY_NOT_OPEN, ONLINE_PAYMENT_NOT_OPEN) veut dire que l'état gardé ici
+// est en retard (GO refermé il y a moins d'une minute) : on le relit tout de suite, le panier cesse de proposer la livraison
+// (G100, 2026-11-06). Au plus une relecture toutes les 5 secondes.
+let dernierRefus = 0;
+siRefusOuverture(() => { if (Date.now() - dernierRefus > 5000) { dernierRefus = Date.now(); chargerLancement(); } });
 function abonner(f) { abonnes.add(f); suivre(); return () => abonnes.delete(f); }
 export function useLancement() { return useSyncExternalStore(abonner, () => etat, () => etat); }
 export function lancementGo() { return etat.go; }
@@ -57,10 +70,11 @@ export function lancementGo() { return etat.go; }
 export function emporterOuvert() { return etat.emporter; }
 
 // Paiement de l'à emporter proposé à l'inscription d'un commerce (Owen, 2026-11-04 : la peur du client qui commande, ne vient
-// pas et ne paie pas). Après GO, « En ligne uniquement » : la commande est payée d'avance. Avant GO, le paiement en ligne
-// n'existe pas encore : « Au choix du client », pour que le commerce vende déjà sur place et passe en ligne au GO sans rien
-// changer. Le commerce garde son choix (contrat, « Formules et calendrier »).
-export function modeEmporterParDefaut() { return etat.go ? 'online' : 'both'; }
+// pas et ne paie pas). « En ligne uniquement » demande des paiements Stripe actifs (G7, fondateur 2026-11-06), qu'un commerce
+// qui s'inscrit n'a jamais encore : « Au choix du client », avant comme après le GO ; il vend déjà sur place et passe « en
+// ligne uniquement » dans Mon compte une fois ses paiements actifs. Le serveur applique la même règle (inscription) : la page
+// d'inscription n'a plus à attendre l'état du GO pour proposer le bon mode (G98).
+export function modeEmporterParDefaut() { return 'both'; }
 
 // Admin, compte de test posé par l'équipe (users.is_test) et simulation : mêmes exemptions que le serveur (compteExempte).
 const exempte = (user) => !!user?.isAdmin || !!user?.isTest || !!user?.simulation;
@@ -81,17 +95,29 @@ export function livraisonOuverte(user) { return serviceOuvert('delivery', user);
 // livraison n'est pas promise sur les cartes (le serveur la refuserait : NO_COURIER_AVAILABLE). Un commerce qui livre
 // lui-même garde sa vérification sur sa fiche (GET /orders/delivery-available/:id). Les comptes exemptés passent, comme
 // côté serveur.
-export function livreurFairideLibre(user) { return exempte(user) || etat.livraisonMaintenant !== false; }
+// `km` (distance du client, quand elle est connue) : au-delà de veloMaxKm, seul un livreur qui n'est pas à vélo compte, comme
+// au serveur (lancement.livreursDisponiblesListe).
+export function livreurFairideLibre(user, km = null) {
+  if (exempte(user)) return true;
+  if (km !== null && etat.veloMaxKm && km > etat.veloMaxKm && etat.livraisonLoinMaintenant === false) return false;
+  return etat.livraisonMaintenant !== false;
+}
 
 /* LA LIVRAISON EST-ELLE POSSIBLE CHEZ CE COMMERCE, MAINTENANT ? (GET /orders/delivery-available/:id)
  * Après GO, une livraison demande un livreur disponible à l'instant (lancement.js) : sinon le commerce ne propose que
  * l'à emporter. Renvoie null tant qu'on ne sait pas (pas de bandeau qui clignote), true ou false ensuite. `km` écarte les
- * vélos trop loin quand la distance est connue. Une erreur réseau répond null : le serveur tranche à la commande. */
-export async function livraisonDisponible(restaurantId, km = null) {
+ * vélos trop loin quand la distance est connue. Une erreur réseau répond null : le serveur tranche à la commande.
+ * `cp` et `ville` (G68, 2026-11-06) : l'adresse de livraison, dont la commune peut être suspendue (Admin › Logistique › Zones) ;
+ * le serveur la lit comme à la commande (adminLogistics.js › communeDeLAdresse). */
+export async function livraisonDisponible(restaurantId, km = null, cp = '', ville = '') {
   if (!restaurantId) return null;
   try {
-    const q = km !== null && km !== undefined && Number.isFinite(Number(km)) ? `?km=${Number(km)}` : '';
-    const r = await fetch(`${API_BASE}/orders/delivery-available/${encodeURIComponent(restaurantId)}${q}`, { cache: 'no-store' });
+    const params = new URLSearchParams();
+    if (km !== null && km !== undefined && Number.isFinite(Number(km))) params.set('km', String(Number(km)));
+    if (cp) params.set('cp', cp);
+    if (cp && ville) params.set('ville', ville);
+    const q = params.toString() ? `?${params}` : '';
+    const r = await fetch(`${adresseApi()}/orders/delivery-available/${encodeURIComponent(restaurantId)}${q}`, { cache: 'no-store' });
     if (!r.ok) return null;
     const d = await r.json();
     return typeof d?.available === 'boolean' ? d : null;
@@ -104,7 +130,11 @@ export async function livraisonDisponible(restaurantId, km = null) {
 // réellement appliquée. Une seule origine, ici, comme pour toutes les autres dates.
 export const OUVERTURE_PAIEMENTS = new Date('2026-10-05T00:00:00+02:00');
 export function paiementsOuverts() { return Date.now() >= OUVERTURE_PAIEMENTS.getTime(); }
-export function dateOuverturePaiements(locale = 'fr-BE') { return formater(OUVERTURE_PAIEMENTS, locale); }
+// Formatage local (G129, 2026-11-06) : la fonction commune `formater` a disparu avec les dates d'ouverture, et cette ligne
+// levait une ReferenceError sur un téléphone à l'heure fausse (avant le 5 octobre 2026), l'écran plantait.
+export function dateOuverturePaiements(locale = 'fr-BE') {
+  return OUVERTURE_PAIEMENTS.toLocaleDateString(locale, { day: 'numeric', month: 'long', timeZone: 'Europe/Brussels' });
+}
 
 // L'abonnement des commerces (OUVERTURE_ABONNEMENT, datePremierPrelevement) n'existe plus depuis le 04/11/2026 (fondateur :
 // « on retire les 20 € par mois ») : plus de date d'activation ni de premier prélèvement à annoncer.

@@ -6,7 +6,7 @@ import { euros } from '../prixPlat';
 import { vibrer } from '../gestes';
 import ChiffresRoulants from './ChiffresRoulants';
 import EtatVide from './EtatVide';
-import { ligneIndisponible } from '../panierDisponible';
+import { motifLigne } from '../panierDisponible';
 
 /* LE PANIER EN COLONNE, À DROITE DE LA CARTE (fondateur, 2026-10-16, « Page d'un commerce » de maquettes/site-ordinateur/site-ordinateur.html).
  * Sur un ordinateur, la place ne manque pas : au lieu d'une pilule posée sur la carte, le panier vit dans une colonne collante
@@ -45,7 +45,8 @@ export default function PanierColonne({ restaurant, mode }) {
   const lignes = ici ? Object.entries(cart.lines) : [];
   const nb = ici ? cart.count : 0;
   // Offre du panier comprise, comme la page Panier et la pastille (audit du 19/10, discovery-16).
-  const sousTotal = ici ? cart.totals(restaurant.menu, restaurant.activeCartPromo).subtotal : 0;
+  const totaux = ici ? cart.totals(restaurant.menu, restaurant.activeCartPromo) : null;
+  const sousTotal = totaux ? totaux.subtotal : 0;
   // Un panier pris chez un autre commerce n'est pas affiché comme s'il était d'ici : on le dit, avec le chemin pour le voir.
   const ailleurs = !ici && cart.count > 0;
 
@@ -69,6 +70,11 @@ export default function PanierColonne({ restaurant, mode }) {
           <ul className="fiche-panier-lignes">
             {lignes.map(([cle, l]) => {
               const options = (l.optionsSnapshot || []).map((o) => o.name).filter(Boolean).join(', ');
+              // Ce que dit la ligne : comme la page Panier (le jour se choisit au paiement, G165 ; choix à refaire, G166).
+              const motif = motifLigne(l, restaurant.menu, { jourPlusTard: true });
+              // Le prix PAYÉ de la ligne, offre du plat comprise, comme la page Panier (G163) : le prix plein sous un
+              // sous-total remisé ne s'additionnait pas.
+              const paye = Math.max(0, l.unitPrice * l.qty - (totaux?.lineDiscounts?.[cle]?.discount || 0));
               return (
                 <li key={cle} className="fiche-panier-ligne">
                   <span className="fiche-panier-ligne-texte">
@@ -76,9 +82,12 @@ export default function PanierColonne({ restaurant, mode }) {
                     {(options || l.note) && <small>{[options, l.note].filter(Boolean).join(' · ')}</small>}
                     {/* Plat en rupture, retiré ou dont une option n'existe plus : dit ici aussi, pas seulement au paiement
                         (audit du 19/10, discovery-17). */}
-                    {ligneIndisponible(l, restaurant.menu)
-                      ? <small className="ligne-indispo">{t('checkout.unavailableToday')}</small>
-                      : <small className="fiche-panier-ligne-prix">{euros(l.unitPrice * l.qty)}</small>}
+                    {motif === 'indisponible' || motif === 'options'
+                      ? <small className="ligne-indispo">{t(motif === 'options' ? 'checkout.optionsToRedo' : 'checkout.unavailableToday')}</small>
+                      : <>
+                        {motif === 'plusTard' && <small className="ligne-indispo">{t('checkout.soldOutLaterDay')}</small>}
+                        <small className="fiche-panier-ligne-prix">{euros(paye)}</small>
+                      </>}
                   </span>
                   <span className="fiche-panier-pas" role="group" aria-label={l.name}>
                     <button type="button" onClick={() => { vibrer('bascule'); cart.changeLineQty(cle, -1); }} aria-label={t('menuCategories.oneLess', { name: l.name })}>−</button>

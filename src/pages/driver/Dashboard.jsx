@@ -14,7 +14,7 @@ import PhotoDepot from '../../components/livreur/PhotoDepot';
 import BoutonUrgence from '../../components/livreur/BoutonUrgence';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
 import RouteVelo from '../../components/livreur/RouteVelo';
-import { experienceApp, suivrePositionCourse, demanderPosition } from '../../natif';
+import { experienceApp, suivrePositionCourse, demanderPosition, refusPosition, estNatif, ouvrirReglagesAppli } from '../../natif';
 import { ouvrirStripe } from '../../ouvrirStripe';
 import { mouvementReduit, vibrer } from '../../gestes';
 import Icone from '../../components/Icone';
@@ -42,6 +42,7 @@ import '../../site-livreur.css';
 import { telephoneLisible } from '../../validation';
 import { haversineDistanceKm } from '../../menuCategories';
 import { signalerOccupe } from '../../miseAJour';
+import { EVENEMENT_CONDITIONS_ACCEPTEES } from '../../conformite';
 
 /* LA TOURNÉE DU LIVREUR (fondateur, 2026-10-30, maquettes/tournee-livreur : toutes les recommandations). Les chiffres viennent
    de sources publiées (backend docs/delais.md) : vol d'oiseau ×1,3 pour les rues, 16 km/h à vélo, 19 à vélo électrique,
@@ -76,6 +77,8 @@ function useSiteLarge(actif) {
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
 const MIN_LOCATION_SEND_INTERVAL_MS = 12000;
+// « Annuler » après « Refuser » : 5 secondes avant que le refus parte au serveur (audit du 06/11, G93).
+const DELAI_ANNULER_REFUS_MS = 5000;
 
 function formatClock(date) {
   return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
@@ -196,6 +199,10 @@ export default function DriverDashboard() {
   const [ageAVerifier, setAgeAVerifier] = useState(null);
   const [sharingLocation, setSharingLocation] = useState(false);
   const [lastPositionAt, setLastPositionAt] = useState(null);
+  // Le suivi a été refusé par le téléphone (G42 : position approximative ou bloquée) : dit tant que la livraison dure.
+  const [suiviRefuse, setSuiviRefuse] = useState(false);
+  // Relance du suivi quand la position revient (réglages du téléphone) : le greffon refusé ne repart pas tout seul.
+  const [relanceSuivi, setRelanceSuivi] = useState(0);
   const [connecting, setConnecting] = useState(false);
   // Selfie de contrôle demandé (SelfieControle.jsx) : null, ou { dueAt, blocking }. Sert au bandeau (LIVE-25).
   const [selfie, setSelfie] = useState(null);
@@ -217,8 +224,11 @@ export default function DriverDashboard() {
    * Oui : il s'allume. Non, ou position déjà bloquée : la petite fenêtre dit seulement où la rallumer dans les réglages. */
   async function togglePause() {
     if (user?.driverPaused && user?.locationSharingEnabled !== false && (await verifierPos()) !== 'granted') {
-      const position = await demanderPosition();
-      if (position || (await verifierPos()) === 'granted') basculerPause();
+      // La position EXACTE (G42) : une approximative ne suffit pas au suivi en livraison, elle ne compte pas comme un oui.
+      const position = await demanderPosition({ precise: true });
+      // L'état relu dans tous les cas : resté sur « prompt », la mise en pause automatique (plus bas) le rééteindrait.
+      const etat = await verifierPos();
+      if (etat === 'granted' || (position && etat !== 'approximate')) basculerPause();
       else setDemandePosition(true);
       return;
     }
@@ -231,6 +241,13 @@ export default function DriverDashboard() {
    * devinette, sans second GET ; un refus le remet comme avant avec le message d'erreur (actionOptimiste.js). La réponse du
    * PATCH ne porte que le rôle d'origine du compte (publicUser sans lireRoles, routes/auth.js) : les rôles déjà connus sont
    * gardés, sinon un livreur aussi client perdrait sa casquette « client » jusqu'au relevé suivant. */
+  // Le profil renvoyé par PATCH /auth/me remplace la devinette ; ni jeton (seul un changement de mot de passe en renvoie un, et
+  // la session garde le sien) ni rôles perdus (voir plus haut).
+  function garderProfilServeur(profil) {
+    const lu = { ...(profil || {}) };
+    delete lu.token;
+    modifierUtilisateur((u) => ({ ...u, ...lu, roles: u.roles?.length ? u.roles : lu.roles }));
+  }
   function basculerPause() {
     const voulu = !user?.driverPaused;
     agirOptimiste('pause', {
@@ -238,15 +255,44 @@ export default function DriverDashboard() {
       envoyer: () => api('/auth/me', { method: 'PATCH', token, body: { driverPaused: voulu } }),
       annuler: (avant) => modifierUtilisateur((u) => ({ ...u, driverPaused: avant })),
       confirmer: (profil) => {
-        const lu = { ...(profil || {}) };
-        delete lu.token; // jamais ici (seul un changement de mot de passe en renvoie un), et la session garde le sien
-        modifierUtilisateur((u) => ({ ...u, ...lu, roles: u.roles?.length ? u.roles : lu.roles }));
+        garderProfilServeur(profil);
         // Reprise : les courses tout de suite, sans attendre le prochain relevé de 15 secondes (audit du 19/10, LIVE-26).
         load();
       }
     });
   }
 
+  /* POSITION REFUSÉE = EN PAUSE (audit du 06/11, G30). Sans position, PositionRequise cache toutes les offres ; disponible
+   * quand même, il comptait « libre » côté serveur et recevait « Nouvelle course » pour une liste vide. Au chargement et à
+   * chaque retour dans l'app (useEtatPosition relit l'état), une autorisation refusée le met en pause. « prompt » ne le met
+   * plus en pause (revue finale du 07/11) : « Une seule fois » sur iPhone et « Seulement cette fois » sur Android repassent
+   * à « prompt » à chaque ouverture, et le livreur se retrouvait en pause sans rien avoir fait. Pour « prompt » dans l'app
+   * et pour « position approximative » (l'ancienne app ne demandait que celle-là), le relevé des courses part avec
+   * `positionBloquee=1` : le serveur ne le note plus « vu », il cesse de compter libre après les minutes de présence.
+   * Il se remet disponible lui-même avec l'interrupteur, qui redemande la position.
+   * Une seule tentative par état de position : un envoi raté (hors ligne, serveur en erreur) remettait « disponible », ce
+   * qui relançait aussitôt l'effet, en boucle. `pauseAutoRef` garde l'état déjà essayé ; un envoi réussi l'efface.
+   * Les relevés de /auth/me partis juste avant la pause (ouverture de l'écran) revenaient APRÈS elle avec « disponible » et
+   * l'écran le montrait ~15 s, pendant que le serveur l'avait déjà mis en pause (revue de la chasse, 2026-11-07). La réponse
+   * du PATCH réécrit donc le profil, puis un relevé parti après lui confirme. */
+  const pauseAutoRef = useRef(null);
+  useEffect(() => {
+    if (!user || user.driverPaused || user.adminStatus !== 'approved' || pauseAutoRef.current === etatPos) return;
+    if (etatPos !== 'denied') return;
+    pauseAutoRef.current = etatPos;
+    modifierUtilisateur((u) => ({ ...u, driverPaused: true }));
+    api('/auth/me', { method: 'PATCH', token, body: { driverPaused: true }, logoutOn401: false })
+      .then((profil) => {
+        pauseAutoRef.current = null;
+        garderProfilServeur(profil);
+        refreshUser().catch(() => {});
+        toast(t('dashDriver.toastPauseSansPosition'));
+      })
+      .catch(() => modifierUtilisateur((u) => ({ ...u, driverPaused: false })));
+  }, [etatPos, user?.driverPaused, user?.adminStatus]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Compte Stripe à relire chez Stripe : « en attente », ou « à compléter » (restricted, pré-GO 2026-11-06, G25).
+  const connectARelire = user?.stripeConnectStatus === 'pending' || user?.stripeConnectStatus === 'restricted';
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('connect')) {
       toast(t('dashDriver.toastPaymentsValidating'));
@@ -254,9 +300,10 @@ export default function DriverDashboard() {
       // Le statut Stripe Connect n'est pas suivi par webhook pour ce type de compte (voir backend) —
       // on le relit activement au retour de l'onboarding avant de rafraîchir l'utilisateur en contexte.
       api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {}).finally(() => refreshUser().catch(() => {}));
-    } else if (user?.stripeConnectStatus === 'pending') {
+    } else if (connectARelire) {
       // Même filet que côté commerce (DashboardLayout.jsx) : un compte resté « en attente » est relu à l'ouverture, au cas où
-      // le livreur n'est pas repassé par le lien de retour de Stripe, ou si l'activation est arrivée après.
+      // le livreur n'est pas repassé par le lien de retour de Stripe, ou si l'activation est arrivée après. « À compléter »
+      // aussi (pré-GO 2026-11-06, G25) : les pièces fournies, il repasse actif sans attendre la relecture du serveur.
       api('/auth/me/connect/refresh', { method: 'POST', token }).then(() => refreshUser().catch(() => {})).catch(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -269,7 +316,7 @@ export default function DriverDashboard() {
   const connectLance = useRef(false);
   const location = useLocation();
   function relireConnect() {
-    if (!connectLance.current && user?.stripeConnectStatus !== 'pending') return undefined;
+    if (!connectLance.current && !connectARelire) return undefined;
     connectLance.current = false;
     return api('/auth/me/connect/refresh', { method: 'POST', token }).catch(() => {}).finally(() => refreshUser().catch(() => {}));
   }
@@ -326,11 +373,22 @@ export default function DriverDashboard() {
       });
     }).catch(() => setDossier({ erreur: true }));
   }, [token, essaiDossier]);
+  // Contrat accepté sur l'écran plein (NouvellesConditions.jsx) : le dossier est relu, « Signe ton nouveau contrat » s'en va.
+  useEffect(() => {
+    const relire = (e) => { if (e.detail?.role === 'driver') setEssaiDossier((n) => n + 1); };
+    window.addEventListener(EVENEMENT_CONDITIONS_ACCEPTEES, relire);
+    return () => window.removeEventListener(EVENEMENT_CONDITIONS_ACCEPTEES, relire);
+  }, []);
+
+  // Offres cachées par PositionRequise : pas « vu » côté serveur (voir la pause automatique plus haut). Sur le site,
+  // « prompt » ne compte pas : Safari le répond aussi après un oui.
+  const positionBloqueeRef = useRef(false);
+  positionBloqueeRef.current = etatPos === 'denied' || etatPos === 'approximate' || (estNatif() && etatPos === 'prompt');
 
   async function load() {
     try {
       const [availableData, mineData, planData] = await Promise.all([
-        api('/orders/available', { token }),
+        api(`/orders/available${positionBloqueeRef.current ? '?positionBloquee=1' : ''}`, { token }),
         // Courses en main et récentes seulement (audit du 19/10, courier-21 : tout l'historique, toutes les 15 s).
         api('/orders/mine/deliveries?recent=1', { token }),
         // Le trajet ne fait jamais échouer la page : sans lui, les courses en main gardent leur ordre d'avant.
@@ -372,13 +430,17 @@ export default function DriverDashboard() {
     load();
     refreshUser().catch(() => {});
     const interval = setInterval(() => { load(); refreshUser().catch(() => {}); }, 15000);
-    return () => clearInterval(interval);
+    // Notification reçue app ouverte (« Nouvelle course », pushNatif.js) : la liste tout de suite, pas au relevé suivant, jusqu'à
+    // 15 secondes plus tard sur une course où le premier qui accepte l'a (audit du 06/11, G121 ; le commerce fait pareil).
+    const surNotification = () => load();
+    window.addEventListener('fairide:commande-arrivee', surNotification);
+    return () => { clearInterval(interval); window.removeEventListener('fairide:commande-arrivee', surNotification); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Retour sur l'onglet après une absence : relecture immédiate, sans attendre le prochain cycle (compte Stripe compris : courier-3).
   useRevalidation(() => { load(); return relireConnect() || refreshUser(); });
   // Retour de Stripe dans l'app, compte encore « en attente » : relu à chaque retour (même raison que DashboardLayout.jsx).
   useRevalidation(() => api('/auth/me/connect/refresh', { method: 'POST', token }).then(() => refreshUser()),
-    { actif: user?.stripeConnectStatus === 'pending', absenceMin: 0 });
+    { actif: connectARelire, absenceMin: 0 });
 
   useEffect(() => {
     activeIdsRef.current = mine.filter((o) => o.status === 'livraison').map((o) => o.id);
@@ -404,6 +466,8 @@ export default function DriverDashboard() {
   // arrière-plan n'existe pas sur le web. DANS L'APPLICATION, pendant une course en livraison, elle existe depuis le
   // 15/10/2026 (natif.js suivrePositionCourse, service au premier plan avec sa notification) : le suivi reprend quand
   // `enLivraison` change. L'horodatage renvoyé au client reste : une carte figée doit se lire comme telle.
+  // Gains, Mon compte… pendant une livraison (G41) : cet écran se démonte, components/livreur/SuiviCoursesHorsEcran.jsx (monté
+  // par App.jsx hors de /driver et /driver/map) reprend le même suivi et les alertes « prête » / « annulée ».
   const enLivraison = mine.some((o) => o.status === 'livraison');
   // Une course en main (à récupérer ou en route) : la mise à jour de l'app attend qu'elle soit livrée (Owen, 2026-11-03,
   // src/miseAJour.js). Pas remis à zéro en quittant l'écran : Mon compte pendant une course ne doit pas l'ouvrir.
@@ -418,6 +482,10 @@ export default function DriverDashboard() {
    * watchPosition posait lui-même la question du système dès l'ouverture de la page, avant que le livreur ait lu
    * l'explication. Sans course en main, il ne sert de toute façon qu'à tenir la position prête (rien n'est envoyé). */
   const suiviUtile = mine.length > 0 || (user?.adminStatus === 'approved' && user?.stripeConnectStatus === 'active' && !user?.driverPaused && etatPos === 'granted');
+  /* Revenu des réglages avec la position exacte (G42, « Ouvrir les réglages ») : le greffon qui avait refusé ne reprend pas
+   * seul, le suivi repart. Seulement sur un vrai changement vers 'granted' (useEtatPosition relit au retour) : jamais de
+   * nouvelle question du système en boucle. */
+  useEffect(() => { if (suiviRefuse && etatPos === 'granted') setRelanceSuivi((n) => n + 1); }, [etatPos]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     if (user?.locationSharingEnabled === false || !suiviUtile) {
       setSharingLocation(false);
@@ -445,6 +513,7 @@ export default function DriverDashboard() {
       message: t('dashDriver.bgTrackingMessage'),
       onPosition: ({ latitude, longitude }) => {
         setSharingLocation(true);
+        setSuiviRefuse(false);
         // Pour trier les courses (2 A) : un nouveau rendu seulement après 30 m, pas à chaque mesure du GPS.
         if (!posTri || haversineDistanceKm(posTri.lat, posTri.lng, latitude, longitude) > 0.03) { posTri = { lat: latitude, lng: longitude }; setMaPosition(posTri); }
         lastCoords = { latitude, longitude };
@@ -453,8 +522,11 @@ export default function DriverDashboard() {
         if (Date.now() - lastSentAt < MIN_LOCATION_SEND_INTERVAL_MS) return;
         send(latitude, longitude);
       },
-      onErreur: () => {
+      onErreur: (e) => {
         setSharingLocation(false);
+        // Plus qu'un toast (G42) : un refus du téléphone, la rangée « Partage de position » du bandeau le dit tant que la
+        // livraison dure (un GPS lent n'est pas un refus).
+        if (refusPosition(e)) setSuiviRefuse(true);
         if (!deniedNotified) {
           deniedNotified = true;
           toast(t('dashDriver.toastAllowGeo'));
@@ -479,7 +551,7 @@ export default function DriverDashboard() {
       clearInterval(heartbeat);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile]);
+  }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile, relanceSuivi]);
 
   // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
   // autre décision (docs/dispatch.md côté serveur). Un seul envoi par course (audit du 19/10, CROSS-36) : un deuxième appui,
@@ -487,8 +559,19 @@ export default function DriverDashboard() {
   /* LA CARTE PART AU TOUCHER (2026-10-23, app lente : elle attendait la réponse du serveur avant de glisser). Elle glisse
    * vers la gauche puis quitte la liste tout de suite (ecran-livreur.css, .ecl-offre.part), l'appel suit ; si le serveur
    * refuse, elle revient à sa place avec le message d'erreur (actionOptimiste.js). `refusees` garde les courses écartées :
-   * un relevé de 15 s parti avant que le serveur ait enregistré le refus ne la remet pas dans la liste. */
+   * un relevé de 15 s parti avant que le serveur ait enregistré le refus ne la remet pas dans la liste.
+   * « ANNULER » PENDANT 5 SECONDES (audit du 06/11, G93). Un seul toucher, sans retour possible, écartait la course pour de
+   * bon (elle ne revient jamais dans sa liste). La barre « Course retirée… · Annuler » reste 5 secondes, et le refus ne part au
+   * serveur qu'ensuite : « Annuler » remet la carte à sa place sans aucun appel. */
   const refusees = useRef(new Set());
+  const [refusAnnulable, setRefusAnnulable] = useState(null); // { id, offre, rang, minuteur }
+  const attentesRefus = useRef(new Map()); // id → arrête l'attente sans rien envoyer
+  function remettreOffre({ id, offre, rang, minuteur }) {
+    clearTimeout(minuteur);
+    refusees.current.delete(id);
+    setPartantes((p) => p.filter((x) => x !== id));
+    if (offre) setAvailable((prev) => (prev.some((x) => x.id === id) ? prev : [...prev.slice(0, Math.max(0, rang)), offre, ...prev.slice(Math.max(0, rang))]));
+  }
   function refuserOffre(id) {
     if (refusees.current.has(id)) return;
     agirOptimiste(`refus:${id}`, {
@@ -501,23 +584,43 @@ export default function DriverDashboard() {
           setAvailable((prev) => prev.filter((x) => x.id !== id));
           setPartantes((p) => p.filter((x) => x !== id));
         }, mouvementReduit() ? 0 : 300);
-        return { offre, rang, minuteur };
+        setRefusAnnulable({ id, offre, rang, minuteur });
+        return { id, offre, rang, minuteur };
       },
-      envoyer: () => api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token }),
-      annuler: ({ offre, rang, minuteur }) => {
-        clearTimeout(minuteur);
-        refusees.current.delete(id);
-        setPartantes((p) => p.filter((x) => x !== id));
-        if (offre) setAvailable((prev) => (prev.some((x) => x.id === id) ? prev : [...prev.slice(0, Math.max(0, rang)), offre, ...prev.slice(Math.max(0, rang))]));
-      },
-      confirmer: () => toast(t('conformite.offerRefused'))
+      envoyer: () => new Promise((resolve) => {
+        const envoi = setTimeout(() => {
+          attentesRefus.current.delete(id);
+          setRefusAnnulable((r) => (r?.id === id ? null : r));
+          resolve(true);
+        }, DELAI_ANNULER_REFUS_MS);
+        attentesRefus.current.set(id, () => { clearTimeout(envoi); attentesRefus.current.delete(id); resolve(false); });
+      }).then((envoyer) => (envoyer ? api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token }) : { annule: true })),
+      annuler: remettreOffre
     });
   }
+  function annulerRefus() {
+    const r = refusAnnulable;
+    if (!r) return;
+    attentesRefus.current.get(r.id)?.();
+    remettreOffre(r);
+    setRefusAnnulable(null);
+  }
+  const barreRefus = refusAnnulable && (
+    <div className="card" role="status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px' }}>
+      <span className="small">{t('conformite.offerRefused')}</span>
+      <button type="button" className="btn-outline" onClick={annulerRefus}>{t('conformite.undoRefuse')}</button>
+    </div>
+  );
 
   // Course en train d'être prise (bordure iris le temps de la réponse) et cartes refusées qui s'en vont.
   const [prise, setPrise] = useState(null);
   const [partantes, setPartantes] = useState([]);
+  // Une prise à la fois (audit du 06/11, G34) : « Accepter » sur une autre carte pendant qu'une prise attend sa réponse ne part
+  // pas. Le serveur refuse aussi la deuxième (verrou par livreur), mais sans ce garde elle partait et revenait en erreur.
+  const priseEnVol = useRef(false);
   async function claim(id) {
+    if (priseEnVol.current) return;
+    priseEnVol.current = true;
     // Le toucher qui engage se sent tout de suite ; « succès » quand le serveur confirme que la course est à moi (gestes.js).
     if (experienceApp()) vibrer('valider');
     setPrise(id);
@@ -545,6 +648,7 @@ export default function DriverDashboard() {
       // suivant, et « Prendre la course » échouait encore. La liste est relue tout de suite.
       else load();
     } finally {
+      priseEnVol.current = false;
       setPrise(null);
     }
   }
@@ -600,14 +704,23 @@ export default function DriverDashboard() {
    * Le glisser (app) ou le bouton (site) ouvre d'abord la question « Tu as bien la commande ? », avec le nombre d'articles et le
    * commerce ; seul « Oui, j'ai la commande » la marque récupérée — le client voit alors qu'elle est en route. */
   const [retraitAConfirmer, setRetraitAConfirmer] = useState(null);
+  /* LE CODE DE RETRAIT, TOUJOURS (G142, décision d'Owen du 06/11/2026). Un glisser de travers disait au client « en route »
+   * pendant que la commande cuisait : la question « Tu as bien la commande ? » demande maintenant les 4 chiffres du code
+   * montré au comptoir, vérifiés par le serveur. Retirée avant « Prête », le commerce lit « retirée par le livreur ». */
+  const [codeRetraitSaisi, setCodeRetraitSaisi] = useState('');
+  const [codeRetraitManque, setCodeRetraitManque] = useState(false);
+  function demanderRetrait(o) { setCodeRetraitSaisi(''); setCodeRetraitManque(false); setRetraitAConfirmer(o); }
   async function confirmerRetrait(order) {
+    if (codeRetraitSaisi.length !== 4) { setCodeRetraitManque(true); toast(t('dashDriver.pickupCodeMissing'), 'erreur'); return false; }
     setRetraitEnCours(order.id);
     try {
-      await api(`/orders/${order.id}/picked-up`, { method: 'PATCH', token });
+      await api(`/orders/${order.id}/picked-up`, { method: 'PATCH', token, body: { code: codeRetraitSaisi } });
       toast(t('dashDriver.toastPickedUp'));
       load();
+      return true;
     } catch (e) {
       toast(e.message, 'erreur');
+      return false;
     } finally {
       setRetraitEnCours(null);
     }
@@ -658,6 +771,11 @@ export default function DriverDashboard() {
   const dossierARevoir = ['draft', 'rejected', 'pending_review'].includes(dossier?.statut) && mine.length === 0;
   const approuve = user?.adminStatus === 'approved' && !dossierARevoir;
   const peutRouler = approuve && user?.stripeConnectStatus === 'active';
+  /* UNE COURSE EN MAIN RESTE À L'ÉCRAN (G159, 2026-11-06). Un livreur suspendu ou bloqué en pleine livraison perdait tout
+     l'écran de la course : plus d'adresse, ni d'appel, ni de code à taper, la commande coincée dans son sac — alors que le
+     serveur le laisse la remettre (/deliver ne lit pas admin_status). Les courses déjà en main restent affichées ; seules les
+     nouvelles offres disparaissent (la carte de son dossier les remplace). */
+  const voitSesCourses = approuve || awaitingPickup.length + active.length > 0;
   const enPause = !!user?.driverPaused;
   const appli = experienceApp();
 
@@ -674,12 +792,12 @@ export default function DriverDashboard() {
     const o = mine.find((x) => x.id === a.orderId);
     return o && (a.type === 'pickup' ? ['preparation', 'pret'].includes(o.status) : ['preparation', 'pret', 'livraison'].includes(o.status));
   });
-  const tourneeActive = approuve && nEnMain >= 2 && arretsPlan.length > 0;
+  const tourneeActive = voitSesCourses && nEnMain >= 2 && arretsPlan.length > 0;
   const premierArret = tourneeActive ? mine.find((o) => o.id === arretsPlan[0].orderId) : null;
-  const principale = approuve ? (premierArret || active[0] || awaitingPickup[0] || null) : null;
+  const principale = voitSesCourses ? (premierArret || active[0] || awaitingPickup[0] || null) : null;
   const autresActives = active.filter((o) => o !== principale);
   const autresRetraits = awaitingPickup.filter((o) => o !== principale);
-  const course = principale || (approuve && terminee ? terminee : null);
+  const course = principale || (voitSesCourses && terminee ? terminee : null);
   const enRetrait = !!principale && principale.status !== 'livraison';
   const fraisCourse = (o) => dec(o.driverFee ?? o.deliveryFee ?? o.fee);
   /* PRÊTE, PRÊTE À…, OU EN RETARD (1 B, 4 A) : le serveur dit l'heure prévue et le retard (tournee.etatPrete), pour une course
@@ -803,8 +921,8 @@ export default function DriverDashboard() {
       <DeliveryTiming order={o} />
       {/* Dans l'application : glisser pour confirmer (un appui dans la poche ne valide rien). Sur le site : le bouton. */}
       <div className="ecl-glisser">
-        <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => setRetraitAConfirmer(o)}>
-          <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => setRetraitAConfirmer(o)}>
+        <GlisserPourConfirmer libelle={t('dashDriver.pickedUpButton')} disabled={retraitEnCours === o.id} onConfirmer={() => demanderRetrait(o)}>
+          <button type="button" className="btn-outline" style={{ width: '100%', padding: '12px 16px', fontSize: 15, fontWeight: 700 }} disabled={retraitEnCours === o.id} onClick={() => demanderRetrait(o)}>
             {retraitEnCours === o.id ? '…' : t('dashDriver.pickedUpButton')}
           </button>
         </GlisserPourConfirmer>
@@ -818,9 +936,13 @@ export default function DriverDashboard() {
         confirmLabel={t('dashDriver.pickupConfirmYes')}
         cancelLabel={t('dashDriver.pickupConfirmNo')}
         loading={retraitEnCours === o.id}
-        onConfirm={async () => { await confirmerRetrait(o); setRetraitAConfirmer(null); }}
+        onConfirm={async () => { if (await confirmerRetrait(o)) setRetraitAConfirmer(null); }}
         onCancel={() => setRetraitAConfirmer(null)}
-      />
+      >
+        <p className="small" style={{ margin: '10px 0 6px' }}>{t('dashDriver.pickupCodeLabel')}</p>
+        <CodeCases id={`code-retrait-${o.id}`} libelle={t('dashDriver.pickupCodeLabel')} valeur={codeRetraitSaisi} manque={codeRetraitManque}
+          onChange={(v) => { setCodeRetraitSaisi(v); if (v.length === 4) setCodeRetraitManque(false); }} onValider={() => confirmerRetrait(o).then((ok) => { if (ok) setRetraitAConfirmer(null); })} />
+      </ConfirmDialog>
     </>
   );
 
@@ -936,19 +1058,23 @@ export default function DriverDashboard() {
         <div className="ecl-offre-pied">
           {/* Refuser reste discret et neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-ghost" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-          <button type="button" className={rang === 0 && nEnMain === 0 ? 'btn-gold' : 'btn-outline'} disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : nEnMain > 0 ? t('ecranLivreur.ajouterTournee') : t('dashDriver.takeRide')}</button>
+          <button type="button" className={rang === 0 && nEnMain === 0 ? 'btn-gold' : 'btn-outline'} disabled={prise !== null} onClick={() => claim(o.id)}>{prise === o.id ? '…' : nEnMain > 0 ? t('ecranLivreur.ajouterTournee') : t('dashDriver.takeRide')}</button>
         </div>
       </article>
     );
   };
 
-  const urgence = peutRouler && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} /></span>;
+  /* L'URGENCE NE DÉPEND PAS DES PAIEMENTS (G123, 2026-11-06). Elle suivait `peutRouler`, qui exige un compte Stripe actif :
+     un compte restreint par Stripe en pleine tournée, ou un livreur suspendu avec une course en main, perdait le bouton au
+     moment où il pouvait servir. Elle reste pour tout livreur validé, et pour quiconque tient une course. */
+  const urgence = (user?.adminStatus === 'approved' || nEnMain > 0) && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} /></span>;
 
   /* ---------- Le site (jamais l'app) : le bandeau du tableau de bord, la liste et le détail d'une course ---------- */
   const site = !appli;
   // Les courses livrées aujourd'hui, pourboires compris (100 % au livreur) : ce qu'il a gagné dans la journée. Les mêmes
-  // montants que la liste « Livrées aujourd'hui » plus bas ; Gains reste la page qui fait foi (année, mois, relevés).
-  const gainsJour = livreesAujourdhui.reduce((s, o) => s + Number(o.driverFee ?? o.deliveryFee ?? 0) + Number(o.tipAmount || 0), 0);
+  // montants que la liste « Livrées aujourd'hui » plus bas ; Gains reste la page qui fait foi (année, mois, relevés). Un
+  // pourboire ne compte que payé (G59, 2026-11-06) : tip_amount est posé avant le paiement, qui peut ne jamais aboutir.
+  const gainsJour = livreesAujourdhui.reduce((s, o) => s + Number(o.driverFee ?? o.deliveryFee ?? 0) + (o.tipPaid ? Number(o.tipAmount || 0) : 0), 0);
   const vehiculeNom = vehicule?.type ? t(`courierOnboarding.vehicle_${vehicule.type}`) : null;
   const contexte = [user?.name, vehiculeNom].filter(Boolean).join(' · ');
   const titreSite = titreBandeau || (peutRouler ? (enPause ? t('siteLivreur.enPause') : t('siteLivreur.disponible')) : titreDossier || t('nav.rides'));
@@ -982,7 +1108,11 @@ export default function DriverDashboard() {
         ? t('dashDriver.sharingDisabledSub')
         : sharingLocation
           ? t('dashDriver.sharingOnSub', { last: lastPositionAt ? t('dashDriver.geoLastSentDot', { time: formatClock(lastPositionAt) }) : '' })
-          : t('dashDriver.sharingWaitingSub')}</span>
+          : suiviRefuse ? t('dashDriver.sharingBlockedSub') : t('dashDriver.sharingWaitingSub')}
+        {/* Refusé par le téléphone (G42) : les réglages de Fairride, d'un toucher, dans l'app (sans le greffon : le chemin écrit). */}
+        {!sharingLocation && suiviRefuse && user?.locationSharingEnabled !== false && estNatif() && (
+          <> <button type="button" className="lien-bouton" onClick={() => ouvrirReglagesAppli().then((ok) => { if (!ok) toast(t('dashDriver.posReqApproxAndroid')); })}>{t('dashDriver.posReqReglages')}</button></>
+        )}</span>
     </p>
   );
 
@@ -1163,6 +1293,7 @@ export default function DriverDashboard() {
       <NotifCourses />
       {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
       <PositionRequise>
+        {barreRefus}
         {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
         {available.length === 0 && <HeuresChargees token={token} position={maPosition} />}
         {offres.map(carteOffre)}
@@ -1242,7 +1373,7 @@ export default function DriverDashboard() {
         {/* Le pourboire déjà payé, comme sur la carte d'offre (téléphone, app) : il manquait ici, sur ordinateur (2026-11-05). */}
         {o.tipPaid && o.tipAmount > 0 && <p className="ecl-impact"><Icone nom="euro" taille={18} /><span>{t('ecranLivreur.pourboireOffre', { amount: dec(o.tipAmount) })}</span></p>}
         <div className="ecl-fc-actions">
-          <button type="button" className="btn-gold" disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
+          <button type="button" className="btn-gold" disabled={prise !== null} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
           {/* Refuser reste neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-outline" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
         </div>
@@ -1278,6 +1409,7 @@ export default function DriverDashboard() {
           {titreOffres}
           {blocGrille}
           <PositionRequise>
+            {barreRefus}
             {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
         {available.length === 0 && <HeuresChargees token={token} position={maPosition} />}
             {available.length > 0 && <div className="ecl-choix-liste">{offres.map(choixOffre)}</div>}
@@ -1310,6 +1442,8 @@ export default function DriverDashboard() {
             course tant qu'il n'est pas envoyé (controleSelfie.js côté serveur). */}
         {peutRouler && <SelfieControle token={token} onDepose={load} onEtat={setSelfie} />}
 
+        {/* Bloqué ou suspendu avec une course en main (G159) : la course d'abord, la carte du dossier dessous. */}
+        {!approuve && voitSesCourses && blocEnMain(false)}
         {!approuve ? (() => {
           /* LE MESSAGE SUIT L'ÉTAT DU DOSSIER (audit du 15/10/2026). « L'équipe vérifie ton dossier » s'affichait aussi à un
              livreur qui ne l'avait pas encore envoyé, ou dont le dossier était à corriger — sans bouton : il attendait une
@@ -1362,7 +1496,7 @@ export default function DriverDashboard() {
         onRefuse={() => refuserRemiseAge(ageAVerifier)} />
       {/* « Disponible » avec la position refusée : où la rallumer (voir togglePause). */}
       {demandePosition && (
-        <Modale titre={t('dashDriver.posReqTitre')} onFermer={() => setDemandePosition(false)}>
+        <Modale titre={t(etatPos === 'approximate' ? 'dashDriver.posReqExacteTitre' : 'dashDriver.posReqTitre')} onFermer={() => setDemandePosition(false)}>
           <ExplicationPosition etat={etatPos} verifier={verifierPos} onAutorisee={() => { setDemandePosition(false); basculerPause(); }}>
             <button type="button" className="btn-outline" onClick={() => setDemandePosition(false)}>{t('dashDriver.posReqPlusTard')}</button>
           </ExplicationPosition>

@@ -47,6 +47,9 @@ export default function ReclamationsCommerce({ restoId, token, toast }) {
           <p className="ec-aide">{r.silenceVautAccord
             ? t('reclamationsResto.echeance', { time: new Date(r.echeance).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
             : t('reclamationsResto.echeanceEquipe')}</p>
+          {/* Ce qui sort de son virement s'il rembourse : sa part du montant, Fairride rend sa commission (G22, décision d'Owen du
+              06/11/2026 ; `retenue` calculée par le serveur, absente d'un serveur plus ancien). */}
+          {typeof r.retenue === 'number' && <p className="ec-aide">{t('reclamationsResto.retenue', { montant: euros(r.retenue) })}</p>}
           <button type="button" className="ec-bouton ec-bouton--iris" disabled={enCours === r.id} onClick={() => decider(r, 'refund')}>
             {t('reclamationsResto.rembourser', { montant: euros(r.montant) })}
           </button>

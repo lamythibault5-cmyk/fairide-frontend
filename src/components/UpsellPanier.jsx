@@ -3,6 +3,8 @@ import FichePlat from './FichePlat';
 import { categoryKind, resolveItemImage } from '../menuCategories';
 import { euros } from '../prixPlat';
 import VignetteSansPhoto from './VignetteSansPhoto';
+import { useLanguage } from '../context/LanguageContext';
+import { localizedItem } from '../menuTranslation';
 
 // « Un dessert ou une boisson avec ça ? » — les suggestions de fin de panier.
 //
@@ -45,6 +47,9 @@ export function LastChanceUpsell({ desserts, drinks, restaurant, cart, t }) {
 
 function UpsellRow({ items, genre, cart, restaurant }) {
   const [pickerItem, setPickerItem] = useState(null);
+  // Le nom dans la langue affichée, comme sur la carte du commerce (G117) : la tuile ET la ligne qu'elle met au panier.
+  const { language } = useLanguage();
+  const nom = (item) => localizedItem(item, language).name;
   // Tout plat passe par sa fiche, avec ou sans options — le meme ecran que depuis la carte du
   // commerce, pour qu'une suggestion ne s'ajoute pas selon d'autres regles que le reste.
   function handleAdd(item) { setPickerItem(item); }
@@ -54,19 +59,19 @@ function UpsellRow({ items, genre, cart, restaurant }) {
         const image = resolveItemImage(item, restaurant.sections);
         return (
           <button type="button" key={item.id} className="upsell-item" onClick={() => handleAdd(item)}>
-            {image ? <img loading="lazy" src={image} alt="" /> : <VignetteSansPhoto nom={item.name} genre={genre} className="upsell-item-vignette" />}
-            <span className="upsell-item-name">{item.name}</span>
+            {image ? <img loading="lazy" src={image} alt="" /> : <VignetteSansPhoto nom={nom(item)} genre={genre} className="upsell-item-vignette" />}
+            <span className="upsell-item-name">{nom(item)}</span>
             <span className="upsell-item-price">+{euros(item.price)}</span>
           </button>
         );
       })}
       {pickerItem && (
         <FichePlat
-          item={pickerItem}
+          item={{ ...pickerItem, ...localizedItem(pickerItem, language) }}
           imageUrl={resolveItemImage(pickerItem, restaurant.sections)}
           onCancel={() => setPickerItem(null)}
           onConfirm={(optionItemIds, snapshot, unitPrice, qty, note) => {
-            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: pickerItem.name, imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty, note });
+            cart.addOne({ restaurantId: restaurant.id, restaurantName: restaurant.name, itemId: pickerItem.id, name: nom(pickerItem), imageUrl: resolveItemImage(pickerItem, restaurant.sections), unitPrice, optionItemIds, optionsSnapshot: snapshot, qty, note });
             setPickerItem(null);
           }}
         />

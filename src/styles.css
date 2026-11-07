@@ -5081,7 +5081,9 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .sponsor-rangee--simulation { padding-right: 76px; }
 .sponsor-demo-mini { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
 .sponsor-demo-mini svg { width: 22px; height: 22px; }
-@media (max-width: 520px) { .sponsor-rangee { margin-left: 8px; padding: 2px 8px 2px 6px; } .sponsor-rangee .sponsor-logo { height: 22px; max-width: 100px; } .sponsor-rangee .sponsor-mention { display: none; } }
+/* « Avec le soutien de » reste lisible sur téléphone, en plus petit : un logo cliquable sans mention n'est pas reconnaissable
+   comme de la publicité (DSA art. 26, CDE XII.12 ; comparaison site / téléphone, 2026-11-05 — la mention était masquée). */
+@media (max-width: 520px) { .sponsor-rangee { margin-left: 8px; padding: 2px 8px 2px 6px; gap: 5px; } .sponsor-rangee .sponsor-logo { height: 22px; max-width: 90px; } .sponsor-rangee .sponsor-mention { font-size: 8.5px; letter-spacing: .02em; } }
 
 /* Emplacements sponsor (EmplacementSponsor.jsx) et Admin › Collaborations / sponsoring. */
 .sponsor-emplacement { position: relative; margin: 18px 0; padding: 10px 12px; border-radius: 14px; background: var(--cream-dim); display: flex; flex-direction: column; gap: 6px; align-items: center; }
@@ -5283,7 +5285,6 @@ html.clavier-ouvert .bv { bottom: var(--clavier, 0px); }
 @keyframes bv-badge-halo { 0% { box-shadow: 0 0 0 0 rgba(200, 240, 60, 1); } 70%, 100% { box-shadow: 0 0 0 26px rgba(200, 240, 60, 0); } }
 @media (prefers-reduced-motion: reduce) { .bv-badge .prix-comptoir.bv-badge-geant { animation: none; box-shadow: 0 0 0 4px var(--lime); } }
 .bv-badge .bv-badge-titre { font-size: 36px; margin: 40px auto 12px; max-width: 12ch; text-wrap: balance; }
-.bv-badge .bv-sous { font-size: 17px; margin: 0; }
 /* L'écran des notifications (AmorceNotifications.jsx, version B de maquettes/notifs-badge) : la même forme que le badge juste
    après, une notification dessinée comme sur l'écran verrouillé d'iOS (fond blanc, coins de 22 px, police du système) au lieu
    de la pastille, et le même halo lime (bv-badge-halo). */

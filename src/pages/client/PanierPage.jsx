@@ -7,7 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import { useToast } from '../../context/ToastContext';
-import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
+import { motifLigne, lignesIndisponibles } from '../../panierDisponible';
 import Icone from '../../components/Icone';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import ChiffresRoulants from '../../components/ChiffresRoulants';
@@ -156,7 +156,9 @@ export default function PanierPage() {
   }
 
   // Plats qui ne se commandent plus (rupture, retirés) : marqués, « Retirer », et le paiement attend qu'ils soient partis.
-  const indisponibles = lignesIndisponibles(cart.lines, restaurant?.menu);
+  // Le jour se choisit au paiement : un plat épuisé AUJOURD'HUI seulement ne bloque pas ici (G165), il est dit, et le paiement
+  // ne le refuse que pour aujourd'hui.
+  const indisponibles = lignesIndisponibles(cart.lines, restaurant?.menu, { jourPlusTard: true });
   /* AVANT LE GO, UN COMMERCE « PAIEMENT EN LIGNE SEULEMENT » NE PREND RIEN (audit du 19/10, LIVE-09). Le panier menait à un
      paiement sans bouton, avec un message flou (« seulement s'il le propose »). Sans paiement en ligne, seul l'à emporter payé
      sur place peut se commander : un commerce qui ne le propose pas (ou qui ne fait que livrer) attend le GO. On le dit ici,
@@ -220,9 +222,17 @@ export default function PanierPage() {
                   <span className="small">{ligne.optionsSnapshot.map((o) => o.name).join(', ')}</span>
                 )}
                 {ligne.note && <span className="small">« {ligne.note} »</span>}
-                {ligneIndisponible(ligne, restaurant?.menu)
-                  ? <span className="ligne-indispo">{t('checkout.unavailableToday')}</span>
-                  : <PrixLigne ligne={ligne} remise={totaux?.lineDiscounts?.[cle]} t={t} />}
+                {(() => {
+                  // Ce que dit la ligne (panierDisponible.js) : plus disponible, choix à refaire (G166), épuisé aujourd'hui (G165).
+                  const motif = motifLigne(ligne, restaurant?.menu, { jourPlusTard: true });
+                  if (motif === 'indisponible' || motif === 'options') return <span className="ligne-indispo">{t(motif === 'options' ? 'checkout.optionsToRedo' : 'checkout.unavailableToday')}</span>;
+                  return (
+                    <>
+                      {motif === 'plusTard' && <span className="ligne-indispo">{t('checkout.soldOutLaterDay')}</span>}
+                      <PrixLigne ligne={ligne} remise={totaux?.lineDiscounts?.[cle]} t={t} />
+                    </>
+                  );
+                })()}
               </div>
               {indisponibles.includes(cle) ? (
                 <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(cle)}>{t('checkout.removeLine')}</button>

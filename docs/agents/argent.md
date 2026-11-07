@@ -87,7 +87,9 @@ food or more** (subtotal, delivery not counted): applied by the order route by i
 promo row `CODE-AMI` of type `order_referral` (backend migration 107, `referrals.CODE_AMI`; typed at checkout it « doesn't
 exist »; the team turns it off in Admin › Promotions). A typed code wins (one code per order) and the code ami waits; paid at
 the shop it doesn't apply, and the quote's `codeAmi` says why so the cart can explain it. The sharer gets **€5 on the
-balance per friend, no cap** (founder: each fake friend needs a real phone and a real paid order), when that friend's first
+balance per friend, no cap** (founder: each fake friend needs a real phone and a real paid order; since 2026-11-06, G38,
+the friend's €5, the sharer's €5 and the sign-up code credit all need the number proven **by SMS**
+(`phone_verified_via = 'sms'`): the e-mail code still lets the order through, without the reward), when that friend's first
 qualifying order is handed over, **only if it was paid online** (`maybeAwardClientReferralReward`: a takeaway paid at the
 shop earns Fairride nothing, so it no longer credits anyone). Before GO nothing can be paid online: the screens that promise
 the friend's €5 wait for GO (`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged.
@@ -133,14 +135,14 @@ the phone, with location already allowed (never asked for this), is more than 1 
 ## Shop cancels after a courier took the job; payouts list (founder, 2026-10-31)
 
 - A shop that cancels an accepted order (`PATCH /orders/:id/refuse` from `preparation`/`pret`) while a courier holds it:
-  the customer is refunded in full as before, and the courier gets the share of a 1 km trip (base fee × 90 % = 4,50 €)
+  the customer is refunded in full as before, and the courier gets the share of a base trip (base fee × 90 %: 5,22 € since the 5,80 € fee of 10-31; computed from pricing, never written)
   for the trip (`annulationLivreur.js`, backend). Fairride pays it from its Stripe balance as a `virements_complements`
   row of nature `annulation` (never twice, retried when the balance is empty), books it 613-ANNULATION → 441-LIVREUR,
   and writes a `courier_earnings` line of kind `cancellation` (Gains: « Annulée par le commerce »). The courier's push
-  says « 4,50 € pour toi quand même ». Charging it back to the shop needs a clause in the next shop contract version
+  says « 5,22 € pour toi quand même » (amount computed, `pushFile.js`). Charging it back to the shop needs a clause in the next shop contract version
   (30 days' notice): not done yet. The customer still can't cancel once the shop accepted (unchanged).
 - Courier contract 2026.9 (`courierContracts.js`): prices are final, VAT included (the « hors TVA » left from 8-14/10 is
-  gone), the courier's share in euros (4,50 € up to 1 km, 0,72 € per started km), straight-line distance, and the
+  gone), the courier's share in euros, computed from pricing in the PDF (since 10-31: 5,22 € up to 3 km, 0,45 € per started km; the in-app sheet and reminder said 4,50 € until 11-06), straight-line distance, and the
   cancellation pay above. Couriers sign again (a 2026.8 signature leaves « contrat » missing in their dossier).
 - Shops see their payouts: Factures › « Virements » and a « Prochain virement » tile on the home screen
   (`GET /restaurants/:id/payouts`, `virementsCommerce.js`): the next Monday's amount (Stripe balance), and each Stripe
@@ -157,10 +159,11 @@ the phone, with location already allowed (never asked for this), is more than 1 
   The courier's cancellation pay (above) is the same 5,22 €.
 - **Missing or wrong item** (`reclamationsPlats.js`): the customer ticks the dishes within 24 h of delivery, adds a photo
   of what arrived and confirms on honour. The shop gets a push and taps « Rembourser » or « Contester » (no photo asked of
-  the shop). No answer within 2 h = refunded at the shop's charge (`rembourserCommande`, responsibility `restaurant`).
-  Contested = no refund; the customer can « maintenir » (a ticket). Silence does NOT count as yes above 15 € or for a
-  customer with 2 contested claims in 90 days (still allowed to claim; the team gets a task, nothing is closed
-  automatically). A shop contesting 5+ claims from 3+ customers in 90 days gives a task.
+  the shop). No answer within 2 h **of opening time** = refunded at the shop's charge (`rembourserCommande`, responsibility
+  `restaurant`; see « Pre-GO money review » below). Contested = no refund; the customer can « maintenir » (a ticket). Silence
+  does NOT count as yes above 15 €, for a customer with 2 contested claims in 90 days, or for a customer already refunded
+  twice by silence in 90 days (still allowed to claim; the team gets a task, nothing is closed automatically). A shop
+  contesting 5+ claims from 3+ customers in 90 days gives a task.
 - **Contracts must be signed before working**: couriers need courier contract 2026.9 to see or take any job
   (`courierContracts.contratAJour`); a shop needs to have accepted **any** version of its contract (`VERSIONS_VALABLES`).
 - **A new shop contract version never stops anything** (Owen, 2026-11-03, RESTO-2026.23): the shop keeps selling and editing
@@ -169,6 +172,44 @@ the phone, with location already allowed (never asked for this), is more than 1 
   only to shops that accepted the version bringing it: `restaurantContract.aAccepte(r, 'RESTO-x')`, never
   `contract_version === VERSION` (e.g. silence-as-yes on missing items needs 2026.21, the 11.11 % cap needs 2026.22).
   New version = bump `VERSION`, add it to `VERSIONS_VALABLES`, write `CHANGEMENTS` and the clauses; nothing else.
+
+## Pre-GO money review (Owen's decisions, 2026-11-06)
+
+- **Partial refund at the shop's charge** (missing item, team gesture): the shop gives back what it received for that amount
+  (amount × (1 − the order's commission rate), e.g. 9 € of a 10 € dish), Fairride gives back its commission (1 €). Backend
+  `remboursement.js` keeps both on the refund line (`order_refunds.repris`, `commission_rendue`, migration 905); the
+  commission leaves the month's commission invoice, or a credit note returns it when the invoice is already issued
+  (`commissionRemboursee.rendreCommissionPartielle`). A refund that completes the order is unchanged (whole commission
+  cancelled). The shop's missing-item card says « Déduit de ton virement : 9,00 €, ta part » (`retenue`), the e-mail and
+  « Prochain virement » say the same amount.
+- **What was really taken back** is kept on the line; less than expected (no transfer, transfer too small, Stripe refused):
+  a high task, the incident stays open, the admin screens say « X € repris sur Y € », and the shop or courier e-mail states
+  the amount taken (none taken: no e-mail).
+- **Missing item, 2 hours of opening time**: the 2 hours count only while the shop is open (opening hours and closures, the
+  « Ouvert » switch, not paused or stopped for the day; `reclamationsPlats.commerceOuvert`). A push that reached no device is
+  doubled by an e-mail to the owner. Shop staff (« service » role) refund up to 15 €; above, the owner only. **The next shop
+  contract version must say « 2 heures d'ouverture »** (RESTO-2026.21 says « 2 heures »; this change only favours the shop,
+  so it applies now, but write it in the next version).
+- **Cancelled through nobody's fault, the shop keeps its share and gets its commission back**: « aucun livreur » (customer or
+  automatic) and a team cancel charged to Fairride or the courier (`delivery_incident = 'annule_equipe'`, never shown to apps,
+  part of `INCIDENTS_DUS_AU_COMMERCE` so a share still waiting is paid). The commission goes back by transfer
+  (`commissionRemboursee.rendreCommissionAnnulation`, same retry queue as a fully refunded order).
+- **Courier cancellation pay** (5,22 €) also when the team cancels an order a courier had claimed (before pickup), and for
+  orders paid with the Fairride balance. A shop refusing 3 claimed orders in 30 days (`annulations_apres_prise_seuil` /
+  `_jours`, platform parameters) gives the team a task: a signal on the shop, nothing about couriers.
+- **Courier price bump** starts when a courier is needed at the shop: expected ready time minus 10 minutes, or the time the
+  shop marked it ready if sooner, never before it is offered (`troisVendeurs.debutAttente`, same function for the list, the
+  push and the claim). Time a courier held the job before releasing it does not count (`orders.held_ms`).
+- **Test accounts paying for real**: an order from an `is_test` customer at a real shop counts as real everywhere (alerts,
+  shop payouts, accounting export, invoices). Only simulation shops, test-owned shops, training orders and simulated payments
+  stay out (`simulation.sqlCommandeReelle`).
+- **Alcohol order, customer absent for the ID check**: no refund, like « client absent » (`delivery_incident` `client_absent`,
+  or `pickup_not_collected` for takeaway), with its own customer text (`orders.noCourier_incident_age_absent`).
+- **Pickup code**: the courier types the pickup code to confirm « J'ai la commande »; before « Prête » the server requires it,
+  and the shop reads « Retirée par le livreur avant que tu l'aies dite prête » (`orders.picked_up_before_ready`).
+- Payout screens: « Prochain virement » no longer lists refused/cancelled refunded orders (except the incidents above) and
+  shows shares still waiting apart, outside the total; Admin › Paiements › Versements shows the share minus what was taken
+  back, and « à verser » means a share really waiting for its transfer.
 
 ## Costs and break-even screen (founder, 2026-11-04)
 

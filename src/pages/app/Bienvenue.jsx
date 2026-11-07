@@ -344,10 +344,11 @@ export default function Bienvenue() {
   // Apple / Google : le compte existe → session ouverte (la garde plus haut renvoie à l'accueil) ; il n'existe pas encore
   // (INCOMPLETE_PROFILE) → l'inscription de l'application, sans e-mail ni mot de passe à donner. Seul un compte protégé par
   // un second facteur passe par /login, qui sait demander le code (Auth.jsx traite le jeton reçu dans `state`).
-  async function viaFournisseur(fournisseur) {
+  // `obtenu` : le jeton déjà rendu par le bouton Google du site (hors de l'application, BoutonsConnexionNative).
+  async function viaFournisseur(fournisseur, obtenu) {
     setAttente(true);
     try {
-      const jeton = await connexionFournisseur(fournisseur);
+      const jeton = obtenu || await connexionFournisseur(fournisseur);
       memoriser();
       try {
         if (jeton.fournisseur === 'apple') await loginWithApple(jeton.jeton, role, { givenName: jeton.prenom || undefined, familyName: jeton.nom || undefined });
