@@ -394,6 +394,12 @@ export function AuthProvider({ children }) {
     // Le téléphone cesse de recevoir les notifications du compte qui s'en va : sans cela, il gardait celles du compte
     // précédent jusqu'à la connexion suivante (2026-10-26). Pendant que la session est encore valide ; sans attendre.
     if (estNatif() && session?.token) desabonnerNatif(session.token).catch(() => {});
+    // Un livreur qui se déconnecte ne travaille plus : en pause, il ne compte plus « libre » pour vendre une livraison et ne
+    // reçoit plus « Nouvelle course » (fondateur, 2026-11-06, G1). Il se remet disponible lui-même à son retour.
+    const sesRoles = session?.user?.roles?.length ? session.user.roles : [session?.user?.role];
+    if (session?.token && sesRoles.includes('driver') && !session.user.driverPaused) {
+      api('/auth/me', { method: 'PATCH', token: session.token, body: { driverPaused: true }, logoutOn401: false }).catch(() => {});
+    }
     setDeconnexionVoulue(true);
     setSession(null);
     // La casquette active appartient à la session qui s'en va : sans cet oubli, le compte suivant

@@ -314,7 +314,7 @@ export default function AdminOrdersPage() {
             </span>
           </div>
           <div className="small">
-            {o.clientName} → {o.driverName ? tr('adminOrders.deliveredBy', { name: o.driverName }) : (o.orderType === 'delivery' ? tr('adminOrders.noDriverAssigned') : tr('adminOrders.takeaway'))}
+            {o.clientName} → {o.driverName ? tr('adminOrders.deliveredBy', { name: o.driverName }) : (o.orderType === 'delivery' ? (o.deliveryBy === 'restaurant' ? tr('adminOrders.shopDelivers') : tr('adminOrders.noDriverAssigned')) : tr('adminOrders.takeaway'))}
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
             <span className="small">
@@ -530,6 +530,8 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           {/* Numéros en liens tel: (audit du 19/10, admin-59 ; fondateur : numéros visibles avec tel:) : au téléphone, un tap. */}
           {detail.clientPhone && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.callClient')} <a href={`tel:${detail.clientPhone}`}>{telephoneLisible(detail.clientPhone)}</a></p>}
           {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: '' })}{detail.driverPhone && <> · <a href={`tel:${detail.driverPhone}`}>{telephoneLisible(detail.driverPhone)}</a></>}</p>}
+          {/* Livrée par l'équipe du commerce : aucun livreur Fairride attendu, pas une course « sans livreur » (audit du 06/11, G175). */}
+          {!detail.driverName && detail.deliveryBy === 'restaurant' && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.shopDelivers')}</p>}
           <p className="small" style={{ margin: '2px 0' }}>
             {tr('adminOrders.paymentLine', { mode: libelle(PAYMENT_MODE_LABELS, detail.paymentMode || 'inconnu') })}
             {detail.isTraining ? ` · ${tr('adminOrders.trainingOrder')}` : ''}
