@@ -22,6 +22,7 @@ public class MainActivity extends BridgeActivity implements ModifiedMainActivity
     @Override
     public void onCreate(Bundle savedInstanceState) {
         registerPlugin(HaptiquePlugin.class);
+        registerPlugin(EcranAllumePlugin.class);
         super.onCreate(savedInstanceState);
     }
 

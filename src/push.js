@@ -12,7 +12,7 @@
 
 import { api } from './api';
 import { estNatif } from './natif';
-import { abonnerNatif, desabonnerNatif, jetonNatifCourant } from './pushNatif';
+import { abonnerNatif, desabonnerNatif, jetonNatifCourant, permissionNativeAccordee } from './pushNatif';
 
 // La clé publique VAPID arrive en base64url ; l'API du navigateur veut un tableau d'octets.
 function base64UrlVersOctets(base64) {
@@ -30,9 +30,10 @@ export function estSupporte() {
     && 'Notification' in window;
 }
 
-// L'abonnement déjà en place sur CE navigateur, ou null.
+// L'abonnement déjà en place sur CE navigateur, ou null. Dans l'app, un jeton ET la permission du téléphone (G39) : coupées
+// dans les réglages, les notifications n'arrivent plus, et l'écran ne doit plus les dire actives.
 export async function abonnementCourant() {
-  if (estNatif()) return jetonNatifCourant() ? { natif: true } : null;
+  if (estNatif()) return jetonNatifCourant() && (await permissionNativeAccordee()) ? { natif: true } : null;
   if (!estSupporte()) return null;
   try {
     const enregistrement = await navigator.serviceWorker.ready;

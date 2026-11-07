@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import { abonnerTerminalNavigateur } from '../../terminalNavigateur';
+import { garderEcranAllume } from '../../natif';
 import Icone from '../Icone';
 
 /* LE SON DU TERMINAL GOODCOM, ALLUMÉ PAR DÉFAUT (fondateur, 2026-10-20 : « les terminaux ont-ils le son ? »).
@@ -27,9 +28,13 @@ export default function SonTerminal({ alerte }) {
   const [terminal, setTerminal] = useState(false);
   useEffect(() => abonnerTerminalNavigateur((e) => setTerminal(!!e.config)), []);
 
-  // Le verrou tombe de lui-même quand la page passe en arrière-plan : on le redemande à son retour.
+  // Le verrou tombe de lui-même quand la page passe en arrière-plan : on le redemande à son retour. Dans l'app, le greffon
+  // natif d'abord (natif.js, garderEcranAllume, G43), sur toutes les pages du tableau de bord d'un terminal.
   useEffect(() => {
-    if (!terminal || !navigator.wakeLock) return undefined;
+    if (!terminal) return undefined;
+    const rendreEcran = garderEcranAllume();
+    if (rendreEcran) return rendreEcran;
+    if (!navigator.wakeLock) return undefined;
     let verrou = null;
     let fini = false;
     const demander = () => {
