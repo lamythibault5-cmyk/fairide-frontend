@@ -49,16 +49,22 @@ export default function OrderReceipt({ order, restaurant }) {
             {i.qty}× {i.name}
             {i.options?.length > 0 && <span className="small" style={{ display: 'block' }}>{i.options.map((o) => o.name).join(', ')}</span>}
           </span>
-          <span>{euros((i.price * i.qty - (i.discount || 0)))}</span>
+          <span>{euros(i.price * i.qty)}</span>
         </div>
       ))}
       {order.items.length > 0 && <>
       <div className="receipt-divider" />
-      <div className="receipt-line"><span>{t('receipt.subtotal')}</span><span>{euros(order.subtotal)}</span></div>
+      {/* LES LIGNES TOMBENT SUR LE TOTAL (chasse aux bugs avant GO, G158), comme le ticket du terminal (backend ticketTerminal.js).
+          order.subtotal est DÉJÀ net des promotions du commerce : le bon imprimait ce sous-total puis « Promo −X » une seconde
+          fois. Plats au prix d'avant l'offre, sous-total d'avant promotions, puis chaque remise sur sa ligne : promotion du
+          commerce, livraison qu'il offre, code promo payé par Fairride, bon cadeau, solde. */}
+      <div className="receipt-line"><span>{t('receipt.subtotal')}</span><span>{euros(order.subtotal + (order.promoDiscount || 0))}</span></div>
       {order.promoDiscount > 0 && <div className="receipt-line"><span>{t('receipt.promo', { label: order.promoLabel })}</span><span>-{euros(order.promoDiscount)}</span></div>}
       {order.orderType === 'delivery' && <div className="receipt-line"><span>{t('receipt.delivery')}</span><span>{euros(order.deliveryFee)}</span></div>}
       {/* TVA comprise (serviceFee est HTVA, serviceFeeVat sa TVA) : le total la contient, la ligne doit la contenir aussi. */}
       {order.serviceFee > 0 && <div className="receipt-line"><span>{t('receipt.serviceFee')}</span><span>{euros((order.serviceFee + (order.serviceFeeVat || 0)))}</span></div>}
+      {order.orderType === 'delivery' && order.deliveryDiscount > 0 && <div className="receipt-line"><span>{t('receipt.deliveryOffer')}</span><span>-{euros(order.deliveryDiscount)}</span></div>}
+      {order.promoCodeDiscount > 0 && <div className="receipt-line"><span>{t('receipt.promoCode', { code: order.promoCode || '' })}</span><span>-{euros(order.promoCodeDiscount)}</span></div>}
       {order.giftVoucherDiscount > 0 && <div className="receipt-line"><span>{t('receipt.giftVoucher', { code: order.giftVoucherCode || '' })}</span><span>-{euros(order.giftVoucherDiscount)}</span></div>}
       {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{euros(order.balanceUsed)}</span></div>}
       <div className="receipt-divider" />

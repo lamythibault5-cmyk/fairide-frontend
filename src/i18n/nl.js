@@ -4845,6 +4845,8 @@ export default {
       instruction: 'Instructie: {label}',
       note: 'Opmerking: {note}',
       promo: 'Promo {label}',
+      promoCode: 'Promocode {code}',
+      deliveryOffer: 'Levering aangeboden door de zaak',
       giftVoucher: 'Cadeaubon {code}',
       toPayOnSite: 'Ter plaatse te betalen',
       payOnSiteNote: 'Betaling ter plaatse, bij het ophalen — niet via Fairride betaald'

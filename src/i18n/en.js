@@ -4836,6 +4836,8 @@ export default {
       instruction: 'Instruction: {label}',
       note: 'Note: {note}',
       promo: 'Promo {label}',
+      promoCode: 'Promo code {code}',
+      deliveryOffer: 'Delivery offered by the shop',
       giftVoucher: 'Gift voucher {code}',
       toPayOnSite: 'To pay on site',
       payOnSiteNote: 'Payment on site, at collection — not paid via Fairride'

@@ -4849,6 +4849,8 @@ export default {
       instruction: 'Consigne : {label}',
       note: 'Note : {note}',
       promo: 'Promo {label}',
+      promoCode: 'Code promo {code}',
+      deliveryOffer: 'Livraison offerte par le commerce',
       giftVoucher: 'Bon cadeau {code}',
       toPayOnSite: 'À payer sur place',
       payOnSiteNote: 'Paiement sur place, au retrait — non payé via Fairride'
