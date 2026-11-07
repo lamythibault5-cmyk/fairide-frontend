@@ -987,7 +987,7 @@ export default function Orders() {
             {arretee.status === 'refuse' ? blocRefus(arretee) : (
               <>
                 <ProchaineEtape order={arretee} />
-                {arretee.deliveryIncident && <p className="small">{t(`orders.noCourier_incident_${arretee.deliveryIncident}`)}</p>}
+                {issueCommande(arretee) && <p className="small">{t(`orders.noCourier_incident_${issueCommande(arretee)}`)}</p>}
                 {blocTotal(arretee)}
               </>
             )}
