@@ -7,7 +7,8 @@ import { chargerGoogleSignIn } from '../googleSignIn';
 import { estNatif, connexionFournisseur } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 import BoutonsConnexionNative, { LogoGoogle, LogoApple } from '../components/BoutonsConnexionNative';
-import { appleWebDisponible } from '../appleSignInWeb';
+import { appleWebDisponible, prechargerApple } from '../appleSignInWeb';
+import RecuperationSms from '../components/RecuperationSms';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -930,6 +931,9 @@ export default function Auth() {
     </div>
   );
 
+  // Le script d'Apple dès l'affichage du bouton (G148, 2026-11-06) : chargé au toucher, Safari bloquait sa fenêtre.
+  useEffect(() => { prechargerApple(); }, []);
+
   // Arrivée depuis l'accueil de l'application (pages/app/Bienvenue.jsx) avec un jeton Apple ou Google déjà obtenu :
   // on le traite une fois, comme si le bouton avait été touché ici — pas de second geste à demander.
   const fedRecu = useRef(false);
@@ -999,7 +1003,8 @@ export default function Auth() {
             // Jeton Google expiré (il vit une heure) ou refusé : le bouton Google est sur la première étape, on y va le temps de
             // reprendre un jeton, puis on revient à l'étape où l'on était (retenirGoogle) ; le reste est gardé (coupure 9 de
             // maquettes/progression, 2026-10-30 : avant, tout le parcours était à refaire).
-            if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { etapeAvantGoogle.current = step; oublierGoogle(); setStep(0); toast(t('auth.googleExpired'), 'erreur'); }
+            // Le code du serveur (FED_TOKEN_INVALID, G151) et non le texte : « Erreur serveur lors de la connexion Google » passait pour un jeton expiré.
+            if (err.code === 'FED_TOKEN_INVALID') { etapeAvantGoogle.current = step; oublierGoogle(); setStep(0); toast(t('auth.googleExpired'), 'erreur'); }
             // Profil refusé par le serveur : on affiche sa raison (« numéro d'entreprise requis »…), pas le code interne.
             else if (err.message === 'INCOMPLETE_PROFILE') toast(err.data?.detail || t('auth.errGoogleIncomplete'), 'erreur');
             else throw err;
@@ -1186,6 +1191,8 @@ export default function Auth() {
                   {forgotLoading ? t('common.loading') : t('auth.sendLink')}
                 </button>
               </form>
+              {/* Plus accès à l'adresse (faute de frappe, relais Apple) : le numéro prouvé par SMS (G52 / G147). */}
+              <RecuperationSms classeBouton="btn-gold btn-block" />
               <button className="btn-ghost" style={{ marginTop: 10 }} onClick={() => setForgotMode(false)}>
                 {t('auth.backToLogin')}
               </button>

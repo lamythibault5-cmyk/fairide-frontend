@@ -99,11 +99,15 @@ export function livreurFairideLibre(user, km = null) {
 /* LA LIVRAISON EST-ELLE POSSIBLE CHEZ CE COMMERCE, MAINTENANT ? (GET /orders/delivery-available/:id)
  * Après GO, une livraison demande un livreur disponible à l'instant (lancement.js) : sinon le commerce ne propose que
  * l'à emporter. Renvoie null tant qu'on ne sait pas (pas de bandeau qui clignote), true ou false ensuite. `km` écarte les
- * vélos trop loin quand la distance est connue. Une erreur réseau répond null : le serveur tranche à la commande. */
-export async function livraisonDisponible(restaurantId, km = null) {
+ * vélos trop loin quand la distance est connue. Une erreur réseau répond null : le serveur tranche à la commande.
+ * `cp` (G68, 2026-11-06) : le code postal de livraison, dont la commune peut être suspendue (Admin › Logistique › Zones). */
+export async function livraisonDisponible(restaurantId, km = null, cp = '') {
   if (!restaurantId) return null;
   try {
-    const q = km !== null && km !== undefined && Number.isFinite(Number(km)) ? `?km=${Number(km)}` : '';
+    const params = new URLSearchParams();
+    if (km !== null && km !== undefined && Number.isFinite(Number(km))) params.set('km', String(Number(km)));
+    if (cp) params.set('cp', cp);
+    const q = params.toString() ? `?${params}` : '';
     const r = await fetch(`${adresseApi()}/orders/delivery-available/${encodeURIComponent(restaurantId)}${q}`, { cache: 'no-store' });
     if (!r.ok) return null;
     const d = await r.json();

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { appleDisponible, prechaufferConnexion, estNatif } from '../natif';
-import { appleWebDisponible } from '../appleSignInWeb';
+import { appleWebDisponible, prechargerApple } from '../appleSignInWeb';
 import BoutonGoogleWeb from './BoutonGoogleWeb';
 
 /* « Continuer avec Apple » / « Continuer avec Google », DANS L'APPLICATION (estNatif()) — et, depuis le 2026-11-06, sur les
@@ -52,7 +52,8 @@ export default function BoutonsConnexionNative({ onChoix, disabled = false }) {
     setAttenteVue(disabled);
     if (!disabled) setChoisi(null);
   }
-  useEffect(() => { prechaufferConnexion(); }, []);
+  // Sur le site, le script d'Apple aussi (G148) : chargé au toucher, Safari bloquait sa fenêtre.
+  useEffect(() => { prechaufferConnexion(); if (!estNatif()) prechargerApple(); }, []);
   const choisir = (fournisseur, jeton) => { setChoisi(fournisseur); onChoix(fournisseur, jeton); };
   const natif = estNatif();
   const apple = natif ? appleDisponible() : appleWebDisponible();

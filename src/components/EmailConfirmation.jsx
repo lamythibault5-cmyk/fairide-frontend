@@ -88,8 +88,8 @@ export default function EmailConfirmation() {
  * revient à la prochaine visite tant que l'adresse n'est pas confirmée.
  * SEULEMENT QUAND ELLE SERT (fondateur, 2026-11-02, maquettes/inscription-legere, question 7) : les nouveautés par e-mail
  * (qui ne partent qu'aux adresses confirmées) ou une adresse d'équipe (ses droits l'attendent) — `emailReminder` du serveur
- * (backend routes/auth.js, publicUser). Les autres confirment quand ils veulent dans Mon compte ; « Mot de passe oublié »
- * marche sans. */
+ * (backend routes/auth.js, publicUser). Et un client qui a une commande payée (fondateur, 2026-11-06, G52) : ses reçus partent
+ * à cette adresse. Les autres confirment quand ils veulent dans Mon compte ; « Mot de passe oublié » marche sans. */
 export function RappelEmail() {
   const { t } = useLanguage();
   const { user, etape, code, saisir, occupe, demander, confirmer, aConfirmer } = useConfirmationEmail({ toastEnvoi: false });

@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import PasswordInput from '../../components/PasswordInput';
 import BoutonsConnexionNative from '../../components/BoutonsConnexionNative';
+import RecuperationSms from '../../components/RecuperationSms';
 import { connexionFournisseur } from '../../natif';
 import { attendrePage, espaceApresConnexion } from '../../routePrefetch';
 import { lireBienvenue } from '../../bienvenue';
@@ -217,6 +218,8 @@ export default function ConnexionAppli() {
             <input id="bv-c-email-oubli" type="email" inputMode="email" autoComplete="email" autoCapitalize="none" spellCheck={false}
               className={erreurs.email ? 'input-invalid' : undefined} value={email} onChange={(e) => setEmail(e.target.value)} placeholder={t('auth.phEmail')} />
           </Champ>
+          {/* Plus accès à l'adresse (faute de frappe, relais Apple d'un compte ouvert sur iPhone) : par SMS (G52 / G147). */}
+          <RecuperationSms classeBouton="btn-ghost" classeLien="bv-lien" />
         </>
       );
       break;

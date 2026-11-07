@@ -272,14 +272,16 @@ export default function Checkout() {
   const verifierLivraison = !!restaurant?.offersDelivery && serviceOuvert('delivery', user) && !exempteLancement(user);
   // Distance à vol d'oiseau : le serveur écarte les vélos trop loin (audit du 19/10, discovery-09).
   const kmLivraison = distanceLivraisonKm(restaurant, user);
+  // Le code postal de livraison, une fois complet (G68) : une commune suspendue ne reçoit plus de livraison.
+  const cpLivraison = /^\d{4}$/.test(addressPostalCode.trim()) ? addressPostalCode.trim() : '';
   useEffect(() => {
     if (!verifierLivraison) { setLivraisonDispo(null); return undefined; }
     let fini = false;
-    const lire = () => livraisonDisponible(restaurantId, kmLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
+    const lire = () => livraisonDisponible(restaurantId, kmLivraison, cpLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
     lire();
     const id = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
     return () => { fini = true; clearInterval(id); };
-  }, [verifierLivraison, restaurantId, kmLivraison]);
+  }, [verifierLivraison, restaurantId, kmLivraison, cpLivraison]);
   /* PLUS DE BASCULE SILENCIEUSE (audit du 19/10, checkout-02). Le contrôle de chaque minute passait la commande en « À emporter »
    * sans un mot, en plein paiement : un client qui ne relisait pas payait un retrait qu'il ne ferait pas. Le mode choisi reste ;
    * la barre dit qu'aucun livreur n'est libre et propose « Passer à l'emporter » (le client décide), et un message le signale
@@ -1034,7 +1036,7 @@ export default function Checkout() {
             {/* Le code ami de l'ami parrainé (backend routes/orders.js) : appliqué tout seul ; sinon le devis dit pourquoi, pour
                 que les 5 € promis ne semblent pas perdus (maquettes/parrainage-visible). */}
             {devisValide?.codeAmi && !devisValide.codeAmi.applique && (
-              <p className="small co-code-ami">{t(devisValide.codeAmi.raison === 'sur_place' ? 'codeAmi.panierSurPlace' : 'codeAmi.panierMinimum')}</p>
+              <p className="small co-code-ami">{t({ sur_place: 'codeAmi.panierSurPlace', numero_sms: 'codeAmi.panierNumeroSms' }[devisValide.codeAmi.raison] || 'codeAmi.panierMinimum')}</p>
             )}
             {/* Les vendeurs (trois vendeurs, C2) : ce ticket est le dernier écran avant de payer quand le total ne bouge pas, il
                 dit donc à qui le client achète. En une ligne ; le détail (et les frais de système de Fairide, compris dans la

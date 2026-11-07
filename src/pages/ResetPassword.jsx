@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -19,14 +19,22 @@ import { mdpValide } from '../validation';
  * renvoie que { ok }) — on dit plutôt ce qui va se passer, vérifié dans la même route : toutes les sessions sont fermées.
  *
  * Les règles sont cochées au fil de la frappe sous le premier champ (les mêmes que l'inscription : motDePasse.js côté
- * serveur : 8 caractères depuis le 2026-11-02, validation.js) ; le toast reste en filet de sécurité à l'envoi. */
+ * serveur : 8 caractères depuis le 2026-11-02, validation.js) ; le toast reste en filet de sécurité à l'envoi.
+ *
+ * `?lang=nl|en` (G150, 2026-11-06) : la langue du compte, posée par le serveur dans le lien de l'e-mail ; ouvert sur un appareil
+ * sans langue retenue, il s'affichait en français. Arrivée par « Retrouver mon compte par SMS » (G52) : l'adresse du compte
+ * vient avec (state.email), on la montre, puisque c'est peut-être elle qui était mal tapée. */
 const APPLI = experienceApp();
 const REGLES = [['mdpLongueur', mdpValide]];
 
 export default function ResetPassword() {
-  const { t } = useLanguage();
+  const { t, setLanguage } = useLanguage();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token') || '';
+  const langueLien = searchParams.get('lang');
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (langueLien) setLanguage(langueLien); }, []);
+  const emailCompte = useLocation().state?.email || '';
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -76,12 +84,13 @@ export default function ResetPassword() {
       <>
         <span className="gn-coche" aria-hidden="true"><Icone nom="valider" taille={24} /></span>
         <p className="gn-texte gn-texte--encre" role="status">{t('resetPassword.updated')}</p>
-        <button type="button" className="btn-gold gn-action" onClick={() => navigate('/login')}>{t('resetPassword.login')}</button>
+        <button type="button" className="btn-gold gn-action" onClick={() => navigate('/login', emailCompte ? { state: { email: emailCompte } } : undefined)}>{t('resetPassword.login')}</button>
       </>
     );
   } else {
     contenu = (
       <form onSubmit={submit}>
+        {emailCompte && <p className="gn-texte">{t('resetPassword.compteSms', { email: emailCompte })}</p>}
         <div className="field" style={{ marginBottom: 0 }}>
           <label htmlFor="reset-mdp">{t('resetPassword.title')}</label>
           {/* Plus de texte d'exemple qui redit la règle (il était coupé par l'œil sur téléphone) : la liste dessous la

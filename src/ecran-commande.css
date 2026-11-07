@@ -217,6 +217,9 @@
 @keyframes ec-apparait { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
 .ec-coche-merci svg { stroke-width: 2.8; }
 .ec-merci-texte { margin: 0 0 10px; line-height: 1.5; color: var(--ink-soft); font-size: 14.5px; }
+/* « Reçu envoyé à … · Changer » (G52) : une ligne discrète sous le récapitulatif, l'adresse entière même longue. */
+.ec-merci-recu { margin: 10px 0 0; color: var(--ink-faint); overflow-wrap: anywhere; }
+.ec-merci-recu a { color: var(--iris); font-weight: 600; }
 .ec-recap-ligne { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
 .ec-recap-ligne > svg { flex: none; color: var(--iris); }
 .ec-recap-texte { flex: 1; min-width: 0; }

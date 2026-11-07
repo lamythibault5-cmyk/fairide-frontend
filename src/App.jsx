@@ -9,6 +9,7 @@ import Layout from './components/Layout';
 import ScrollRestorer from './components/ScrollRestorer';
 import GardeRetourEspace from './components/GardeRetourEspace';
 import AttenteStripe from './components/AttenteStripe';
+import AvisReprise from './components/AvisReprise';
 import NavigationFeedback from './components/NavigationFeedback';
 import ProtectedRoute from './components/ProtectedRoute';
 import { SkeletonCards } from './components/Skeleton';
@@ -186,6 +187,8 @@ export default function App() {
       <ScrollRestorer />
       <GardeRetourEspace />
       <AttenteStripe />
+      {/* Compte repris par Google / Apple : l'ancien mot de passe ne marche plus (G51). */}
+      <AvisReprise />
       <NavigationFeedback />
       <BarreSimulation />
       <PrechauffageCarte />

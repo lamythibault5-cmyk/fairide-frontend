@@ -278,7 +278,12 @@ address found (`GET /restaurants/lookup/reverse`) in a card, « C'est bien ici �
 « 120 bte 3 »), « Une autre adresse » for the search and fields (prefilled); without a position, or no house number found,
 the fields. **Password: 8 characters, no upper/lower-case rule** (`mdpValide`, validation.js; the backend still refuses
 leaked passwords). The « Confirme ton adresse e-mail » card of Mes commandes shows only when the server says it serves
-(`user.emailReminder`: newsletter opt-in or a team address). Every welcome and sign-up screen sends one cookieless event,
+(`user.emailReminder`: newsletter opt-in, a team address, or a customer with a paid order, 2026-11-06 G52; the order
+confirmation also says « Reçu envoyé à {email} · Changer »). Lost access to the address (typo, Apple relay): « Mot de passe
+oublié » › « Retrouve ton compte par SMS » sends a code to the number proven by SMS and opens the reset page
+(RecuperationSms.jsx, `POST /auth/forgot-password/phone`); PHONE_TAKEN points there. Signing in with Google / Apple on an
+account whose address was never confirmed erases its password and signs out its other devices (kept on purpose): AvisReprise.jsx
+says so once, with « Choisir un nouveau mot de passe » (G51). Every welcome and sign-up screen sends one cookieless event,
 `inscription_ecran` with the screen name only (analytics.js), so the next review can see where people stop. Only
 **The app has no website chrome** (2026-10-15, [Layout.jsx](../../src/components/Layout.jsx), `APPLI`): when `experienceApp()`,
 no page shows the site header, footer, legal-links row or cookie card. Signed in, every page — help, legal, « C'est bon » —
