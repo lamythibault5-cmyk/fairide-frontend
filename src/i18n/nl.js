@@ -8404,6 +8404,12 @@ export default {
     },
     adresses: {
       typeManually: "Mijn straat staat er niet bij: adres zelf invullen",
+      here: "Mijn locatie gebruiken",
+      hereLoading: "Je locatie zoeken…",
+      hereFound: "Gevonden met je locatie: controleer het huisnummer.",
+      hereFailed: "Locatie niet gevonden. Geef Fairride toegang tot je locatie, of zoek je adres hierboven.",
+      hereVague: "Je locatie is te onnauwkeurig om je deur te vinden. Zet de exacte locatie aan voor Fairride, of zoek je adres hierboven.",
+      hereNotFound: "Geen adres gevonden op je locatie. Zoek het hierboven.",
       numberTitle: "Huisnummer",
       numberLabel: "Huisnummer",
       numberPlaceholder: "Bv. 12, 12A, 30/2",

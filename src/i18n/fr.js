@@ -8464,6 +8464,12 @@ export default {
     },
     adresses: {
       typeManually: "Ma rue n’est pas proposée : saisir l’adresse à la main",
+      here: "Utiliser ma position",
+      hereLoading: "Recherche de ta position…",
+      hereFound: "Trouvée avec ta position : vérifie le numéro.",
+      hereFailed: "Position introuvable. Autorise la localisation pour Fairride, ou cherche ton adresse ci-dessus.",
+      hereVague: "Ta position est trop approximative pour trouver ta porte. Active la position exacte pour Fairride, ou cherche ton adresse ci-dessus.",
+      hereNotFound: "Aucune adresse trouvée à ta position. Cherche-la ci-dessus.",
       numberTitle: "Numéro",
       numberLabel: "Numéro de rue",
       numberPlaceholder: "Ex. 12, 12A, 30/2",

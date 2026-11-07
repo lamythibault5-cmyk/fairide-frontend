@@ -4933,6 +4933,10 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 /* Seconde étape du carnet : le numéro, quand la suggestion ne portait que la rue. */
 .adresse-numero-rue { font-weight: 700; font-size: 17px; margin: 4px 0 18px; display: flex; flex-direction: column; gap: 2px; }
 .adresse-numero-rue .adresse-sous { font-weight: 400; white-space: normal; }
+/* « Utiliser ma position », sous la recherche (ChoixAdresse.jsx › depuisMaPosition) : une rangée comme une adresse, seule. */
+.adresse-ici { margin-top: 6px; border-bottom: 0; }
+.adresse-ici .adresse-choisir { color: var(--iris); }
+.adresse-ici-trouvee { margin: -10px 0 14px; color: var(--ink-soft); }
 
 /* Message d'erreur d'un champ : sous le champ qu'il concerne, en rouge d'état. */
 .champ-erreur { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--red); }
