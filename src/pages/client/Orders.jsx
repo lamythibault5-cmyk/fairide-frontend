@@ -8,6 +8,7 @@ const APPLI = experienceApp();
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { vibrer } from '../../gestes';
 import useRevalidation from '../../useRevalidation';
+import { nourrirSuivi } from '../../hooks/useCommandeEnCours';
 import EtatVide from '../../components/EtatVide';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import ErreurChargement from '../../components/ErreurChargement';
@@ -167,6 +168,8 @@ export default function Orders() {
   const relirePremierePage = () => api(CHEMIN_COMMANDES, { token }).then((l) => {
     const page = Array.isArray(l) ? l : [];
     setOrders((avant) => fusionnerPremierePage(page, avant));
+    // La bande « commande en cours » ne relit plus pendant qu'on est ici : elle prend cette lecture (G156).
+    nourrirSuivi(page, token);
     return page;
   });
   async function voirPlus() {
@@ -604,6 +607,7 @@ export default function Orders() {
         deliveryLat={o.deliveryLat} deliveryLng={o.deliveryLng}
         driverLat={o.driverLat} driverLng={o.driverLng}
         lastUpdatedAt={o.driverLocationUpdatedAt}
+        velo={o.driverVelo ?? null} voiture={o.driverVoiture ?? null}
         {...(APPLI ? {} : { height: 320 })}
       />
       <div className="small" style={{ marginTop: 4, textAlign: 'center' }}>
@@ -973,7 +977,16 @@ export default function Orders() {
         {vedette && corpsEnCours(vedette)}
         {arretee && (
           <div className="sc-arret">
-            {arretee.status === 'refuse' ? blocRefus(arretee) : <ProchaineEtape order={arretee} />}
+            {/* Annulée : ce qui s'est passé ET l'argent (G58). Close « client absent » ou « non récupérée », ProchaineEtape ne dit
+                rien (la ligne de l'incident le dit) ; cette ligne et le montant manquaient ici : le client croyait la commande
+                remboursée, puis trouvait le débit. */}
+            {arretee.status === 'refuse' ? blocRefus(arretee) : (
+              <>
+                <ProchaineEtape order={arretee} />
+                {arretee.deliveryIncident && <p className="small">{t(`orders.noCourier_incident_${arretee.deliveryIncident}`)}</p>}
+                {blocTotal(arretee)}
+              </>
+            )}
             <Link to="/restaurants" className="btn-gold sc-arret-action">{t('orders.voirAutres')}</Link>
           </div>
         )}

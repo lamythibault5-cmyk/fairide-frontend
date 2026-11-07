@@ -15,7 +15,7 @@
     { "source": "/", "destination": "/index.html" },
     { "source": "/:lang(nl|en)", "destination": "/index.html" },
     {
-      "source": "/:lang(nl|en)?/:page(login|reset-password|restaurants|reserver|recherche|mentions-legales|cgv|confidentialite|cookies|classement|accessibilite|signaler|aide|notre-histoire|account|orders|map|panier|checkout|order-success|order-cancelled|invoices|favorites|dashboard|driver|admin|crm|sales|carte|equipe|groupe|documents|bienvenue)/:rest*",
+      "source": "/:lang(nl|en)?/:page(login|reset-password|restaurants|reserver|recherche|mentions-legales|cgv|confidentialite|cookies|classement|accessibilite|signaler|aide|notre-histoire|account|orders|map|panier|checkout|order-success|order-cancelled|invoices|favorites|dashboard|driver|admin|crm|sales|carte|equipe|groupe|documents|bienvenue|retour-appli|demandes|preuve)/:rest*",
       "destination": "/index.html"
     }
   ],
@@ -77,7 +77,7 @@
       ]
     },
     {
-      "source": "/(notre-histoire|aide|restaurants|cgv|confidentialite|cookies|mentions-legales|login)(/.*)?",
+      "source": "/(notre-histoire|aide|restaurants|cgv|confidentialite|cookies|mentions-legales|login|retour-appli)(/.*)?",
       "headers": [
         { "key": "Cache-Control", "value": "no-cache" }
       ]

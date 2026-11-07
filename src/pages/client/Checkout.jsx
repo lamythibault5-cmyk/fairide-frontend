@@ -19,7 +19,7 @@ import ErreurChargement from '../../components/ErreurChargement';
 import EtatVide from '../../components/EtatVide';
 import { CHEMIN_COMMANDES_RECENTES, lireCache } from '../../cacheDonnees';
 import { distanceLivraisonKm } from '../../livraison';
-import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
+import { motifLigne, lignesIndisponibles } from '../../panierDisponible';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
@@ -30,7 +30,7 @@ import VerifTelephone, { telephoneAVerifier } from '../../components/VerifTeleph
 import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
 import useLoinDeLAdresse from '../../hooks/useLoinDeLAdresse';
-import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
+import { getScheduleDateOptions, getScheduleTimeOptions, dateKey } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import CodePromoCheckout from '../../components/client/CodePromoCheckout';
@@ -143,6 +143,8 @@ export default function Checkout() {
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
+  // Programmée pour un jour suivant : un plat épuisé aujourd'hui seulement se commande (G165, même règle que le serveur).
+  const jourPlusTard = scheduleEnabled && !!scheduleDate && scheduleDate > dateKey(new Date());
   // Les jours et créneaux suivent les horaires du commerce (scheduleUtils.js) : recalculés une fois la fiche chargée.
   const ouverture = restaurant ? { hours: restaurant.hours, closures: restaurant.closures, open: restaurant.open, pausedUntil: restaurant.pausedUntil } : null;
   const dateOptions = useMemo(() => getScheduleDateOptions(7, libellesDates, ouverture), [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -520,7 +522,7 @@ export default function Checkout() {
       if (caseManquante) { caseManquante.closest('.co-case').scrollIntoView({ behavior: defilement(), block: 'center' }); caseManquante.focus({ preventScroll: true }); }
       return;
     }
-    if (lignesIndisponibles(cart.lines, restaurant?.menu).length) { toast(t('checkout.removeUnavailable'), 'erreur'); return; }
+    if (lignesIndisponibles(cart.lines, restaurant?.menu, { jourPlusTard }).length) { toast(t('checkout.removeUnavailable'), 'erreur'); return; }
     // Le toucher qui engage se sent tout de suite, la confirmation (« succès ») viendra avec la réponse (gestes.js).
     vibrer('valider');
     setPlacing(true);
@@ -806,10 +808,11 @@ export default function Checkout() {
                 <Link to="/panier" className="co-modifier">{t('checkout.modifier')}</Link>
               </div>
             )}
-            {Object.entries(cart.lines).filter(([, line]) => ligneIndisponible(line, restaurant.menu)).map(([lineKey, line]) => (
-              // Plat retiré de la carte ou en rupture : la ligne le dit (avant, elle disparaissait et le serveur refusait).
+            {Object.entries(cart.lines).map(([lineKey, line]) => [lineKey, line, motifLigne(line, restaurant.menu, { jourPlusTard })]).filter(([, , motif]) => motif === 'indisponible' || motif === 'options').map(([lineKey, line, motif]) => (
+              // Plat retiré de la carte ou en rupture : la ligne le dit (avant, elle disparaissait et le serveur refusait). Ses choix
+              // qui ne respectent plus les règles du plat : « à refaire » (G166).
               <div key={lineKey} className="co-ligne co-ligne--indispo">
-                <span className="co-ligne-nom">{line.name}<span className="ligne-indispo">{t('checkout.unavailableToday')}</span></span>
+                <span className="co-ligne-nom">{line.name}<span className="ligne-indispo">{t(motif === 'options' ? 'checkout.optionsToRedo' : 'checkout.unavailableToday')}</span></span>
                 <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(lineKey)}>{t('checkout.removeLine')}</button>
               </div>
             ))}
@@ -1336,7 +1339,8 @@ export default function Checkout() {
                   {pendingOrder.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="velo" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(pendingOrder.deliveryDiscount)}</span></div>
                   )}
-                  {pendingOrder.deliveryBy !== 'restaurant' && <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>}
+                  {/* Pas de frais de système sous une livraison offerte : le client n'en paie rien (même règle que le ticket, G116). */}
+                  {pendingOrder.deliveryBy !== 'restaurant' && Number(pendingOrder.deliveryFee) - Number(pendingOrder.deliveryDiscount || 0) > 0 && <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>}
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}

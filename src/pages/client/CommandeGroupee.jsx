@@ -83,7 +83,14 @@ export default function CommandeGroupee() {
 
   const lien = lienPublic(`/groupe/${g.code}`);
   const mesLignes = g.lines.filter((l) => l.mine);
-  const panierIci = cart.restaurantId && String(cart.restaurantId) === String(g.restaurant.id) && cart.count > 0;
+  // Les parts déjà importées de CE groupe ne sont pas « mon panier » (G60) : rouvert, elles ne repartent pas comme la part de
+  // l'hôte. Une ligne importée avant leur marquage se reconnaît à sa consigne « Pour <prénom> » d'un participant.
+  const prefixes = [...new Set(g.lines.map((l) => t('groupOrder.forName', { name: l.guestName })))];
+  const ancienne = (l) => prefixes.some((p) => String(l.note || '').startsWith(p));
+  const deCeGroupe = (l) => l.groupe === g.code || (!l.groupe && ancienne(l));
+  const lignesAMoi = Object.values(cart.lines).filter((l) => !deCeGroupe(l));
+  const nbAMoi = lignesAMoi.reduce((a, l) => a + l.qty, 0);
+  const panierIci = cart.restaurantId && String(cart.restaurantId) === String(g.restaurant.id) && nbAMoi > 0;
 
   async function partager() {
     try {
@@ -100,7 +107,7 @@ export default function CommandeGroupee() {
     setOccupe(true);
     try {
       const deja = mesLignes.map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds, optionsSnapshot: l.optionsSnapshot, unitPrice: l.unitPrice, note: l.note }));
-      const panier = Object.values(cart.lines).map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds, optionsSnapshot: l.optionsSnapshot, unitPrice: l.unitPrice, note: l.note }));
+      const panier = lignesAMoi.map((l) => ({ itemId: l.itemId, qty: l.qty, optionItemIds: l.optionItemIds, optionsSnapshot: l.optionsSnapshot, unitPrice: l.unitPrice, note: l.note }));
       await api(`/group-orders/${g.code}/lines`, { method: 'PUT', token, body: { lines: [...deja, ...panier] } });
       cart.clear();
       if (!g.isHost) quitterGroupe();
@@ -124,8 +131,9 @@ export default function CommandeGroupee() {
     try {
       const r = await api(`/group-orders/${g.code}/lock`, { method: 'POST', token });
       retenirGroupeACommander({ code: g.code, restaurantId: r.restaurant.id });
-      cart.addMany({
-        restaurantId: r.restaurant.id, restaurantName: r.restaurant.name,
+      // Remplacées, pas ajoutées (G60) : un second « Commander » après « Rouvrir » doublait chaque plat.
+      cart.replaceGroupLines({
+        restaurantId: r.restaurant.id, restaurantName: r.restaurant.name, groupe: g.code, ancienne,
         lignes: r.lines.map((l) => ({ itemId: l.itemId, name: l.name, qty: l.qty, optionItemIds: l.optionItemIds, optionsSnapshot: l.optionsSnapshot, unitPrice: l.unitPrice,
           note: [t('groupOrder.forName', { name: l.guestName }), l.note].filter(Boolean).join(' · ') }))
       });
@@ -140,6 +148,8 @@ export default function CommandeGroupee() {
     try {
       await api(`/group-orders/${g.code}/${action}`, { method: 'POST', token });
       if (action === 'cancel') quitterGroupe();
+      // Rouvert ou annulé : les parts importées quittent le panier de l'hôte (G60) ; « Commander » les remettra, à jour.
+      cart.removeGroupLines(g.code, ancienne);
       // Rouvert ou annulé : la prochaine commande de l'hôte ne vaut plus pour ce groupe.
       oublierGroupeACommander();
       charger();
@@ -173,10 +183,11 @@ export default function CommandeGroupee() {
   );
 
   const libelleDecisif = decisive === 'commander' ? t('groupOrder.order')
-    : decisive === 'envoyer' ? t('groupOrder.sendCart', { n: cart.count }) : t('groupOrder.pickDishes');
+    : decisive === 'envoyer' ? t('groupOrder.sendCart', { n: nbAMoi }) : t('groupOrder.pickDishes');
   const actionDecisive = decisive === 'commander' ? () => commander() : decisive === 'envoyer' ? envoyer : choisir;
   const barre = decisive && (
-    <BarreCommande montant={g.total} className="eg-barre">
+    // Le même montant que l'estimation juste au-dessus, offres des plats comprises (G163) ; g.total est le prix plein.
+    <BarreCommande montant={totalPaye} className="eg-barre">
       <button type="button" className="btn-gold" disabled={occupe && decisive !== 'choisir'} onClick={actionDecisive}>
         {occupe && decisive !== 'choisir' ? '…' : libelleDecisif}
       </button>
@@ -202,8 +213,11 @@ export default function CommandeGroupee() {
       </BandeauCommande>
 
       <FeuilleCommande>
+        {/* Commande de l'hôte refusée ou annulée (G162) : dit à tous, au lieu de « en train de commander » sans fin. */}
         {g.status === 'locked' && (
-          <p className="eg-note" role="status"><Icone nom="cadenas" taille={18} />{g.isHost ? t('groupOrder.lockedHost') : t('groupOrder.lockedGuest', { name: g.hostFirstName })}</p>
+          <p className="eg-note" role="status"><Icone nom="cadenas" taille={18} />{g.orderStopped
+            ? (g.isHost ? t('groupOrder.stoppedHost') : t('groupOrder.stoppedGuest', { name: g.hostFirstName }))
+            : (g.isHost ? t('groupOrder.lockedHost') : t('groupOrder.lockedGuest', { name: g.hostFirstName }))}</p>
         )}
         {/* Commandé et payé par l'hôte (audit du 19/10, checkout-08) : dit à tous, au lieu de « en train de commander » 24 h. */}
         {g.status === 'ordered' && (
@@ -235,7 +249,7 @@ export default function CommandeGroupee() {
               {(decisive !== 'choisir' || (panierIci && decisive !== 'envoyer')) && (
                 <div className="eg-actions">
                   {panierIci && decisive !== 'envoyer' && (
-                    <button type="button" className="eg-bouton-iris eg-bouton-plein" disabled={occupe} onClick={envoyer}>{occupe ? '…' : t('groupOrder.sendCart', { n: cart.count })}</button>
+                    <button type="button" className="eg-bouton-iris eg-bouton-plein" disabled={occupe} onClick={envoyer}>{occupe ? '…' : t('groupOrder.sendCart', { n: nbAMoi })}</button>
                   )}
                   {decisive !== 'choisir' && <button type="button" className="eg-bouton-iris" onClick={choisir}>{t('groupOrder.pickDishes')}</button>}
                 </div>

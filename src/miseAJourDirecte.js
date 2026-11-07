@@ -1,6 +1,7 @@
 import { api } from './api';
 import { estNatif, plateforme } from './natif';
 import { estOccupe, niveauMiseAJour, ecouterMiseAJour } from './miseAJour';
+import { notificationToucheeRecemment } from './pushNatif';
 
 /* LES MISES À JOUR DIRECTES (Owen, 2026-11-05 : « on trouve beaucoup de bugs », une correction doit arriver dans l'appli
  * aussi vite que sur le site, sans attendre un jour de revue chez Apple).
@@ -36,6 +37,8 @@ const ESSAI = 'fairide_paquet_essai';
 const RATES = 'fairide_paquets_rates';
 const ABSENCE = 30 * 60 * 1000;
 const INTERVALLE = 10 * 60 * 1000;
+// Au retour au premier plan, le toucher d'une notification arrive juste après le réveil : on l'attend avant de recharger (G128).
+const ATTENTE_RETOUR_MS = 1000;
 
 let greffon = null;
 let demarre = false;
@@ -62,7 +65,10 @@ function noterEssai() {
 // Met en place ce qui attend, si le moment est bon. Recharge les écrans : rien n'est exécuté après.
 async function appliquer() {
   const pret = lire(PRET);
-  if (!pret || estOccupe()) return;
+  // Pas juste après le toucher d'une notification (G128) : le commerce ou le livreur ouvre l'appli pour agir, la page que la
+  // notification ouvre ne doit pas disparaître dans un rechargement. Ce sera au prochain démarrage ou au prochain retour.
+  // Sauf sous l'écran « Mets à jour » obligatoire, qui bloque déjà tout.
+  if (!pret || estOccupe() || (notificationToucheeRecemment() && niveauMiseAJour() !== 'obligatoire')) return;
   // Déjà celui qui tourne (téléchargé une seconde fois pendant qu'il se mettait en place) : rien à recharger.
   if (pret.version === ID) { ecrire(PRET, null); return; }
   const u = await charger();
@@ -122,7 +128,8 @@ export async function demarrerMiseAJourDirecte() {
   ecouterMiseAJour(lever);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') { partiLe = Date.now(); return; }
-    if (partiLe && Date.now() - partiLe > ABSENCE) appliquer().catch(() => {});
+    // Une seconde plus tard (G128) : le toucher d'une notification qui a réveillé l'appli a eu le temps d'arriver.
+    if (partiLe && Date.now() - partiLe > ABSENCE) setTimeout(() => { if (document.visibilityState === 'visible') appliquer().catch(() => {}); }, ATTENTE_RETOUR_MS);
     verifier();
   });
 }
