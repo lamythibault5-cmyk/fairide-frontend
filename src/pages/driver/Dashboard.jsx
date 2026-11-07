@@ -14,7 +14,7 @@ import PhotoDepot from '../../components/livreur/PhotoDepot';
 import BoutonUrgence from '../../components/livreur/BoutonUrgence';
 import GlisserPourConfirmer from '../../components/livreur/GlisserPourConfirmer';
 import RouteVelo from '../../components/livreur/RouteVelo';
-import { experienceApp, suivrePositionCourse, demanderPosition } from '../../natif';
+import { estNatif, experienceApp, suivrePositionCourse, demanderPosition } from '../../natif';
 import { ouvrirStripe } from '../../ouvrirStripe';
 import { mouvementReduit, vibrer } from '../../gestes';
 import Icone from '../../components/Icone';
@@ -77,6 +77,8 @@ function useSiteLarge(actif) {
 // Cadence maximale d'envoi de la position au serveur (voir l'effet watchPosition plus bas) — reprend
 // l'intervalle de l'ancien sondage, pour que le passage à watchPosition n'augmente pas le trafic.
 const MIN_LOCATION_SEND_INTERVAL_MS = 12000;
+// « Annuler » après « Refuser » : 5 secondes avant que le refus parte au serveur (audit du 06/11, G93).
+const DELAI_ANNULER_REFUS_MS = 5000;
 
 function formatClock(date) {
   return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
@@ -219,7 +221,8 @@ export default function DriverDashboard() {
   async function togglePause() {
     if (user?.driverPaused && user?.locationSharingEnabled !== false && (await verifierPos()) !== 'granted') {
       const position = await demanderPosition();
-      if (position || (await verifierPos()) === 'granted') basculerPause();
+      // L'état relu dans tous les cas : resté sur « prompt », la mise en pause automatique (plus bas) le rééteindrait.
+      if ((await verifierPos()) === 'granted' || position) basculerPause();
       else setDemandePosition(true);
       return;
     }
@@ -247,6 +250,23 @@ export default function DriverDashboard() {
       }
     });
   }
+
+  /* POSITION REFUSÉE = EN PAUSE (audit du 06/11, G30). Sans position, PositionRequise cache toutes les offres ; disponible
+   * quand même, il comptait « libre » côté serveur et recevait « Nouvelle course » pour une liste vide. Au chargement et à
+   * chaque retour dans l'app (useEtatPosition relit l'état), une autorisation refusée le met en pause ; dans l'app, une
+   * autorisation jamais donnée aussi (sur le site, Safari peut répondre « prompt » après un oui : seul « denied » compte).
+   * Il se remet disponible lui-même avec l'interrupteur, qui redemande la position. */
+  const pauseAutoRef = useRef(false);
+  useEffect(() => {
+    if (!user || user.driverPaused || user.adminStatus !== 'approved' || pauseAutoRef.current) return;
+    if (!(etatPos === 'denied' || (estNatif() && etatPos === 'prompt'))) return;
+    pauseAutoRef.current = true;
+    modifierUtilisateur((u) => ({ ...u, driverPaused: true }));
+    api('/auth/me', { method: 'PATCH', token, body: { driverPaused: true }, logoutOn401: false })
+      .then(() => toast(t('dashDriver.toastPauseSansPosition')))
+      .catch(() => modifierUtilisateur((u) => ({ ...u, driverPaused: false })))
+      .finally(() => { pauseAutoRef.current = false; });
+  }, [etatPos, user?.driverPaused, user?.adminStatus]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('connect')) {
@@ -379,7 +399,11 @@ export default function DriverDashboard() {
     load();
     refreshUser().catch(() => {});
     const interval = setInterval(() => { load(); refreshUser().catch(() => {}); }, 15000);
-    return () => clearInterval(interval);
+    // Notification reçue app ouverte (« Nouvelle course », pushNatif.js) : la liste tout de suite, pas au relevé suivant, jusqu'à
+    // 15 secondes plus tard sur une course où le premier qui accepte l'a (audit du 06/11, G121 ; le commerce fait pareil).
+    const surNotification = () => load();
+    window.addEventListener('fairide:commande-arrivee', surNotification);
+    return () => { clearInterval(interval); window.removeEventListener('fairide:commande-arrivee', surNotification); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Retour sur l'onglet après une absence : relecture immédiate, sans attendre le prochain cycle (compte Stripe compris : courier-3).
   useRevalidation(() => { load(); return relireConnect() || refreshUser(); });
@@ -494,8 +518,19 @@ export default function DriverDashboard() {
   /* LA CARTE PART AU TOUCHER (2026-10-23, app lente : elle attendait la réponse du serveur avant de glisser). Elle glisse
    * vers la gauche puis quitte la liste tout de suite (ecran-livreur.css, .ecl-offre.part), l'appel suit ; si le serveur
    * refuse, elle revient à sa place avec le message d'erreur (actionOptimiste.js). `refusees` garde les courses écartées :
-   * un relevé de 15 s parti avant que le serveur ait enregistré le refus ne la remet pas dans la liste. */
+   * un relevé de 15 s parti avant que le serveur ait enregistré le refus ne la remet pas dans la liste.
+   * « ANNULER » PENDANT 5 SECONDES (audit du 06/11, G93). Un seul toucher, sans retour possible, écartait la course pour de
+   * bon (elle ne revient jamais dans sa liste). La barre « Course retirée… · Annuler » reste 5 secondes, et le refus ne part au
+   * serveur qu'ensuite : « Annuler » remet la carte à sa place sans aucun appel. */
   const refusees = useRef(new Set());
+  const [refusAnnulable, setRefusAnnulable] = useState(null); // { id, offre, rang, minuteur }
+  const attentesRefus = useRef(new Map()); // id → arrête l'attente sans rien envoyer
+  function remettreOffre({ id, offre, rang, minuteur }) {
+    clearTimeout(minuteur);
+    refusees.current.delete(id);
+    setPartantes((p) => p.filter((x) => x !== id));
+    if (offre) setAvailable((prev) => (prev.some((x) => x.id === id) ? prev : [...prev.slice(0, Math.max(0, rang)), offre, ...prev.slice(Math.max(0, rang))]));
+  }
   function refuserOffre(id) {
     if (refusees.current.has(id)) return;
     agirOptimiste(`refus:${id}`, {
@@ -508,23 +543,43 @@ export default function DriverDashboard() {
           setAvailable((prev) => prev.filter((x) => x.id !== id));
           setPartantes((p) => p.filter((x) => x !== id));
         }, mouvementReduit() ? 0 : 300);
-        return { offre, rang, minuteur };
+        setRefusAnnulable({ id, offre, rang, minuteur });
+        return { id, offre, rang, minuteur };
       },
-      envoyer: () => api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token }),
-      annuler: ({ offre, rang, minuteur }) => {
-        clearTimeout(minuteur);
-        refusees.current.delete(id);
-        setPartantes((p) => p.filter((x) => x !== id));
-        if (offre) setAvailable((prev) => (prev.some((x) => x.id === id) ? prev : [...prev.slice(0, Math.max(0, rang)), offre, ...prev.slice(Math.max(0, rang))]));
-      },
-      confirmer: () => toast(t('conformite.offerRefused'))
+      envoyer: () => new Promise((resolve) => {
+        const envoi = setTimeout(() => {
+          attentesRefus.current.delete(id);
+          setRefusAnnulable((r) => (r?.id === id ? null : r));
+          resolve(true);
+        }, DELAI_ANNULER_REFUS_MS);
+        attentesRefus.current.set(id, () => { clearTimeout(envoi); attentesRefus.current.delete(id); resolve(false); });
+      }).then((envoyer) => (envoyer ? api(`/orders/${id}/refuse-offer`, { method: 'PATCH', token }) : { annule: true })),
+      annuler: remettreOffre
     });
   }
+  function annulerRefus() {
+    const r = refusAnnulable;
+    if (!r) return;
+    attentesRefus.current.get(r.id)?.();
+    remettreOffre(r);
+    setRefusAnnulable(null);
+  }
+  const barreRefus = refusAnnulable && (
+    <div className="card" role="status" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, padding: '10px 14px' }}>
+      <span className="small">{t('conformite.offerRefused')}</span>
+      <button type="button" className="btn-outline" onClick={annulerRefus}>{t('conformite.undoRefuse')}</button>
+    </div>
+  );
 
   // Course en train d'être prise (bordure iris le temps de la réponse) et cartes refusées qui s'en vont.
   const [prise, setPrise] = useState(null);
   const [partantes, setPartantes] = useState([]);
+  // Une prise à la fois (audit du 06/11, G34) : « Accepter » sur une autre carte pendant qu'une prise attend sa réponse ne part
+  // pas. Le serveur refuse aussi la deuxième (verrou par livreur), mais sans ce garde elle partait et revenait en erreur.
+  const priseEnVol = useRef(false);
   async function claim(id) {
+    if (priseEnVol.current) return;
+    priseEnVol.current = true;
     // Le toucher qui engage se sent tout de suite ; « succès » quand le serveur confirme que la course est à moi (gestes.js).
     if (experienceApp()) vibrer('valider');
     setPrise(id);
@@ -552,6 +607,7 @@ export default function DriverDashboard() {
       // suivant, et « Prendre la course » échouait encore. La liste est relue tout de suite.
       else load();
     } finally {
+      priseEnVol.current = false;
       setPrise(null);
     }
   }
@@ -943,7 +999,7 @@ export default function DriverDashboard() {
         <div className="ecl-offre-pied">
           {/* Refuser reste discret et neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-ghost" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
-          <button type="button" className={rang === 0 && nEnMain === 0 ? 'btn-gold' : 'btn-outline'} disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : nEnMain > 0 ? t('ecranLivreur.ajouterTournee') : t('dashDriver.takeRide')}</button>
+          <button type="button" className={rang === 0 && nEnMain === 0 ? 'btn-gold' : 'btn-outline'} disabled={prise !== null} onClick={() => claim(o.id)}>{prise === o.id ? '…' : nEnMain > 0 ? t('ecranLivreur.ajouterTournee') : t('dashDriver.takeRide')}</button>
         </div>
       </article>
     );
@@ -1170,6 +1226,7 @@ export default function DriverDashboard() {
       <NotifCourses />
       {/* Pas de course sans position autorisée (PositionRequise.jsx) : le client ne pourrait pas suivre la livraison. */}
       <PositionRequise>
+        {barreRefus}
         {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
         {available.length === 0 && <HeuresChargees token={token} position={maPosition} />}
         {offres.map(carteOffre)}
@@ -1249,7 +1306,7 @@ export default function DriverDashboard() {
         {/* Le pourboire déjà payé, comme sur la carte d'offre (téléphone, app) : il manquait ici, sur ordinateur (2026-11-05). */}
         {o.tipPaid && o.tipAmount > 0 && <p className="ecl-impact"><Icone nom="euro" taille={18} /><span>{t('ecranLivreur.pourboireOffre', { amount: dec(o.tipAmount) })}</span></p>}
         <div className="ecl-fc-actions">
-          <button type="button" className="btn-gold" disabled={prise === o.id} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
+          <button type="button" className="btn-gold" disabled={prise !== null} onClick={() => claim(o.id)}>{prise === o.id ? '…' : t('dashDriver.takeRide')}</button>
           {/* Refuser reste neutre : aucune conséquence pour le livreur. */}
           <button type="button" className="btn-outline" onClick={() => refuserOffre(o.id)}>{t('conformite.refuseOffer')}</button>
         </div>
@@ -1285,6 +1342,7 @@ export default function DriverDashboard() {
           {titreOffres}
           {blocGrille}
           <PositionRequise>
+            {barreRefus}
             {available.length === 0 && <EtatVide scene="commandes" titre={t('dashDriver.noneAvailable')} texte={texteMinimum} />}
         {available.length === 0 && <HeuresChargees token={token} position={maPosition} />}
             {available.length > 0 && <div className="ecl-choix-liste">{offres.map(choixOffre)}</div>}

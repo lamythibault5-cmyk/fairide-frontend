@@ -38,8 +38,15 @@ ignored since, and can be deleted.
   date is « announced by e-mail »). It used to push back the trial end of every shop subscription (`prolongerEssais`):
   gone with the subscription on 2026-11-04.
 - **After GO, no courier = no delivery.** `lancement.livreursDisponibles` counts couriers who could take the job now:
-  approved, Stripe active, status verified, not paused, not test, no job in hand, no selfie check past its 60-min deadline
-  and bikes only within `VELO_MAX_KM`. Zero → order and quote refused with
+  approved, Stripe active, status verified, not test, no job in hand, no selfie check past its 60-min deadline
+  and bikes only within `VELO_MAX_KM`, and **free** (`couriers.sqlLivreurLibre`, founder 2026-11-06, G1/G2/G30): not paused,
+  seen in the app within `courier_presence_min` minutes (15; `users.driver_seen_at`, written at most once a minute by the
+  courier screen's `GET /orders/available` — one timestamp, never a history), at least one push device, location sharing
+  not off, current contract version signed. Approved or reinstated couriers start paused; logging out, or turning location
+  off, pauses them. Each free courier covers `delivery_orders_per_free_courier` (1) delivery already sold and still waiting
+  for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time). The same rule
+  picks who gets « Nouvelle course » (`notifLivreurs.livreursAPrevenir`, e-mail reminder included) and feeds the admin
+  counts. Zero → order and quote refused with
   `NO_COURIER_AVAILABLE` (409), except for a shop that delivers with its own employees (`livraisonCommerce.livreParCommerce`,
   `lancement.livraisonPossible`, 2026-11-02): it waits for no courier, but still only after GO. It only COUNTS couriers: never add ratings, rankings or acceptance history to it
   (employment-presumption rule, see `notifLivreurs.js`). Scheduled orders are judged like immediate ones.
