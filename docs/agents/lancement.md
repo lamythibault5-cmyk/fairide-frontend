@@ -58,7 +58,10 @@ ignored since, and can be deleted.
   courier screen's `GET /orders/available` — one timestamp, never a history), at least one push device, location sharing
   not off, current contract version signed. Approved or reinstated couriers start paused; logging out, or turning location
   off, pauses them. Each free courier covers `delivery_orders_per_free_courier` (1) delivery already sold and still waiting
-  for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time). The same rule
+  for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time). An open
+  Stripe page reserves nothing: the rule runs again when the payment lands (`fermeALArriveeDuPaiement`, reason `livreur`,
+  one delivery payment at a time via `verrouPaiementLivraison`); the first paid keeps the courier, the next is refunded at
+  once and never reaches the shop (2026-11-07). The same rule
   picks who gets « Nouvelle course » (`notifLivreurs.livreursAPrevenir`, e-mail reminder included) and feeds the admin
   counts. Zero → order and quote refused with
   `NO_COURIER_AVAILABLE` (409), except for a shop that delivers with its own employees (`livraisonCommerce.livreParCommerce`,

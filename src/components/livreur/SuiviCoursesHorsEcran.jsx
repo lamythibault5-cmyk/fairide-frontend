@@ -42,7 +42,9 @@ export default function SuiviCoursesHorsEcran() {
       // Écran caché sans course en main : rien à surveiller (le serveur prévient par notification).
       if (!document.hidden || enMainRef.current) {
         try {
-          const r = await api('/orders/mine/deliveries?recent=1', { token });
+          // `horsEcran=1` : ce relevé ne note pas le livreur « vu » (revue de la chasse GO, 07/11). Sur Mon compte ou Gains il
+          // ne regarde aucune offre ; compté libre, une livraison lui était vendue sans que personne la voie.
+          const r = await api('/orders/mine/deliveries?recent=1&horsEcran=1', { token });
           if (!fini) setMine(r);
         } catch { /* réseau : le relevé suivant */ }
       }
