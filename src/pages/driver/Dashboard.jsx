@@ -264,8 +264,11 @@ export default function DriverDashboard() {
 
   /* POSITION REFUSÉE = EN PAUSE (audit du 06/11, G30). Sans position, PositionRequise cache toutes les offres ; disponible
    * quand même, il comptait « libre » côté serveur et recevait « Nouvelle course » pour une liste vide. Au chargement et à
-   * chaque retour dans l'app (useEtatPosition relit l'état), une autorisation refusée le met en pause ; dans l'app, une
-   * autorisation jamais donnée aussi (sur le site, Safari peut répondre « prompt » après un oui : seul « denied » compte).
+   * chaque retour dans l'app (useEtatPosition relit l'état), une autorisation refusée le met en pause. « prompt » ne le met
+   * plus en pause (revue finale du 07/11) : « Une seule fois » sur iPhone et « Seulement cette fois » sur Android repassent
+   * à « prompt » à chaque ouverture, et le livreur se retrouvait en pause sans rien avoir fait. Pour « prompt » dans l'app
+   * et pour « position approximative » (l'ancienne app ne demandait que celle-là), le relevé des courses part avec
+   * `positionBloquee=1` : le serveur ne le note plus « vu », il cesse de compter libre après les minutes de présence.
    * Il se remet disponible lui-même avec l'interrupteur, qui redemande la position.
    * Une seule tentative par état de position : un envoi raté (hors ligne, serveur en erreur) remettait « disponible », ce
    * qui relançait aussitôt l'effet, en boucle. `pauseAutoRef` garde l'état déjà essayé ; un envoi réussi l'efface.
@@ -275,7 +278,7 @@ export default function DriverDashboard() {
   const pauseAutoRef = useRef(null);
   useEffect(() => {
     if (!user || user.driverPaused || user.adminStatus !== 'approved' || pauseAutoRef.current === etatPos) return;
-    if (!(etatPos === 'denied' || (estNatif() && etatPos === 'prompt'))) return;
+    if (etatPos !== 'denied') return;
     pauseAutoRef.current = etatPos;
     modifierUtilisateur((u) => ({ ...u, driverPaused: true }));
     api('/auth/me', { method: 'PATCH', token, body: { driverPaused: true }, logoutOn401: false })
@@ -377,10 +380,15 @@ export default function DriverDashboard() {
     return () => window.removeEventListener(EVENEMENT_CONDITIONS_ACCEPTEES, relire);
   }, []);
 
+  // Offres cachées par PositionRequise : pas « vu » côté serveur (voir la pause automatique plus haut). Sur le site,
+  // « prompt » ne compte pas : Safari le répond aussi après un oui.
+  const positionBloqueeRef = useRef(false);
+  positionBloqueeRef.current = etatPos === 'denied' || etatPos === 'approximate' || (estNatif() && etatPos === 'prompt');
+
   async function load() {
     try {
       const [availableData, mineData, planData] = await Promise.all([
-        api('/orders/available', { token }),
+        api(`/orders/available${positionBloqueeRef.current ? '?positionBloquee=1' : ''}`, { token }),
         // Courses en main et récentes seulement (audit du 19/10, courier-21 : tout l'historique, toutes les 15 s).
         api('/orders/mine/deliveries?recent=1', { token }),
         // Le trajet ne fait jamais échouer la page : sans lui, les courses en main gardent leur ordre d'avant.

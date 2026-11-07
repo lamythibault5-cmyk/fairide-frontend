@@ -144,7 +144,10 @@ export default function Checkout() {
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
   // Programmée pour un jour suivant : un plat épuisé aujourd'hui seulement se commande (G165, même règle que le serveur).
-  const jourPlusTard = scheduleEnabled && !!scheduleDate && scheduleDate > dateKey(new Date());
+  // Jour de service qui bascule à 6 h, comme le serveur (sqlJourService) : 01:30 demain appartient encore au service de ce soir.
+  const jourService = (d) => dateKey(new Date(d.getTime() - 6 * 3600e3));
+  const jourPlusTard = scheduleEnabled && !!scheduleDate
+    && jourService(new Date(`${scheduleDate}T${scheduleTime || '12:00'}`)) > jourService(new Date());
   // Les jours et créneaux suivent les horaires du commerce (scheduleUtils.js) : recalculés une fois la fiche chargée.
   const ouverture = restaurant ? { hours: restaurant.hours, closures: restaurant.closures, open: restaurant.open, pausedUntil: restaurant.pausedUntil } : null;
   const dateOptions = useMemo(() => getScheduleDateOptions(7, libellesDates, ouverture), [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
