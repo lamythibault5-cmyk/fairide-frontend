@@ -40,6 +40,9 @@ ignored since, and can be deleted.
   (`courier_insurance_policy`, Admin › Conformité: **GO stays possible without it**) and ready couriers with no push
   device. The card re-reads itself every minute; a press answers from what was written even when the readiness reading
   fails (`bilanIllisible`, G72).
+  GO is refused (409 `DELAI_SANS_LIVREUR_VIDE`) while `delivery_no_courier_cancel_min` (Admin › Conformité › Dispatch) is
+  empty: without it a paid delivery nobody takes never closes (pre-GO bug hunt, 2026-11-06, G4). The card says so in red
+  (`bilan().annulationSansLivreurMin` null). Closing stays possible.
 - **GO announcement (G12, founder 2026-11-06)**: no longer to every approved shop and courier. `lancement.destinatairesAnnonce`
   (from `pretLancement`): shops that can sell everything (ready, Stripe active, delivery or online payment offered) get
   « c'est parti »; shops that can only sell takeaway paid at the shop get a takeaway text; the others nothing; only ready

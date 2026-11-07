@@ -149,6 +149,9 @@ export function EcheanceAcceptation({ order }) {
   );
 }
 
+// Au-delà de 2 minutes après l'heure promise, on ne la répète plus : « un peu en retard » (G53).
+const RETARD_DIT_MS = 2 * 60000;
+
 function formatDateTime(ms) {
   const isToday = new Date(ms).toDateString() === new Date().toDateString();
   return isToday
@@ -185,12 +188,23 @@ export function DeliveryTiming({ order }) {
 
   const readyLabel = isPickup ? t('orderStatus.timing.pickupEstimate') : t('orderStatus.timing.deliveryEstimate');
   const minutesLeft = Math.max(0, Math.round((estimatedDeliveryAt - Date.now()) / 60000));
+  // Plus de RETARD_DIT_MS après l'heure promise : « (imminente) » restait affiché tant que la commande était ouverte (G53).
+  const enRetard = Date.now() - estimatedDeliveryAt > RETARD_DIT_MS;
   return (
     <div className="small">
       {orderedAt} · {readyLabel} <b>{formatTime(estimatedDeliveryAt)}</b>
-      {minutesLeft > 0 ? t('orderStatus.timing.minutesLeft', { min: minutesLeft }) : t('orderStatus.timing.imminent')}
+      {minutesLeft > 0 ? t('orderStatus.timing.minutesLeft', { min: minutesLeft }) : enRetard ? t('orderStatus.timing.late') : t('orderStatus.timing.imminent')}
     </div>
   );
+}
+
+/* COMMANDE PROGRAMMÉE LOINTAINE (chasse aux bogues d'avant GO, 2026-11-06, G153). Acceptée mardi pour jeudi, elle disait
+ * « C'est en cuisine » pendant deux jours, l'app relisait le serveur toutes les 15 s et retenait ses mises à jour
+ * (useCommandeEnCours). Prévue dans plus de PROGRAMMEE_LOINTAINE_MS : rien ne cuit encore, rien à suivre de près. */
+const PROGRAMMEE_LOINTAINE_MS = 90 * 60000;
+export function programmeeLointaine(order) {
+  if (!order?.scheduledFor || !['nouveau', 'preparation'].includes(order.status)) return false;
+  return new Date(order.scheduledFor).getTime() - Date.now() > PROGRAMMEE_LOINTAINE_MS;
 }
 
 /* SUIVI EN BANDEAU IRIS (fondateur, 2026-10-16, version 1C de maquettes/autres-idees/autres-idees.html). Une commande en cours s'ouvre
@@ -207,6 +221,8 @@ export function titreSuivi(order, t) {
   // Un livreur nommé est déjà en route vers le commerce : plus « on attend un livreur » (audit du 19/10, AO-14).
   if (status === 'pret' && orderType === 'delivery' && order.driverName) return t('orderStatus.grand.pretDeliveryDriver', { name: prenomLivreur(order) });
   if (status === 'pret') return t(orderType === 'delivery' ? 'orderStatus.grand.pretDelivery' : 'orderStatus.grand.pretPickup');
+  // Programmée et acceptée d'avance : pas « C'est en cuisine » des jours durant (G153, programmeeLointaine).
+  if (status === 'preparation' && programmeeLointaine(order)) return t('orderStatus.grand.programmee', { date: formatDateTime(new Date(order.scheduledFor).getTime()) });
   if (['nouveau', 'preparation', 'livraison'].includes(status)) return t(`orderStatus.grand.${status}`);
   return statusLabel(status, orderType, t, true);
 }
@@ -273,7 +289,8 @@ export function ProchaineEtape({ order }) {
   }
   // Close après une attente sans client (livraison « client absent », à emporter non récupérée, audit du 19/10, shop-206) :
   // la ligne de l'incident dit déjà que la commande reste due (Orders.jsx) ; « un paiement éventuel est remboursé » serait faux.
-  if (status === 'annule' && ['client_absent', 'pickup_not_collected'].includes(order.deliveryIncident)) return null;
+  // Close d'office faute d'avoir été marquée remise (G26, pickup_auto_closed) : la ligne de l'incident le dit, sans parler d'argent.
+  if (status === 'annule' && ['client_absent', 'pickup_not_collected', 'pickup_auto_closed'].includes(order.deliveryIncident)) return null;
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
   }
@@ -318,12 +335,23 @@ export function heureArrivee(order) {
   if (status === 'pret' && orderType === 'pickup') return null;
   const quand = new Date(estimatedDeliveryAt).getTime();
   if (!Number.isFinite(quand)) return null;
-  return { time: formatTime(quand), min: Math.max(0, Math.round((quand - Date.now()) / 60000)) };
+  // L'heure promise est gardée telle quelle (le serveur la garde aussi : les compteurs de retard en dépendent) ; passée de
+  // plus de 2 minutes, le titre ne la montre plus (G53) : « Chez toi vers 19:35 » à 19:52 au-dessus de « En route vers
+  // toi » contredisait la carte, qui donne les minutes du livreur en direct.
+  return { time: formatTime(quand), min: Math.max(0, Math.round((quand - Date.now()) / 60000)), late: Date.now() - quand > RETARD_DIT_MS };
 }
 export function TitreHeure({ order, className }) {
   const { t } = useLanguage();
   const heure = heureArrivee(order);
   if (!heure) return null;
+  if (heure.late) {
+    return (
+      <>
+        <h2 className={className}>{t('orderStatus.grand.enRetard')}</h2>
+        <div className="small suivi-heure-sous">{titreSuivi(order, t)}</div>
+      </>
+    );
+  }
   const [avant, apres] = t(order.orderType === 'pickup' ? 'orderStatus.grand.pretVers' : 'orderStatus.grand.arriveVers', { time: '\u0000' }).split('\u0000');
   return (
     <>

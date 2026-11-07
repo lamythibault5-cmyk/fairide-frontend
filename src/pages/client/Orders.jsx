@@ -633,7 +633,9 @@ export default function Orders() {
     <>
       {/* Payée sur place puis annulée : « À payer sur place 4,50 € » restait affiché sous une commande close (audit du 19/10,
           LIVE-11). Rien n'a été payé, rien n'est à payer : on le dit, sans montant. */}
-      {avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
+      {/* À payer sur place et close d'office faute d'avoir été marquée remise (G26) : on ne sait pas si elle a été payée au
+          comptoir, aucune ligne d'argent. */}
+      {avecMontant && o.deliveryIncident === 'pickup_auto_closed' ? null : avecMontant && o.paymentMode === 'on_site' && o.status === 'annule' && !o.pickupNoShow ? (
         <div className="suivi-total"><span className="small">{t('orders.payNothing')}</span></div>
       ) : avecMontant && (
         <div className="suivi-total">
@@ -692,13 +694,21 @@ export default function Orders() {
   );
   // Annuler, tant que le commerce n'a pas accepté. La règle est dite UNE fois, dans la note au-dessus (ProchaineEtape : « tu peux
   // aussi l'annuler toi-même d'ici là ») ; la phrase qui la répétait sous le bouton est partie (audit design 2).
-  const boutonAnnuler = (o) => (o.status === 'nouveau' && !impayeeEnLigne(o) && !nonEnvoyee(o) ? (
-    <button type="button" className="btn-ghost suivi-annuler" disabled={cancellingId === o.id} onClick={() => setAAnnuler(o)}>
-      {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
-    </button>
+  // Commande programmée déjà acceptée : annulable, remboursée en entier, jusqu'à ce que la cuisine commence (chasse aux bogues
+  // d'avant GO, 2026-11-06, G92 ; backend cancelUntil, PATCH /orders/:id/cancel). L'heure limite est dite sous le bouton.
+  const programmeeAnnulable = (o) => o.status === 'preparation' && Number(o.cancelUntil) > Date.now();
+  const heureLimite = (ms) => (new Date(ms).toDateString() === new Date().toDateString() ? heureCourte(ms)
+    : new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }));
+  const boutonAnnuler = (o) => ((o.status === 'nouveau' && !impayeeEnLigne(o) && !nonEnvoyee(o)) || programmeeAnnulable(o) ? (
+    <>
+      <button type="button" className="btn-ghost suivi-annuler" disabled={cancellingId === o.id} onClick={() => setAAnnuler(o)}>
+        {cancellingId === o.id ? '...' : t('orders.cancelOrder')}
+      </button>
+      {programmeeAnnulable(o) && <div className="small" style={{ marginTop: 6 }}>{t('orders.cancelUntil', { time: heureLimite(o.cancelUntil) })}</div>}
+    </>
   ) : null);
   // En route, « le commerce la prépare » était faux (audit du 19/10, AO-15) : une phrase pour la livraison.
-  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) ? <div className="small" style={{ marginTop: 6 }}>{t(o.status === 'livraison' ? 'orders.cancelLockedOnTheWay' : 'orders.cancelLocked')}</div> : null);
+  const noteVerrou = (o) => (['preparation', 'pret', 'livraison'].includes(o.status) && !programmeeAnnulable(o) ? <div className="small" style={{ marginTop: 6 }}>{t(o.status === 'livraison' ? 'orders.cancelLockedOnTheWay' : 'orders.cancelLocked')}</div> : null);
   // LE PIED D'UNE COMMANDE : pourboire, « Signaler un problème » ou « Un souci ? », « Commander à nouveau ». Une rangée
   // alignée sur le texte de la carte (audit design 2 : les deux liens étaient décalés l'un par rapport à l'autre).
   // `avecRecommander` : sur le site, « Commander à nouveau » est déjà sur la ligne du tableau.

@@ -6,6 +6,8 @@ import ConfirmDialog from '../ConfirmDialog';
 // Commande en livraison toujours sans livreur (plan de test LIV-1, 2 octobre 2026). Avant : « attend qu'un livreur passe »,
 // sans limite et sans issue. Le client sait maintenant jusqu'à quand on cherche, puis peut annuler, remboursé en entier
 // (POST /orders/:id/no-courier-cancel : Fairide paie, le commerce garde son dû).
+// Livreur attribué qui n'est pas venu chercher la commande prête (chasse aux bogues d'avant GO, 2026-11-06, G5 ; backend
+// courierNoShow) : même issue, mais pas « nous cherchons encore un livreur » à côté de son nom.
 export default function SansLivreur({ order, token, toast, onUpdated }) {
   const { t } = useLanguage();
   const [maintenant, setMaintenant] = useState(() => Date.now());
@@ -31,7 +33,7 @@ export default function SansLivreur({ order, token, toast, onUpdated }) {
 
   return (
     <div className="small" style={{ marginTop: 8 }} role="status">
-      {possible ? t('orders.noCourier_stillNone') : t('orders.noCourier_searching', { time: heure })}
+      {order.courierNoShow ? t('orders.noCourier_noShow') : possible ? t('orders.noCourier_stillNone') : t('orders.noCourier_searching', { time: heure })}
       {possible && (
         <div style={{ marginTop: 6 }}>
           <button type="button" className="btn-outline" disabled={enCours} onClick={() => setConfirmer(true)}>{t('orders.noCourier_cancelButton')}</button>

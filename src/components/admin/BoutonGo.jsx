@@ -109,6 +109,8 @@ export default function BoutonGo() {
           {peutAppuyer && !etat.annonce.enCours && etat.annonce.aPrevenir > 0 && <button type="button" className="btn-outline" disabled={enCours} onClick={() => setConfirmerRenvoi(true)}>{tr('adminGo.announceButton')}</button>}
         </div>
       )}
+      {/* Délai d'annulation faute de livreur vide : le serveur refuse le GO (chasse aux bogues d'avant GO, 2026-11-06, G4). */}
+      {!etat.go && etat.annulationSansLivreurMin === null && <p className="small texte-erreur" style={{ margin: '0 0 12px' }}>{tr('adminGo.noCourierCancelMissing')}</p>}
       {!peutAppuyer ? (
         <p className="small" style={{ margin: 0 }}>{tr('adminGo.roleOnly')}</p>
       ) : etat.force ? null : etat.go ? (

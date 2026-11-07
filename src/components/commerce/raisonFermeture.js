@@ -14,6 +14,9 @@ export function raisonFermeture(o, statutAvant) {
   if (o.status === 'refuse') return o.refusalReason ? { cle: 'alertBar.closedRefused', valeurs: { reason: o.refusalReason }, propre: true } : { cle: null, propre: true };
   if (o.status !== 'annule') return null;
   if (o.pickupNoShow || o.deliveryIncident === 'pickup_not_collected') return { cle: 'alertBar.closedNoShow', propre: true };
+  // À emporter jamais marquée remise, close d'office 12 h après (chasse aux bogues d'avant GO, 2026-11-06, G26, backend
+  // orderTimeouts.surveillerRetraitsOublies) : un rangement, pas une alerte.
+  if (o.deliveryIncident === 'pickup_auto_closed') return { cle: 'alertBar.closedAutoPickup', propre: true };
   if (o.orderType === 'pickup' && o.ageCheck === 'refused_absent') return { cle: 'alertBar.closedAgeAbsent', propre: true };
   if (o.expiredUnaccepted) return { cle: 'alertBar.closedExpired' };
   if (o.deliveryIncident === 'no_courier_cancelled') return { cle: 'alertBar.closedNoCourier' };
