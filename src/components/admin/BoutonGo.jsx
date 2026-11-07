@@ -4,6 +4,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { getLocale, useLanguage } from '../../context/LanguageContext';
 import useAdminRole from '../../hooks/useAdminRole';
+import usePushNotifications from '../../hooks/usePushNotifications';
 import { chargerLancement } from '../../launch';
 import ConfirmDialog from '../ConfirmDialog';
 import Icone from '../Icone';
@@ -15,6 +16,10 @@ import Icone from '../Icone';
 // confirmation. Le serveur réserve l'action au propriétaire et aux admins ; les autres rôles voient l'état sans bouton.
 // Au-dessus, « Ouvrir l'à emporter » (fondateur, 2026-10-31 : plus aucune date, CarteEmporter plus bas) : même lecture
 // (GET /admin/launch), puisque le GO ouvre aussi l'à emporter.
+// Réponse d'un bouton sans bilan (bilanIllisible, G72) : l'état écrit remplace l'ancien, les chiffres d'avant restent jusqu'à
+// la prochaine lecture.
+const apresBascule = (r) => (avant) => (r.bilanIllisible ? { ...avant, ...r } : r);
+
 export default function BoutonGo() {
   const { t: tr } = useLanguage();
   const { token } = useAuth();
@@ -24,19 +29,41 @@ export default function BoutonGo() {
   const [saisie, setSaisie] = useState('');
   const [enCours, setEnCours] = useState(false);
   const [confirmerFermeture, setConfirmerFermeture] = useState(false);
+  const [confirmerRenvoi, setConfirmerRenvoi] = useState(false);
   const peutAppuyer = !role || role === 'owner' || role === 'admin';
 
   // Lecture en échec : la carte reste, avec l'erreur et « Réessayer » (audit du 19/10, admin-49). Elle disparaissait sans
   // un mot, et l'équipe pouvait croire la livraison fermée, ou ne plus trouver « Refermer » pendant un incident.
   const [erreur, setErreur] = useState(null);
   const lire = () => api('/admin/launch', { token }).then((r) => { setEtat(r); setErreur(null); }).catch((e) => setErreur(e.message || tr('adminGo.loadError')));
-  useEffect(() => { lire(); }, [token]); // eslint-disable-line react-hooks/exhaustive-deps -- lecture à l'arrivée
+  // Relue toutes les minutes tant que la page est visible (G72, 2026-11-06) : les chiffres sur lesquels on décide (livreurs
+  // libres, annonce) bougent, et une réponse du GO sans bilan (bilanIllisible) se complète d'elle-même.
+  useEffect(() => {
+    lire();
+    const minute = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
+    return () => clearInterval(minute);
+  }, [token]); // eslint-disable-line react-hooks/exhaustive-deps -- lecture à l'arrivée, puis chaque minute
+
+  // « Renvoyer l'annonce » (G12) : l'e-mail d'ouverture à ceux qui sont prêts et ne l'ont pas encore reçu.
+  async function renvoyerAnnonce() {
+    setEnCours(true);
+    try {
+      const r = await api('/admin/launch/announce', { method: 'POST', token });
+      setConfirmerRenvoi(false);
+      toast(r.aPrevenir ? tr('adminGo.announceSent') : tr('adminGo.announceNone'), 'succes');
+      lire();
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setEnCours(false);
+    }
+  }
 
   async function basculer(go) {
     setEnCours(true);
     try {
       const r = await api('/admin/launch', { method: 'POST', token, body: { go, confirmation: go ? saisie.trim().toUpperCase() : undefined } });
-      setEtat(r); setSaisie(''); setConfirmerFermeture(false);
+      setEtat(apresBascule(r)); setSaisie(''); setConfirmerFermeture(false);
       chargerLancement(); // le reste de la console (bandeau d'ouverture) suit tout de suite
       // Premier GO : les annonces partent en arrière-plan (admin-50) ; leur compte rendu arrive dans une tâche.
       toast(go ? (r.premierGo ? tr('adminGo.doneFirst') : tr('adminGo.doneOpen')) : tr('adminGo.doneClosed'), 'succes');
@@ -70,13 +97,30 @@ export default function BoutonGo() {
         {tr('adminGo.ready', { prets: etat.livreursPrets, total: etat.livreursTotal, commerces: etat.commercesPrets, commercesTotal: etat.commercesTotal, dispo: etat.livreursDisponiblesMaintenant })}
       </p>
       <p className="small" style={{ margin: '0 0 12px', color: 'var(--ink-soft)' }}>{tr('adminGo.readyHint')}</p>
+      {/* Ce qui manque encore sans bloquer le GO (fondateur, 2026-11-06, G3) : en rouge, au-dessus du bouton. */}
+      {etat.assuranceLivreurs === false && <p className="small texte-erreur" style={{ margin: '0 0 6px' }}><Icone nom="alerte" taille={14} className="icone-texte" />{' '}{tr('adminGo.insuranceMissing')}</p>}
+      {etat.livreursPretsSansNotifications > 0 && <p className="small texte-erreur" style={{ margin: '0 0 6px' }}><Icone nom="alerte" taille={14} className="icone-texte" />{' '}{tr('adminGo.readyNoPush', { n: etat.livreursPretsSansNotifications })}</p>}
+      {/* Refermer coupe aussi l'à emporter des commerces « en ligne uniquement » (G35). */}
+      {!etat.go && etat.emporter && etat.commercesEnLigneSeulement > 0 && <p className="small texte-erreur" style={{ margin: '0 0 6px' }}>{tr('adminGo.closedOnlineOnly', { n: etat.commercesEnLigneSeulement })}</p>}
+      {/* Après le premier GO : l'annonce, à ceux qui ne l'ont pas encore reçue (G12). */}
+      {etat.goAt && etat.annonce && (
+        <div className="row" style={{ gap: 8, alignItems: 'center', flexWrap: 'wrap', margin: '0 0 12px' }}>
+          {/* Pendant l'envoi (premier GO ou renvoi), « à prévenir » compte ceux qui l'attendent encore : pas de bouton. */}
+          <p className="small" style={{ margin: 0 }}>{etat.annonce.enCours ? tr('adminGo.announceSending') : etat.annonce.aPrevenir > 0 ? tr('adminGo.announceLeft', { n: etat.annonce.aPrevenir }) : tr('adminGo.announceDone')}</p>
+          {peutAppuyer && !etat.annonce.enCours && etat.annonce.aPrevenir > 0 && <button type="button" className="btn-outline" disabled={enCours} onClick={() => setConfirmerRenvoi(true)}>{tr('adminGo.announceButton')}</button>}
+        </div>
+      )}
+      {/* Délai d'annulation faute de livreur vide : le serveur refuse le GO (chasse aux bogues d'avant GO, 2026-11-06, G4). */}
+      {!etat.go && etat.annulationSansLivreurMin === null && <p className="small texte-erreur" style={{ margin: '0 0 12px' }}>{tr('adminGo.noCourierCancelMissing')}</p>}
+      <EquipeJoignable n={etat.equipeJoignable} relire={lire} />
       {!peutAppuyer ? (
         <p className="small" style={{ margin: 0 }}>{tr('adminGo.roleOnly')}</p>
       ) : etat.force ? null : etat.go ? (
         <button type="button" className="btn-outline" disabled={enCours} onClick={() => setConfirmerFermeture(true)}>{tr('adminGo.closeButton')}</button>
       ) : (
         <form className="row" style={{ gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); if (saisie.trim().toUpperCase() === 'GO') basculer(true); }}>
-          {!etat.goAt && <p className="small" style={{ margin: '0 0 4px', flexBasis: '100%' }}>{tr('adminGo.firstGoNote')}</p>}
+          {/* Combien recevront l'annonce, avant d'appuyer (G12). */}
+          {!etat.goAt && <p className="small" style={{ margin: '0 0 4px', flexBasis: '100%' }}>{tr('adminGo.firstGoNote', { commerces: etat.annonce?.commerces ?? 0, emporter: etat.annonce?.commercesEmporter ?? 0, livreurs: etat.annonce?.livreurs ?? 0 })}</p>}
           <label className="field" style={{ margin: 0 }}>
             <span className="field-intitule">{tr('adminGo.confirmLabel')}</span>
             <input value={saisie} onChange={(e) => setSaisie(e.target.value)} autoComplete="off" spellCheck={false} style={{ width: 90, textTransform: 'uppercase' }} aria-label={tr('adminGo.confirmLabel')} />
@@ -87,10 +131,46 @@ export default function BoutonGo() {
       <ConfirmDialog
         open={confirmerFermeture} loading={enCours} danger
         onCancel={() => setConfirmerFermeture(false)} onConfirm={() => basculer(false)}
-        title={tr('adminGo.title')} message={etat.livraisonsProgrammees > 0 ? `${tr('adminGo.confirmClose')} ${tr('adminGo.confirmCloseScheduled', { n: etat.livraisonsProgrammees })}` : tr('adminGo.confirmClose')} confirmLabel={tr('adminGo.closeButton')}
+        title={tr('adminGo.title')}
+        message={[tr('adminGo.confirmClose'), etat.livraisonsProgrammees > 0 && tr('adminGo.confirmCloseScheduled', { n: etat.livraisonsProgrammees }),
+          etat.commercesEnLigneSeulement > 0 && tr('adminGo.confirmCloseOnlineOnly', { n: etat.commercesEnLigneSeulement })].filter(Boolean).join(' ')}
+        confirmLabel={tr('adminGo.closeButton')}
+      />
+      <ConfirmDialog
+        open={confirmerRenvoi} loading={enCours}
+        onCancel={() => setConfirmerRenvoi(false)} onConfirm={renvoyerAnnonce}
+        title={tr('adminGo.announceButton')} message={tr('adminGo.announceConfirm', { n: etat.annonce?.aPrevenir ?? 0 })} confirmLabel={tr('adminGo.announceButton')}
       />
     </section>
     </>
+  );
+}
+
+/* L'ÉQUIPE JOIGNABLE PAR NOTIFICATION (bug hunt avant GO, G15 ; lancement.bilan › equipeJoignable). Les alertes à l'équipe
+ * (urgence livreur, livreur bloqué, commande pas acceptée) sonnent sur les appareils des comptes de l'équipe : en rouge à 0,
+ * puisqu'il ne reste alors que l'e-mail et le SMS d'astreinte. Les comptes de l'équipe ne sont jamais invités à activer les
+ * notifications : le bouton le fait pour CET appareil (téléphone de garde), avec le même abonnement que partout ailleurs.
+ * Serveur d'avant, sans le chiffre : rien. */
+function EquipeJoignable({ n, relire }) {
+  const { t: tr } = useLanguage();
+  const { token } = useAuth();
+  const toast = useToast();
+  const push = usePushNotifications(token);
+  if (typeof n !== 'number') return null;
+  async function activer() {
+    const issue = await push.activer();
+    if (issue === 'ok') { toast(tr('adminGo.teamAlertsOn'), 'succes'); relire(); }
+    else toast(tr(issue === 'refuse' ? 'adminGo.teamAlertsRefused' : 'adminGo.teamAlertsUnavailable'), 'erreur');
+  }
+  return (
+    <div style={{ margin: '0 0 12px' }}>
+      <p className={`small${n === 0 ? ' texte-erreur' : ''}`} style={{ margin: '0 0 4px' }}>
+        {n === 0 ? <b>{tr('adminGo.teamReachableNone')}</b> : tr('adminGo.teamReachable', { n })}
+      </p>
+      {push.supporte && (push.abonne
+        ? <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>{tr('adminGo.teamAlertsOn')}</p>
+        : <button type="button" className="btn-outline btn-sm" disabled={push.occupe} onClick={activer}>{tr('adminGo.teamAlertsButton')}</button>)}
+    </div>
   );
 }
 
@@ -111,7 +191,7 @@ function CarteEmporter({ etat, setEtat, peutAppuyer }) {
     setEnCours(true);
     try {
       const r = await api('/admin/launch/pickup', { method: 'POST', token, body: { open, confirmation: open ? saisie.trim().toUpperCase() : undefined } });
-      setEtat(r); setSaisie(''); setConfirmerFermeture(false);
+      setEtat(apresBascule(r)); setSaisie(''); setConfirmerFermeture(false);
       chargerLancement(); // le bandeau d'ouverture de la console suit tout de suite
       toast(open ? (r.premiereOuverture ? tr('adminGo.pickupDoneFirst') : tr('adminGo.pickupDoneOpen')) : tr('adminGo.pickupDoneClosed'), 'succes');
     } catch (e) {
@@ -134,7 +214,7 @@ function CarteEmporter({ etat, setEtat, peutAppuyer }) {
         <button type="button" className="btn-outline" disabled={enCours} onClick={() => setConfirmerFermeture(true)}>{tr('adminGo.pickupCloseButton')}</button>
       ) : (
         <form className="row" style={{ gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); if (saisie.trim().toUpperCase() === 'EMPORTER') basculer(true); }}>
-          {!etat.emporterAt && <p className="small" style={{ margin: '0 0 4px', flexBasis: '100%' }}>{tr('adminGo.pickupFirstNote')}</p>}
+          {!etat.emporterAt && <p className="small" style={{ margin: '0 0 4px', flexBasis: '100%' }}>{tr('adminGo.pickupFirstNote', { n: etat.annonce?.emporterAPrevenir ?? 0 })}</p>}
           <label className="field" style={{ margin: 0 }}>
             <span className="field-intitule">{tr('adminGo.pickupConfirmLabel')}</span>
             <input value={saisie} onChange={(e) => setSaisie(e.target.value)} autoComplete="off" spellCheck={false} style={{ width: 130, textTransform: 'uppercase' }} aria-label={tr('adminGo.pickupConfirmLabel')} />

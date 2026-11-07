@@ -23,6 +23,7 @@ import MiseEnLigne from '../../components/commerce/MiseEnLigne';
 import { demarrerTerminalNavigateur, EVENEMENT_COMMANDE } from '../../terminalNavigateur';
 import { signalerOccupe } from '../../miseAJour';
 import Icone from '../../components/Icone';
+import { murTelephone } from '../../murTelephone';
 import '../../site-pro.css';
 
 // Charge une seule fois restaurant/orders et les partage aux sous-pages via
@@ -215,11 +216,14 @@ export default function DashboardLayout() {
   // secondes après, restait « Paiements à configurer » alors que Stripe le disait actif. Un effet sur la fiche (et non dans
   // loadDashboard : la fiche arrive par pickResto, que loadDashboard ne relit pas) — un appel Stripe, rien de plus.
   const stripeStatut = restaurant?.stripeConnectStatus;
+  // « À compléter » (restricted) aussi (pré-GO 2026-11-06, G25) : une fois les pièces fournies chez Stripe, le compte repasse
+  // actif sans attendre la relecture quotidienne du serveur.
+  const statutARelire = stripeStatut === 'pending' || stripeStatut === 'restricted';
   useEffect(() => {
-    if (!restoId || stripeStatut !== 'pending' || statutReluRef.current) return;
+    if (!restoId || !statutARelire || statutReluRef.current) return;
     statutReluRef.current = true;
     api(`/restaurants/${restoId}/connect/refresh`, { method: 'POST', token })
-      .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== 'pending') setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); })
+      .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== stripeStatut) setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); })
       .catch(() => {});
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [restoId, stripeStatut]);
@@ -228,8 +232,8 @@ export default function DashboardLayout() {
   // « Paiements à configurer » restait jusqu'au redémarrage (Stripe Connect n'a pas de webhook ici). Tant que le statut est
   // « en attente », chaque retour au premier plan le relit.
   useRevalidation(() => api(`/restaurants/${restoId}/connect/refresh`, { method: 'POST', token })
-    .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== 'pending') setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); }),
-  { actif: !!restoId && stripeStatut === 'pending', absenceMin: 0 });
+    .then((r) => { if (r?.stripeConnectStatus && r.stripeConnectStatus !== stripeStatut) setRestaurant((x) => (x ? { ...x, stripeConnectStatus: r.stripeConnectStatus } : x)); }),
+  { actif: !!restoId && statutARelire, absenceMin: 0 });
   // Retour sur l'onglet, focus, connexion retrouvée : relecture silencieuse (voir useRevalidation.js).
   useRevalidation(() => { if (restoId) return loadDashboard(restoId); return undefined; }, { actif: !!restoId && !etatCommandes.accesPerdu });
   // Changement d'onglet : on relit les données en arrière-plan (sans squelette — l'ancien état reste
@@ -435,6 +439,14 @@ export default function DashboardLayout() {
         <div className="agir-bandeau" role="status">
           <span><Icone nom="reglages" taille={16} className="icone-texte" />{' '}{t('dashResto.actingBanner', { name: user?.name || '', admin: actingAdminEmail })}</span>
           <button type="button" className="btn-outline btn-sm" onClick={quitterAction}>{t('dashResto.actingQuit')}</button>
+        </div>
+      )}
+      {/* Numéro pas encore prouvé : seule la page Commandes s'ouvre (ProtectedRoute, G16), avec ce bandeau qui reste tant que le
+          numéro n'est pas prouvé ; « Recevoir le code » ouvre le mur (Mon commerce), d'où « Voir mes commandes » ramène ici. */}
+      {murTelephone(user, 'restaurant', actingAdminEmail) && (
+        <div className="agir-bandeau" role="status">
+          <span><Icone nom="alerte" taille={16} className="icone-texte" />{' '}{t('verifTel.murBandeau')}</span>
+          <button type="button" className="btn-outline btn-sm" onClick={() => navigate('/dashboard')}>{t('verifTel.murBandeauCta')}</button>
         </div>
       )}
       {myRestos.length === 1 ? (

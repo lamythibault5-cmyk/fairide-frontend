@@ -269,8 +269,11 @@ function RefundTab({ detail, tr, token, toast, onDone }) {
   async function rembourser() {
     setBusy(true);
     try {
-      await api(`/admin/incidents/${detail.id}/refund`, { method: 'POST', token, body: { amount: montant, responsibility, reason: reason.trim() } });
-      toast(tr('adminIncidents.toastRefunded', { amount: money(montant) }));
+      const rep = await api(`/admin/incidents/${detail.id}/refund`, { method: 'POST', token, body: { amount: montant, responsibility, reason: reason.trim() } });
+      // Pas entièrement repris sur le virement du commerce ou du livreur (G70, 06/11/2026) : le serveur laisse l'incident ouvert.
+      toast(rep?.resteOuvert
+        ? tr('adminIncidents.toastRefundedPartial', { amount: money(montant), repris: money(rep.reprisSurVirement || 0), attendu: money(rep.repriseAttendue || 0) })
+        : tr('adminIncidents.toastRefunded', { amount: money(montant) }));
       setConfirm(false); onDone();
     } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
   }

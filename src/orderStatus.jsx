@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useLanguage, getLocale } from './context/LanguageContext';
 import Icone from './components/Icone';
+import { programmeeLointaine } from './commandeProgrammee';
 
 // `icon` porte maintenant un NOM DE TRACÉ (voir components/Icone.jsx) et non plus un emoji : les
 // consignes s'affichent côte à côte dans une rangée de pastilles au paiement, et quatre emoji
@@ -149,6 +150,9 @@ export function EcheanceAcceptation({ order }) {
   );
 }
 
+// Au-delà de 2 minutes après l'heure promise, on ne la répète plus : « un peu en retard » (G53).
+const RETARD_DIT_MS = 2 * 60000;
+
 function formatDateTime(ms) {
   const isToday = new Date(ms).toDateString() === new Date().toDateString();
   return isToday
@@ -185,10 +189,12 @@ export function DeliveryTiming({ order }) {
 
   const readyLabel = isPickup ? t('orderStatus.timing.pickupEstimate') : t('orderStatus.timing.deliveryEstimate');
   const minutesLeft = Math.max(0, Math.round((estimatedDeliveryAt - Date.now()) / 60000));
+  // Plus de RETARD_DIT_MS après l'heure promise : « (imminente) » restait affiché tant que la commande était ouverte (G53).
+  const enRetard = Date.now() - estimatedDeliveryAt > RETARD_DIT_MS;
   return (
     <div className="small">
       {orderedAt} · {readyLabel} <b>{formatTime(estimatedDeliveryAt)}</b>
-      {minutesLeft > 0 ? t('orderStatus.timing.minutesLeft', { min: minutesLeft }) : t('orderStatus.timing.imminent')}
+      {minutesLeft > 0 ? t('orderStatus.timing.minutesLeft', { min: minutesLeft }) : enRetard ? t('orderStatus.timing.late') : t('orderStatus.timing.imminent')}
     </div>
   );
 }
@@ -207,6 +213,8 @@ export function titreSuivi(order, t) {
   // Un livreur nommé est déjà en route vers le commerce : plus « on attend un livreur » (audit du 19/10, AO-14).
   if (status === 'pret' && orderType === 'delivery' && order.driverName) return t('orderStatus.grand.pretDeliveryDriver', { name: prenomLivreur(order) });
   if (status === 'pret') return t(orderType === 'delivery' ? 'orderStatus.grand.pretDelivery' : 'orderStatus.grand.pretPickup');
+  // Programmée et acceptée d'avance : pas « C'est en cuisine » des jours durant (G153, programmeeLointaine).
+  if (status === 'preparation' && programmeeLointaine(order)) return t('orderStatus.grand.programmee', { date: formatDateTime(new Date(order.scheduledFor).getTime()) });
   if (['nouveau', 'preparation', 'livraison'].includes(status)) return t(`orderStatus.grand.${status}`);
   return statusLabel(status, orderType, t, true);
 }
@@ -273,7 +281,8 @@ export function ProchaineEtape({ order }) {
   }
   // Close après une attente sans client (livraison « client absent », à emporter non récupérée, audit du 19/10, shop-206) :
   // la ligne de l'incident dit déjà que la commande reste due (Orders.jsx) ; « un paiement éventuel est remboursé » serait faux.
-  if (status === 'annule' && ['client_absent', 'pickup_not_collected'].includes(order.deliveryIncident)) return null;
+  // Close d'office faute d'avoir été marquée remise (G26, pickupAutoClosed) : la ligne de l'incident le dit, sans parler d'argent.
+  if (status === 'annule' && (order.pickupAutoClosed || ['client_absent', 'pickup_not_collected'].includes(order.deliveryIncident))) return null;
   if (status === 'annule' && order.expiredUnaccepted) {
     return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_expired_on_site' : 'orderStatus.next_expired')}</div>;
   }
@@ -281,6 +290,8 @@ export function ProchaineEtape({ order }) {
   // juste dessous, « une commande non réceptionnée reste due » (orders.noCourier_incident_client_absent, conforme aux CGU).
   // Le texte de l'incident, affiché partout où la commande l'est (Orders.jsx), suffit : pas de note « remboursé ».
   if (status === 'annule' && order.deliveryIncident === 'client_absent') return null;
+  // Absent au contrôle d'âge (G154, 06/11/2026) : pas de remboursement, la ligne de l'issue le dit (Orders.jsx).
+  if (status === 'annule' && order.ageCheck === 'refused_absent') return null;
   if (status === 'nouveau') cle = 'next_nouveau';
   else if (status === 'preparation') cle = livraison ? 'next_preparation_delivery' : 'next_preparation_pickup';
   else if (status === 'pret') cle = livraison ? 'next_pret_delivery' : 'next_pret_pickup';
@@ -318,12 +329,23 @@ export function heureArrivee(order) {
   if (status === 'pret' && orderType === 'pickup') return null;
   const quand = new Date(estimatedDeliveryAt).getTime();
   if (!Number.isFinite(quand)) return null;
-  return { time: formatTime(quand), min: Math.max(0, Math.round((quand - Date.now()) / 60000)) };
+  // L'heure promise est gardée telle quelle (le serveur la garde aussi : les compteurs de retard en dépendent) ; passée de
+  // plus de 2 minutes, le titre ne la montre plus (G53) : « Chez toi vers 19:35 » à 19:52 au-dessus de « En route vers
+  // toi » contredisait la carte, qui donne les minutes du livreur en direct.
+  return { time: formatTime(quand), min: Math.max(0, Math.round((quand - Date.now()) / 60000)), late: Date.now() - quand > RETARD_DIT_MS };
 }
 export function TitreHeure({ order, className }) {
   const { t } = useLanguage();
   const heure = heureArrivee(order);
   if (!heure) return null;
+  if (heure.late) {
+    return (
+      <>
+        <h2 className={className}>{t('orderStatus.grand.enRetard')}</h2>
+        <div className="small suivi-heure-sous">{titreSuivi(order, t)}</div>
+      </>
+    );
+  }
   const [avant, apres] = t(order.orderType === 'pickup' ? 'orderStatus.grand.pretVers' : 'orderStatus.grand.arriveVers', { time: '\u0000' }).split('\u0000');
   return (
     <>

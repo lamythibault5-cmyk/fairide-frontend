@@ -205,6 +205,29 @@ function preparerHaptique() {
   }, { capture: true, passive: true });
 }
 
+/* L'ÉCRAN RESTE ALLUMÉ SUR LES COMMANDES, DANS L'APP (bug hunt avant GO, G43 ; décision d'Owen, 2026-11-06). navigator.wakeLock
+ * manque souvent dans la vue web Android : le téléphone du comptoir se verrouillait, la sonnerie de la page se taisait. Le
+ * greffon EcranAllume (android/…/EcranAllumePlugin.java, ios/App/App/FairideViewController.swift) garde l'écran allumé tant
+ * qu'au moins une page le demande (un compteur : la page Commandes et l'écran du terminal). Rend la fonction qui le rend, ou
+ * null sans le greffon (site, version plus ancienne de l'app) : l'appelant garde alors navigator.wakeLock. */
+let ecranAllume = null; // enregistré une seule fois, comme RetourNatif
+let demandesEcranAllume = 0;
+export function garderEcranAllume() {
+  if (!estNatif() || !Capacitor.isPluginAvailable('EcranAllume')) return null;
+  const envoyer = (actif) => {
+    try { ecranAllume ||= registerPlugin('EcranAllume'); ecranAllume.activer({ actif }).catch(() => {}); } catch { /* greffon absent */ }
+  };
+  demandesEcranAllume += 1;
+  if (demandesEcranAllume === 1) envoyer(true);
+  let rendu = false;
+  return () => {
+    if (rendu) return;
+    rendu = true;
+    demandesEcranAllume -= 1;
+    if (demandesEcranAllume === 0) envoyer(false);
+  };
+}
+
 /* LE BALAYAGE RETOUR D'IOS, COUPÉ PENDANT QU'UNE FENÊTRE EST OUVERTE (2026-10-27, fondateur : « dans Mon compte, les écrans
  * n'ont pas le retour par balayage »). Le balayage depuis le bord gauche est celui de WebKit (FairideViewController.swift) :
  * il remonte l'historique, et ignore une feuille dessinée par la page. Feuille ouverte, il reculait SOUS elle (ou ne
@@ -411,13 +434,17 @@ export async function demarrerNatif(historique) {
  * bêtes, une app de livraison demande la position ») : la question du système part du bouton qui en a besoin
  * (« Trouver mes restaurants », l'interrupteur « Disponible ») ; sa phrase à nous est celle de l'Info.plist. `delai` : l'accueil
  * attend 6 s, pas 10, avant de proposer le code postal (il attend sur l'écran de chargement, plus sur un bouton figé). */
-export async function demanderPosition({ delai = 10000 } = {}) {
+/* `precise` (G42, 2026-11-06) : pour un LIVREUR, la position exacte. Sur Android 12 et plus, ne demander que la position
+ * approximative laissait la plupart des livreurs sur « approximative » : en livraison, le greffon de suivi en arrière-plan
+ * (suivrePositionCourse) exige la position exacte et refusait de démarrer — aucune position envoyée de toute la course. Le
+ * client, lui, garde l'approximative : elle suffit pour trouver les commerces proches. */
+export async function demanderPosition({ delai = 10000, precise = false } = {}) {
   const options = { enableHighAccuracy: false, timeout: delai, maximumAge: 5 * 60 * 1000 };
   if (estNatif()) {
     try {
       const { Geolocation } = await import('@capacitor/geolocation');
       let droit = await Geolocation.checkPermissions();
-      if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: ['coarseLocation'] });
+      if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: [precise ? 'location' : 'coarseLocation'] });
       if (droit.location !== 'granted' && droit.coarseLocation !== 'granted') return null;
       const p = await Geolocation.getCurrentPosition(options);
       return { lat: p.coords.latitude, lng: p.coords.longitude };
@@ -502,16 +529,26 @@ export async function suivrePositionCourse({ arrierePlan = false, titre, message
   return () => navigator.geolocation.clearWatch(watchId);
 }
 
+/* L'erreur reçue par `onErreur` de suivrePositionCourse est-elle un REFUS (G42) ? Le greffon répond NOT_AUTHORIZED (position
+ * bloquée, ou seulement approximative sur Android), le navigateur le code 1 ; un GPS lent ou muet (codes 2 et 3) n'en est pas
+ * un. Pas d'erreur du tout : pas de géolocalisation sur cet appareil, compté comme un refus. */
+export function refusPosition(e) {
+  return !e || e.code === 'NOT_AUTHORIZED' || e.code === 1;
+}
+
 /* État de l'autorisation de position, SANS rien demander : 'granted' | 'denied' | 'prompt'. Sert à l'écran qui bloque les
  * courses d'un livreur tant qu'elle manque (components/livreur/PositionRequise.jsx). 'denied' veut dire que le système ne
  * reposera plus la question : seule la personne peut la rouvrir dans ses réglages. Un navigateur sans l'API Permissions
- * répond 'prompt' — la demande réelle (demanderPosition) tranchera. */
-export async function etatPosition() {
+ * répond 'prompt' — la demande réelle (demanderPosition) tranchera.
+ * `precise` (livreurs, G42) : sur Android, la seule position approximative rend 'approximate' — elle ne suffit pas au suivi
+ * d'une livraison (voir demanderPosition). Sur iPhone, l'état exact/approximatif n'est pas lisible ici : 'granted'. */
+export async function etatPosition({ precise = false } = {}) {
   if (estNatif()) {
     try {
       const { Geolocation } = await import('@capacitor/geolocation');
       const d = await Geolocation.checkPermissions();
-      if (d.location === 'granted' || d.coarseLocation === 'granted') return 'granted';
+      if (d.location === 'granted') return 'granted';
+      if (d.coarseLocation === 'granted') return precise && plateforme() === 'android' ? 'approximate' : 'granted';
       return d.location === 'denied' ? 'denied' : 'prompt';
     } catch { return 'prompt'; }
   }
@@ -519,6 +556,18 @@ export async function etatPosition() {
     const p = await navigator.permissions?.query({ name: 'geolocation' });
     return p?.state || 'prompt';
   } catch { return 'prompt'; }
+}
+
+/* Ouvre la page de Fairride dans les réglages du téléphone (G42) : la position exacte, ou une position bloquée, ne se
+ * rétablit que là. Par le greffon de suivi en arrière-plan, déjà dans la coque (pas de greffon de plus, donc pas de nouvelle
+ * version des stores). Rend false hors de l'application ou si le greffon manque : l'écran garde alors la consigne écrite. */
+export async function ouvrirReglagesAppli() {
+  if (!estNatif()) return false;
+  try {
+    const { registerPlugin } = await import('@capacitor/core');
+    await registerPlugin('BackgroundGeolocation').openSettings();
+    return true;
+  } catch { return false; }
 }
 
 /* Connexion Apple / Google DANS L'APPLICATION (feuille native du système).

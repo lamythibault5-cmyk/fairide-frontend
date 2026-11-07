@@ -7,7 +7,8 @@ import { chargerGoogleSignIn } from '../googleSignIn';
 import { estNatif, connexionFournisseur } from '../natif';
 import { lireBienvenue } from '../bienvenue';
 import BoutonsConnexionNative, { LogoGoogle, LogoApple } from '../components/BoutonsConnexionNative';
-import { appleWebDisponible } from '../appleSignInWeb';
+import { appleWebDisponible, prechargerApple } from '../appleSignInWeb';
+import RecuperationSms from '../components/RecuperationSms';
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
@@ -147,8 +148,12 @@ export default function Auth() {
   const [verifSociete, setVerifSociete] = useState(null); // { valid, legalName, address, companyNumber, vatNumber } | null — affiché sous le numéro (VerifSociete, shop-2)
   // Services que le commerce veut proposer ; enregistrés à la création du restaurant (fairide_resto_hint).
   // pickupPaymentMode : 'on_site' (0 % de commission) | 'online' | 'both' (10 % sur les commandes payées en ligne).
-  // Proposé par défaut : « Au choix du client » avant GO, « En ligne uniquement » après (launch.js › modeEmporterParDefaut).
+  // Proposé par défaut : « Au choix du client », avant comme après le GO (launch.js › modeEmporterParDefaut, G7/G98) : « En
+  // ligne uniquement » demande des paiements actifs, qu'un commerce qui s'inscrit n'a pas encore ; il le choisit ensuite dans
+  // Mon compte. deliveryMode reste 'fairide' : un commerce démarre toujours avec les livreurs Fairride (G127).
   const [services, setServices] = useState(() => ({ delivery: true, deliveryMode: 'fairide', pickup: true, pickupPaymentMode: modeEmporterParDefaut() }));
+  // Un brouillon d'avant peut encore porter « en ligne » (G7) : il compte « au choix », le seul mode possible sans paiements.
+  const modeEmporter = services.pickupPaymentMode === 'on_site' ? 'on_site' : 'both';
   // Type de cuisine (liste complète + « Autre » à préciser), retenu pour la création du restaurant et donné en
   // contexte à la lecture IA du menu.
   // Ce que le commerce vend (ChoixSpecialites.jsx, fondateur, 2026-10-22) : jusqu'à 7 spécialités, la première est son type
@@ -258,7 +263,7 @@ export default function Auth() {
       email: email.trim(), emailSecondary: emailSecondaryOuvert ? emailSecondary.trim() : '',
       website: fiche.website || '',
       offersDelivery: !!services.delivery, offersPickup: !!services.pickup,
-      pickupPaymentMode: services.pickup ? services.pickupPaymentMode : undefined,
+      pickupPaymentMode: services.pickup ? modeEmporter : undefined,
       deliveryMode: services.deliveryMode === 'restaurant' ? 'restaurant' : 'fairide',
       // Commerce trouvé dans la recherche, ou saisi à la main parce qu'il n'y était pas : dans les deux
       // cas l'inscription aboutit à un vrai commerce, la provenance n'est qu'une mention pour l'admin.
@@ -930,6 +935,9 @@ export default function Auth() {
     </div>
   );
 
+  // Le script d'Apple dès l'affichage du bouton (G148, 2026-11-06) : chargé au toucher, Safari bloquait sa fenêtre.
+  useEffect(() => { prechargerApple(); }, []);
+
   // Arrivée depuis l'accueil de l'application (pages/app/Bienvenue.jsx) avec un jeton Apple ou Google déjà obtenu :
   // on le traite une fois, comme si le bouton avait été touché ici — pas de second geste à demander.
   const fedRecu = useRef(false);
@@ -999,7 +1007,8 @@ export default function Auth() {
             // Jeton Google expiré (il vit une heure) ou refusé : le bouton Google est sur la première étape, on y va le temps de
             // reprendre un jeton, puis on revient à l'étape où l'on était (retenirGoogle) ; le reste est gardé (coupure 9 de
             // maquettes/progression, 2026-10-30 : avant, tout le parcours était à refaire).
-            if (/google|token|jeton|expir/i.test(err.message || '') && err.message !== 'INCOMPLETE_PROFILE') { etapeAvantGoogle.current = step; oublierGoogle(); setStep(0); toast(t('auth.googleExpired'), 'erreur'); }
+            // Le code du serveur (FED_TOKEN_INVALID, G151) et non le texte : « Erreur serveur lors de la connexion Google » passait pour un jeton expiré.
+            if (err.code === 'FED_TOKEN_INVALID') { etapeAvantGoogle.current = step; oublierGoogle(); setStep(0); toast(t('auth.googleExpired'), 'erreur'); }
             // Profil refusé par le serveur : on affiche sa raison (« numéro d'entreprise requis »…), pas le code interne.
             else if (err.message === 'INCOMPLETE_PROFILE') toast(err.data?.detail || t('auth.errGoogleIncomplete'), 'erreur');
             else throw err;
@@ -1186,6 +1195,8 @@ export default function Auth() {
                   {forgotLoading ? t('common.loading') : t('auth.sendLink')}
                 </button>
               </form>
+              {/* Plus accès à l'adresse (faute de frappe, relais Apple) : le numéro prouvé par SMS (G52 / G147). */}
+              <RecuperationSms classeBouton="btn-gold btn-block" />
               <button className="btn-ghost" style={{ marginTop: 10 }} onClick={() => setForgotMode(false)}>
                 {t('auth.backToLogin')}
               </button>
@@ -1475,20 +1486,23 @@ export default function Auth() {
                   <span className="titre-groupe" id="auth-services-titre">{t('auth.servicesTitle')}</span>
                   <p className="small" style={{ margin: '0 0 6px' }}>{t('auth.servicesHelp')}</p>
                   <label className="service-option"><input type="checkbox" checked={services.delivery} onChange={(e) => setServices((s) => ({ ...s, delivery: e.target.checked }))} /> <span><Icone nom="velo" taille={16} className="icone-texte" />{' '}{t('auth.serviceDelivery')}</span></label>
+                  {/* Plus de choix « avec mon équipe » ici (G127, 2026-11-06) : le serveur l'ignorait (le commerce démarre toujours avec
+                      les livreurs Fairride) et rien ne lui disait de signer la déclaration. Il se choisit dans Mon commerce › Livraison. */}
                   {services.delivery && (
                     <div className="service-suboptions">
-                      <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'fairide'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'fairide' }))} /> <span>{t('auth.serviceDeliveryFairide')}</span></label>
-                      <label className="service-option"><input type="radio" name="deliveryMode" checked={services.deliveryMode === 'restaurant'} onChange={() => setServices((s) => ({ ...s, deliveryMode: 'restaurant' }))} /> <span>{t('auth.serviceDeliveryOwn')}</span></label>
+                      <p className="small" style={{ margin: 0 }}>{t('auth.serviceDeliveryOwnLater')}</p>
                     </div>
                   )}
                   <label className="service-option"><input type="checkbox" checked={services.pickup} onChange={(e) => setServices((s) => ({ ...s, pickup: e.target.checked }))} /> <span><Icone nom="maison" taille={16} className="icone-texte" />{' '}{t('auth.servicePickup')}</span></label>
                   {services.pickup && (
-                    // Comment l'à emporter est payé décide de la commission : sur place = 0 %, en ligne ou au choix = 10 % sur les
-                    // commandes payées en ligne.
+                    // Comment l'à emporter est payé décide de la commission : sur place = 0 %, au choix = 10 % sur les commandes payées
+                    // en ligne. « En ligne uniquement » n'est plus proposé ici (G7) : il demande des paiements actifs, et le serveur
+                    // inscrit de toute façon « au choix » sans eux.
                     <div className="service-suboptions" role="group" aria-label={t('accountUi.pickupPayTitle')}>
-                      {[['on_site', 'pickupPayOnSiteOnly'], ['online', 'pickupPayOnline'], ['both', 'pickupPayBoth']].map(([v, cle]) => (
-                        <label key={v} className="service-option"><input type="radio" name="pickupPaymentMode" checked={services.pickupPaymentMode === v} onChange={() => setServices((s) => ({ ...s, pickupPaymentMode: v }))} /> <span>{t(`accountUi.${cle}`)}{services.pickupPaymentMode === v && <span className="small" style={{ display: 'block' }}>{t(`accountUi.${cle}Text`)}</span>}</span></label>
+                      {[['on_site', 'pickupPayOnSiteOnly'], ['both', 'pickupPayBoth']].map(([v, cle]) => (
+                        <label key={v} className="service-option"><input type="radio" name="pickupPaymentMode" checked={modeEmporter === v} onChange={() => setServices((s) => ({ ...s, pickupPaymentMode: v }))} /> <span>{t(`accountUi.${cle}`)}{modeEmporter === v && <span className="small" style={{ display: 'block' }}>{t(`accountUi.${cle}Text`)}</span>}</span></label>
                       ))}
+                      <p className="small" style={{ margin: '4px 0 0' }}>{t('auth.pickupPayOnlineLater')}</p>
                     </div>
                   )}
                   {/* UNE PHRASE (12 oct. 2026, test au téléphone) : ce que Fairride prend. Plus d'abonnement depuis le 04/11/2026

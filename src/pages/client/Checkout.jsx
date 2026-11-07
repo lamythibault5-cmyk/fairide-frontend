@@ -19,7 +19,7 @@ import ErreurChargement from '../../components/ErreurChargement';
 import EtatVide from '../../components/EtatVide';
 import { CHEMIN_COMMANDES_RECENTES, lireCache } from '../../cacheDonnees';
 import { distanceLivraisonKm } from '../../livraison';
-import { ligneIndisponible, lignesIndisponibles } from '../../panierDisponible';
+import { motifLigne, lignesIndisponibles } from '../../panierDisponible';
 import { DELIVERY_INSTRUCTION_OPTIONS, deliveryInstructionLabel } from '../../orderStatus';
 import Icone from '../../components/Icone';
 import ChoixPastilles from '../../components/ChoixPastilles';
@@ -30,7 +30,7 @@ import VerifTelephone, { telephoneAVerifier } from '../../components/VerifTeleph
 import AddressSearch from '../../components/AddressSearch';
 import ChoixAdresse from '../../components/ChoixAdresse';
 import useLoinDeLAdresse from '../../hooks/useLoinDeLAdresse';
-import { getScheduleDateOptions, getScheduleTimeOptions } from '../../scheduleUtils';
+import { getScheduleDateOptions, getScheduleTimeOptions, dateKey } from '../../scheduleUtils';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { serviceOuvert, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import CodePromoCheckout from '../../components/client/CodePromoCheckout';
@@ -143,6 +143,11 @@ export default function Checkout() {
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
+  // Programmée pour un jour suivant : un plat épuisé aujourd'hui seulement se commande (G165, même règle que le serveur).
+  // Jour de service qui bascule à 6 h, comme le serveur (sqlJourService) : 01:30 demain appartient encore au service de ce soir.
+  const jourService = (d) => dateKey(new Date(d.getTime() - 6 * 3600e3));
+  const jourPlusTard = scheduleEnabled && !!scheduleDate
+    && jourService(new Date(`${scheduleDate}T${scheduleTime || '12:00'}`)) > jourService(new Date());
   // Les jours et créneaux suivent les horaires du commerce (scheduleUtils.js) : recalculés une fois la fiche chargée.
   const ouverture = restaurant ? { hours: restaurant.hours, closures: restaurant.closures, open: restaurant.open, pausedUntil: restaurant.pausedUntil } : null;
   const dateOptions = useMemo(() => getScheduleDateOptions(7, libellesDates, ouverture), [restaurant]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -270,16 +275,26 @@ export default function Checkout() {
   useLancement();
   const [livraisonDispo, setLivraisonDispo] = useState(null);
   const verifierLivraison = !!restaurant?.offersDelivery && serviceOuvert('delivery', user) && !exempteLancement(user);
-  // Distance à vol d'oiseau : le serveur écarte les vélos trop loin (audit du 19/10, discovery-09).
-  const kmLivraison = distanceLivraisonKm(restaurant, user);
+  // Distance à vol d'oiseau : le serveur écarte les vélos trop loin (audit du 19/10, discovery-09). Celle du devis quand il est
+  // là (pré-GO 2026-11-06, G112) : le serveur la calcule sur l'adresse TAPÉE ici, celle du compte pouvait être ailleurs.
+  const kmDevis = fulfillmentType === 'delivery' && devis?.order?.distanceKm != null ? Number(devis.order.distanceKm) : null;
+  const kmLivraison = kmDevis ?? distanceLivraisonKm(restaurant, user);
+  // Le code postal de livraison, une fois complet (G68) : une commune suspendue ne reçoit plus de livraison.
+  const cpLivraison = /^\d{4}$/.test(addressPostalCode.trim()) ? addressPostalCode.trim() : '';
+  const villeLivraison = cpLivraison ? addressCity.trim() : '';
   useEffect(() => {
     if (!verifierLivraison) { setLivraisonDispo(null); return undefined; }
     let fini = false;
-    const lire = () => livraisonDisponible(restaurantId, kmLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
+    const lire = () => livraisonDisponible(restaurantId, kmLivraison, cpLivraison, villeLivraison).then((d) => { if (!fini && d) setLivraisonDispo(d.available); });
     lire();
     const id = setInterval(() => { if (document.visibilityState === 'visible') lire(); }, 60000);
     return () => { fini = true; clearInterval(id); };
-  }, [verifierLivraison, restaurantId, kmLivraison]);
+  }, [verifierLivraison, restaurantId, kmLivraison, cpLivraison, villeLivraison]);
+  // Devis refusé faute de livreur (pré-GO 2026-11-06, G113) : la barre le dit tout de suite et propose l'à emporter, au lieu
+  // d'attendre la relecture de la minute pendant que le client retape « Commander et payer ». Même chose au paiement, plus bas.
+  useEffect(() => {
+    if (devis?.erreur?.code === 'NO_COURIER_AVAILABLE' && fulfillmentType === 'delivery') setLivraisonDispo(false);
+  }, [devis]); // eslint-disable-line react-hooks/exhaustive-deps -- seulement quand le devis change
   /* PLUS DE BASCULE SILENCIEUSE (audit du 19/10, checkout-02). Le contrôle de chaque minute passait la commande en « À emporter »
    * sans un mot, en plein paiement : un client qui ne relisait pas payait un retrait qu'il ne ferait pas. Le mode choisi reste ;
    * la barre dit qu'aucun livreur n'est libre et propose « Passer à l'emporter » (le client décide), et un message le signale
@@ -513,7 +528,7 @@ export default function Checkout() {
       if (caseManquante) { caseManquante.closest('.co-case').scrollIntoView({ behavior: defilement(), block: 'center' }); caseManquante.focus({ preventScroll: true }); }
       return;
     }
-    if (lignesIndisponibles(cart.lines, restaurant?.menu).length) { toast(t('checkout.removeUnavailable'), 'erreur'); return; }
+    if (lignesIndisponibles(cart.lines, restaurant?.menu, { jourPlusTard }).length) { toast(t('checkout.removeUnavailable'), 'erreur'); return; }
     // Le toucher qui engage se sent tout de suite, la confirmation (« succès ») viendra avec la réponse (gestes.js).
     vibrer('valider');
     setPlacing(true);
@@ -573,6 +588,8 @@ export default function Checkout() {
         if (APPLI) { setCasesAvant(false); setSousEcran('avantCommande'); } else setFenetreTel(true);
         return;
       }
+      // Plus de livreur libre (G113) : la barre passe tout de suite à « Passer à l'emporter ».
+      if (e.code === 'NO_COURIER_AVAILABLE') setLivraisonDispo(false);
       toast(e.message, 'erreur');
     } finally {
       setPlacing(false);
@@ -623,9 +640,22 @@ export default function Checkout() {
         }
       }
     } catch (e) {
-      toast(e.message, 'erreur');
       setOuverturePaiement(false);
       setPaying(false);
+      /* LA PAGE DE PAIEMENT DÉJÀ OUVERTE A ÉTÉ PAYÉE (pré-GO 2026-11-06, G20) : le serveur ne rouvre rien. Payée : l'écran de
+       * confirmation ; paiement encore en cours à la banque : le même écran, qui attend et redemande au serveur. */
+      if (e.code === 'ALREADY_PAID' || e.code === 'PAYMENT_IN_PROGRESS') {
+        commandeTermineeRef.current = true;
+        oublierSaisiePaiement(restaurantId);
+        if (e.code === 'ALREADY_PAID') cart.clear(); else cart.stashForPayment(order.id);
+        navigate(`/order-success?order=${order.id}`, { replace: true });
+        return;
+      }
+      toast(e.message, 'erreur');
+      /* COMMANDE DÉJÀ CLOSE (annulée à 45 min sans paiement, ou commerce fermé ; pré-GO 2026-11-06, G40) : la carte ne servait
+       * plus à rien, ses trois boutons échouaient. Le panier reste et repart en une NOUVELLE commande au prochain clic. */
+      if (e.code === 'ORDER_CLOSED') { cart.nouvelleDemande(); setPendingOrder(null); return; }
+      if (e.code === 'NO_COURIER_AVAILABLE') setLivraisonDispo(false);
       // Échec sur le chemin direct : la commande existe déjà côté serveur, non payée. On montre la carte, qui permet
       // de réessayer ou d'annuler (un nouveau clic sur la barre renverrait d'ailleurs cette même commande, voir
       // commandeExistante dans le backend).
@@ -648,7 +678,16 @@ export default function Checkout() {
       if (modifier) window.scrollTo({ top: 0, behavior: defilement() });
       if (pendingOrder.balanceUsed > 0) refreshUser().catch(() => {});
     } catch (e) {
+      // Payée entre-temps (G20) : rien à annuler ici, l'écran de confirmation la montre (elle reste annulable de Mes commandes).
+      if (e.code === 'ALREADY_PAID') {
+        commandeTermineeRef.current = true; oublierSaisiePaiement(restaurantId); cart.clear();
+        toast(e.message);
+        navigate(`/order-success?order=${pendingOrder.id}`, { replace: true });
+        return;
+      }
       toast(e.message, 'erreur');
+      // Déjà close (G40) : la carte part, le panier repart en une nouvelle commande.
+      if (e.code === 'ORDER_CLOSED') { cart.nouvelleDemande(); setPendingOrder(null); }
     } finally {
       setCancelling(false);
     }
@@ -775,10 +814,11 @@ export default function Checkout() {
                 <Link to="/panier" className="co-modifier">{t('checkout.modifier')}</Link>
               </div>
             )}
-            {Object.entries(cart.lines).filter(([, line]) => ligneIndisponible(line, restaurant.menu)).map(([lineKey, line]) => (
-              // Plat retiré de la carte ou en rupture : la ligne le dit (avant, elle disparaissait et le serveur refusait).
+            {Object.entries(cart.lines).map(([lineKey, line]) => [lineKey, line, motifLigne(line, restaurant.menu, { jourPlusTard })]).filter(([, , motif]) => motif === 'indisponible' || motif === 'options').map(([lineKey, line, motif]) => (
+              // Plat retiré de la carte ou en rupture : la ligne le dit (avant, elle disparaissait et le serveur refusait). Ses choix
+              // qui ne respectent plus les règles du plat : « à refaire » (G166).
               <div key={lineKey} className="co-ligne co-ligne--indispo">
-                <span className="co-ligne-nom">{line.name}<span className="ligne-indispo">{t('checkout.unavailableToday')}</span></span>
+                <span className="co-ligne-nom">{line.name}<span className="ligne-indispo">{t(motif === 'options' ? 'checkout.optionsToRedo' : 'checkout.unavailableToday')}</span></span>
                 <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(lineKey)}>{t('checkout.removeLine')}</button>
               </div>
             ))}
@@ -1034,7 +1074,7 @@ export default function Checkout() {
             {/* Le code ami de l'ami parrainé (backend routes/orders.js) : appliqué tout seul ; sinon le devis dit pourquoi, pour
                 que les 5 € promis ne semblent pas perdus (maquettes/parrainage-visible). */}
             {devisValide?.codeAmi && !devisValide.codeAmi.applique && (
-              <p className="small co-code-ami">{t(devisValide.codeAmi.raison === 'sur_place' ? 'codeAmi.panierSurPlace' : 'codeAmi.panierMinimum')}</p>
+              <p className="small co-code-ami">{t({ sur_place: 'codeAmi.panierSurPlace', numero_sms: 'codeAmi.panierNumeroSms' }[devisValide.codeAmi.raison] || 'codeAmi.panierMinimum')}</p>
             )}
             {/* Les vendeurs (trois vendeurs, C2) : ce ticket est le dernier écran avant de payer quand le total ne bouge pas, il
                 dit donc à qui le client achète. En une ligne ; le détail (et les frais de système de Fairide, compris dans la
@@ -1305,7 +1345,8 @@ export default function Checkout() {
                   {pendingOrder.deliveryDiscount > 0 && (
                     <div className="line"><span><Icone nom="velo" taille={14} /> {t('checkout.deliveryDiscountLine', { name: restaurant.name })}</span><span>-{euros(pendingOrder.deliveryDiscount)}</span></div>
                   )}
-                  {pendingOrder.deliveryBy !== 'restaurant' && <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>}
+                  {/* Pas de frais de système sous une livraison offerte : le client n'en paie rien (même règle que le ticket, G116). */}
+                  {pendingOrder.deliveryBy !== 'restaurant' && Number(pendingOrder.deliveryFee) - Number(pendingOrder.deliveryDiscount || 0) > 0 && <div className="line"><span>{t('checkout.serviceFeeLine')}<span className="small" style={{ display: 'block', color: 'var(--ink-soft)' }}>{t('conformite.sellerServiceFee')}</span></span><span>{euros(pendingOrder.serviceFee + (pendingOrder.serviceFeeVat || 0))}</span></div>}
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}

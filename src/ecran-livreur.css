@@ -86,6 +86,8 @@
 .ecl-partage i { flex: none; width: 9px; height: 9px; margin-top: 4px; border-radius: 50%; background: var(--lime); }
 .ecl-partage.ok i { animation: ecl-pouls 2s ease-out infinite; }
 .ecl-partage.attention i { background: transparent; border: 2px solid #fff; }
+/* « Ouvrir les réglages » quand le téléphone refuse le suivi (G42) : un lien sur l'iris, donc blanc. */
+.ecl-partage .lien-bouton { color: #fff; font-weight: 600; }
 @keyframes ecl-pouls { 0%, 100% { box-shadow: 0 0 0 0 rgba(200, 240, 60, .7); } 60% { box-shadow: 0 0 0 8px rgba(200, 240, 60, 0); } }
 
 /* ---------- Dans la feuille ---------- */

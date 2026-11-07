@@ -88,6 +88,7 @@ export default function AdminOrdersPage() {
   const [detail, setDetail] = useState(null);
   const [mode, setMode] = useViewMode('orders');
   const [kanbanMove, setKanbanMove] = useState(null); // { order, status }
+  const [kanbanAllergie, setKanbanAllergie] = useState(null); // { order, status, motif, allergie } : G65
   // Glisser une commande payée en ligne vers « annulée » : même choix de remboursement et de motif que la fenêtre de la
   // commande (fondateur, 2026-10-21 : le motif dit qui porte le remboursement). null = rien à rembourser par carte.
   const [kanbanRemb, setKanbanRemb] = useState(null);
@@ -314,7 +315,7 @@ export default function AdminOrdersPage() {
             </span>
           </div>
           <div className="small">
-            {o.clientName} → {o.driverName ? tr('adminOrders.deliveredBy', { name: o.driverName }) : (o.orderType === 'delivery' ? tr('adminOrders.noDriverAssigned') : tr('adminOrders.takeaway'))}
+            {o.clientName} → {o.driverName ? tr('adminOrders.deliveredBy', { name: o.driverName }) : (o.orderType === 'delivery' ? (o.deliveryBy === 'restaurant' ? tr('adminOrders.shopDelivers') : tr('adminOrders.noDriverAssigned')) : tr('adminOrders.takeaway'))}
           </div>
           <div className="row" style={{ justifyContent: 'space-between', marginTop: 6, flexWrap: 'wrap', gap: 4 }}>
             <span className="small">
@@ -338,13 +339,31 @@ export default function AdminOrdersPage() {
         danger={kanbanMove?.status === 'annule'}
         onConfirm={async (motif) => {
           try { await api(`/admin/orders/${kanbanMove.order.id}/status`, { method: 'PATCH', token, body: { status: kanbanMove.status, reason: motif, ...(kanbanRemb ? { refund: corpsRemboursement(kanbanRemb) } : {}) } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
-          catch (e) { toast(e.message, 'erreur'); } finally { setKanbanMove(null); }
+          catch (e) {
+            // Demande d'allergie (G65) : l'équipe confirme avoir eu le commerce, puis le même forçage repart avec le même motif.
+            if (e.code === 'ALLERGY_CONFIRM_REQUIRED') setKanbanAllergie({ ...kanbanMove, motif, allergie: e.data?.allergyRequest || '' });
+            else toast(e.message, 'erreur');
+          } finally { setKanbanMove(null); }
         }}
         onCancel={() => setKanbanMove(null)}
         confirmDisabled={motifManquant(kanbanRemb)}
       >
         {kanbanRemb && <ChoixRemboursement valeur={kanbanRemb} onChange={setKanbanRemb} />}
       </ReasonDialog>
+      <ConfirmDialog
+        open={!!kanbanAllergie}
+        title={tr('adminOrders.allergyConfirmTitle')}
+        message={kanbanAllergie ? tr('adminOrders.allergyConfirmBody', { allergy: kanbanAllergie.allergie }) : ''}
+        confirmLabel={tr('adminOrders.allergyConfirmCta')}
+        danger
+        onConfirm={async () => {
+          const m = kanbanAllergie;
+          setKanbanAllergie(null);
+          try { await api(`/admin/orders/${m.order.id}/status`, { method: 'PATCH', token, body: { status: m.status, reason: m.motif, allergyConfirmedByShop: true } }); toast(tr('adminOrders.toastStatusChanged')); load(); }
+          catch (e) { toast(e.message, 'erreur'); }
+        }}
+        onCancel={() => setKanbanAllergie(null)}
+      />
       {/* Annulation groupée : c'est un forçage de statut, le motif est obligatoire (décision DEC-3) ; il vaut pour toute la
           sélection. La réaffectation d'un livreur garde la simple confirmation. */}
       <ReasonDialog
@@ -440,6 +459,8 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       // Réattribution qui demande une confirmation (audit du 19/10/2026, admin-01) : le serveur dit quels contrôles de la
       // prise ne passent pas (vélo trop loin, prix sous le minimum du livreur…) ; l'équipe les lit, puis confirme ou renonce.
       if (e.code === 'CONFIRMATION_REQUISE' && confirmAction.siAConfirmer) suite = () => confirmAction.siAConfirmer(e.message);
+      // Forcer « en préparation » une demande d'allergie (G65) : le serveur demande que l'équipe confirme avoir eu le commerce.
+      else if (e.code === 'ALLERGY_CONFIRM_REQUIRED' && confirmAction.siAllergie) suite = () => confirmAction.siAllergie(e.data?.allergyRequest || '', motif);
       else toast(e.message, 'erreur');
     } finally {
       setBusy(false);
@@ -456,7 +477,15 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       message: tr('adminOrders.confirmChangeStatusBody', { from: ORDER_STATUS_LABELS[detail.status] || detail.status, to: ORDER_STATUS_LABELS[newStatus] || newStatus }),
       successMessage: tr('adminOrders.toastStatusChanged'),
       needsReason: true,
-      run: (motif) => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: newStatus, reason: motif } })
+      run: (motif) => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: newStatus, reason: motif } }),
+      siAllergie: (allergie, motif) => setConfirmAction({
+        title: tr('adminOrders.allergyConfirmTitle'),
+        message: tr('adminOrders.allergyConfirmBody', { allergy: allergie }),
+        confirmLabel: tr('adminOrders.allergyConfirmCta'),
+        danger: true,
+        successMessage: tr('adminOrders.toastStatusChanged'),
+        run: () => api(`/admin/orders/${selected.id}/status`, { method: 'PATCH', token, body: { status: newStatus, reason: motif, allergyConfirmedByShop: true } })
+      })
     });
   }
 
@@ -500,16 +529,26 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
       message: tr('adminOrders.confirmRefundWords', { amount: money(amount), who: libelle(REFUND_RESPONSIBILITY_LABELS, refundResponsibility) }),
       danger: true,
       successMessage: tr('adminOrders.toastRefunded'),
-      messageApres: (rep) => (rep && rep.reprisSurVirement === 0 ? tr('adminOrders.refundNothingReclaimed') : null),
+      // Repris moins que sa part (virement trop petit, reprise refusée : G70, 06/11/2026) : « X € repris sur Y € ».
+      messageApres: (rep) => {
+        if (!rep || typeof rep.reprisSurVirement !== 'number') return null;
+        if (typeof rep.repriseAttendue === 'number') {
+          return rep.reprisSurVirement < rep.repriseAttendue - 0.005
+            ? tr('adminOrders.refundPartReclaimed', { repris: money(rep.reprisSurVirement), attendu: money(rep.repriseAttendue) }) : null;
+        }
+        return rep.reprisSurVirement === 0 ? tr('adminOrders.refundNothingReclaimed') : null; // serveur d'avant le 06/11
+      },
       run: () => api(`/admin/orders/${selected.id}/refund`, { method: 'POST', token, body: { amount, responsibility: refundResponsibility, reason: refundReason.trim() || undefined } })
     });
   }
 
+  // Le statut relu (detail) après un forçage ou une annulation : selected.status restait celui de l'ouverture (G124).
+  const statutVu = (detail || selected).status;
   return createPortal(
     <RecordDrawer
       title={numero(detail) ? `${numero(detail)} · ${selected.restaurantName}` : selected.restaurantName}
       subtitle={detail ? tr('adminOrders.clientLine', { name: detail.clientName, phone: detail.clientPhone ? ` · ${detail.clientPhone}` : '' }) : ''}
-      badge={<span className={`status-badge status-${selected.status}`}>{ORDER_STATUS_LABELS[selected.status] || selected.status}</span>}
+      badge={<span className={`status-badge status-${statutVu}`}>{ORDER_STATUS_LABELS[statutVu] || statutVu}</span>}
       tabs={[
         { key: 'apercu', label: tr('adminCommon.tabOverview') },
         { key: 'historique', label: tr('adminCommon.tabTimeline') },
@@ -530,6 +569,8 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
           {/* Numéros en liens tel: (audit du 19/10, admin-59 ; fondateur : numéros visibles avec tel:) : au téléphone, un tap. */}
           {detail.clientPhone && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.callClient')} <a href={`tel:${detail.clientPhone}`}>{telephoneLisible(detail.clientPhone)}</a></p>}
           {detail.driverName && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.driverLine', { name: detail.driverName, phone: '' })}{detail.driverPhone && <> · <a href={`tel:${detail.driverPhone}`}>{telephoneLisible(detail.driverPhone)}</a></>}</p>}
+          {/* Livrée par l'équipe du commerce : aucun livreur Fairride attendu, pas une course « sans livreur » (audit du 06/11, G175). */}
+          {!detail.driverName && detail.deliveryBy === 'restaurant' && <p className="small" style={{ margin: '2px 0' }}>{tr('adminOrders.shopDelivers')}</p>}
           <p className="small" style={{ margin: '2px 0' }}>
             {tr('adminOrders.paymentLine', { mode: libelle(PAYMENT_MODE_LABELS, detail.paymentMode || 'inconnu') })}
             {detail.isTraining ? ` · ${tr('adminOrders.trainingOrder')}` : ''}
@@ -647,6 +688,7 @@ function OrderDetailModal({ selected, detail, onClose, onChanged }) {
         open={!!confirmAction && !confirmAction.needsReason}
         title={confirmAction?.title}
         message={confirmAction?.message}
+        confirmLabel={confirmAction?.confirmLabel}
         danger={confirmAction?.danger}
         loading={busy}
         onConfirm={() => runConfirmed()}

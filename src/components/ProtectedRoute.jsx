@@ -3,15 +3,10 @@ import { useAuth } from '../context/AuthContext';
 import { usePreviewMode } from '../context/PreviewModeContext';
 import RedirectionRole from './RedirectionRole';
 import { lazyPage } from '../lazyPage';
+import { murTelephone, PAGE_HORS_MUR } from '../murTelephone';
 
-// Commerce et livreur : numéro prouvé avant d'entrer (fondateur, 2026-11-05, voir MurTelephone.jsx). Le client, lui, le prouve à
-// sa première commande. Code reçu par e-mail après un SMS perdu (phoneEmailFallback) : il entre. Ni l'équipe qui agit pour le
-// compte, ni un compte de test, ni la simulation.
+// Commerce et livreur : numéro prouvé avant d'entrer (fondateur, 2026-11-05, voir MurTelephone.jsx ; la règle : murTelephone.js).
 const MurTelephone = lazyPage(() => import('./MurTelephone'));
-function murTelephone(user, role, actingAdminEmail) {
-  return (role === 'restaurant' || role === 'driver') && !user.phoneVerified && !user.phoneEmailFallback
-    && !user.simulation && !user.isTest && !user.isAdmin && !actingAdminEmail;
-}
 
 export default function ProtectedRoute({ role, admin, children }) {
   const { user, role: userRole, roles, deconnexionVoulue, actingAdminEmail } = useAuth();
@@ -35,6 +30,14 @@ export default function ProtectedRoute({ role, admin, children }) {
   // Page d'un autre rôle (audit du 19/10, auth-17) : on le dit, et « Mes casquettes » (Mon compte) permet d'ajouter ce rôle.
   if (!roleOk) return ['client', 'restaurant', 'driver'].includes(role) ? <RedirectionRole role={role} /> : <Navigate to="/" replace />;
   if (admin && !user.isAdmin) return <Navigate to="/" replace />;
-  if (murTelephone(user, role, actingAdminEmail)) return <MurTelephone role={role} />;
+  /* LA PAGE COMMANDES DU COMMERCE RESTE OUVERTE (chasse aux bugs avant GO, G16 ; fondateur, 2026-11-06). Le mur remplaçait tout
+   * /dashboard, alarme, feuille « Nouvelle commande » et liste comprises : la tablette de cuisine connectée à un compte sans
+   * numéro prouvé (le SMS part sur le mobile du titulaire, souvent pas en cuisine) ne voyait plus aucune commande, qui expirait
+   * au bout de 15 minutes et mettait le commerce en pause. Commandes s'ouvre avec un bandeau « Prouve ton numéro »
+   * (DashboardLayout) ; le mur reste sur toutes les autres pages. */
+  if (murTelephone(user, role, actingAdminEmail)) {
+    if (role === 'restaurant' && location.pathname.replace(/\/$/, '') === PAGE_HORS_MUR) return children;
+    return <MurTelephone role={role} />;
+  }
   return children;
 }

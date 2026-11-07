@@ -33,7 +33,7 @@ import { SkeletonCards } from '../../components/Skeleton';
 import { BandeauCommerce, FeuilleCommerce, SegmentGlisse } from '../../components/commerce/BandeauCommerce';
 import { RouteVelo } from '../../components/TeteListe';
 import { vibrer } from '../../gestes';
-import { experienceApp, estNatif } from '../../natif';
+import { experienceApp, estNatif, garderEcranAllume } from '../../natif';
 import { raisonFermeture } from '../../components/commerce/raisonFermeture';
 import MiseEnLigne, { RouteMiseEnLigne, EtapesMiseEnLigne } from '../../components/commerce/MiseEnLigne';
 import useMiseEnLigne from '../../components/commerce/useMiseEnLigne';
@@ -48,6 +48,7 @@ import LivreurCommande from '../../components/commerce/LivreurCommande';
 import PlusDeTemps from '../../components/commerce/PlusDeTemps';
 import ReclamationsCommerce from '../../components/commerce/ReclamationsCommerce';
 import RenouvellementContrat from '../../components/commerce/RenouvellementContrat';
+import TicketsBloques from '../../components/commerce/TicketsBloques';
 import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
 import { telephoneLisible } from '../../validation';
 
@@ -109,6 +110,9 @@ function GestesEquipe({ order, t, occupe, classe, onAction, moi }) {
     );
   }
   if (order.status === 'pret') return <button type="button" className={classe} disabled={occupe} onClick={() => onAction(order.id, 'shop-departed')}>{t('livraisonEquipe.partie')}</button>;
+  // Partie sans passer par « Prête » (chasse aux bogues d'avant GO, 2026-11-06, G33) : le serveur l'accepte depuis la
+  // préparation ; le bouton y est en contour, « Marquer prête » garde la place principale.
+  if (order.status === 'preparation') return <button type="button" className="ec-bouton ec-bouton--contour" disabled={occupe} onClick={() => onAction(order.id, 'shop-departed')}>{t('livraisonEquipe.partie')}</button>;
   if (order.status === 'livraison') return <button type="button" className={classe} disabled={occupe} onClick={() => onAction(order.id, 'shop-delivered')}>{t('livraisonEquipe.livree')}</button>;
   return null;
 }
@@ -140,8 +144,11 @@ export default function OrdersPage() {
      et ne voit plus les commandes : après 15 minutes elles sont annulées (acceptation.js), et le commerce mis en pause.
      Seulement sur cette page (pas tout le tableau de bord : un téléphone laissé sur « Ma carte » viderait sa batterie),
      redemandé au retour sur l'onglet — le navigateur relâche le verrou dès que la page est cachée. Sans l'API (anciens
-     navigateurs), rien ne change. */
+     navigateurs), rien ne change. Dans l'app, le greffon natif d'abord (natif.js, garderEcranAllume, G43) : la vue web
+     Android n'a souvent pas wakeLock. */
   useEffect(() => {
+    const rendreEcran = garderEcranAllume();
+    if (rendreEcran) return rendreEcran;
     if (!('wakeLock' in navigator)) return undefined;
     let verrou = null;
     let actif = true;
@@ -213,6 +220,12 @@ export default function OrdersPage() {
     api(`/restaurants/${restoId}/terminals`, { token }).then((d) => setTerminaux(d.terminals || [])).catch(() => setTerminaux([]));
   }, [restoId, token]);
   useEffect(() => { chargerTerminaux(); }, [chargerTerminaux]);
+  // Relue chaque minute, onglet visible (G67) : la liste n'était lue qu'à l'ouverture, un terminal tombé pendant le service
+  // restait « en ligne » à l'écran toute la soirée.
+  useEffect(() => {
+    const i = setInterval(() => { if (document.visibilityState === 'visible') chargerTerminaux(); }, 60000);
+    return () => clearInterval(i);
+  }, [chargerTerminaux]);
   const terminauxActifs = (terminaux || []).filter((x) => !x.revokedAt);
   const aTerminal = terminauxActifs.length > 0;
   const terminalEnLigne = terminauxActifs.some((x) => x.online);
@@ -233,6 +246,15 @@ export default function OrdersPage() {
       const r = await api(`/orders/${order.id}/print`, { method: 'POST', token, body: { copies } });
       const n = r?.jobIds?.length || copies;
       toast(n > 1 ? t('ordersResto.toastTicketSentN', { n }) : terminalEnLigne ? t('ordersResto.ticketSentTerminal') : t('ordersResto.ticketQueuedOffline'));
+      loadDashboard(restoId);
+    } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoiTicket(null); }
+  }
+  // « Réimprimer » de la carte des tickets abandonnés (TicketsBloques, G62) : chaque commande, au nombre minimum de tickets.
+  async function reimprimerAbandons(liste) {
+    setEnvoiTicket('abandons');
+    try {
+      for (const o of liste) await api(`/orders/${o.id}/print`, { method: 'POST', token, body: { copies: minExemplaires(o) } });
+      toast(t('ordersResto.ticketSentTerminal'));
       loadDashboard(restoId);
     } catch (e) { toast(e.message, 'erreur'); } finally { setEnvoiTicket(null); }
   }
@@ -577,7 +599,7 @@ export default function OrdersPage() {
       )}
       {o.print && <div style={{ margin: '4px 0' }}><EtatImpression p={o.print} t={t} /></div>}
       {!nouvelle && !close && <div className="ec-route-blanc"><RouteSuivi status={o.status} orderType={o.orderType} /></div>}
-      <ListePlats items={o.items} />
+      <ListePlats items={o.items} epuises={nouvelle} />
       <PastilleCouverts order={o} />
       {close && <DeliveryTiming order={o} />}
       <BandeauAllergie order={o} />
@@ -614,6 +636,8 @@ export default function OrdersPage() {
       {/* RETRAIT SANS RIEN TAPER (simulation du 10 oct. 2026) : le commerce compare à l'œil le code que le livreur lui
           montre avec celui-ci ; c'est le livreur qui confirme le retrait de son côté (PATCH /orders/:id/picked-up). */}
       <CodeRetrait order={o} t={t} />
+      {/* Retirée par le livreur avec le code avant « Prête » (G142, décision d'Owen du 06/11/2026) : le commerce le lit. */}
+      {o.retireeAvantPret && o.status === 'livraison' && <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.retireeAvantPret')}</p>}
       {/* Le livreur, une personne : qui vient, s'il est là (et depuis quand), son pourboire. */}
       <LivreurCommande order={o} />
       {o.status === 'pret' && o.orderType === 'delivery' && o.deliveryBy !== 'restaurant' && !o.driverId && (
@@ -846,7 +870,7 @@ export default function OrdersPage() {
           </span>
         )}
         <BadgeEquipe order={o} t={t} />
-        <ListePlats items={o.items} />
+        <ListePlats items={o.items} epuises={nouvelle} />
         <PastilleCouverts order={o} />
         <div className="sp-cmd-paiement">
           {o.paymentMode === 'on_site' && rienAEncaisser(o) && !o.pickupNoShow ? null : o.paymentMode === 'on_site' ? (
@@ -948,6 +972,7 @@ export default function OrdersPage() {
       </BandeauCommerce>
       <FeuilleCommerce>
         {communs}
+        <TicketsBloques commandes={enCours} aTerminal={aTerminal} terminalEnLigne={terminalEnLigne} onReimprimer={reimprimerAbandons} envoi={envoiTicket === 'abandons'} />
         {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
         {!membreEquipe && <RenouvellementContrat restoId={restoId} token={token} toast={toast} lectureSeule={lectureSeule} onChange={() => loadDashboard(restoId)} />}
         <div className="sp-cadre">
@@ -1033,6 +1058,7 @@ export default function OrdersPage() {
       <FeuilleCommerce>
         {nouvellesTriees.length > 0 && <>{enTete(sections[0])}{nouvellesTriees.map((o) => carteCommande(o, { barre: true }))}</>}
         {communs}
+        <TicketsBloques commandes={enCours} aTerminal={aTerminal} terminalEnLigne={terminalEnLigne} onReimprimer={reimprimerAbandons} envoi={envoiTicket === 'abandons'} />
         {!lectureSeule && <ReclamationsCommerce restoId={restoId} token={token} toast={toast} />}
         {!membreEquipe && <RenouvellementContrat restoId={restoId} token={token} toast={toast} lectureSeule={lectureSeule} onChange={() => loadDashboard(restoId)} />}
         {etatListe}

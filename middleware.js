@@ -39,7 +39,8 @@ export default async function middleware(request) {
     });
     return new Response(reponse.body, { status: reponse.status, statusText: reponse.statusText, headers: reponse.headers });
   } catch {
-    return new Response(JSON.stringify({ error: 'Le serveur Fairride ne répond pas. Réessaie dans un instant.' }), {
+    // Un code (G151, 2026-11-06) : le site traduit son propre message (api.js) au lieu d'afficher ce texte en français.
+    return new Response(JSON.stringify({ error: 'Le serveur Fairride ne répond pas. Réessaie dans un instant.', code: 'RELAY_UNREACHABLE' }), {
       status: 502,
       headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' },
     });

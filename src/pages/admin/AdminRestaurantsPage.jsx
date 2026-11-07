@@ -97,19 +97,34 @@ export function BoutonGererCommerce({ id, token, api, toast, tr, className = 'bt
 
 // « Fermer jusqu'à demain » (décision DEC-15) : pour un commerce fermé sans prévenir et injoignable. Il reste visible,
 // affiché fermé, ne prend plus de commande et rouvre tout seul le lendemain à 6 h — sans le retirer du site.
+// CONFIRMER, ET DIRE CE QUI RESTE DÛ (chasse aux bogues d'avant GO, 2026-11-06, G174 et G66). Un toucher de travers arrêtait un
+// commerce qui vendait jusqu'au matin, sans un mot pour lui. La fermeture demande maintenant confirmation ; le serveur prévient
+// le commerce et rend les commandes encore dues avant la réouverture (openOrders), listées sous le bouton, à garder ou annuler
+// une à une depuis Commandes (une tâche les garde aussi). Rouvrir reste immédiat.
 export function BoutonFermerSoir({ detail, token, api, toast, tr, onChanged }) {
   const [busy, setBusy] = useState(false);
+  const [confirmer, setConfirmer] = useState(false);
+  const [dues, setDues] = useState([]);
   const ferme = !!detail.pausedUntil && detail.pausedUntil > Date.now();
   async function basculer() {
     setBusy(true);
     try {
-      await api(`/admin/restaurants/${detail.id}/close-until-tomorrow`, { method: 'PATCH', token, body: ferme ? { reopen: true } : {} });
+      const r = await api(`/admin/restaurants/${detail.id}/close-until-tomorrow`, { method: 'PATCH', token, body: ferme ? { reopen: true } : {} });
       toast(ferme ? tr('adminRestos.reopenedToast') : tr('adminRestos.closedTonightToast'));
+      setDues(!ferme && Array.isArray(r?.openOrders) ? r.openOrders : []);
       onChanged?.();
-    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); }
+    } catch (e) { toast(e.message, 'erreur'); } finally { setBusy(false); setConfirmer(false); }
   }
   const heure = ferme ? new Date(detail.pausedUntil).toLocaleString(undefined, { weekday: 'short', hour: '2-digit', minute: '2-digit' }) : '';
-  return <button type="button" className="btn-outline" disabled={busy} onClick={basculer} title={tr('adminRestos.closeTonightHelp')}>{busy ? '…' : ferme ? tr('adminRestos.reopenNow', { time: heure }) : tr('adminRestos.closeTonight')}</button>;
+  const liste = dues.map((o) => `n° ${o.orderNumber || '?'} (${o.clientName || '?'}, ${o.scheduledFor ? new Date(o.scheduledFor).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : '…'})`).join(', ');
+  return (
+    <>
+      <button type="button" className="btn-outline" disabled={busy} onClick={() => (ferme ? basculer() : setConfirmer(true))} title={tr('adminRestos.closeTonightHelp')}>{busy ? '…' : ferme ? tr('adminRestos.reopenNow', { time: heure }) : tr('adminRestos.closeTonight')}</button>
+      {dues.length > 0 && <p className="small" role="status" style={{ margin: '6px 0 0', flexBasis: '100%' }}>{tr('adminRestos.closedTonightOpenOrders', { list: liste })}</p>}
+      <ConfirmDialog open={confirmer} title={tr('adminRestos.closeTonightConfirmTitle', { name: detail.name || '' })} message={tr('adminRestos.closeTonightConfirmText')}
+        confirmLabel={tr('adminRestos.closeTonight')} danger loading={busy} onCancel={() => setConfirmer(false)} onConfirm={basculer} />
+    </>
+  );
 }
 
 // Le bouton « Facturer l'abonnement » / « Offrir l'abonnement » est parti avec l'abonnement (fondateur, 2026-11-04 : « on

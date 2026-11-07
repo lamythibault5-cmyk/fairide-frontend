@@ -63,7 +63,7 @@ export default function OrderResult({ success }) {
 function ResultatCommande({ success }) {
   const [params] = useSearchParams();
   const orderId = params.get('order');
-  const { token } = useAuth();
+  const { token, user } = useAuth();
   const cart = useCart();
   const { t } = useLanguage();
 
@@ -111,6 +111,14 @@ function ResultatCommande({ success }) {
 
     async function check() {
       polls += 1;
+      /* LE SERVEUR DEMANDE À STRIPE (pré-GO 2026-11-06, G21). Seul le webhook faisait passer la commande payée : s'il tardait ou
+         ne marchait pas, cet écran disait « en cours » et le commerce ne voyait rien pendant 45 minutes. À l'arrivée, à mi-chemin
+         et avant de conclure « en cours », le serveur relit la page de paiement (POST /payments/confirm/:id ; sans effet si le
+         webhook est passé). Un serveur d'avant cette route répond 404 : ignoré, le sondage continue comme avant. */
+      if (polls === 1 || polls === 4 || polls === MAX_POLLS) {
+        await api(`/payments/confirm/${orderId}`, { method: 'POST', token }).catch(() => {});
+        if (cancelled) return;
+      }
       try {
         // ?suivi=1 : la commande vient d'être passée, elle est dans les récentes (tenir la charge, 2026-11-02).
         // /orders/mine plutôt qu'un GET /orders/:id : c'est l'endpoint dont on est certain qu'il
@@ -240,6 +248,11 @@ function ResultatCommande({ success }) {
             </div>
           )}
           <InfosRetrait order={commande} />
+          {/* L'ADRESSE DU REÇU (fondateur, 2026-11-06, G52) : l'adresse n'est pas prouvée à l'inscription, et une faute de frappe
+              envoyait les reçus à un inconnu sans que personne le voie. Payée en ligne seulement : c'est elle qui a un reçu. */}
+          {commande && !surPlace && user?.email && (
+            <p className="small ec-merci-recu">{t('orderResult.recuEnvoye', { email: user.email })} · <Link to="/account">{t('orderResult.recuChanger')}</Link></p>
+          )}
           {/* Le code ami, une fois par téléphone, au moment où l'on est content (maquettes/parrainage-visible, question 5). */}
           {commande && <RappelCodeAmi />}
           </div>

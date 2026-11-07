@@ -18,19 +18,24 @@ const URL_SERVICE = 'ws://localhost:62769';
 const LARGEUR_POINTS = 384; // rouleau de 58 mm à 203 ppp
 const DELAI_MS = 15000;
 
+// « 0 » (refus) : le service ne dit pas pourquoi, le plus souvent un rouleau vide. C'était « unknown », que le serveur abandonne
+// après trois essais (45 s) : chaque commande payée pendant que le papier manquait perdait son ticket. « printer_refused » est un
+// incident qui se règle sur place : le ticket attend et repart au tour suivant (backend impressions.js, chasse aux bugs, G62).
+// Une connexion fermée sans réponse (service arrêté en route) échoue tout de suite au lieu d'attendre les 15 s du délai.
 function envoyer(requete, donnees, delai = DELAI_MS) {
   return new Promise((resolve, reject) => {
-    let ws;
+    let ws; let fini = false; let minuterie = null;
+    const echec = (message, code) => { if (fini) return; fini = true; clearTimeout(minuterie); reject(Object.assign(new Error(message), { code })); };
     try { ws = new WebSocket(URL_SERVICE + requete, 'printer'); } catch (e) { reject(Object.assign(new Error(e.message), { code: 'printer_offline' })); return; }
-    const minuterie = setTimeout(() => { try { ws.close(); } catch { /* rien */ } reject(Object.assign(new Error('Délai dépassé'), { code: 'printer_busy' })); }, delai);
+    minuterie = setTimeout(() => { try { ws.close(); } catch { /* rien */ } echec('Délai dépassé', 'printer_busy'); }, delai);
     ws.onopen = () => ws.send(donnees);
     ws.onmessage = (m) => {
-      clearTimeout(minuterie);
+      if (m.data === '0') echec('Impression refusée par le terminal', 'printer_refused');
+      else if (!fini) { fini = true; clearTimeout(minuterie); resolve(true); }
       try { ws.close(); } catch { /* rien */ }
-      if (m.data === '0') reject(Object.assign(new Error('Impression refusée par le terminal'), { code: 'unknown' }));
-      else resolve(true);
     };
-    ws.onerror = () => { clearTimeout(minuterie); reject(Object.assign(new Error('Service d\'impression Goodcom injoignable'), { code: 'printer_offline' })); };
+    ws.onerror = () => echec('Service d\'impression Goodcom injoignable', 'printer_offline');
+    ws.onclose = () => echec('Service d\'impression Goodcom fermé sans réponse', 'printer_offline');
   });
 }
 
@@ -105,7 +110,7 @@ export function ticketEnImage(lignes, colonnes = 32) {
 }
 
 // Imprime un ticket (lignes du backend) sur l'imprimante du Goodcom. Lève une erreur portant `code`
-// (printer_offline, printer_busy, unknown) — les mêmes codes que ceux que le serveur connaît (impressions.js).
+// (printer_offline, printer_busy, printer_refused) — les mêmes codes que ceux que le serveur connaît (impressions.js).
 export async function imprimerSurGoodcom(lignes, colonnes = 32) {
   const image = ticketEnImage(lignes, colonnes);
   await envoyer('?f=1&t=base&time=10', image);
