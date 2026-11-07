@@ -174,7 +174,9 @@ async function ecouter() {
       clearTimeout(ouverture);
       // Arrêt voulu (arreter) : on s'en va. Un délai d'ouverture dépassé, lui, est un échec comme un autre.
       if ((e?.name === 'AbortError' && !delaiDepasse) || !config) return;
-      if (ouvertA && Date.now() - ouvertA >= FLUX_LONG_MS) { traiterFile(); continue; }
+      // Flux long fermé (coupure du relais, redémarrage de Railway) : rouvert tout de suite, Railway d'abord — un passage par
+      // le relais après un seul échec ne doit pas y rester pour de bon.
+      if (ouvertA && Date.now() - ouvertA >= FLUX_LONG_MS) { source = 0; traiterFile(); continue; }
       // Pas pu l'ouvrir (ou fermé aussitôt) : l'autre adresse au prochain essai.
       source += 1;
       await new Promise((res) => setTimeout(res, attente));
