@@ -18,6 +18,11 @@ import PageLivreur from '../../components/livreur/PageLivreur';
 const quandRemise = (o) => o.deliveredAt || o.createdAt;
 const moisBruxelles = (ts) => new Date(ts).toLocaleDateString('sv-SE', { timeZone: 'Europe/Brussels' }).slice(0, 7);
 const coursePayee = (o) => (o.driverPaidRide !== undefined ? o.driverPaidRide : o.status === 'livre');
+/* CE QUI A VRAIMENT ÉTÉ REÇU (G59, 2026-11-06). Un pourboire ne compte que payé (tipPaid) : tip_amount est posé avant le
+ * paiement, et un pourboire rendu au client remet tipPaid à faux. Le déplacement payé quand le commerce annule
+ * (cancellationPay, registre des gains côté serveur) compte aussi : il manquait au récap alors que Gains le montre. */
+const pourboireRecu = (o) => (o.tipPaid ? Number(o.tipAmount || 0) : 0);
+const montantCourse = (o) => (coursePayee(o) ? Number(o.driverFee ?? o.deliveryFee) : Number(o.cancellationPay || 0));
 
 function currentMonthValue() {
   const d = new Date();
@@ -44,12 +49,12 @@ export default function InvoicesPage() {
   const monthOrders = useMemo(() => {
     if (!orders) return [];
     return orders
-      .filter((o) => coursePayee(o) && moisBruxelles(quandRemise(o)) === month)
+      .filter((o) => (coursePayee(o) || Number(o.cancellationPay) > 0) && moisBruxelles(quandRemise(o)) === month)
       .sort((a, b) => quandRemise(a) - quandRemise(b));
   }, [orders, month]);
   const totals = useMemo(() => ({
-    deliveryFees: monthOrders.reduce((a, o) => a + Number(o.driverFee ?? o.deliveryFee), 0),
-    tips: monthOrders.reduce((a, o) => a + o.tipAmount, 0)
+    deliveryFees: monthOrders.reduce((a, o) => a + montantCourse(o), 0),
+    tips: monthOrders.reduce((a, o) => a + pourboireRecu(o), 0)
   }), [monthOrders]);
 
   // BANDEAU ET FEUILLE, DANS L'APP AUSSI (fondateur, 2026-10-19, finitions-appli.html, section 4) : « ← Mon compte » et le
@@ -113,9 +118,9 @@ export default function InvoicesPage() {
               {monthOrders.map((o) => (
                 <tr key={o.id}>
                   <td>{new Date(quandRemise(o)).toLocaleDateString(getLocale())}</td>
-                  <td>{o.restaurantName}</td>
-                  <td className="num">{euros(Number(o.driverFee ?? o.deliveryFee))}</td>
-                  <td className="num">{o.tipAmount > 0 ? euros(o.tipAmount) : '-'}</td>
+                  <td>{o.restaurantName}{!coursePayee(o) ? ` · ${t('driverPay.kind_cancellation')}` : ''}</td>
+                  <td className="num">{euros(montantCourse(o))}</td>
+                  <td className="num">{pourboireRecu(o) > 0 ? euros(pourboireRecu(o)) : '-'}</td>
                 </tr>
               ))}
             </tbody>
