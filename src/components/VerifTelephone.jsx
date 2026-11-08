@@ -28,7 +28,10 @@ import { telephoneLisible } from '../validation';
  *     dans l'espace commerce ou livreur, sans prouver le numéro (backend phone_email_fallback_at) : un SMS perdu ne bloque ni
  *     une commande ni une inscription. Pas dans Mon compte ni dans le dossier livreur : là, le numéro doit vraiment être
  *     prouvé (l'étape « Vérifie ton mobile » du commerce, l'envoi du dossier).
- * `onFait(user, { credited })` une fois le compte à jour ; `credited` : le code promo de l'inscription, crédité à cette preuve. */
+ * `onFait(user, { credited })` une fois le compte à jour ; `credited` : le code promo de l'inscription, crédité à cette preuve.
+ * `simple` (paiement, fondateur, 2026-11-08, maquettes/bienvenue-partage, version A) : moins de texte. « Entre le code reçu
+ * par SMS », le numéro avec « Changer », six cases, et « Pas reçu ? » seulement après le décompte (puis « Renvoyer le code »
+ * et, au paiement, le code par e-mail). Le code se remplit tout seul quand le SMS arrive (one-time-code). */
 
 // Encore à prouver pour COMMANDER : ni numéro prouvé, ni code reçu par e-mail après un SMS perdu (backend routes/orders.js).
 export function telephoneAVerifier(user) {
@@ -47,7 +50,7 @@ function envoiRecent(user) {
   return dernierEnvoi && user && dernierEnvoi.userId === user.id && Date.now() - dernierEnvoi.at < CODE_RECENT_MS ? dernierEnvoi : null;
 }
 
-export default function VerifTelephone({ auto = false, repliEmail = false, onFait, focusRef }) {
+export default function VerifTelephone({ auto = false, repliEmail = false, onFait, focusRef, simple = false }) {
   const { user, token, refreshUser, requestContactChange, confirmContactChange } = useAuth();
   const { t } = useLanguage();
   const toast = useToast();
@@ -181,6 +184,40 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
         </div>
         <button type="button" className="btn-gold vt-envoyer" disabled={occupe} onClick={envoyerNouveau}>{occupe ? t('common.loading') : t('verifTel.envoyerNouveau')}</button>
         <button type="button" className="lien-bouton vt-lien" onClick={() => { setErreur(''); setEtape(numeroEnCours || masque ? 'saisie' : 'repos'); }}>{t('common.cancel')}</button>
+      </div>
+    );
+  }
+
+  if (simple) {
+    const numero = canal === 'sms' ? (telephoneLisible(masque) || masque || telephoneLisible(user.phone) || user.phone || '') : user.email;
+    const saisir = (e) => { const v = e.target.value.replace(/\D/g, '').slice(0, 6); setCode(v); setErreur(''); if (v.length === 6) confirmer(v); };
+    return (
+      <div className="vt vt-simple">
+        <h3 className="vt-s-titre">{t(canal === 'sms' ? 'verifTel.simpleTitreSms' : 'verifTel.simpleTitreEmail')}</h3>
+        <p className="vt-s-num" aria-live="polite">
+          <span>{etape === 'envoi' ? t('verifTel.envoi') : numero}</span>
+          <button type="button" className="vt-s-changer" disabled={occupe} onClick={() => { setNouveau(''); setErreur(''); setEtape('numero'); }}>{t('verifTel.changerCourt')}</button>
+        </p>
+        <label className="vt-cases" htmlFor="vt-code">
+          <span className="sr-only">{t('verifTel.codeLabel')}</span>
+          <input id="vt-code" ref={champ} className="vt-cases-champ" inputMode="numeric" autoComplete="one-time-code" pattern="[0-9]*"
+            maxLength={6} value={code} disabled={etape === 'envoi'} onChange={saisir} />
+          {Array.from({ length: 6 }, (_, i) => (
+            <span key={i} aria-hidden="true" className={`vt-case${erreur ? ' vt-case--erreur' : ''}${i === code.length && etape === 'saisie' ? ' vt-case--ici' : ''}`}>{code[i] || ''}</span>
+          ))}
+        </label>
+        {erreur && <p className="field-error vt-s-erreur" role="alert">{erreur}</p>}
+        {occupe && etape === 'saisie' && <p className="vt-s-renvoi">{t('common.loading')}</p>}
+        {!occupe && (attenteRenvoi > 0 || etape === 'envoi' ? (
+          etape === 'saisie' && <p className="vt-s-renvoi">{t('verifTel.pasRecuDans', { s: attenteRenvoi })}</p>
+        ) : (
+          <div className="vt-s-liens">
+            <button type="button" className="lien-bouton vt-lien" onClick={() => (numeroEnCours ? envoyerNouveau() : demander())}>{t('verifTel.pasRecuRenvoyer')}</button>
+            {repliEmail && canal === 'sms' && !numeroEnCours && (
+              <button type="button" className="lien-bouton vt-lien" onClick={() => demander({ parEmail: true })}>{t('verifTel.parEmail')}</button>
+            )}
+          </div>
+        ))}
       </div>
     );
   }

@@ -228,13 +228,9 @@ body:has(.fiche-page) .plat-fermer:not(.plat-fermer--sur-photo) ~ .plat-defile .
 .fiche-appli .fiche-ticket small { font-size: 11.5px; line-height: 1.25; color: var(--ink-soft); }
 .fiche-appli .fiche-ticket-note { margin: 0 0 4px; font-size: 12.5px; color: var(--ink-soft); text-align: center; }
 
-/* La bascule et « À plusieurs » sur une rangée, sans les deux filets de la version d'avant. */
+/* La bascule sur une rangée, sans les deux filets de la version d'avant (« Commander à plusieurs » est dessous depuis le
+ * 08/11, ecran-equipe-groupe.css › .fiche-groupe-bouton). */
 .fiche-appli .fiche-entete--ticket .fiche-faits { border: 0; padding: 0; margin: 14px 0 12px; flex-wrap: wrap; }
-.fiche-appli .fiche-groupe-lien {
-  display: inline-flex; align-items: center; gap: 7px; min-height: 44px; padding: 0 4px; border: 0; background: none;
-  color: var(--iris); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
-}
-.fiche-appli .fiche-groupe-lien:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; border-radius: 8px; }
 
 /* L'annonce d'ouverture, en bloc iris : le texte en blanc, et le vélo lime qui roule sur la route en pointillés. */
 .fiche-appli .fiche-info.fiche-info--route {

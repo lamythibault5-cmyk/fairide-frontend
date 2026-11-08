@@ -15,6 +15,7 @@ import { ListeAttente, RouteArretsAttente } from '../../components/client/Attent
 import { etapesAttente, lignesCochees, titreAttente, useEtatAttente } from '../../attenteCommande';
 import { euros } from '../../prixPlat';
 import { RappelCodeAmi } from '../../components/CodeAmi';
+import QuiDoitQuoi from '../../components/client/QuiDoitQuoi';
 
 // Page d'arrivée après le retour du prestataire de paiement.
 //
@@ -292,7 +293,8 @@ function ResultatCommande({ success }) {
             <p className="small ec-merci-recu">{t('orderResult.recuEnvoye', { email: user.email })} · <Link to="/account">{t('orderResult.recuChanger')}</Link></p>
           )}
           {/* Le code ami, une fois par téléphone, au moment où l'on est content (maquettes/parrainage-visible, question 5). */}
-          {commande && <RappelCodeAmi />}
+          {/* Commande groupée payée par l'hôte : ce que chacun lui doit (maquettes/bienvenue-partage) ; sinon le rappel du code ami. */}
+          {commande?.groupCode ? <QuiDoitQuoi commande={commande} /> : commande && <RappelCodeAmi />}
           </div>
           <div className="sc-merci-actions">
           {/* Le bouton dit ce qu'on veut faire juste après avoir payé : suivre CETTE commande (elle s'ouvre en tête de Mes commandes,

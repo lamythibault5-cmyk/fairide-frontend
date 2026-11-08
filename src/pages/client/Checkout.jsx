@@ -40,7 +40,7 @@ import { lireSaisiePaiement, garderSaisiePaiement, oublierSaisiePaiement } from 
 import { defilement, vibrer } from '../../gestes';
 import { groupeACommander } from '../../commandeGroupee';
 import { cheminFiche } from '../../adresseFiche';
-import { CODE_AMI } from '../../components/CodeAmi';
+import { CODE_AMI, eurosRond } from '../../components/CodeAmi';
 
 // Juste avant de valider la commande : si le panier ne contient encore aucun dessert/aucune boisson,
 // propose quelques options de cette section pour ne pas les laisser passer — même logique qu'un
@@ -138,8 +138,21 @@ export default function Checkout() {
   const [casesAvant, setCasesAvant] = useState(false);
   const telOk = useRef(false);
   const focusCodeTel = useRef(null);
+  /* LE CRÉDIT DE BIENVENUE ATTEND LE NUMÉRO (fondateur, 2026-11-08, maquettes/bienvenue-partage). Le devis le dit
+   * (codeAmi.raison 'numero_sms') : l'écran du code l'annonce (« 5 € de crédit t'attendent »). Compte Google ou Apple (adresse
+   * déjà prouvée) : il peut commander sans le code, mais sans le crédit (« Commander sans le crédit », `sansCredit`) ; s'il n'y
+   * a pas de crédit en jeu, l'écran du code ne s'ouvre même pas (le serveur laisse passer ces comptes, routes/orders.js). */
+  const sansCredit = useRef(false);
+  const viaFournisseur = !!(user?.hasGoogleAuth || user?.hasAppleAuth);
+  const creditEnAttente = () => (devisValide?.codeAmi?.raison === 'numero_sms' ? devisValide.codeAmi : null);
   // Lu à l'appel (pas au rendu) : la commande relancée juste après le code part d'une fermeture d'avant la session relue.
-  const telAVerifier = () => telephoneAVerifier(user) && !telOk.current;
+  const telAVerifier = () => telephoneAVerifier(user) && !telOk.current && !sansCredit.current && !(viaFournisseur && !creditEnAttente());
+  // Le code prouvé, la commande part avec le crédit : le total annoncé est celui d'après le crédit (sinon la carte « le total
+  // a changé » s'ouvrirait pour une bonne nouvelle).
+  const montantApresCredit = () => {
+    const c = creditEnAttente();
+    return c ? Math.max(0, +(montantDebite - Number(c.montant || 0)).toFixed(2)) : montantDebite;
+  };
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
   const [scheduleDate, setScheduleDate] = useState('');
   const [scheduleTime, setScheduleTime] = useState('');
@@ -499,7 +512,9 @@ export default function Checkout() {
     return { attente: { surPlace, livraison: fulfillmentType === 'delivery', parCommerce: livreParCommerce } };
   }
 
-  async function placeOrder() {
+  // `attendu` : le total annoncé quand il a changé depuis le devis (crédit de bienvenue gagné à l'instant par le code SMS).
+  async function placeOrder(attendu) {
+    const annonce = typeof attendu === 'number' ? attendu : montantAnnonce;
     if (apercu) { setApercuOuvert(true); return; }
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       signalerChamp('adresse', t('checkout.toastAddressRequired'), 'checkout-rangee-adresse');
@@ -533,13 +548,13 @@ export default function Checkout() {
        * Stripe »). Même idée que le sur-place : le total vu part avec la commande ; s'il tombe juste, le
        * serveur ouvre le paiement dans le même appel (order.paiement) — un aller-retour de moins avant Stripe. Sinon, rien
        * ne change : la carte « le total a changé », puis /payments/checkout. Pourboire 0 : il se donne à la livraison. */
-      const payerEnLigne = surPlace ? null : { expectedTotal: montantAnnonce, tip: 0 };
+      const payerEnLigne = surPlace ? null : { expectedTotal: annonce, tip: 0 };
       const order = await api('/orders', {
         method: 'POST', token,
         // Même panier = même commande, même depuis un onglet dupliqué (plan de test CMD-19, voir CartContext).
         // Payée sur place : le total vu part avec la commande ; s'il tombe juste, le serveur l'envoie au commerce dans le même
         // appel (plus de commande « fantôme » quand un second appel échouait). Sinon, la carte « le total a changé », comme avant.
-        body: { ...corps, clientRequestId: cart.requestId, ...(surPlace ? { confirmOnSite: true, expectedTotal: montantAnnonce } : { payerEnLigne }) }
+        body: { ...corps, clientRequestId: cart.requestId, ...(surPlace ? { confirmOnSite: true, expectedTotal: annonce } : { payerEnLigne }) }
       });
       if (order.paymentMode === 'on_site' && order.paid) { terminerSurPlace(order); return; }
       if (order.balanceUsed > 0) refreshUser().catch(() => {});
@@ -558,11 +573,11 @@ export default function Checkout() {
        * au-dessus du bouton (CDE XII.7 : corriger ses erreurs de saisie avant de commander). */
       const memeMode = (order.paymentMode === 'on_site') === surPlace;
       // Comparé au montant que le bouton annonçait : le devis du serveur quand il est là (il tombe juste), sinon l'estimation.
-      if (memeMode && Math.abs(Number(order.total) - montantAnnonce) < 0.005) {
+      if (memeMode && Math.abs(Number(order.total) - annonce) < 0.005) {
         await confirmAndPay(order);
         return;
       }
-      setTotalAnnonce(montantAnnonce);
+      setTotalAnnonce(annonce);
       setPendingOrder(order);
       setOuverturePaiement(false);
     } catch (e) {
@@ -1027,16 +1042,24 @@ export default function Checkout() {
                   {remiseLivraison > 0 && <LigneTicket libelle={t('checkout.deliveryDiscountLine', { name: restaurant.name })} montant={`−${euros(remiseLivraison)}`} />}
                 </>
               )}
-              {codePromoMontant > 0 && <LigneTicket libelle={!codePromo?.code && devisValide?.promoCode === CODE_AMI ? t('codeAmi.panier') : t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />}
+              {/* Le crédit de bienvenue (maquettes/bienvenue-partage) : une ligne lime qu'on ne rate pas, « 5,00 € offerts »,
+                  jamais « −5 € ». Les autres codes gardent leur ligne de ticket. */}
+              {codePromoMontant > 0 && (!codePromo?.code && devisValide?.promoCode === CODE_AMI ? (
+                <div className="co-t-ligne co-t-bienvenue">
+                  <span className="co-t-bienvenue-icone" aria-hidden="true"><Icone nom="cadeau" taille={18} /></span>
+                  <span className="co-t-bienvenue-texte"><b>{t('codeAmi.panier')}</b><small>{t('codeAmi.panierOffert')}</small></span>
+                  <span className="co-t-bienvenue-montant">{euros(codePromoMontant)}<small>{t('codeAmi.panierOfferts')}</small></span>
+                </div>
+              ) : <LigneTicket libelle={t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />)}
               {devisValide?.giftVoucherDiscount > 0 && <LigneTicket libelle={t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })} montant={`−${euros(devisValide.giftVoucherDiscount)}`} />}
               {soldeTicket > 0 && <LigneTicket libelle={t('checkout.balanceUsedLine')} montant={`−${euros(soldeTicket)}`} />}
               {/* Sur le site, ce total est celui que l'on regarde (la barre n'y garde que le bouton) : ses chiffres roulent. */}
               <div className="co-t-ligne co-t-total"><span>{devisValide ? t('checkout.totalToPay') : t('checkout.estimatedTotal')}</span><span className="sc-roulant">{APPLI ? euros(montantDebite) : <ChiffresRoulants valeur={euros(montantDebite)} />}</span></div>
             </div>
-            {/* Le code ami de l'ami parrainé (backend routes/orders.js) : appliqué tout seul ; sinon le devis dit pourquoi, pour
-                que les 5 € promis ne semblent pas perdus (maquettes/parrainage-visible). */}
+            {/* Le crédit de bienvenue (backend routes/orders.js) : appliqué tout seul ; sinon le devis dit pourquoi (moins de
+                20 € de plats, payé au comptoir, numéro à prouver), pour qu'il ne semble pas perdu. Déjà reçu : rien n'est dit. */}
             {devisValide?.codeAmi && !devisValide.codeAmi.applique && (
-              <p className="small co-code-ami">{t({ sur_place: 'codeAmi.panierSurPlace', numero_sms: 'codeAmi.panierNumeroSms' }[devisValide.codeAmi.raison] || 'codeAmi.panierMinimum')}</p>
+              <p className="small co-code-ami">{t({ sur_place: 'codeAmi.panierSurPlace', numero_sms: 'codeAmi.panierNumeroSms' }[devisValide.codeAmi.raison] || 'codeAmi.panierMinimum', { montant: eurosRond(devisValide.codeAmi.montant), minimum: eurosRond(devisValide.codeAmi.minimum) })}</p>
             )}
             {/* Les vendeurs (trois vendeurs, C2) : ce ticket est le dernier écran avant de payer quand le total ne bouge pas, il
                 dit donc à qui le client achète. En une ligne ; le détail (et les frais de système de Fairide, compris dans la
@@ -1218,25 +1241,30 @@ export default function Checkout() {
         </SousEcran>
       )}
       {sousEcran === 'avantCommande' && (
-        <SousEcran titre={t('appli.coAvantTitre')} onFermer={() => setSousEcran(null)} pied={
+        <SousEcran titre={telAVerifier() || telOk.current ? t('verifTel.derniereEtape') : t('appli.coAvantTitre')} onFermer={() => setSousEcran(null)} pied={
           <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} disabled={placing || paying} onClick={() => {
             // Le code d'abord : le bouton n'est jamais grisé (design.md), il ramène au champ.
             if (telAVerifier()) { toast(t('verifTel.aSaisir')); focusCodeTel.current?.(); return; }
             const reste = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
             if (reste) { toast(reste); return; }
             setSousEcran(null); placeOrder();
-          }}>{surPlaceChoisi ? t('checkout.confirmOnSite', { total: euros(montantDebite) }) : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}</button>
+          }}>{surPlaceChoisi ? t('checkout.confirmOnSite', { total: euros(montantDebite) }) : user?.simulation ? t('checkout.confirmAndPaySimulated') : telAVerifier() ? t('verifTel.validerPayer', { total: euros(montantApresCredit()) }) : t('checkout.confirmAndPay')}</button>
         }>
           {(telAVerifier() || telOk.current) && (
-            <div className="co-telephone">
-              <h3>{t('verifTel.titre')}</h3>
-              <p className="small">{t('verifTel.pourquoi')}</p>
-              <VerifTelephone auto repliEmail focusRef={focusCodeTel} onFait={() => {
+            <div className="co-telephone co-telephone--simple">
+              {creditEnAttente() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditEnAttente().montant) })}</span>}
+              <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onFait={() => {
+                const attendu = montantApresCredit();
                 telOk.current = true;
                 // Rien d'autre à cocher : la commande part, le client a déjà touché « Commander ».
-                if (!casesAvant) { setSousEcran(null); placeOrder(); }
+                if (!casesAvant) { setSousEcran(null); placeOrder(attendu); }
               }} />
-              <p className="small vt-unique">{t('verifTel.unique')}</p>
+              {viaFournisseur && creditEnAttente() && (
+                <button type="button" className="co-sans-credit" onClick={() => {
+                  sansCredit.current = true;
+                  if (!casesAvant) { setSousEcran(null); placeOrder(); }
+                }}>{t('verifTel.sansCredit')}</button>
+              )}
             </div>
           )}
           {casesAvant && (
@@ -1248,10 +1276,12 @@ export default function Checkout() {
         </SousEcran>
       )}
       {fenetreTel && (
-        <Modale titre={t('verifTel.titre')} onFermer={() => setFenetreTel(false)} classeBoite="co-telephone-fenetre">
-          <p className="small">{t('verifTel.pourquoi')}</p>
-          <VerifTelephone auto repliEmail focusRef={focusCodeTel} onFait={() => { telOk.current = true; setFenetreTel(false); placeOrder(); }} />
-          <p className="small vt-unique">{t('verifTel.unique')}</p>
+        <Modale titre={t('verifTel.derniereEtape')} onFermer={() => setFenetreTel(false)} classeBoite="co-telephone-fenetre co-telephone--simple">
+          {creditEnAttente() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditEnAttente().montant) })}</span>}
+          <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onFait={() => { const attendu = montantApresCredit(); telOk.current = true; setFenetreTel(false); placeOrder(attendu); }} />
+          {viaFournisseur && creditEnAttente() && (
+            <button type="button" className="co-sans-credit" onClick={() => { sansCredit.current = true; setFenetreTel(false); placeOrder(); }}>{t('verifTel.sansCredit')}</button>
+          )}
           {/* Sur le site, pas de feuille à tirer : sans ce bouton, rien ne refermait la fenêtre avant le code vérifié. */}
           {!APPLI && <div className="modal-pied"><button type="button" className="btn-ghost" onClick={() => setFenetreTel(false)}>{t('common.cancel')}</button></div>}
         </Modale>

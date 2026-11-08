@@ -6,28 +6,40 @@ import { useToast } from '../context/ToastContext';
 import { estNatif, experienceApp, lienPublic } from '../natif';
 import { paiementEnLigneOuvert, useLancement } from '../launch';
 import { getConsent, onConsentChange } from '../consent';
-import { euros } from '../prixPlat';
+import { euros, eurosCourt } from '../prixPlat';
 import Modale from './Modale';
 import Icone from './Icone';
 import '../code-ami.css';
 
-/* LE CODE AMI, VISIBLE (fondateur, 2026-11-03, maquettes/parrainage-visible : B, carte proposée, message avec lien, rappel
- * après la première commande, comptes déjà ouverts compris, site comme l'app).
+/* LE CRÉDIT DE BIENVENUE ET LE CODE AMI (fondateur, 2026-11-08, maquettes/bienvenue-partage ; avant : le code ami du 03/11,
+ * maquettes/parrainage-visible).
  *
- * Chaque client a un code (users.own_referral_code). L'ami qui s'inscrit avec reçoit 5 € de réduction sur sa première commande
- * payée en ligne de 20 € de plats ou plus, appliqués tout seuls par le serveur (backend routes/orders.js, CODE_AMI) ; le client
- * reçoit 5 € sur son solde quand cette commande est remise, pour chaque ami, sans plafond (referrals.js).
+ * BIENVENUE : tout client reçoit « 5 € de crédit offerts » sur sa première commande payée en ligne de 20 € de plats ou plus,
+ * une fois par compte et par numéro prouvé par SMS, utilisés tout seuls au paiement (backend routes/orders.js, ligne réservée
+ * CODE_AMI). Jamais « −5 € » : un cadeau, pas une réduction. La feuille « On t'offre 5 € de crédit » se montre une fois, après
+ * le badge, tant que le serveur dit le crédit encore à prendre (GET /auth/me › bienvenue).
  *
- * AVANT LE GO, RIEN NE PROMET LES 5 € DE L'AMI. Le solde et le code ami ne servent que sur une commande payée en ligne, qui
- * n'existe qu'après le GO (lancement.md) : la feuille et le rappel attendent le GO, et la carte de Compte garde « Invite un ami,
- * reçois 5 € » sans parler de l'ami. Les comptes exemptés (test, équipe) voient déjà tout, pour l'essayer en production. */
+ * CODE AMI : chaque client a un code (users.own_referral_code). Celui qui le partage reçoit 3 € sur son solde quand la
+ * première commande payée en ligne de son ami lui est remise (referrals.js) ; l'ami n'a rien de plus que la bienvenue de tout
+ * le monde. Montré dans Compte › Portefeuille (carte courte) et une fois sur « Commande confirmée ».
+ *
+ * AVANT LE GO, RIEN NE PROMET LE CRÉDIT. Il ne sert que sur une commande payée en ligne, qui n'existe qu'après le GO
+ * (lancement.md) : la feuille et le rappel attendent le GO. Les comptes exemptés (test, équipe) voient déjà tout. */
 
-// Le nom de la ligne réservée (backend migration 107, referrals.CODE_AMI) : le panier et le reçu le traduisent en « Code ami ».
+// Le nom de la ligne réservée (backend migrations 107 et 123, referrals.CODE_AMI) : le panier et le reçu la traduisent en
+// « Crédit de bienvenue ».
 export const CODE_AMI = 'CODE-AMI';
-const CLE_FEUILLE = 'fairide_code_ami_vu';
+const CLE_BIENVENUE = 'fairide_bienvenue_credit_vu';
 const CLE_RAPPEL = 'fairide_code_ami_rappel';
 const CLE_BADGE = 'fairide_badge_explique';
 const PAGES_FEUILLE = ['/', '/home', '/restaurants'];
+// Ce que reçoit celui qui partage, par ami (backend referrals.CLIENT_REFERRAL_REWARD) ; le serveur le redit (referral/mine › parAmi).
+export const PAR_AMI = 3;
+// Le crédit de bienvenue (backend referrals.REFERRAL_FRIEND_REWARD) : pour qui n'a pas encore de compte (l'invitation à un
+// groupe) ; connecté, le serveur le dit lui-même (GET /auth/me › bienvenue).
+export const MONTANT_BIENVENUE = 5;
+// « 5 € », « 3 € » : un montant rond, dans le format de la langue (« € 5 » en néerlandais).
+export const eurosRond = (n) => eurosCourt(n);
 
 function lire(cle) {
   try { return localStorage.getItem(cle) === 'vu'; } catch { return true; }
@@ -36,21 +48,20 @@ function noter(cle) {
   try { localStorage.setItem(cle, 'vu'); } catch { /* stockage indisponible : elle reviendra, sans gravité */ }
 }
 
-// Le code du client et la version des textes : « deux » (5 € chacun) une fois le paiement en ligne ouvert, « seul » avant.
 function useCodeAmi() {
   const { user, role } = useAuth();
   useLancement(); // redessine au GO
   const code = role === 'client' && !user?.isAdmin ? (user?.ownReferralCode || '') : '';
-  return { code, deux: paiementEnLigneOuvert(user), user };
+  return { code, ouvert: paiementEnLigneOuvert(user), user };
 }
 
 /* Partage natif (feuille du téléphone : Messages, WhatsApp…), le message ET le lien : le lien ouvre l'inscription avec le code
  * déjà rempli (site : Auth.jsx ; app installée : ConnexionAppli.jsx, ?ref=). Dans l'app, le greffon Share de Capacitor : la
  * vue web d'Android n'a pas navigator.share. Sans partage du tout (ordinateur), le message et le lien sont copiés. Renvoie
  * true quand le partage est parti (ou copié) ; un partage annulé n'est pas une erreur. */
-async function partager({ code, deux, t, toast }) {
+async function partager({ code, ouvert, t, toast }) {
   const url = lienPublic(`/login?ref=${encodeURIComponent(code)}`);
-  const text = t(deux ? 'codeAmi.messageDeux' : 'codeAmi.messageSeul', { code });
+  const text = t(ouvert ? 'codeAmi.messageBienvenue' : 'codeAmi.messageSeul', { code });
   try {
     if (estNatif()) {
       const { Share } = await import('@capacitor/share');
@@ -69,35 +80,21 @@ async function partager({ code, deux, t, toast }) {
 }
 
 function usePartager() {
-  const { code, deux } = useCodeAmi();
+  const { code, ouvert } = useCodeAmi();
   const { t } = useLanguage();
   const toast = useToast();
-  return () => partager({ code, deux, t, toast });
+  return () => partager({ code, ouvert, t, toast });
 }
 
-// Le code en grand, et où il reste (la carte de Compte a sa version pâle, avec « Copier »).
-export function TicketCodeAmi({ code }) {
-  const { t } = useLanguage();
-  return (
-    <div className="code-ami-ticket">
-      <span className="code-ami-ticket-haut"><Icone nom="cadeau" taille={18} />{t('codeAmi.ticket')}</span>
-      <b className="code-ami-code">{code}</b>
-      <span className="code-ami-ticket-bas"><Icone nom="compte" taille={15} />{t('codeAmi.ou')}</span>
-    </div>
-  );
-}
-
-/* LA FEUILLE APRÈS L'INSCRIPTION (version B de la maquette). Une fois par téléphone (ou navigateur), sur la liste, pour tout
- * client connecté : le nouveau compte comme celui qui existait déjà. Dans l'app, juste après l'écran du badge (EcranBadge.jsx
- * prévient en se fermant) ; sur le site, une fois la carte des cookies répondue, pour ne jamais s'ouvrir par-dessus. Elle monte
- * sur la liste (Modale : feuille qui se tire vers le bas sur téléphone, fenêtre centrée sur ordinateur). « Plus tard », le
- * fond, Échap ou un partage la ferment pour de bon : le code reste dans Compte › Portefeuille. */
-export default function FeuilleCodeAmi() {
-  const { code, deux } = useCodeAmi();
+/* LA FEUILLE DE BIENVENUE. Une fois par téléphone (ou navigateur), sur la liste, pour un client dont le crédit est encore à
+ * prendre : le nouveau compte comme celui qui n'a jamais commandé. Dans l'app, juste après l'écran du badge (EcranBadge.jsx
+ * prévient en se fermant) ; sur le site, une fois la carte des cookies répondue. « Choisir mon repas », « Plus tard », le
+ * fond ou Échap la ferment pour de bon : le crédit, lui, reste et s'applique tout seul au paiement. */
+export default function FeuilleBienvenue() {
+  const { user, ouvert } = useCodeAmi();
   const { t } = useLanguage();
   const { pathname } = useLocation();
-  const lancerPartage = usePartager();
-  const [vue, setVue] = useState(() => lire(CLE_FEUILLE));
+  const [vue, setVue] = useState(() => lire(CLE_BIENVENUE));
   const [badgeVu, setBadgeVu] = useState(() => !experienceApp() || lire(CLE_BADGE));
   const [cookiesRepondus, setCookiesRepondus] = useState(() => experienceApp() || !!getConsent());
   useEffect(() => {
@@ -107,69 +104,84 @@ export default function FeuilleCodeAmi() {
     return () => { window.removeEventListener('fairide:badge-vu', surBadge); finCookies?.(); };
   }, []);
 
-  if (vue || !code || !deux || !badgeVu || !cookiesRepondus || !PAGES_FEUILLE.includes(pathname)) return null;
-  const fermer = () => { noter(CLE_FEUILLE); setVue(true); };
-  const surPartage = async () => { if (await lancerPartage()) fermer(); };
+  const bienvenue = user?.role === 'client' && !user?.isAdmin ? user?.bienvenue : null;
+  if (vue || !bienvenue || !ouvert || !badgeVu || !cookiesRepondus || !PAGES_FEUILLE.includes(pathname)) return null;
+  const fermer = () => { noter(CLE_BIENVENUE); setVue(true); };
+  const montant = eurosRond(bienvenue.montant);
   return (
-    <Modale ariaLabel={t('codeAmi.carteDeux')} onFermer={fermer} classeBoite="code-ami-feuille">
-      <TicketCodeAmi code={code} />
-      <h2 className="code-ami-titre">{t('codeAmi.titreDeux')}</h2>
-      <p className="code-ami-sous">{t('codeAmi.sousDeux')}</p>
-      <button type="button" className="btn-gold code-ami-bouton" onClick={surPartage}>{t('codeAmi.partager')}</button>
+    <Modale ariaLabel={t('codeAmi.bienvenueTitre', { montant })} onFermer={fermer} classeBoite="code-ami-feuille">
+      <div className="code-ami-ticket">
+        <span className="code-ami-ticket-haut"><Icone nom="cadeau" taille={18} />{t('codeAmi.bienvenueTicket')}</span>
+        <b className="code-ami-code bienvenue-montant">{t('codeAmi.bienvenueMontant', { montant })}</b>
+        <span className="code-ami-ticket-bas"><Icone nom="valider" taille={15} />{t('codeAmi.bienvenueBas')}</span>
+      </div>
+      <h2 className="code-ami-titre">{t('codeAmi.bienvenueTitre', { montant })}</h2>
+      <p className="code-ami-sous">{t('codeAmi.bienvenueSous', { minimum: eurosRond(bienvenue.minimum) })}</p>
+      <button type="button" className="btn-gold code-ami-bouton" onClick={fermer}>{t('codeAmi.bienvenueBouton')}</button>
       <button type="button" className="code-ami-lien" onClick={fermer}>{t('codeAmi.plusTard')}</button>
     </Modale>
   );
 }
 
-/* LA CARTE DE COMPTE › PORTEFEUILLE : ouverte d'office (plus de feuille à ouvrir), le code en grand avec « Copier »,
- * « Partager mon code » en iris (le lime de la page reste « Ajouter un code »), ce que les amis ont rapporté, et les
- * conditions en clair. `stats` : GET /auth/referral/mine. */
+/* LA CARTE DE COMPTE › PORTEFEUILLE, COURTE (maquettes/bienvenue-partage, C) : le montant en grand, le code et « Partager »
+ * sur une ligne (le lime de la page reste « Ajouter un code »), les conditions derrière un lien. Ce que les amis ont rapporté
+ * n'apparaît qu'à partir du premier ami. `stats` : GET /auth/referral/mine. */
 export function CarteCodeAmi({ stats }) {
-  const { code: codeCompte, deux } = useCodeAmi();
+  const { code: codeCompte } = useCodeAmi();
   const { t } = useLanguage();
   const lancerPartage = usePartager();
   const [copie, setCopie] = useState(false);
+  const [conditions, setConditions] = useState(false);
   const code = stats?.code || codeCompte;
   if (!code) return null;
   const copier = () => {
     navigator.clipboard?.writeText(code).then(() => { setCopie(true); setTimeout(() => setCopie(false), 1800); }).catch(() => {});
   };
-  const gagnes = euros(stats?.earnedTotal || 0);
+  const montant = eurosRond(stats?.parAmi || PAR_AMI);
   const n = stats?.rewardedCount || 0;
   const attente = stats?.pendingCount || 0;
   return (
     <div className="code-ami-carte">
       <div className="code-ami-tete">
-        <span className="account-link-icon" aria-hidden="true"><Icone nom="cadeau" taille={22} /></span>
-        <span><b>{t(deux ? 'codeAmi.carteDeux' : 'codeAmi.carteSeul')}</b><span className="small">{t(deux ? 'codeAmi.sousDeux' : 'codeAmi.sousSeul')}</span></span>
+        <span className="code-ami-rond" aria-hidden="true"><Icone nom="cadeau" taille={22} /></span>
+        <b className="code-ami-accroche">{t('codeAmi.carteTitre')}<em>{t('codeAmi.cartePour', { montant })}</em></b>
       </div>
-      <div className="code-ami-ticket code-ami-ticket--clair">
-        <span><span className="code-ami-ticket-haut">{t('codeAmi.ticket')}</span><b className="code-ami-code">{code}</b></span>
-        <button type="button" className="code-ami-copier" onClick={copier} aria-live="polite">{copie ? t('codeAmi.copie') : t('codeAmi.copier')}</button>
+      <div className="code-ami-rang">
+        <button type="button" className="code-ami-puce" onClick={copier} aria-live="polite" aria-label={`${t('codeAmi.ticket')} ${code} · ${t('codeAmi.copier')}`}>
+          <b>{code}</b><span>{copie ? t('codeAmi.copie') : t('codeAmi.copier')}</span>
+        </button>
+        <button type="button" className="code-ami-partager" onClick={lancerPartage}>{t('codeAmi.partagerCourt')}</button>
       </div>
-      <button type="button" className="btn-teal code-ami-partager" onClick={lancerPartage}><Icone nom="lien" taille={18} />{t('codeAmi.partager')}</button>
-      <p className="small code-ami-stats">{n === 0 ? t('codeAmi.gagnesZero', { montant: gagnes }) : t(n === 1 ? 'codeAmi.gagnesUn' : 'codeAmi.gagnesPlusieurs', { n, montant: gagnes })}</p>
-      {attente > 0 && <p className="small code-ami-stats">{t(attente === 1 ? 'codeAmi.attenteUn' : 'codeAmi.attentePlusieurs', { n: attente })}</p>}
-      <p className="small code-ami-conditions">{t(deux ? 'codeAmi.conditionsDeux' : 'codeAmi.conditionsSeul')}</p>
+      {(n > 0 || attente > 0) && (
+        <p className="small code-ami-stats">
+          {n > 0 && t(n === 1 ? 'codeAmi.gagnesUn' : 'codeAmi.gagnesPlusieurs', { n, montant: euros(stats?.earnedTotal || 0) })}
+          {n > 0 && attente > 0 && ' · '}
+          {attente > 0 && t(attente === 1 ? 'codeAmi.attenteUn' : 'codeAmi.attentePlusieurs', { n: attente })}
+        </p>
+      )}
+      <div className="code-ami-pied">
+        <span>{t('codeAmi.carteQuand')}</span>
+        <button type="button" className="code-ami-lien-conditions" aria-expanded={conditions} onClick={() => setConditions((c) => !c)}>{t('codeAmi.conditionsLien')}</button>
+      </div>
+      {conditions && <p className="small code-ami-conditions">{t('codeAmi.conditions', { montant })}</p>}
     </div>
   );
 }
 
-/* LE RAPPEL SUR L'ÉCRAN « COMMANDE CONFIRMÉE », une fois par téléphone (question 5 de la maquette : le moment où l'on est
- * content). Une rangée calme sous le récapitulatif, sans lime (le lime de l'écran est « Suivre ma commande ») : l'écran
- * tient toujours sur un écran (maquettes/merci-une-page). Compté comme vu dès qu'il s'affiche. */
+/* LE RAPPEL SUR L'ÉCRAN « COMMANDE CONFIRMÉE », une fois par téléphone (le moment où l'on est content). Une rangée calme
+ * sous le récapitulatif, sans lime (le lime de l'écran est « Suivre ma commande »). Compté comme vu dès qu'il s'affiche. */
 export function RappelCodeAmi() {
-  const { code, deux } = useCodeAmi();
+  const { code, ouvert } = useCodeAmi();
   const { t } = useLanguage();
   const lancerPartage = usePartager();
   const [montre] = useState(() => !lire(CLE_RAPPEL));
-  const visible = montre && !!code && deux;
+  const visible = montre && !!code && ouvert;
   useEffect(() => { if (visible) noter(CLE_RAPPEL); }, [visible]);
   if (!visible) return null;
   return (
     <div className="code-ami-rappel">
       <span className="code-ami-rappel-icone" aria-hidden="true"><Icone nom="cadeau" taille={20} /></span>
-      <span className="code-ami-rappel-texte"><b>{t('codeAmi.carteDeux')}</b><small>{t('codeAmi.ticket')} : {code}</small></span>
+      <span className="code-ami-rappel-texte"><b>{t('codeAmi.rappelTitre', { montant: eurosRond(PAR_AMI) })}</b><small>{t('codeAmi.ticket')} : {code}</small></span>
       <button type="button" className="code-ami-rappel-bouton" onClick={lancerPartage}>{t('codeAmi.partagerCourt')}</button>
     </div>
   );

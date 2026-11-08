@@ -130,6 +130,16 @@
 
 /* ---------- Le bouton « Commande groupée » de la fiche (RestaurantMenu.jsx) ---------- */
 .eg-depart { margin: 0 0 14px; min-height: 40px; padding: 0 16px; font-size: 14px; }
+/* « Commander à plusieurs » sur la fiche, app et site (maquettes/bienvenue-partage) : un vrai bouton à filet iris, sous la
+ * bascule, sur deux lignes (ce que c'est, comment ça marche). */
+.fiche-groupe-bouton {
+  display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; margin: 12px 0 4px; padding: 12px 18px;
+  background: #fff; border: 2px solid var(--iris); border-radius: var(--radius-pill); color: var(--iris); font: inherit; cursor: pointer;
+}
+.fiche-groupe-bouton span { display: flex; flex-direction: column; text-align: left; }
+.fiche-groupe-bouton b { font-size: 16px; font-weight: 700; }
+.fiche-groupe-bouton small { font-size: 13px; color: var(--ink-soft); }
+.fiche-groupe-bouton:active { transform: scale(.98); }
 @media (pointer: coarse) { .eg-depart { min-height: 44px; } }
 
 /* ---------- L'équipe du commerce, côté propriétaire (Mon compte › Mon équipe) ---------- */
@@ -185,6 +195,31 @@
 .eg-invit-actions { display: flex; flex-direction: column; gap: 8px; }
 .eg-invit-actions .btn-gold, .eg-invit-actions .eg-bouton-iris { width: 100%; min-height: 50px; font-size: 16px; font-weight: 700; justify-content: center; display: flex; align-items: center; text-decoration: none; }
 .eg-invit .eg-note { margin: 0 0 14px; }
+/* L'invitation à une commande groupée (InvitationGroupe.jsx) : le crédit de bienvenue de l'ami, en encadré pointillé. */
+.eg-invit-cadeau {
+  display: flex; align-items: center; gap: 10px; margin: 0 0 16px; padding: 10px 12px; border-radius: 14px;
+  border: 1.5px dashed rgba(59, 47, 181, .35); color: var(--ink-soft); font-size: 14.5px; line-height: 1.4;
+}
+.eg-invit-cadeau svg { flex: none; color: var(--iris); }
+.eg-invit-cadeau b { color: var(--ink); }
+/* « Qui te doit quoi » sur « Commande confirmée » (QuiDoitQuoi.jsx) : une carte teintée, sans lime (le lime de l'écran est
+ * « Suivre ma commande »). */
+.eg-doit { margin-top: 14px; padding: 14px; border-radius: var(--radius); background: var(--iris-tint); text-align: left; }
+.eg-doit-tete { display: flex; align-items: center; gap: 12px; }
+.eg-doit-rond { flex: none; width: 40px; height: 40px; border-radius: 50%; background: #fff; color: var(--iris); display: grid; place-items: center; }
+.eg-doit-tete b { display: block; font-size: 15.5px; color: var(--ink); }
+.eg-doit-tete small { display: block; font-size: 13px; color: var(--ink-soft); }
+.eg-doit-liste { list-style: none; margin: 8px 0 0; padding: 0; }
+.eg-doit-liste li { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid rgba(59, 47, 181, .12); }
+.eg-doit-liste li:last-child { border-bottom: 0; }
+.eg-doit-qui { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.eg-doit-qui b { font-size: 15px; color: var(--ink); }
+.eg-doit-qui small { font-size: 12.5px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.eg-doit-montant { flex: none; font-variant-numeric: tabular-nums; color: var(--ink); }
+.eg-doit-envoyer {
+  width: 100%; margin-top: 10px; min-height: 46px; border: 0; border-radius: var(--radius-pill); background: var(--iris); color: #fff;
+  font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
+}
 /* Téléphone : bandeau et feuille d'un bord à l'autre de la colonne, sans le cadre de la carte. */
 @media (max-width: 560px) {
   .eg-invit { margin-top: 0; }

@@ -716,10 +716,11 @@ export default function RestaurantMenu({ id }) {
     : modeActif === 'pickup' && commandesOuvertes(user) && !onlineOrderingDisabled
       ? { valeur: t('restaurantMenu.etaPickupValue', { min: prepAnnoncee(restaurant) }), libelle: t('restaurantMenu.etaPickupLabel') }
       : null;
-  /* LE BOUTON « COMMANDE GROUPÉE » (pages/client/CommandeGroupee.jsx) : compte client exigé, comme pour commander. Sur le site,
-     une pastille à filet iris sous la description ; dans l'app (version B), un lien court sur la rangée de la bascule. */
+  /* LE BOUTON « COMMANDER À PLUSIEURS » (pages/client/CommandeGroupee.jsx) : compte client exigé, comme pour commander. Un vrai
+     bouton sous la bascule, app et site (fondateur, 2026-11-08, maquettes/bienvenue-partage : le petit lien « À plusieurs »,
+     personne ne le voyait). Filet iris : le lime de la fiche reste au panier. */
   const boutonGroupe = user && !onlineOrderingDisabled && !(String(groupeEnCours()?.restaurantId) === String(restaurant.id) && !groupeQuitte) && (
-    <button type="button" className={vueAppli ? 'fiche-groupe-lien' : 'eg-bouton-iris eg-depart'} aria-label={t('groupOrder.start')} onClick={async () => {
+    <button type="button" className="fiche-groupe-bouton" onClick={async () => {
       if (groupeEnCreation.current) return;
       groupeEnCreation.current = true;
       try {
@@ -727,7 +728,7 @@ export default function RestaurantMenu({ id }) {
         navigate(`/groupe/${g.code}`);
       } catch (e) { toast(e.message, 'erreur'); } finally { groupeEnCreation.current = false; }
     }}>
-      <Icone nom="personnes" taille={17} />{vueAppli ? t('groupOrder.startShort') : t('groupOrder.start')}
+      <Icone nom="personnes" taille={22} /><span><b>{t('groupOrder.startButton')}</b><small>{t('groupOrder.startSub')}</small></span>
     </button>
   );
   /* LE TICKET DE L'APP (fondateur, 2026-10-17, version B de « Fiche du commerce » dans maquettes/commerces-marque/commerces-marque.html) : la
@@ -871,7 +872,6 @@ export default function RestaurantMenu({ id }) {
           pour en ouvrir une — compte client exigé, comme pour commander. Le bouton est secondaire (pastille à filet iris,
           ecran-equipe-groupe.css) : la lime de la fiche reste au panier. */}
       <BandeauGroupe restaurantId={restaurant.id} onQuitter={() => setGroupeQuitte(true)} />
-      {!vueAppli && boutonGroupe}
 
       {/* La bascule et les frais sur une même rangée entre deux filets (.fiche-faits), dans l'app comme sur le site. */}
       <div className="fiche-faits">
@@ -889,9 +889,8 @@ export default function RestaurantMenu({ id }) {
         </div>
       )}
       {panneauFrais}
-      {/* App (version B) : « À plusieurs » à côté de la bascule. */}
-      {vueAppli && boutonGroupe}
       </div>
+      {boutonGroupe}
 
       {/* UNE SEULE CARTE D'OFFRE, au lieu de deux bandeaux de deux couleurs.
           La promotion et la livraison offerte étaient deux <div> sans classe, l'un rouge l'autre

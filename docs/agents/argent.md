@@ -81,18 +81,24 @@ each). The business contract `RESTO-2026.20` still prints « de 1 à 30 km » (`
 **Order promo codes** (`order_percent`, `order_amount`, `order_free_delivery`, `../fairide-backend/codesPromo.js`) are
 paid by Fairide like the balance: they lower `orders.total`, never the business's or the courier's share; online
 payment only.
-**Referral, « code ami » (founder, 2026-11-03, `maquettes/parrainage-visible`).** Every customer has a code
-(`users.own_referral_code`). The friend who signs up with it gets **€5 off once**, on an order **paid online with €20 of
-food or more** (subtotal, delivery not counted): applied by the order route by itself (no typing), through the reserved
-promo row `CODE-AMI` of type `order_referral` (backend migration 107, `referrals.CODE_AMI`; typed at checkout it « doesn't
-exist »; the team turns it off in Admin › Promotions). A typed code wins (one code per order) and the code ami waits; paid at
-the shop it doesn't apply, and the quote's `codeAmi` says why so the cart can explain it. The sharer gets **€5 on the
-balance per friend, no cap** (founder: each fake friend needs a real phone and a real paid order; since 2026-11-06, G38,
-the friend's €5, the sharer's €5 and the sign-up code credit all need the number proven **by SMS**
-(`phone_verified_via = 'sms'`): the e-mail code still lets the order through, without the reward), when that friend's first
-qualifying order is handed over, **only if it was paid online** (`maybeAwardClientReferralReward`: a takeaway paid at the
-shop earns Fairride nothing, so it no longer credits anyone). Before GO nothing can be paid online: the screens that promise
-the friend's €5 wait for GO (`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged.
+**Welcome credit for everyone, and the « code ami » (founder, 2026-11-08, `maquettes/bienvenue-partage`; before: the code
+ami of 2026-11-03).** **Every customer** gets **« 5 € de crédit offerts »** (never written « −5 € »: a gift, not a discount)
+on their **first order paid online with €20 of food or more** (subtotal, delivery not counted), applied by the order route by
+itself (no typing), through the reserved promo row `CODE-AMI` of type `order_referral` (backend migrations 107 and 123,
+`referrals.CODE_AMI`; typed at checkout it « doesn't exist »; the team turns it off in Admin › Promotions). **Once per
+person**: one account AND one number proven **by SMS** (`phone_verified_via = 'sms'`, G38); the use keeps a sha256 of the
+number (`promo_code_uses.phone_hash`), so a second account on the same number gets nothing, even after the first changed
+number or was deleted. « First order »: `first_order_only`, a takeaway paid at the shop (before GO) doesn't count; a
+cancelled order frees it. A typed code wins (one code per order) and the credit waits. The quote's `codeAmi` says why it
+doesn't apply yet (`minimum`, `sur_place`, `numero_sms`) so the cart can explain it; already received, second order, number
+already used: **nothing is said**, the cart is normal (founder). `GET /auth/me › bienvenue` ({ montant, minimum } or null)
+says whether the welcome sheet should show. **Google / Apple accounts** may order without proving their number (their e-mail
+is proven), but without the credit (« Commander sans le crédit »). The **sharer** of a code ami gets **€3 on the balance per
+friend, no cap** (`referrals.CLIENT_REFERRAL_REWARD`; a friend who signed up before the switch, `platform_parameters.
+code_ami_3e_depuis`, keeps the €5 promised), when that friend's first qualifying order is handed over, **only if it was paid
+online** and the friend's number is proven by SMS (`maybeAwardClientReferralReward`); the friend gets nothing more than the
+welcome everyone gets. Before GO nothing can be paid online: the welcome sheet and the code ami reminder wait for GO
+(`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged (€5).
 **No subscription (founder, 2026-11-04: « on retire les 20 € par mois ; ça bloque les inscriptions »).** A shop pays
 nothing each month: Fairride earns only the 10 % commission on orders paid online and the system fee inside the delivery fee.
 Gone with it: the €20/month plan and its first free month, the « petit mois » guarantee (€50), the « offert pendant le
