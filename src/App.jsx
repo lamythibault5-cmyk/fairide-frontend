@@ -47,7 +47,8 @@ const Orders = lazyPage(() => import('./pages/client/Orders'));
 const OrderResult = lazyPage(() => import('./pages/client/OrderResult'));
 const ClientMapPage = lazyPage(() => import('./pages/client/MapPage'));
 const PanierPage = lazyPage(() => import('./pages/client/PanierPage'));
-const CommandeGroupee = lazyPage(() => import('./pages/client/CommandeGroupee'));
+// /groupe/:code : la commande groupée connecté, l'invitation sans compte (InvitationGroupe.jsx, 2026-11-08).
+const PageGroupe = lazyPage(() => import('./pages/client/InvitationGroupe'));
 const ClientInvoicesPage = lazyPage(() => import('./pages/client/InvoicesPage'));
 const Account = lazyPage(() => import('./pages/Account'));
 
@@ -240,7 +241,7 @@ export default function App() {
         {/* Le panier a sa page : il se depliait par-dessus le menu qu'on etait en train de lire. */}
         <Route path="/panier" element={<ProtectedRoute role="client"><PanierPage /></ProtectedRoute>} />
         {/* Commande groupée (backend routes/commandesGroupees.js) : un compte client, comme pour commander. */}
-        <Route path="/groupe/:code" element={<ProtectedRoute role="client"><CommandeGroupee /></ProtectedRoute>} />
+        <Route path="/groupe/:code" element={<PageGroupe />} />
         <Route path="/invoices" element={<ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>} />
         {/* Sans ProtectedRoute : le retour de Stripe dans le navigateur intégré de l'application n'a pas de session (audit du
             19/10, checkout-07). OrderResult applique lui-même la règle des pages client quand il y a une session. */}

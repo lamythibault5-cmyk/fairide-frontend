@@ -122,7 +122,7 @@ family, a row of its specialities: TeteListe.jsx, lentillePuces.js), map, favour
 with a white ring — white-on-glass was unreadable), cart / checkout / order confirmed (EcranCommande.jsx), Mon compte (EnteteCompte.jsx;
 order since 2026-10-27, `maquettes/compte/compte.html` version B, every role, site the same: one « Gérer mon compte » row that opens
 every personal setting in a sheet (Mon profil / Préférences / Confidentialité; a courier's papers, location and alert sound in it too).
-Customer: then Portefeuille (balance + lime « Ajouter un code », cards, meal vouchers), the code ami card open (CodeAmi.jsx, 2026-11-03: code, Copier, iris « Partager mon code », earned, conditions),
+Customer: then Portefeuille (balance + lime « Ajouter un code », cards, meal vouchers), the short code ami card (CodeAmi.jsx, 2026-11-08: « Invite un ami, 3 € pour toi », code + Copier and iris « Partager » on one line, earned only from the first friend, « Conditions » link),
 Assistance, Fairride. Shop / courier: then Mon commerce / Mes courses, Solde et avantages (plain referral row), Assistance. All:
 « Aussi sur Fairride » (MesCasquettes) as plain rows at the end; Messages on top only when unread, else in Assistance),
 business dashboard / orders / menu / stats (BandeauCommerce.jsx, CarteCommerce.jsx), courier dashboard / job in progress / earnings
@@ -259,12 +259,19 @@ tap window and the one-time bubble of 2026-10-27 were removed (the bubble hid th
 before the list replaces them: « Repère ce badge. » ([EcranBadge.jsx](../../src/components/EcranBadge.jsx), version A of
 maquettes/badge-simple), the badge drawn very large in lime glow on full iris, 17 words, no real shop; app only, every signed-in client, once per device
 (`fairide_badge_explique`), on the list or home, right after the notifications primer (which sits above it). The site keeps the
-hover title only. **Then the code ami sheet** (founder, 2026-11-03, version B of `maquettes/parrainage-visible`,
-[CodeAmi.jsx](../../src/components/CodeAmi.jsx)): a Modale rising over the list (EcranBadge sends `fairide:badge-vu`), the code
-large on an iris ticket, « 5 € pour toi, 5 € pour ton ami. », lime « Partager mon code » (native share: message + link
-`/login?ref=CODE`, which opens sign-up with the code filled), « Plus tard ». Once per device (`fairide_code_ami_vu`), every
-client including old accounts, site too (after the cookie card); only once online payment is open (GO, or an exempt account).
-The order-confirmed screen shows a quiet reminder row once (`fairide_code_ami_rappel`).
+hover title only. **Then the welcome sheet** (founder, 2026-11-08, `maquettes/bienvenue-partage`,
+[CodeAmi.jsx](../../src/components/CodeAmi.jsx)): a Modale rising over the list (EcranBadge sends `fairide:badge-vu`), an iris
+ticket « Cadeau de bienvenue · 5 € de crédit · Utilisé tout seul au paiement », « On t'offre 5 € de crédit. », lime « Choisir
+mon repas », « Plus tard ». Once per device (`fairide_bienvenue_credit_vu`), only while the server says the credit is still to
+take (`GET /auth/me › bienvenue`), site too (after the cookie card); only once online payment is open (GO, or an exempt
+account). In the cart the credit is a lime row « Crédit de bienvenue · Offert par Fairride · 5,00 € offerts ». The SMS code
+at the first order (« Dernière étape », after « Commander et payer ») is the short version A: lime pill « 5 € de crédit
+t'attendent » when the credit is at stake, « Entre le code reçu par SMS », the number with « Changer », six boxes, « Pas
+reçu ? » only after the countdown, « Valider et payer · total after the credit »; Google / Apple accounts also get
+« Commander sans le crédit », and never see it when no credit is at stake. The order-confirmed screen shows a quiet code ami
+reminder row once (`fairide_code_ami_rappel`, « Invite un ami : 3 € pour toi »), or « Qui te doit quoi » after a group order
+(QuiDoitQuoi.jsx). Group orders: a real « Commander à plusieurs » button under the toggle; `/groupe/:code` without an account
+shows the invitation (InvitationGroupe.jsx, `GET /group-orders/:code/invitation`) before sign-up.
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](../../src/pages/app/InscriptionAppli.jsx)):
 « Continuer avec mon e-mail », and Apple / Google for an account that does not exist yet, no longer go to `/login` — one question

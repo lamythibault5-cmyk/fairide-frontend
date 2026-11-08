@@ -1,6 +1,6 @@
-/* LE CODE AMI (CodeAmi.jsx ; fondateur, 2026-11-03, maquettes/parrainage-visible). App et site, une seule famille :
- * le ticket (le code en grand et où il reste), la feuille après l'inscription, la carte de Compte › Portefeuille et le rappel
- * de l'écran « Commande confirmée ». Le seul lime est le bouton « Partager mon code » de la feuille : sur le ticket iris, le
+/* LE CRÉDIT DE BIENVENUE ET LE CODE AMI (CodeAmi.jsx ; fondateur, 2026-11-08, maquettes/bienvenue-partage). App et site,
+ * une seule famille : le ticket iris de la feuille « On t'offre 5 € de crédit », la carte courte de Compte › Portefeuille,
+ * le rappel de l'écran « Commande confirmée » et la ligne lime du panier. Le seul lime est le bouton « Partager mon code » de la feuille : sur le ticket iris, le
  * code est blanc (un seul lime par écran, design.md) ; la carte de Compte partage en iris (le lime de la page est « Ajouter
  * un code ») et le rappel en pastille blanche (le lime de l'écran est « Suivre ma commande »). */
 
@@ -15,6 +15,7 @@
   display: block; margin: 6px 0 10px; font-size: 34px; line-height: 1.1; font-weight: 800; letter-spacing: .1em;
   font-variant-numeric: tabular-nums; overflow-wrap: anywhere;
 }
+.code-ami-code.bienvenue-montant { letter-spacing: -.01em; font-family: var(--font-titre); font-size: 38px; }
 .code-ami-ticket-bas {
   display: flex; align-items: center; justify-content: center; gap: 6px; padding-top: 9px;
   border-top: 1.5px dashed rgba(255, 255, 255, .3); font-size: 13px; color: rgba(255, 255, 255, .78);
@@ -33,24 +34,26 @@
   font: inherit; font-size: 16px; font-weight: 600; color: var(--iris); cursor: pointer;
 }
 
-/* La carte de Compte › Portefeuille, dans la carte teintée `.compte-parrain` (ecran-compte.css). */
+/* La carte courte de Compte › Portefeuille, dans la carte teintée `.compte-parrain` (ecran-compte.css). */
 .code-ami-carte { display: flex; flex-direction: column; gap: 12px; padding: 16px; }
-.code-ami-tete { display: flex; gap: 12px; align-items: flex-start; }
-.code-ami-tete .account-link-icon { flex: none; background: #fff; }
-.code-ami-tete b { display: block; font-size: 16px; color: var(--ink); }
-.code-ami-tete .small { display: block; white-space: normal; color: var(--ink-soft); }
-.code-ami-ticket.code-ami-ticket--clair {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 14px;
-  background: #fff; color: var(--iris); border: 1.5px dashed var(--iris); border-radius: var(--radius); text-align: left;
+.code-ami-tete { display: flex; gap: 12px; align-items: center; }
+.code-ami-rond { flex: none; width: 44px; height: 44px; border-radius: 50%; background: #fff; color: var(--iris); display: grid; place-items: center; }
+.code-ami-accroche { font-family: var(--font-titre); font-size: 20px; line-height: 1.15; font-weight: 800; color: var(--ink); }
+.code-ami-accroche em { display: block; font-style: normal; color: var(--iris); }
+.code-ami-rang { display: flex; gap: 8px; }
+.code-ami-puce {
+  flex: 1; min-width: 0; display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 14px; min-height: 48px;
+  background: #fff; border: 1.5px dashed var(--iris); border-radius: var(--radius); color: var(--iris); font: inherit; cursor: pointer;
 }
-.code-ami-ticket--clair .code-ami-ticket-haut { justify-content: flex-start; font-size: 11.5px; color: var(--ink-soft); }
-.code-ami-ticket--clair .code-ami-code { margin: 2px 0 0; font-size: 24px; }
-.code-ami-copier {
-  flex: none; padding: 8px 14px; border: 0; border-radius: var(--radius-pill); background: var(--iris-tint);
-  color: var(--iris); font: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+.code-ami-puce b { font-size: 18px; font-weight: 800; letter-spacing: .1em; font-variant-numeric: tabular-nums; }
+.code-ami-puce span { font-size: 14px; font-weight: 600; color: var(--ink-soft); }
+.code-ami-partager {
+  flex: none; padding: 0 20px; min-height: 48px; border: 0; border-radius: var(--radius-pill); background: var(--iris);
+  color: #fff; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer;
 }
-.code-ami-partager { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
-.code-ami-stats { margin: 0; text-align: center; color: var(--ink-soft); }
+.code-ami-stats { margin: 0; color: var(--ink-soft); }
+.code-ami-pied { display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 13.5px; color: var(--ink-soft); }
+.code-ami-lien-conditions { flex: none; background: none; border: 0; padding: 4px 0; font: inherit; font-weight: 600; color: var(--iris); cursor: pointer; }
 .code-ami-conditions { margin: 0; font-size: 12.5px; color: var(--ink-faint); }
 
 /* Le rappel après la première commande : une rangée, sous le récapitulatif. */
@@ -69,5 +72,26 @@
   color: var(--iris); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
 }
 
-/* Au panier : pourquoi les 5 € du code ami ne s'appliquent pas encore (moins de 20 € de plats, ou payé au comptoir). */
+/* Au panier : pourquoi le crédit de bienvenue ne s'applique pas encore (moins de 20 € de plats, payé au comptoir, numéro). */
 .co-code-ami { margin: 8px 0 0; color: var(--iris); font-weight: 600; }
+
+/* Au panier : la ligne du crédit de bienvenue, qu'on ne peut pas rater (fondateur, 2026-11-08 : « plus showy »). Lime, comme
+ * un cadeau : jamais « −5 € », toujours « 5,00 € offerts ». */
+.co-t-ligne.co-t-bienvenue {
+  display: flex; align-items: center; gap: 10px; margin: 6px -8px; padding: 10px 12px; border-radius: 14px;
+  background: var(--lime); color: var(--ink);
+}
+.co-t-bienvenue-icone { flex: none; width: 34px; height: 34px; border-radius: 50%; background: var(--ink); color: var(--lime); display: grid; place-items: center; }
+.co-t-bienvenue-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.co-t-bienvenue-texte b { font-size: 15.5px; font-weight: 800; }
+.co-t-bienvenue-texte small { font-size: 12.5px; color: rgba(20, 18, 31, .72); }
+.co-t-bienvenue-montant { flex: none; text-align: right; font-family: var(--font-titre); font-size: 19px; line-height: 1.1; font-weight: 800; white-space: nowrap; }
+.co-t-bienvenue-montant small { display: block; font-family: var(--font-texte, inherit); font-size: 12.5px; font-weight: 700; color: rgba(20, 18, 31, .72); }
+
+/* La pastille « 5 € de crédit t'attendent » en tête de l'écran du code SMS (Checkout.jsx). */
+.co-pastille-credit {
+  display: inline-flex; align-items: center; gap: 8px; margin: 4px auto 0; padding: 7px 14px 7px 8px; border-radius: var(--radius-pill);
+  background: var(--lime); color: var(--ink); font-size: 15px; font-weight: 800;
+}
+.co-pastille-credit i { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--ink); color: var(--lime); font-style: normal; }
+.co-sans-credit { display: block; margin: 18px auto 0; padding: 8px 12px; background: none; border: 0; font: inherit; font-size: 15px; font-weight: 600; color: var(--iris); cursor: pointer; }

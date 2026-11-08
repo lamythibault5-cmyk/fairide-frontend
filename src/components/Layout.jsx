@@ -27,8 +27,9 @@ import '../site-cadre.css';
 const AmorceNotifications = lazy(() => import('./AmorceNotifications'));
 // « Repère ce badge. » une fois, juste après les notifications (EcranBadge.jsx) : client de l'app seulement.
 const EcranBadge = lazy(() => import('./EcranBadge'));
-// Le code ami, une fois, sur la liste : après le badge dans l'app, après la carte des cookies sur le site (CodeAmi.jsx).
-const FeuilleCodeAmi = lazy(() => import('./CodeAmi'));
+// « On t'offre 5 € de crédit », une fois, sur la liste : après le badge dans l'app, après la carte des cookies sur le site
+// (CodeAmi.jsx, maquettes/bienvenue-partage).
+const FeuilleBienvenue = lazy(() => import('./CodeAmi'));
 // Nouvelles conditions ou nouveau contrat : un écran plein à l'ouverture, « Accepter et continuer » (2026-11-06,
 // maquettes/nouvelles-conditions). Client et livreur ici ; le commerce dans DashboardLayout, qui connaît le commerce choisi.
 const NouvellesConditions = lazy(() => import('./conformite/NouvellesConditions'));
@@ -259,7 +260,7 @@ export default function Layout() {
         {seesClientCart && <FloatingCart />}
         {experienceApp() && lireBienvenue().amorceNotifs === 'a-faire' && <Suspense fallback={null}><AmorceNotifications /></Suspense>}
         {experienceApp() && role === 'client' && <Suspense fallback={null}><EcranBadge /></Suspense>}
-        {role === 'client' && <Suspense fallback={null}><FeuilleCodeAmi /></Suspense>}
+        {role === 'client' && <Suspense fallback={null}><FeuilleBienvenue /></Suspense>}
         {(role === 'client' || role === 'driver') && <Suspense fallback={null}><NouvellesConditions role={role} /></Suspense>}
       </>
     );

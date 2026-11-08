@@ -5907,6 +5907,32 @@ html.appli .page-feuille-fermer { box-shadow: 0 4px 14px rgba(20, 18, 31, .26), 
 .co-telephone h3 { margin: 0 0 4px; font-size: 18px; }
 .co-telephone > .small { margin: 0 0 12px; }
 .co-telephone-fenetre .vt { margin-top: 10px; }
+/* L'écran du code, version simple (VerifTelephone `simple`, paiement ; maquettes/bienvenue-partage, A) : une phrase, le
+ * numéro avec « Changer », six cases. Le champ réel est posé, invisible, sur les cases : le clavier numérique, le collage et
+ * le code proposé par le téléphone (one-time-code) marchent comme avant. */
+.vt-simple { align-items: center; text-align: center; gap: 0; }
+.vt-s-titre { font-size: 25px; line-height: 1.15; font-weight: 800; letter-spacing: -.01em; margin: 16px 0 6px; }
+.vt-s-num { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 4px 8px; margin: 0; font-size: 16px; color: var(--ink-soft); }
+.vt-s-changer { background: none; border: 0; padding: 0; font: inherit; font-weight: 700; color: var(--iris); cursor: pointer; }
+.vt-cases { position: relative; display: flex; justify-content: center; gap: 8px; margin: 24px 0 14px; cursor: text; }
+.vt-cases-champ { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; font-size: 16px; caret-color: transparent; border: 0; padding: 0; }
+.vt-case {
+  width: 46px; height: 58px; border-radius: 14px; border: 2px solid var(--line, #E2E0EA); background: #fff;
+  display: grid; place-items: center; font-family: var(--font-titre); font-size: 26px; font-weight: 800; color: var(--ink);
+}
+.vt-case--ici { border-color: var(--iris); box-shadow: 0 0 0 4px var(--iris-tint); }
+.vt-case--ici:empty::after { content: ""; width: 2px; height: 26px; background: var(--iris); animation: vt-curseur 1s steps(1) infinite; }
+@keyframes vt-curseur { 50% { opacity: 0; } }
+.vt-case--erreur { border-color: var(--danger, #C62828); }
+.vt-s-erreur { margin: 0 0 8px; }
+.vt-s-renvoi { margin: 0; font-size: 14px; color: var(--ink-faint); }
+.vt-s-liens { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 18px; }
+@media (max-width: 360px) { .vt-case { width: 40px; height: 52px; } }
+/* Au paiement : la pastille « 5 € de crédit t'attendent » au-dessus, centrée (code-ami.css) ; le titre de l'écran simple
+ * garde sa taille malgré `.co-telephone h3`. */
+.co-telephone--simple { display: flex; flex-direction: column; align-items: center; text-align: center; }
+.co-telephone--simple .vt-s-titre { font-size: 25px; margin: 16px 0 6px; }
+.co-telephone-fenetre.co-telephone--simple .vt { margin-top: 0; }
 /* Le mur du numéro sur le site (MurTelephone.jsx, 2026-11-05) : une carte étroite au milieu, comme la connexion. Dans l'app,
    ce sont les écrans .bv de l'inscription. */
 .mur-tel { max-width: 460px; padding-top: 32px; padding-bottom: 48px; }
