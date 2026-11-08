@@ -23,6 +23,8 @@ import { SITE } from './CadreSite';
 import TexteReplie from '../TexteReplie';
 import { BandePhotos, FeuillePlat, RafalePhotos } from './AjoutPlat';
 import { usePhotoPlat, useRegleCarte } from './ajoutPlatOutils';
+import { EtatHausse, FenetreRefus, FeuilleTextes, RefusHausse, SupplementsCarte } from './HaussesCommerce';
+import { regleHausses, useDeclarations } from './haussesOutils';
 
 /* « MA CARTE » CÔTÉ COMMERCE, AU BANDEAU IRIS (fondateur, 2026-10-16, maquettes/tous-les-ecrans/tous-les-ecrans.html › Ma carte,
  * « Interrupteur de rupture »). Le commerce ne modifie pas ses plats lui-même (fondateur, 2026-10-01) : il met un plat en
@@ -44,7 +46,13 @@ import { usePhotoPlat, useRegleCarte } from './ajoutPlatOutils';
  * LE VERROU S'OUVRE SUR TROIS GESTES (fondateur, 2026-10-29, AjoutPlat.jsx) : le carré « + photo » d'un plat sans photo et
  * la bande « N plats sans photo » en rafale ; « Ajouter un plat » ; le prix d'un plat, touché, pour le changer. Prix toujours
  * déclarés sur l'honneur. « Ajouter un plat » prend le lime une fois le commerce en ligne : la demande à Fairride (nom,
- * description, retrait) passe en iris. Le titulaire seul : un membre de l'équipe du commerce ne voit pas ces gestes. */
+ * description, retrait) passe en iris. Le titulaire seul : un membre de l'équipe du commerce ne voit pas ces gestes.
+ *
+ * LE COMMERCE CHANGE SES TEXTES ET SES SUPPLÉMENTS, UNE HAUSSE A SA PHOTO (Owen, 2026-11-08, maquettes/carte-hausses) : le nom
+ * d'un plat touché ouvre la feuille « Changer ce plat » (nom, description, section, en ligne d'une touche ; « Retirer de la
+ * carte » au bas de la feuille). Les suppléments payants sont listés sous les plats, leur prix touchable. Une hausse dont la
+ * photo n'a pas convaincu l'équipe met sa carte de choix en tête (RefusHausse), et prend alors le lime de l'écran.
+ * La demande à Fairride reste pour le reste (un supplément à ajouter, des options). Détails : HaussesCommerce.jsx. */
 export default function CarteCommerce({ restaurant, restoId, loadDashboard, communs, urlSuggeree, onStock, onWithdraw, onConnect, connecting, lectureSeule = false }) {
   const { t } = useLanguage();
   const { token } = useAuth();
@@ -59,11 +67,18 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
   const enLigne = menu.filter((i) => !i.withdrawn && i.available !== false && !i.outOfStockToday).length;
   const recharger = () => loadDashboard(restoId);
   const regle = useRegleCarte(restoId, token, restaurant);
-  const photo = usePhotoPlat(restoId, token, recharger);
-  // Plat ouvert dans la feuille : { nouveau: true } ou { plat } pour son prix.
-  const [feuille, setFeuille] = useState(null);
-  const [rafale, setRafale] = useState(false);
   const titulaire = !lectureSeule;
+  const hausses = regleHausses(restaurant);
+  const declarations = useDeclarations(restoId, token, titulaire);
+  // Après un prix déclaré, un texte changé ou un choix : la carte ET les déclarations (l'étiquette sous le prix en dépend).
+  const toutRecharger = () => Promise.all([recharger(), declarations.charger()]);
+  const photo = usePhotoPlat(restoId, token, recharger);
+  // Plat ouvert dans la feuille : { nouveau: true }, { plat } pour son prix, ou { option } pour le prix d'un supplément.
+  const [feuille, setFeuille] = useState(null);
+  const [textes, setTextes] = useState(null);
+  const [refusOuvert, setRefusOuvert] = useState(null);
+  const [rafale, setRafale] = useState(false);
+  const refus = titulaire ? declarations.refus : [];
   const sansPhoto = menu.filter((i) => !i.imageUrl && !i.withdrawn);
 
   const titreEnLigne = enLigne === 0 ? t('ecranCommerce.aucunEnLigne') : t(enLigne === 1 ? 'ecranCommerce.produitEnLigne' : 'ecranCommerce.produitsEnLigne', { n: enLigne });
@@ -94,6 +109,10 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
           </div>
         )}
 
+        {/* Une photo refusée : la carte du choix en tête, avec le lime de l'écran (décision 3 de maquettes/carte-hausses). */}
+        {refus.map((d, i) => (
+          <RefusHausse key={d.id} d={d} restoId={restoId} token={token} badge={!!restaurant.prixComptoir} lime={i === 0} onFait={toutRecharger} />
+        ))}
         {!carteVide && (
           <>
             <p className="ec-carte-verrou" role="note">
@@ -102,7 +121,7 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
             </p>
             {titulaire && <BandePhotos n={sansPhoto.length} onOuvrir={() => setRafale(true)} />}
             {titulaire && (
-              <button type="button" className={`ec-bouton ${avantEnLigne ? 'ec-bouton--iris' : 'ec-bouton--lime'} ec-ajout-bouton`} onClick={() => setFeuille({ nouveau: true })}>
+              <button type="button" className={`ec-bouton ${avantEnLigne || refus.length ? 'ec-bouton--iris' : 'ec-bouton--lime'} ec-ajout-bouton`} onClick={() => setFeuille({ nouveau: true })}>
                 <span aria-hidden="true" className="ec-ajout-plus">+</span>{t('carteAjout.ajouter')}
               </button>
             )}
@@ -123,20 +142,33 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
                       {g.label && <p className="ec-sous-section">{g.label}</p>}
                       {g.items.map((item) => (
                         <LignePlat key={item.id} item={item} sections={restaurant.sections || []} t={t} onStock={onStock} onWithdraw={onWithdraw} onDemanderRetrait={setARetirer}
-                          onPhoto={titulaire ? photo.choisir : null} photoEnvoi={photo.envoi === item.id} onPrix={titulaire ? (p) => setFeuille({ plat: p }) : null} />
+                          onPhoto={titulaire ? photo.choisir : null} photoEnvoi={photo.envoi === item.id} onPrix={titulaire ? (p) => setFeuille({ plat: p }) : null}
+                          onTextes={titulaire ? setTextes : null}
+                          etatHausse={titulaire ? <EtatHausse d={declarations.derniere.get(`p:${item.id}`)} h={hausses.delaiHeures} onRefus={setRefusOuvert} /> : null} />
                       ))}
                     </div>
                   ))}
                 </section>
               ))}
             </div>
-            {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairide s'en charge (fondateur, 2026-10-01). */}
+            {/* Les suppléments payants, leur prix touchable par le titulaire (décision 2 de maquettes/carte-hausses). */}
+            <SupplementsCarte restaurant={restaurant} onPrix={titulaire ? (o) => setFeuille({ option: o }) : null}
+              derniere={declarations.derniere} h={hausses.delaiHeures} onRefus={setRefusOuvert} />
+            {/* Le plus court chemin : écrire ce qu'on veut changer, l'équipe Fairride s'en charge (fondateur, 2026-10-01). Depuis
+                le 2026-11-08, pour ce que le commerce ne fait pas lui-même : un supplément à ajouter, des options, un menu. */}
             <div className="ec-demande"><DemandeModifCarte restoId={restoId} lime={false} /></div>
           </>
         )}
         {photo.input}
-        {feuille && <FeuillePlat restoId={restoId} token={token} restaurant={restaurant} regle={regle} plat={feuille.plat || null}
-          onFermer={() => setFeuille(null)} onFait={recharger} />}
+        {feuille && <FeuillePlat restoId={restoId} token={token} restaurant={restaurant} regle={regle} plat={feuille.plat || null} option={feuille.option || null}
+          onFermer={() => setFeuille(null)} onFait={toutRecharger} />}
+        {textes && <FeuilleTextes restoId={restoId} token={token} restaurant={restaurant} plat={textes} onFermer={() => setTextes(null)} onFait={toutRecharger}
+          onRetirer={setARetirer}
+          onPrixSupplement={(s) => {
+            const n = menu.filter((m) => (m.optionGroups || []).some((g) => g.id === s.groupe?.id)).length;
+            setTextes(null); setFeuille({ option: { ...s, nbPlats: n } });
+          }} />}
+        {refusOuvert && <FenetreRefus d={refusOuvert} restoId={restoId} token={token} badge={!!restaurant.prixComptoir} onFait={toutRecharger} onFermer={() => setRefusOuvert(null)} />}
         {rafale && <RafalePhotos plats={sansPhoto} photo={photo} onFermer={() => setRafale(false)} />}
         <ConfirmDialog open={!!aRetirer} title={aRetirer ? t('ecranCommerce.retirerTitre', { name: aRetirer.name }) : ''} message={t('ecranCommerce.retirerTexte')}
           confirmLabel={t('menuItem.markUnavailable')} danger onCancel={() => setARetirer(null)}
@@ -168,7 +200,10 @@ export default function CarteCommerce({ restaurant, restoId, loadDashboard, comm
 /* LE CARRÉ « + PHOTO » ET LE PRIX TOUCHABLE (2026-10-29, AjoutPlat.jsx). Un plat sans photo à lui (imageUrl vide : l'image de
  * section ne compte pas) montre un carré en pointillés à la place de l'icône ; le toucher ouvre l'appareil photo ou la
  * photothèque. Le prix, sous le nom, ouvre la feuille « Nouveau prix ». `onPhoto` / `onPrix` absents : console en lecture. */
-function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait, onPhoto, photoEnvoi, onPrix }) {
+/* LE NOM TOUCHÉ OUVRE « CHANGER CE PLAT » (Owen, 2026-11-08, `onTextes`, titulaire seul) : il ouvrait « Retirer de la carte »,
+ * qui est maintenant au bas de cette feuille. Un membre de l'équipe du commerce garde le geste d'avant. `etatHausse` : la
+ * ligne « Photo envoyée… » sous le prix (HaussesCommerce.jsx › EtatHausse). */
+function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait, onPhoto, photoEnvoi, onPrix, onTextes, etatHausse }) {
   const enVente = !item.outOfStockToday;
   const image = resolveItemImage(item, sections);
   const interrupteur = !item.withdrawn && (item.available !== false || item.outOfStockToday);
@@ -188,7 +223,7 @@ function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait, 
       : indisponible ? t('menuItem.unavailable')
         : `${euros(item.price)} · ${t('ecranCommerce.enVente')}`;
   const retirable = !item.withdrawn && item.available !== false;
-  const ouvrir = retirable ? () => onDemanderRetrait(item) : undefined;
+  const ouvrir = onTextes && !item.withdrawn ? () => onTextes(item) : retirable ? () => onDemanderRetrait(item) : undefined;
   return (
     <div className={`ec-plat${rupture ? ' ec-plat--rupture' : ''}${item.withdrawn || indisponible ? ' ec-plat--retire' : ''}`}>
       {onPhoto && !item.imageUrl && !item.withdrawn
@@ -201,8 +236,8 @@ function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait, 
         ? <img loading="lazy" decoding="async" {...imgProps(image, 58, '58px')} alt="" className="ec-plat-photo" onClick={ouvrir} />
         : <span className="ec-plat-photo" aria-hidden="true" onClick={ouvrir}><Icone nom={categoryEmoji(item.category)} taille={22} /></span>}
       <span className="ec-plat-texte">
-        {retirable
-          ? <button type="button" className="ec-plat-nom" onClick={ouvrir} title={t('menuItem.withdrawHelp')}>{item.name}</button>
+        {ouvrir
+          ? <button type="button" className="ec-plat-nom" onClick={ouvrir} title={onTextes ? t('hausses.toucherNom') : t('menuItem.withdrawHelp')}>{item.name}</button>
           : <b>{item.name}</b>}
         {item.activePromo && <span className="ec-plat-promo"><Icone nom="etiquette" taille={12} className="icone-texte" />{' '}{item.activePromo.label}</span>}
         {onPrix && !item.withdrawn && !rupture && !indisponible
@@ -215,6 +250,7 @@ function LignePlat({ item, sections, t, onStock, onWithdraw, onDemanderRetrait, 
             </small>
           )
           : <small key={etat} className="ec-plat-etat fondu">{etat}</small>}
+        {!item.withdrawn && etatHausse}
         {item.withdrawn && (
           <button type="button" className="ec-lien" onClick={retirer} title={t('menuItem.withdrawBackHelp')}>
             {`↩︎ ${t('menuItem.withdrawBack')}`}
