@@ -58,8 +58,15 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
    « Sortir une version iPhone » plus bas. Team ID Apple `44V9JV2JQN` (23 oct. 2026), déjà dans
    `public/.well-known/apple-app-site-association` : `https://fairide.be/…` s'ouvre dans l'app une fois le site déployé.
    Depuis le 24 oct. 2026 (revue du 24/10) la liste y comprend `/retour-appli*` (le retour de Stripe d'une demande faite
-   dans l'app : sans lui, l'iPhone restait dans le navigateur intégré après le paiement) et `/driver*`. Une adresse qui
-   n'y est pas s'ouvre dans Safari, jamais dans l'app. Le bouton de `/retour-appli` prend sur iPhone le schéma de l'app,
+   dans l'app : sans lui, l'iPhone restait dans le navigateur intégré après le paiement) et `/driver*`. Depuis le 8 nov.
+   2026 elle reprend toutes les adresses de l'Android (`android:pathPrefix` d'`AndroidManifest.xml`) : `/groupe` (l'ami
+   invité à une commande groupée qui a l'app y entre, déjà connecté ; sans l'app, le site, sans accueil),
+   `/nl|en/restaurants`, `/dashboard`, `/carte`, `/equipe`, `/documents`, `/invoices`, `/demandes`, `/preuve`. **Une
+   adresse ajoutée d'un côté s'ajoute de l'autre.** Comme l'Android (G118), l'iPhone ne prend plus
+   `/order-success*` ni `/order-cancelled*` : ces pages ne servent qu'au client du SITE (l'app revient toujours par
+   `/retour-appli`), et l'app installée lui volait le retour de Stripe, son onglet ne recevait jamais la confirmation. Pas de nouvelle version de l'app
+   pour l'iPhone : iOS relit ce fichier sur le site (par le relais d'Apple, en général sous 24 h, et à chaque
+   installation ou mise à jour). Une adresse qui n'y est pas s'ouvre dans Safari, jamais dans l'app. Le bouton de `/retour-appli` prend sur iPhone le schéma de l'app,
    `fairide:///chemin` (`CFBundleURLTypes` d'`Info.plist`) : iOS n'ouvre jamais l'app pour un lien vers le domaine déjà affiché.
 5. **Notifications** : projet Firebase → télécharger `google-services.json` dans `android/app/` ;
    pour iOS, ajouter une app iOS `be.fairide.app` au même projet Firebase, télécharger son

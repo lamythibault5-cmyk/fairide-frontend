@@ -4,14 +4,24 @@
       {
         "appIDs": ["44V9JV2JQN.be.fairide.app"],
         "components": [
-          { "/": "/order-success*", "comment": "Retour de paiement Stripe" },
-          { "/": "/order-cancelled*", "comment": "Paiement abandonné" },
           { "/": "/orders*", "comment": "Suivi, pourboire payé" },
           { "/": "/account*", "comment": "Mon compte, Stripe Connect" },
           { "/": "/restaurants*", "comment": "Fiche partagée" },
+          { "/": "/nl/restaurants*", "comment": "Fiche partagée (adresse en néerlandais)" },
+          { "/": "/en/restaurants*", "comment": "Fiche partagée (adresse en anglais)" },
+          { "/": "/groupe*", "comment": "Invitation à une commande groupée : l'ami qui a l'app y entre, déjà connecté" },
+          { "/": "/nl/groupe*", "comment": "Commande groupée (néerlandais)" },
+          { "/": "/en/groupe*", "comment": "Commande groupée (anglais)" },
           { "/": "/reset-password*", "comment": "Lien du courriel de mot de passe oublié" },
           { "/": "/retour-appli*", "comment": "Retour de Stripe pour une demande venue de l'app (paiement, pourboire, Identity, Connect)" },
-          { "/": "/driver*", "comment": "Espace livreur : retour de Stripe Identity / Connect du dossier, liens des e-mails" }
+          { "/": "/driver*", "comment": "Espace livreur : retour de Stripe Identity / Connect du dossier, liens des e-mails" },
+          { "/": "/dashboard*", "comment": "Espace commerce : liens des e-mails et des SMS (nouvelle commande, questions sur la carte)" },
+          { "/": "/carte*", "comment": "Lien « C'est bon » de la carte, envoyé au commerce" },
+          { "/": "/equipe*", "comment": "Invitation d'un membre de l'équipe d'un commerce" },
+          { "/": "/documents*", "comment": "Documents du livreur ou du commerce, liens des e-mails" },
+          { "/": "/invoices*", "comment": "Factures, liens des e-mails" },
+          { "/": "/demandes*", "comment": "Demandes de restaurant, liens des e-mails" },
+          { "/": "/preuve*", "comment": "Preuve de livraison" }
         ]
       }
     ]
