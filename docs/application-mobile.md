@@ -124,7 +124,8 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
     `Theme.AppCompat.Light.NoActionBar` + `forceDarkAllowed=false` dans `android/app/src/main/res/values/styles.xml`).
     **iOS** : FAIT, `UIUserInterfaceStyle` = `Light` dans `Info.plist` ; sans elle, un iPhone en mode sombre affiche le
     clavier, les sélecteurs de date et les fenêtres du système en noir sur nos écrans blancs.
-13. **Commandes qui passent le mode Concentration** (iPhone, 8 nov. 2026, À FAIRE à la main) : le serveur envoie déjà la
+13. **Commandes qui passent le mode Concentration** (iPhone, 8 nov. 2026 ; clé ajoutée à `App.entitlements` le même jour,
+    étapes 1 et 2 faites avec Owen : la case n'existe PAS dans l'API App Store Connect, le profil se régénère par l'API) : le serveur envoie déjà la
     nouvelle commande et son rappel au commerce avec `interruption-level` = `time-sensitive` (backend `fcm.js`). Sans le
     droit ci-dessous, iOS les traite comme des notifications ordinaires (rien ne casse, mais Concentration et Ne pas
     déranger les retiennent). Dans l'ordre, sinon la signature du build échoue :
