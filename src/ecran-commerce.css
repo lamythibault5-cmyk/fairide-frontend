@@ -631,6 +631,29 @@ html.avec-bande-a-traiter main { padding-bottom: calc(76px + env(safe-area-inset
 .ec-ajout--deux .ec-honneur--fait, .modal-box.ec-ajout:not(.ec-ajout--deux) .ec-honneur--fait { padding: 0; }
 .modal-box.ec-ajout:has(.ec-honneur--fait) { padding: 24px; }
 
+/* LES PRIX QUI MONTENT, LES TEXTES, LES SUPPLÉMENTS (Owen, 2026-11-08, HaussesCommerce.jsx, maquettes/carte-hausses).
+   L'étiquette sous le prix : vue du commerce seul, petite et grise ; rouge quand un choix l'attend. */
+.ec-hausse-etat { display: inline-flex; align-items: center; gap: 4px; font-size: 12.5px; color: var(--ink-soft); line-height: 1.3; }
+.ec-hausse-etat svg { flex: none; }
+button.ec-hausse-etat { padding: 0; border: 0; background: none; font: inherit; font-size: 12.5px; cursor: pointer; text-align: left; min-height: 0 !important; }
+.ec-hausse-etat--refus { color: var(--red-texte); font-weight: 700; text-decoration: underline; text-underline-offset: 2px; }
+/* La carte du choix quand la photo ne montre pas le prix : en tête de Ta carte, contour rouge (une réponse est attendue). */
+.ec-refus { border: 1.5px solid var(--red); background: #fff; border-radius: 20px; padding: 14px 16px 8px; margin: 0 0 14px; display: flex; flex-direction: column; }
+.modal-box .ec-refus { border: 0; padding: 0; margin: 0; }
+.ec-refus-titre { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-size: 16px; font-weight: 800; color: var(--ink); overflow-wrap: anywhere; }
+.ec-refus-titre svg { flex: none; color: var(--red); margin-top: 2px; }
+.ec-refus-note { margin: 8px 0 0; font-size: 14.5px; color: var(--ink); overflow-wrap: anywhere; }
+.ec-refus-delai, .ec-refus-sous { margin: 6px 0 0; font-size: 13.5px; color: var(--ink-soft); }
+.ec-refus-sous { margin: 0 0 6px; text-align: center; }
+/* La photo-preuve prise, sur l'écran sur l'honneur (iris) : vignette et « Photo ajoutée ». */
+.ec-preuve { display: flex; align-items: center; gap: 12px; padding: 8px; margin: 4px 0 6px; border: 2px solid rgba(255, 255, 255, .55); border-radius: 16px; font-weight: 700; }
+.ec-preuve img { width: 64px; height: 64px; border-radius: 10px; object-fit: cover; flex: none; }
+/* Les suppléments payants sous les plats, et ceux d'un plat dans « Changer ce plat ». */
+.ec-supplements { margin: 8px 0 4px; }
+.ec-supp { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 15px; }
+.ec-supp-nom { display: flex; flex-direction: column; gap: 2px; min-width: 0; overflow-wrap: anywhere; }
+.ec-supp-compte { text-transform: none; letter-spacing: 0; font-weight: 600; }
+
 /* Plats manquants signalés (ReclamationsCommerce.jsx ; 31/10/2026) : une carte par réclamation qui attend, en tête de
    Commandes. Contour rouge doux : il y a une réponse à donner, avant une heure dite. */
 .ec-reclamations { margin: 0 0 14px; }

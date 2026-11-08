@@ -56,8 +56,32 @@ increase rounded up to €0.10 since 2026-11-02) and keeps the counter price in 
 through the honour screen, whose lime button is the declaration (« Oui, 12,00 € au comptoir »); the backend keeps each one
 (`menu_price_declarations`, migration 097, `declarationPrix.js`: dish, prices, name, date, exact text) and re-signs the card
 if it was signed. If a price is false the « Prix du comptoir » badge goes, **nothing else**: the screen threatens nothing
-else (the contract has no parity clause) and never says « on vérifie » (nobody checks). Name, description, sections,
-options and withdrawal still go through the team (« Une modification ? »).
+else (the contract has no parity clause) and never says « on vérifie » (nobody checks), except for a rise under the photo
+rule below. Options and new extras still go through the team (« Une modification ? »).
+
+**Rises with a photo, texts and extras by the shop (2026-11-08, Owen, version B of the workspace mockup
+`maquettes/carte-hausses`).** Frontend: [HaussesCommerce.jsx](../../src/components/commerce/HaussesCommerce.jsx),
+[haussesOutils.jsx](../../src/components/commerce/haussesOutils.jsx), the price sheet in AjoutPlat.jsx, the team side in
+[HaussesCartes.jsx](../../src/components/admin/HaussesCartes.jsx) (Admin › Cartes › « Hausses à vérifier » and
+« Changements de texte », `?vue=hausses|textes`).
+- **The photo rule is dormant**: it applies only when the owner payload says `regleHausses.photoRequise` (absent = false), which
+  the backend turns on with contract **RESTO-2026.25**, published only after the lawyer's OK (can a rise wait, or need a
+  proof, and still be « applying the prices the shop asks »?). Rule off: a rise is on honour exactly as on 10-29.
+- Rule on: a dish or extra whose shown price goes UP needs a photo of the price board / printed menu / till showing the new
+  counter price (`POST /:id/menu/proof`, then `proofId` with the declaration). Live at once, badge kept; the team checks the
+  photo within `regleHausses.delaiHeures` (48 h). A drop and a new dish stay on honour; a dish re-added under the same name at
+  a higher price is a rise (the server answers `PREUVE_REQUISE`, the sheet asks for the photo and retries).
+- The shop sees « Photo envoyée · l'équipe regarde sous 48 h » under the price, then « Photo pas encore vérifiée » if the team
+  did not answer (the price stays live with the badge, on the shop's word). Customers see nothing special.
+- Team says « La photo ne montre pas ce prix » (note required): the shop gets a card at the top of Ta carte with the note, the
+  deadline and three choices: put back the old price, send another photo, or keep the price without the « Prix du comptoir »
+  badge (only offered to a shop that has the badge; the badge then leaves its whole menu). No choice by the deadline: the
+  server puts back the old price.
+- Name, description and section: the owner changes them himself (dish name touched → « Changer ce plat »), live at once
+  (`PATCH /:id/menu/:itemId/textes`); the team sees the last 7 days with « Remettre comme avant » (watch « 2 steaks » →
+  « 1 steak » at the same price, a hidden rise). Withdrawal moved to the bottom of that sheet.
+- Paid extras are listed under the dishes, their price touchable (`POST /:id/options/:optionItemId/declare-price`, ≥ 0 €): one
+  price for every dish that offers the group.
 
 **Carte seule (2026-10-25, Owen).** A shop can be shown before its contract and its « C'est bon »: Admin › Restaurants ›
 drawer › « Montrer en carte seule » (`PATCH /admin/restaurants/:id/vitrine`, backend `routes/validationCarte.js`), then the

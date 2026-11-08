@@ -26,7 +26,9 @@ const SUJETS = ['bug', 'avis'];
 // Les réponses, dans l'ordre : identifiant d'ancre (cible des liens de Mon compte) et nombre de paragraphes.
 // « Les prix sont-ils les mêmes qu'au restaurant ? » en premier (fondateur, 2026-10-19) : c'est la première raison de choisir
 // Fairide, et la réponse porte le calcul complet que l'accueil du site montre sans note (HeroPrix.jsx).
-const REPONSES = [['prix', 3], ['paiement', 3], ['titres-restaurant', 2], ['adresse', 1], ['commande', 1]];
+// « prix » a 4 paragraphes depuis le 08/11/2026 : le 4e publie le motif de la photo d'une hausse (contrat RESTO-2026.25,
+// règlement P2B art. 10 : une limite aux prix d'un commerce se motive publiquement).
+const REPONSES = [['prix', 4], ['paiement', 3], ['titres-restaurant', 2], ['adresse', 1], ['commande', 1]];
 const CLE_REPONSE = { prix: 'prices', paiement: 'payment', 'titres-restaurant': 'vouchers', adresse: 'address', commande: 'order' };
 const APPLI = experienceApp();
 
