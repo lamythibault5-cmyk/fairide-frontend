@@ -68,7 +68,7 @@
       "updateUrl": "",
       "statsUrl": "",
       "channelUrl": "",
-      "appReadyTimeout": 15000,
+      "appReadyTimeout": 30000,
       "resetWhenUpdate": true,
       "keepUrlPathAfterReload": true,
       "shakeMenu": false

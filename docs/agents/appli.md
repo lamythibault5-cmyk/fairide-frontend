@@ -25,10 +25,12 @@ something (`signalerOccupe`) nor when the app opens on a link. Safety: (1) the *
 ([scripts/paquet-appli.mjs](../../scripts/paquet-appli.mjs)), a fingerprint per platform of `capacitor.config.json`,
 the plugin versions and the `ios/` or `android/` tree of the commit; a phone only takes a zip of its own socle, so a native
 change never reaches a shell without it and waits for the store; (2) the app calls `notifyAppReady` 3 s after React mounted
-without a crashed page, otherwise the plugin goes back to the previous screens after 15 s and that zip is never retried on
-this phone; (3) the team can withdraw a zip (`POST /api/admin/app/paquets/:id/retrait`: phones go back to the previous one,
+without a crashed page, otherwise the plugin goes back to the previous screens after 30 s (15 s until 2026-11-08) and that zip is never
+retried on this phone; (3) the team can withdraw a zip (`POST /api/admin/app/paquets/:id/retrait`: phones go back to the previous one,
 else to the store version) or stop everything (`app_paquets_arret` = 1 in Admin › Conformité › Paramètres); reverting
-the PR on GitHub also gives a new zip in about 10 minutes. The store builds bake the same identity
+the PR on GitHub also gives a new zip in about 10 minutes. **Never return the plugin itself from an `async` function** (`charger()` returns `{ u }`): a Capacitor plugin answers
+any method name, `then` included, so `await` hung forever; until 2026-11-08 no phone ever applied a zip (Android store
+builds 26–29, iPhone up to 300 can never receive one; found by logcat on the Galaxy Tab S7+). The store builds bake the same identity
 (`VITE_PAQUET_ID`, `VITE_PAQUET_ORDRE`, `VITE_SOCLE_IOS`, `VITE_SOCLE_ANDROID`); a build without them (website, Fairide
 Test, a local build) never asks. Only apps that contain the plugin (iPhone 1.0 once rebuilt after this, Android after
 build 25) get live updates. **With the update window**: a live update changes the screens, not the build number, so the
