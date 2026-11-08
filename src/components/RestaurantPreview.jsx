@@ -131,7 +131,7 @@ export default function RestaurantPreview({ restaurant }) {
             {fulfillmentType === 'delivery' ? (
               <div className="line"><span>{t('restoPreview.deliveryExample')}</span><span>{euros(deliveryFee)}</span></div>
             ) : (
-              <div className="line"><span>{t('restoPreview.takeawayNoFee')}</span><span>0.00€</span></div>
+              <div className="line"><span>{t('restoPreview.takeawayNoFee')}</span><span>{euros(0)}</span></div>
             )}
             <div className="line"><span>{t('restoPreview.systemFeeExample')}</span><span>{euros(serviceFee)}</span></div>
             <div className="line total"><span>{t('restoPreview.totalExample')}</span><span>{euros(total)}</span></div>

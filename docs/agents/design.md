@@ -362,3 +362,11 @@ flavour **written in the name** (`--gout-*` tokens: cola, orange, lemon, vanilla
 written. Never guess a flavour, and never draw a placeholder that looks like a photo that failed to load (the old grey box
 with 16 px cutlery did). Still to come: real photos for branded products (a Coca-Cola 33 cl can is the same everywhere),
 once Fairride has its own photos of them.
+
+## Prices: « 11.50 € », a little smaller (founder, 2026-11-08)
+
+Every price a customer sees reads « 11.50 € » with a dot, € after the number, in fr, nl and en alike, totals included
+(`euros()` / `eurosCourt()` in `src/prixPlat.js`; « 4 € » when whole in short forms, « 1 250.00 € », « −2.50 € »). Prices are
+drawn about 6 % smaller (one `zoom` rule in `client-ui.css`, never under 12 px). Why: the founder's observation (Uber
+Eats) that the dot reads lighter, and the size effect (Coulter & Coulter 2005). Receipts, invoices and e-mails are made by
+the backend and keep « 11,50 € ». Mockup: `maquettes/retours-08-11/retours-08-11.html`.

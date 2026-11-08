@@ -21,6 +21,7 @@ import ErreurChargement from '../../components/ErreurChargement';
 import CertifiedBadge from '../../components/CertifiedBadge';
 import { imgProps, cacherImageCassee } from '../../images';
 import { normaliserRecherche } from '../../normaliserRecherche';
+import { versListe } from '../../filtresEnvoyes';
 import { CarteDemanderRecherche } from '../../components/demandes/CartesDemander';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
@@ -212,8 +213,8 @@ export default function SearchPage() {
     const versFiche = (commerce) => { const l = lienFiche(user, commerce); return navigate(l.to, { state: l.state }); };
     if (r.commerces[0]) return versFiche(r.commerces[0]);
     if (r.plats[0]) return versFiche(r.plats[0].restaurant);
-    if (r.cuisines[0]) return navigate('/restaurants', { state: { categorie: categories.deSpecialite(r.cuisines[0].value) } });
-    if (r.communes[0]) return navigate('/restaurants', { state: { commune: r.communes[0] } });
+    if (r.cuisines[0]) return navigate('/restaurants', { state: versListe({ categorie: categories.deSpecialite(r.cuisines[0].value) }) });
+    if (r.communes[0]) return navigate('/restaurants', { state: versListe({ commune: r.communes[0] }) });
     if (r.aide[0]) return navigate(r.aide[0].to);
     if (r.rubriques[0]) return navigate(r.rubriques[0].to);
     if (r.mesCommandes[0]) return navigate('/orders');
@@ -269,7 +270,7 @@ export default function SearchPage() {
           <h3 className="recherche-titre-app">{t('search.byCraving')}</h3>
           <div className="recherche-tuiles">
             {famillesTuiles.map((f) => (
-              <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
+              <Link key={f.cle} to="/restaurants" state={versListe({ categorie: f.cle })} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
                 <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration)} alt="" width="52" height="52" decoding="async" draggable="false" />
                 <span>{libelleCategorie(f.cle, t)}</span>
               </Link>
@@ -316,7 +317,7 @@ export default function SearchPage() {
                 mêmes que dans l'app, avec l'illustration 2D (sans relief) au lieu de la 3D. */}
             <div className="recherche-tuiles recherche-tuiles--site">
               {famillesTuiles.map((f) => (
-                <Link key={f.cle} to="/restaurants" state={{ famille: f.cle }} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
+                <Link key={f.cle} to="/restaurants" state={versListe({ categorie: f.cle })} className="recherche-tuile" style={{ '--tuile-fond': f.fond }}>
                   <img className="recherche-tuile-illu" src={illustrationCuisine(f.illustration, { plat: true })} alt="" width="40" height="40" decoding="async" draggable="false" />
                   <span>{libelleCategorie(f.cle, t)}</span>
                 </Link>
@@ -386,13 +387,13 @@ export default function SearchPage() {
           <Groupe titre={t('search.cuisineTypes')} quand={resultats.cuisines.length}>
             {resultats.cuisines.map((c) => (
               // Plus de rangée de spécialités sous la bande (2026-10-27) : la ligne ouvre la catégorie où elle se trouve, et le dit.
-              <Ligne key={c.value} to="/restaurants" state={{ categorie: categories.deSpecialite(c.value) }} icone={<Icone nom={iconeSpecialite(c.value)} taille={20} />} titre={restaurantTypeLabel(c.value, t) || c.value}
+              <Ligne key={c.value} to="/restaurants" state={versListe({ categorie: categories.deSpecialite(c.value) })} icone={<Icone nom={iconeSpecialite(c.value)} taille={20} />} titre={restaurantTypeLabel(c.value, t) || c.value}
                 sous={t('search.seeCategory', { categorie: libelleCategorie(categories.deSpecialite(c.value), t) })} />
             ))}
           </Groupe>
           <Groupe titre={t('search.municipalities')} quand={resultats.communes.length}>
             {resultats.communes.map((c) => (
-              <Ligne key={c} to="/restaurants" state={{ commune: c }} icone="position" titre={c} sous={t('search.seeMunicipalityBusinesses')} />
+              <Ligne key={c} to="/restaurants" state={versListe({ commune: c })} icone="position" titre={c} sous={t('search.seeMunicipalityBusinesses')} />
             ))}
           </Groupe>
           <Groupe titre={t('search.myOrders')} quand={resultats.mesCommandes.length}>

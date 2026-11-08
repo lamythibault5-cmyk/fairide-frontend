@@ -4941,6 +4941,30 @@ button.fiche-adresse { width: 100%; text-align: left; font-family: inherit; font
 .adresse-ici { margin-top: 6px; border-bottom: 0; }
 .adresse-ici .adresse-choisir { color: var(--iris); }
 .adresse-ici-trouvee { margin: -10px 0 14px; color: var(--ink-soft); }
+/* MAISON ET TRAVAIL (2026-11-08, maquette retours-08-11) : deux rangées épinglées sous la recherche, « Ajouter » en iris tant
+   qu'elles sont vides ; « Changer » à droite d'une rangée posée ; un bandeau quand on choisit l'adresse de l'une d'elles. */
+.adresses-fixes { margin-top: 10px; border-top: 1px solid var(--line); }
+.adresse-fixe .adresse-nom { font-weight: 700; }
+.adresse-ajouter { color: var(--iris); font-weight: 600; }
+.adresse-changer {
+  flex: 0 0 auto; align-self: center; min-height: 36px; padding: 0 12px; margin-right: 4px;
+  background: none; border: 0; border-radius: var(--radius-pill); font: inherit; font-size: 14px; font-weight: 600;
+  color: var(--iris); cursor: pointer;
+}
+.adresse-changer:hover { background: var(--iris-tint); }
+.adresse-cible {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px;
+  margin-top: 12px; padding: 10px 12px; border-radius: 14px; background: var(--iris-tint); color: var(--ink); font-size: 14px; font-weight: 600;
+}
+.adresse-cible-actions { display: flex; gap: 6px; }
+/* Les trois pastilles du nom, à l'étape d'enregistrement. */
+.adresse-noms { display: flex; gap: 8px; margin: -6px 0 16px; flex-wrap: wrap; }
+.adresse-nom-puce {
+  display: inline-flex; align-items: center; gap: 6px; min-height: 40px; padding: 0 14px;
+  border: 1.5px solid var(--line); border-radius: var(--radius-pill); background: #fff;
+  font: inherit; font-size: 14px; font-weight: 600; color: var(--ink); cursor: pointer;
+}
+.adresse-nom-puce.on { border-color: var(--iris); background: var(--iris-tint); color: var(--iris); }
 
 /* Message d'erreur d'un champ : sous le champ qu'il concerne, en rouge d'état. */
 .champ-erreur { margin: 0 0 10px; font-size: 14px; font-weight: 600; color: var(--red); }

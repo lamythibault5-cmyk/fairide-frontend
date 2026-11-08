@@ -66,7 +66,7 @@ refuses another value (`FIXED_RULE`).
 recommendations, no tip on the payment page). The checkout card is kept by Stripe (`setup_future_usage: 'on_session'` on the
 card only, never Bancontact: it would become a SEPA mandate the founder refused; if Stripe ever refuses the setting the
 order page opens without it). At arrival a sheet (`components/client/Pourboire.jsx`, opened by the push « Karim t'a livré »
-→ `/orders?pourboire=<id>`, or once when a delivered order shows up) and a row on the order card offer 1 / 2 / 3 € or
+→ `/orders?pourboire=<id>`, or once when a delivered order shows up) and a row on the order card offer 1 / 2 / 5 € (3 € until 2026-11-08) or
 « Autre », **minimum 1 €**, **7 days** after delivery; « Donner 2 € » calls `POST /api/payments/tip/:id`, which charges
 the saved card (backend `pourboireApres.js`); Bancontact, an order from before, a removed card or a bank confirmation
 open today's Stripe page with the amount filled in. Whatever the path, `pourboireApres.enregistrerPaye` records it,

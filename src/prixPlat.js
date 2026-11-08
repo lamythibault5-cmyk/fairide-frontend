@@ -55,9 +55,29 @@ function formateur(forme, options) {
   return f;
 }
 
-// Montant en euros dans la langue affichée : 15,11 € (fr-BE), €15.11 (en-GB), € 15,11 (nl-BE).
+/* LES PRIX AVEC UN POINT, PAREIL DANS LES TROIS LANGUES (Owen, 2026-11-08, version A de maquettes/retours-08-11) :
+ * « 11.50 € » au lieu de « 11,50 € » (fr), « € 11,50 » (nl) ou « €11.50 » (en). Comme Uber Eats : sans la queue de la
+ * virgule, le prix paraît plus petit. Partout où le client voit un prix, totaux compris (même choix pour le site). Les
+ * documents du serveur (reçus PDF, factures, e-mails) ne passent pas par ici. Le signe € après le nombre, espace
+ * insécable ; au-delà de 999, une espace fine insécable entre les milliers (« 1 250.00 € ») ; un montant négatif
+ * s'écrit avec le vrai signe moins (« −2.50 € »). L'arrondi reste celui d'Intl (au centime, comme avant). */
+const ESPACE_EURO = '\u00a0';
+const ESPACE_MILLIERS = '\u202f';
+const FORMATS_POINT = [];
+function eurosPoint(v, decimales) {
+  const n = Number(v) || 0;
+  // Un seul format quelle que soit la langue : les chiffres d'en-US, ses séparateurs remplacés ci-dessous.
+  if (!FORMATS_POINT[decimales]) FORMATS_POINT[decimales] = new Intl.NumberFormat('en-US', { minimumFractionDigits: decimales, maximumFractionDigits: decimales });
+  const corps = FORMATS_POINT[decimales].formatToParts(Math.abs(n))
+    .map((p) => (p.type === 'group' ? ESPACE_MILLIERS : p.type === 'decimal' ? '.' : p.value)).join('');
+  // « −0.00 € » n'existe pas : un montant qui s'arrondit à zéro s'écrit sans signe.
+  const negatif = n < 0 && /[1-9]/.test(corps);
+  return `${negatif ? '−' : ''}${corps}${ESPACE_EURO}€`;
+}
+
+// Montant en euros, toujours deux décimales : « 15.11 € ».
 export function euros(v) {
-  return formateur('euros', { style: 'currency', currency: 'EUR' }).format(Number(v) || 0);
+  return eurosPoint(v, 2);
 }
 
 // Une distance dans le format de la langue : « 0,3 km » en français et en néerlandais, « 0.3 km » en anglais (audit du 19/10,
@@ -70,9 +90,10 @@ export function kmLisible(v) {
 
 // Même chose sans « ,00 » pour un montant rond : un badge « -4 € dès 25 € » se lit mieux que « -4,00 € dès 25,00 € ».
 // Exportée pour la page Promotions du commerce (audit du 19/10, shop-119 : elle avait son propre format, français partout).
+// Même format à point que euros() : « 4 € », « 2.50 € ».
 export function eurosCourt(v) {
   const n = Number(v) || 0;
-  return formateur(Number.isInteger(n) ? 'rond' : 'centimes', { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
+  return eurosPoint(n, Number.isInteger(n) ? 0 : 2);
 }
 
 /* LIBELLÉ D'UNE PROMO DANS LA LANGUE AFFICHÉE.

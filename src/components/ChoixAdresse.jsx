@@ -7,6 +7,7 @@ import SousEcran from './SousEcran';
 import AddressSearch from './AddressSearch';
 import Icone from './Icone';
 import { positionPrecise } from '../natif';
+import { LIBELLES_RESERVES, nomAdresse, rueAdresse } from '../nomAdresse';
 
 // LE CARNET D'ADRESSES : choisir où livrer, ou en ajouter une.
 //
@@ -22,7 +23,9 @@ import { positionPrecise } from '../natif';
 // fausse adresse, mais Mon compte l'enregistrait sans rien vérifier, et c'est cette adresse-là que
 // tout le reste affichait. La vérification vit maintenant au point d'écriture, pas à l'arrivée.
 // `onSaisieManuelle` (paiement) : l'adresse introuvable par la recherche se tape à la main, champ par champ.
-export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) {
+// `depuisPosition` (2026-11-08) : ouvert par la bulle « Tu es à 4,2 km de … › Livrer à ma position » (BulleAdresseLoin.jsx) :
+// le carnet part tout de suite sur « Utiliser ma position ».
+export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle, depuisPosition = false }) {
   const { t } = useLanguage();
   const { token, user, refreshUser } = useAuth();
   const toast = useToast();
@@ -39,6 +42,17 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
   // « Utiliser ma position » : la recherche en cours, puis ce qui l'a fait échouer (affiché sous la rangée).
   const [chercheIci, setChercheIci] = useState(false);
   const [erreurIci, setErreurIci] = useState('');
+  /* MAISON ET TRAVAIL (fondateur, 2026-11-08, maquette retours-08-11). `cible` : on est en train de choisir l'adresse de
+   * la Maison ou du Travail (« Ajouter » ou « Changer » sur sa rangée) : la prochaine adresse ajoutée la prend, et toucher
+   * une adresse enregistrée lui donne ce nom au lieu de la choisir. `libelle` : le nom choisi à l'étape d'enregistrement
+   * (pastilles Maison / Travail / Autre). */
+  const [cible, setCible] = useState(null);
+  const [libelle, setLibelle] = useState('');
+
+  useEffect(() => {
+    if (depuisPosition) depuisMaPosition();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     api('/auth/me/addresses', { token })
@@ -51,6 +65,14 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
   const enCours = (a) =>
     (user.addressStreet || '').toLowerCase() === (a.street || '').toLowerCase()
     && (user.addressNumber || '').toLowerCase() === (a.number || '').toLowerCase();
+
+  // Les adresses nommées Maison et Travail sont épinglées en haut ; les autres dessous. En mode choix (`cible`), toutes
+  // celles qui ne portent pas déjà ce nom sont proposées.
+  const fixes = {
+    maison: (adresses || []).find((a) => a.label === 'maison') || null,
+    travail: (adresses || []).find((a) => a.label === 'travail') || null
+  };
+  const autres = (adresses || []).filter((a) => (cible ? a.label !== cible : !LIBELLES_RESERVES.includes(a.label)));
 
   async function choisir(a) {
     if (occupe) return;
@@ -81,10 +103,11 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
   // client pour une lacune de la carte. Voir verifierAdressePrecise (backend/geocode.js), qui porte
   // les mesures. Quand le numéro est reconnu, ce sont les coordonnées de LA MAISON qui sont
   // enregistrées, pas le milieu de la voie : c'est ce que le livreur verra sur sa carte.
+  // DEPUIS LE 2026-11-08, TOUTE ADRESSE AJOUTÉE PASSE PAR CETTE ÉTAPE : le numéro (prérempli s'il est connu) et son nom,
+  // Maison, Travail ou Autre, comme chez Uber Eats. Un toucher de plus, pour ne plus avoir à nommer l'adresse après coup.
   function ajouter(suggestion) {
     if (occupe) return;
-    if (!suggestion.number) { setACompleter(suggestion); setNumero(''); setErreur(''); return; }
-    enregistrer(suggestion);
+    setACompleter(suggestion); setNumero(suggestion.number || ''); setErreur(''); setLibelle(cible || '');
   }
 
   // UTILISER MA POSITION (fondateur, 2026-11-07 : « quand je cherche une adresse, qu'il prenne juste ma position, je l'ai
@@ -105,7 +128,7 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
       const r = await api(`/restaurants/lookup/reverse?lat=${p.lat.toFixed(6)}&lng=${p.lng.toFixed(6)}`);
       if (!r?.found) { setErreurIci(t('adresses.hereNotFound')); return; }
       setACompleter({ street: r.street, postalCode: r.postalCode, city: r.city, parPosition: true });
-      setNumero(r.number || ''); setErreur('');
+      setNumero(r.number || ''); setErreur(''); setLibelle(cible || '');
     } catch {
       setErreurIci(t('adresses.hereNotFound'));
     } finally {
@@ -118,14 +141,31 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
     try {
       const creee = await api('/auth/me/addresses', {
         method: 'POST', token,
-        body: { street: adresse.street, number: adresse.number, postalCode: adresse.postalCode, city: adresse.city }
+        body: { street: adresse.street, number: adresse.number, postalCode: adresse.postalCode, city: adresse.city, label: libelle }
       });
-      setAdresses((l) => [...(l || []).filter((x) => x.id !== creee.id), creee]);
+      // Le serveur retire le nom Maison / Travail à l'adresse qui l'avait (un seul de chaque) : on fait de même ici.
+      setAdresses((l) => [...(l || []).filter((x) => x.id !== creee.id).map((x) => (creee.label && x.label === creee.label && LIBELLES_RESERVES.includes(creee.label) ? { ...x, label: '' } : x)), creee]);
+      setCible(null);
       setACompleter(null);
       await choisir(creee);
     } catch (e) {
       // Pendant la saisie du numéro, le message reste sous le champ ; ailleurs, le toast fait l'affaire.
       if (aCompleter) setErreur(e.message); else toast(e.message, 'erreur');
+      setOccupe(false);
+    }
+  }
+
+  // Donner (ou retirer, '') le nom Maison / Travail à une adresse déjà enregistrée : PATCH /auth/me/addresses/:id.
+  async function nommer(a, label) {
+    if (occupe) return;
+    setOccupe(true);
+    try {
+      const maj = await api(`/auth/me/addresses/${a.id}`, { method: 'PATCH', token, body: { label } });
+      setAdresses((l) => (l || []).map((x) => (x.id === maj.id ? maj : (label && x.label === label ? { ...x, label: '' } : x))));
+      setCible(null);
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
       setOccupe(false);
     }
   }
@@ -152,6 +192,13 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
             <span className="adresse-sous">{`${aCompleter.postalCode} ${aCompleter.city}`.trim()}</span>
           </p>
           {aCompleter.parPosition && <p className="small adresse-ici-trouvee">{t('adresses.hereFound')}</p>}
+          <div className="adresse-noms" role="group" aria-label={t('adresses.nameLabel')}>
+            {[['maison', t('adresses.home'), 'maison'], ['travail', t('adresses.work'), 'mallette'], ['', t('adresses.other'), 'position']].map(([cle, nom, icone]) => (
+              <button key={cle || 'autre'} type="button" className={`adresse-nom-puce${libelle === cle ? ' on' : ''}`} aria-pressed={libelle === cle} onClick={() => setLibelle(cle)}>
+                <Icone nom={icone} taille={16} />{nom}
+              </button>
+            ))}
+          </div>
           <div className="field">
             <label htmlFor="adresse-numero-champ">{t('adresses.numberLabel')}</label>
             <input
@@ -197,34 +244,67 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle }) 
       {onSaisieManuelle && (
         <button type="button" className="btn-ghost btn-sm" style={{ marginTop: 6 }} onClick={onSaisieManuelle}>{t('adresses.typeManually')}</button>
       )}
-      <h3 className="adresses-titre">{t('adresses.saved')}</h3>
+      {/* MAISON ET TRAVAIL, ÉPINGLÉES EN HAUT (2026-11-08) : posées, on les touche pour y livrer ; pas encore, « Ajouter ».
+          « Changer » (ou « Ajouter ») passe le carnet en mode choix : la prochaine adresse ajoutée prend ce nom, ou on touche
+          une adresse enregistrée. */}
+      {cible && (
+        <div className="adresse-cible" role="status">
+          <span>{t(cible === 'maison' ? 'adresses.pickHome' : 'adresses.pickWork')}</span>
+          <span className="adresse-cible-actions">
+            {fixes[cible] && <button type="button" className="btn-ghost btn-sm" onClick={() => nommer(fixes[cible], '')} disabled={occupe}>{t('adresses.unname', { nom: t(cible === 'maison' ? 'adresses.home' : 'adresses.work') })}</button>}
+            <button type="button" className="btn-ghost btn-sm" onClick={() => setCible(null)}>{t('adresses.cancel')}</button>
+          </span>
+        </div>
+      )}
+      {adresses !== null && !cible && (
+        <div className="adresses-fixes">
+          {[['maison', t('adresses.home'), 'maison'], ['travail', t('adresses.work'), 'mallette']].map(([cle, nom, icone]) => {
+            const a = fixes[cle];
+            return (
+              <div key={cle} className={`adresse-ligne adresse-fixe${a && enCours(a) ? ' est-active' : ''}`}>
+                <button type="button" className="adresse-choisir" onClick={() => (a ? choisir(a) : setCible(cle))} disabled={occupe}>
+                  <Icone nom={icone} taille={20} />
+                  <span className="adresse-texte">
+                    <span className="adresse-nom">{nom}</span>
+                    <span className={`adresse-sous${a ? '' : ' adresse-ajouter'}`}>{a ? rueAdresse(a) : t('adresses.add')}</span>
+                  </span>
+                </button>
+                {a && <button type="button" className="adresse-changer" onClick={() => setCible(cle)} aria-label={t('adresses.changeNamed', { nom })}>{t('adresses.change')}</button>}
+              </div>
+            );
+          })}
+        </div>
+      )}
+      <h3 className="adresses-titre">{t(cible ? 'adresses.pickFromSaved' : 'adresses.saved')}</h3>
       {adresses === null && <p className="small">{t('adresses.loading')}</p>}
-      {adresses !== null && adresses.length === 0 && (
+      {adresses !== null && autres.length === 0 && (
         <p className="small adresses-vide">{t('adresses.empty')}</p>
       )}
-      {(adresses || []).map((a) => (
-        <div key={a.id} className={`adresse-ligne${enCours(a) ? ' est-active' : ''}`}>
-          <button type="button" className="adresse-choisir" onClick={() => choisir(a)} disabled={occupe}>
+      {autres.map((a) => (
+        <div key={a.id} className={`adresse-ligne${enCours(a) && !cible ? ' est-active' : ''}`}>
+          <button type="button" className="adresse-choisir" onClick={() => (cible ? nommer(a, cible) : choisir(a))} disabled={occupe}>
             <Icone nom={a.label ? 'maison' : 'position'} taille={20} />
             <span className="adresse-texte">
-              <span className="adresse-nom">{a.label || `${a.street} ${a.number}`.trim()}</span>
+              <span className="adresse-nom">{nomAdresse(a, t) || `${a.street} ${a.number}`.trim()}</span>
               <span className="adresse-sous">
-                {a.label ? `${a.street} ${a.number}, ${a.city}`.replace(' ,', ',') : `${a.postalCode} ${a.city}`.trim()}
+                {a.label ? rueAdresse(a) : `${a.postalCode} ${a.city}`.trim()}
               </span>
             </span>
           </button>
           {/* Supprimer, et non modifier comme chez Uber : une adresse est géocodée à l'enregistrement,
               donc la corriger reviendrait à en créer une autre. Supprimer puis rechercher est plus
               court, et évite une adresse dont les coordonnées ne correspondent plus au texte. */}
-          <button
-            type="button"
-            className="adresse-supprimer"
-            onClick={(e) => supprimer(a, e)}
-            aria-label={t('adresses.remove', { adresse: `${a.street} ${a.number}` })}
-            title={t('adresses.removeShort')}
-          >
-            <span aria-hidden="true">×</span>
-          </button>
+          {!cible && (
+            <button
+              type="button"
+              className="adresse-supprimer"
+              onClick={(e) => supprimer(a, e)}
+              aria-label={t('adresses.remove', { adresse: `${a.street} ${a.number}` })}
+              title={t('adresses.removeShort')}
+            >
+              <span aria-hidden="true">×</span>
+            </button>
+          )}
         </div>
       ))}
       </>

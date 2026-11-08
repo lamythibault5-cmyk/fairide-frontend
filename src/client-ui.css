@@ -124,6 +124,14 @@
 .plat-prix.est-remise, .plat .plat-prix.est-remise { color: var(--promo); }
 .plat-prix-avant { font-size: 13px; color: var(--ink-faint); }
 .plat-promo { color: var(--promo); font-size: 13px; font-weight: 700; }
+/* LES PRIX UN PEU PLUS PETITS (Owen, 2026-11-08, maquettes/retours-08-11 : « reduire un petit peu la police »), avec le point
+   (prixPlat.js). Un seul réglage, quelle que soit la taille propre à chaque écran (carte, fiche du plat, panier, paiement,
+   barres) : `zoom` réduit le prix de 6 % là où il est, sans toucher à la taille écrite ailleurs ; les chiffres qui roulent
+   (ChiffresRoulants, en %) suivent. Les prix déjà à 12,5 px ou moins (aperçus de la liste, prix barrés) n'y sont pas : ils
+   resteraient lisibles mais passeraient sous 12 px. */
+.plat-prix, .plat-ajouter-prix, .plat-option-prix,
+.panier-ligne-paye, .fiche-panier-ligne-prix, .fiche-voir-panier-total, .panier-pilule-total, .ec-feuille .upsell-item-price,
+.co-barre-montant, .co-bouton-montant, .co-t-montant, .sc-roulant { zoom: var(--prix-zoom, 0.94); }
 .plat-visuel { position: relative; flex-shrink: 0; width: 112px; height: 112px; border-radius: 12px; overflow: hidden; background: var(--surface-soft); }
 .plat-visuel .plat-photo { width: 100%; height: 100%; object-fit: cover; display: block; }
 .plat-ajout {

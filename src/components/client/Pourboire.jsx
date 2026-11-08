@@ -3,7 +3,7 @@
  *
  * Avant : « Laisser un pourboire » caché sous « Détails », un formulaire gris, puis une seconde page Stripe où remettre son
  * moyen de paiement — sept gestes, presque personne n'allait au bout. Maintenant deux gestes, sans quitter l'appli :
- * le montant (1, 2, 3 € ou « Autre », 2 € choisi d'office pour que le bouton dise ce qu'il fait), puis « Donner 2 € ».
+ * le montant (1, 2, 5 € ou « Autre » ; 5 au lieu de 3 le 2026-11-08, Owen, 2 € choisi d'office pour que le bouton dise ce qu'il fait), puis « Donner 2 € ».
  *   - FeuillePourboire : la feuille qui s'ouvre une fois à l'arrivée (notification « Karim t'a livré », ou la commande qui
  *     passe à « Livrée » sous les yeux), version A de la maquette ;
  *   - ChoixPourboire variante « ligne » : la même chose sur la carte de la commande dans Mes commandes, pendant les sept
@@ -26,7 +26,7 @@ import './pourboire.css';
 
 const prenom = (nom) => String(nom || '').trim().split(/\s+/)[0] || '';
 const initiales = (nom) => String(nom || '').trim().split(/\s+/).filter(Boolean).slice(0, 2).map((m) => m[0].toUpperCase()).join('');
-const MONTANTS = [1, 2, 3];
+const MONTANTS = [1, 2, 5];
 
 // « Visa •••• 4242 · la carte de ta commande », « Apple Pay · comme ta commande », « Bancontact · comme ta commande ».
 function libelleMoyen(moyen, t) {

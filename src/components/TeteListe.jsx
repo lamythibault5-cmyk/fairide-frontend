@@ -105,7 +105,7 @@ export function RouteVelo({ position = 12, className = '', roule = false, avance
  * C'est le filtre « À emporter » qui existait déjà (RestaurantList.jsx, `emporter`) : « À emporter » ne garde que les
  * commerces qui proposent l'emporter, « Livraison » les montre tous, comme la pastille éteinte d'avant. Même état, même
  * logique : seule la place change. Forme : { emporter, choisir(bool), libelleLivraison, libelleEmporter, libelleGroupe }. */
-export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null }) {
+export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, bulle = null }) {
   const app = experienceApp();
   const bandeau = adresse != null;
 
@@ -144,15 +144,18 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
       if (saute) { void l.offsetWidth; l.style.transition = ''; l.dataset.pose = '1'; }
       // Après la mesure sans transition : seules l'opacité et la taille (scale) s'animent.
       l.classList.add('lt-lentille--vue');
-      if (!premiere && precedente !== puce) {
+      if (precedente !== puce) {
         // La pastille vient à l'écran. Plus de « goutte » (la lentille qui s'étirait et rebondissait en partant) : elle glisse
         // comme celle de la barre d'onglets (fondateur, 2026-10-23 : « beaucoup plus calme », ecran-liste.css).
+        // Ouverte avec une catégorie déjà choisie (Recherche, retour d'une fiche) : la bande y est d'un coup, sans défiler
+        // (2026-10-27 : « Courses », la dernière, s'ouvrait hors de l'écran, sans bulle visible).
         const d = defile.current;
+        const comment = premiere ? 'auto' : defilement();
         if (d) {
           const g = puce.offsetLeft - 24;
           const dr = puce.offsetLeft + puce.offsetWidth + 24;
-          if (g < d.scrollLeft) d.scrollTo({ left: g, behavior: defilement() });
-          else if (dr > d.scrollLeft + d.clientWidth) d.scrollTo({ left: dr - d.clientWidth, behavior: defilement() });
+          if (g < d.scrollLeft) d.scrollTo({ left: g, behavior: comment });
+          else if (dr > d.scrollLeft + d.clientWidth) d.scrollTo({ left: dr - d.clientWidth, behavior: comment });
         }
       }
       precedente = puce;
@@ -214,6 +217,8 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
             <div className="lt-route" aria-hidden="true">
               <span className="lt-velo" ref={velo}>{VELO}</span>
             </div>
+            {/* « Tu es à 4,2 km de … » (BulleAdresseLoin.jsx, 2026-11-08) : sous l'adresse, la pointe vers elle. */}
+            {bulle}
           </div>
         </div>
       )}

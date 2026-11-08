@@ -50,6 +50,13 @@ import { vibrer } from '../../gestes';
 import { normaliserRecherche } from '../../normaliserRecherche';
 import RangeeDemandes from '../../components/demandes/RangeeDemandes';
 import { FinDeListeDemande } from '../../components/demandes/CartesDemander';
+import { filtresEnvoyes } from '../../filtresEnvoyes';
+import usePositionLancement from '../../hooks/usePositionLancement';
+import BulleAdresseLoin from '../../components/client/BulleAdresseLoin';
+import { adresseEnCours, nomAdresse } from '../../nomAdresse';
+
+// Une liste lue en cache, ou [] : une réponse d'une autre forme (objet, ancienne version) ne fait plus planter la liste.
+const listeEnCache = (chemin) => { const l = lireCache(chemin); return Array.isArray(l) ? l : []; };
 
 // « TRIER » RETIRÉ POUR LE MOMENT (fondateur, 2026-10-20, après le test avec Maestro Pizza) : avec une poignée de commerces,
 // trier ne sert à rien et charge la bande. L'état et les règles restent (le tri « Recommandé » est celui que décrit
@@ -453,13 +460,19 @@ function RangeeApercu({ title, icon, list: rangee, favoriteIds, onToggleFavorite
 }
 
 export default function RestaurantList() {
-  const { token, user } = useAuth();
+  const { token, user, refreshUser } = useAuth();
   // BOUTON GO (audit du 19/10, discovery-01) : la liste suit l'état du serveur comme la fiche (src/launch.js). Sans cet
   // abonnement, un téléphone neuf après GO voyait « Commande en ligne bientôt » jusqu'à ouvrir une fiche, et un téléphone
   // resté sur « GO » promettait la livraison après la fermeture.
   useLancement();
   // Carnet d'adresses, ouvert depuis la rangee « Livrer a » en tete de page.
+  // 'ici' : ouvert par la bulle « Livrer à ma position », directement sur la position (ChoixAdresse, depuisPosition).
   const [choixAdresse, setChoixAdresse] = useState(false);
+  // LA POSITION À CHAQUE OUVERTURE (2026-11-08, usePositionLancement.js) : l'adresse du carnet où l'on est, la bulle « Tu es
+  // à 4,2 km de … », et, sans compte, le tri du plus proche.
+  const lancement = usePositionLancement({ user, token, refreshUser });
+  // D'où se mesurent les distances : l'adresse du compte, sinon (sans compte) la position du téléphone.
+  const reperePos = user?.lat && user?.lng ? { lat: user.lat, lng: user.lng } : (!user && lancement.position ? lancement.position : null);
   const { t } = useLanguage();
   const navigate = useNavigate();
   const location = useLocation();
@@ -512,11 +525,12 @@ export default function RestaurantList() {
     return chargerAvecCache(CHEMIN_LISTE, { forcer, token: jetonListe(user, token) }).then((l) => { setRestaurants(l); setEchecListe(false); return true; }).catch(() => { setEchecListe(true); return false; }).finally(() => setLoading(false));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.isTest, token]);
-  const [search, setSearch] = useState(sauves ? sauves.search : filtresInitiaux.search || '');
-  const [commune, setCommune] = useState(sauves ? sauves.commune : filtresInitiaux.commune || '');
+  const envoyesAuMontage = filtresEnvoyes(filtresInitiaux);
+  const [search, setSearch] = useState(sauves ? sauves.search : envoyesAuMontage.search);
+  const [commune, setCommune] = useState(sauves ? sauves.commune : envoyesAuMontage.commune);
   // LA CATÉGORIE CHOISIE (fondateur, 2026-10-27, categoriesClient dans specialites.js) : une seule bande, plus de rangée de
   // spécialités dessous. La Recherche envoie la catégorie (« Par envie », ou celle d'une spécialité tapée).
-  const [categorie, setCategorie] = useState(sauves ? sauves.categorie || '' : filtresInitiaux.categorie || '');
+  const [categorie, setCategorie] = useState(sauves ? sauves.categorie || '' : envoyesAuMontage.categorie);
   /* CHANGER DE CUISINE NE FAIT PLUS « SAUTER » LA LISTE (fondateur, 2026-10-23 : « comme la barre d'onglets, beaucoup plus
      calme »). Les cartes jouent leur entrée (popIn, styles.css) à la première apparition de la liste ; un changement de
      catégorie les remplace sans la rejouer — comme un onglet, qui change d'écran sans animation
@@ -562,14 +576,21 @@ export default function RestaurantList() {
     if (location.key === cleMontee.current) return;
     cleMontee.current = location.key;
     const st = location.state || {};
-    if (!st.filtresListe && !st.categorie && !st.commune && !st.search) reinitialiserFiltres();
+    if (st.filtresListe) return;
+    reinitialiserFiltres();
+    // Une catégorie, une commune ou un mot envoyés par la Recherche alors que la liste est déjà montée derrière elle (2026-10-27,
+    // revenu le 2026-11-08) : ils s'appliquent ici, pas seulement au montage (useState plus haut), sinon la liste restait sur tout.
+    const envoyes = filtresEnvoyes(st);
+    if (envoyes.categorie) setCategorie(envoyes.categorie);
+    if (envoyes.commune) setCommune(envoyes.commune);
+    if (envoyes.search) setSearch(envoyes.search);
   }, [location.key, location.state, reinitialiserFiltres]);
   const [panneau, setPanneau] = useState(null);
   // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
   // les démos restent dessous, pour montrer l'étendue de l'offre.
-  const [inscrits, setInscrits] = useState(() => (lireCache('/restaurants/landing') || []).filter((r) => r.menuComplete));
+  const [inscrits, setInscrits] = useState(() => listeEnCache('/restaurants/landing').filter((r) => r.menuComplete));
   // Date d'inscription de chaque commerce (ms), pour « Nouveau sur Fairide » sur les cartes « À la une ».
-  const [inscritLe, setInscritLe] = useState(() => new Map((lireCache('/restaurants/landing') || []).filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
+  const [inscritLe, setInscritLe] = useState(() => new Map(listeEnCache('/restaurants/landing').filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
   const [placementsTous, setPlacementsTous] = useState(() => lireCache('/placements/active')?.placements || []);
   // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
   const [rangeesAjoutees, setRangeesAjoutees] = useState(() => lireCache('/placements/active')?.sections || []);
@@ -720,7 +741,7 @@ export default function RestaurantList() {
   const hasActiveFilter = !!(search || categorieListe || commune || bio || vegan || halal || sansGluten || emporterListe || ouvertListe || livreListe || tri !== 'recommande');
 
   // Distance a vol d'oiseau depuis l'adresse du compte, quand elle est connue.
-  const distanceDe = (r) => (user?.lat && user?.lng && r.lat && r.lng ? haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) : null);
+  const distanceDe = (r) => (reperePos && r.lat && r.lng ? haversineDistanceKm(reperePos.lat, reperePos.lng, r.lat, r.lng) : null);
 
   // `toujoursOuvert` : la même règle sans l'heure, pour l'écran vide (qui rouvre en premier).
   const garderDisponibilite = (r, options) => (!ouvertListe || ouvertPourCommander(r, user, maintenant, options))
@@ -758,7 +779,7 @@ export default function RestaurantList() {
     // proche (sauf filtre de commune explicite), l'ordre du serveur (plus récent d'abord) départageant un même anneau.
     .sort((a, b) => {
       if (tri !== 'recommande') return 0;
-      if (user?.lat && user?.lng) return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity) || 0;
+      if (reperePos) return (distanceDe(a) ?? Infinity) - (distanceDe(b) ?? Infinity) || 0;
       if (!homeCommune || commune) return 0;
       return communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune);
     })
@@ -858,17 +879,19 @@ export default function RestaurantList() {
   // repli sur une sélection aléatoire parmi tous (hors déjà commandés), pour que la section s'affiche
   // toujours immédiatement dès que la liste des restos est chargée.
   const discoverList = useMemo(() => {
-    const hasLocation = user?.lat && user?.lng;
+    const hasLocation = !!reperePos;
     const eligible = nonGrocery.filter((r) => (
       !orderedRestaurantIds.has(r.id) &&
-      (!hasLocation || (r.lat && r.lng && haversineDistanceKm(user.lat, user.lng, r.lat, r.lng) <= DISCOVER_RADIUS_KM))
+      (!hasLocation || (r.lat && r.lng && haversineDistanceKm(reperePos.lat, reperePos.lng, r.lat, r.lng) <= DISCOVER_RADIUS_KM))
     ));
     const des = new Map(eligible.map((r) => [r.id, Math.random()]));
     return [...eligible].sort((a, b) => rang(a) - rang(b) || des.get(a.id) - des.get(b.id)).slice(0, DISCOVER_MAX);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, homeCommune, orderedRestaurantIds, user?.lat, user?.lng]);
+  }, [restaurants, homeCommune, orderedRestaurantIds, reperePos?.lat, reperePos?.lng]);
 
-  const avecPosition = !!(user?.lat && user?.lng);
+  const avecPosition = !!reperePos;
+  // Le nom de l'adresse choisie dans le carnet (« Maison », « Travail », ou celui tapé), vide sinon.
+  const nomEnCours = user ? nomAdresse(adresseEnCours(lancement.adresses, user), t) : '';
   const libelleTri = (cle) => (cle === 'recommande' ? t('mapClient.sortRecommended') : t('siteListe.triDistance'));
   // « Manger local : les commerces de … d'abord » retiré (fondateur, 2026-10-16) : on ne prévient plus que si la commune n'a
   // encore aucun commerce, pour dire pourquoi la liste montre ceux d'à côté.
@@ -920,7 +943,8 @@ export default function RestaurantList() {
         adresse={user ? (user.addressStreet && user.addressCity
           ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',')
           : t('restaurantMenu.noAddress')) : null}
-        intituleAdresse={t('restaurantMenu.deliverTo')}
+        // « Livrer à · Maison » quand l'adresse choisie a un nom dans le carnet (2026-11-08).
+        intituleAdresse={nomEnCours ? t('restaurantMenu.deliverToNamed', { nom: nomEnCours }) : t('restaurantMenu.deliverTo')}
         libelleChanger={t('restaurantMenu.changeAddress')}
         onAdresse={() => setChoixAdresse(true)}
         // Avec la colonne, Bio / Vegan / Halal / Sans gluten y sont (« Envies ») : la bande ne garde que les cuisines.
@@ -930,6 +954,9 @@ export default function RestaurantList() {
         cuisine={categorie}
         choisirCuisine={setCategorie}
         libelleBande={t('ecranListe.cuisinesAria')}
+        bulle={lancement.loin && !choixAdresse ? (
+          <BulleAdresseLoin km={lancement.loin.km} user={user} onGarder={lancement.garder} onIci={() => { lancement.garder(); setChoixAdresse('ici'); }} />
+        ) : null}
         mode={modeSurBandeau ? {
           emporter,
           choisir: setEmporter,
@@ -938,7 +965,7 @@ export default function RestaurantList() {
           libelleGroupe: t('siteListe.modeAria')
         } : null}
       />
-      {choixAdresse && <ChoixAdresse onFermer={() => setChoixAdresse(false)} />}
+      {choixAdresse && <ChoixAdresse depuisPosition={choixAdresse === 'ici'} onFermer={() => { setChoixAdresse(false); lancement.relireCarnet(); }} />}
       <div className="sl-corps">
       {/* LA COLONNE DES FILTRES (site, à partir de 1 100 px ; maquettes/site-ordinateur/site-ordinateur.html, « Liste »). Les mêmes filtres que
           les pastilles et leurs panneaux, ouverts d'un coup au lieu d'être repliés : Trier (mêmes trois tris) et Envies (les
@@ -1051,8 +1078,8 @@ export default function RestaurantList() {
         <div className="carte-panneau liste-panneau">
           {['recommande', 'distance'].map((cle) => (
             <button key={cle} type="button" className={`cuisine-chip${tri === cle ? ' active' : ''}`}
-              disabled={cle === 'distance' && !(user?.lat && user?.lng)}
-              title={cle === 'distance' && !(user?.lat && user?.lng) ? t('mapClient.sortDistanceNeedsAddress') : undefined}
+              disabled={cle === 'distance' && !avecPosition}
+              title={cle === 'distance' && !avecPosition ? t('mapClient.sortDistanceNeedsAddress') : undefined}
               onClick={() => { setTri(cle); setPanneau(null); }}>
               {cle === 'recommande' ? t('mapClient.sortRecommended') : t('mapClient.sortDistance')}
             </button>
