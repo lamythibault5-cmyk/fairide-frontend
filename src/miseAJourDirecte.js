@@ -24,7 +24,10 @@ import { notificationToucheeRecemment } from './pushNatif';
  * Ce qui ne passe PAS par ici : tout ce qui touche la coque native (greffons, permissions, icône, ios/, android/). Un tel
  * changement donne un nouveau socle : les applis installées gardent leur dernier paquet compatible et attendent le store.
  *
- * Builds sans socle (le site, l'appli de test, un build local) : rien ne se passe. */
+ * Builds sans socle (le site, l'appli de test, un build local) : rien ne se passe.
+ *
+ * PREMIÈRE PREUVE SUR UN VRAI TÉLÉPHONE (8 nov. 2026) : cette ligne est le paquet de test qui doit passer du build Android 30 /
+ * iPhone 301 aux écrans suivants (libellé « Build » de Mon compte, logcat « Downloading » puis « notifyAppReady »). */
 const ID = import.meta.env.VITE_PAQUET_ID || '';
 const ORDRE = Number(import.meta.env.VITE_PAQUET_ORDRE) || 0;
 const SOCLES = { ios: import.meta.env.VITE_SOCLE_IOS || '', android: import.meta.env.VITE_SOCLE_ANDROID || '' };
