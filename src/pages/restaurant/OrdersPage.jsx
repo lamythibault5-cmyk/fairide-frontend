@@ -47,6 +47,7 @@ import ListePlats from '../../components/commerce/ListePlats';
 import LivreurCommande from '../../components/commerce/LivreurCommande';
 import PlusDeTemps from '../../components/commerce/PlusDeTemps';
 import ReclamationsCommerce from '../../components/commerce/ReclamationsCommerce';
+import JoindreFairride from '../../components/commerce/JoindreFairride';
 import RenouvellementContrat from '../../components/commerce/RenouvellementContrat';
 import TicketsBloques from '../../components/commerce/TicketsBloques';
 import { heurePrete, ouEstLeClient, prenom } from '../../components/commerce/clientCommande';
@@ -80,13 +81,31 @@ function EtatImpression({ p, t }) {
 // Code de retrait d'une livraison, en grand, tant que le livreur n'est pas passé. Le commerce n'a rien à taper ni à
 // toucher : il vérifie que le livreur montre le même code, et lui remet la commande. Le serveur n'envoie le code
 // qu'une fois un livreur assigné (routes/orders.js, GET /restaurant/:id).
+/* LE NUMÉRO DE REMISE (idée d'Owen, 2026-11-08 ; backend numeroRemise.js). Le commerce confirme que c'est le bon livreur sans
+ * toucher son écran : le livreur dit le numéro de commande, le personnel lui lit ce numéro à deux chiffres (aussi imprimé
+ * sur le ticket du sac), et le livreur le tape dans son appli. Le serveur ne l'envoie jamais au livreur : s'il tape juste,
+ * c'est la bonne commande. Le code à 4 chiffres du livreur reste en petit pour les applis pas encore à jour, qui le montrent
+ * encore au comptoir. Une commande sans numéro (d'avant) : le code seul, comme avant. */
 function CodeRetrait({ order, t }) {
-  if (order.orderType !== 'delivery' || !order.driverId || !order.pickupCode || !['preparation', 'pret'].includes(order.status)) return null;
+  if (order.orderType !== 'delivery' || order.deliveryBy === 'restaurant' || !['preparation', 'pret'].includes(order.status)) return null;
+  const code = order.driverId && order.pickupCode ? order.pickupCode : null;
+  if (order.handoverNumber == null && !code) return null;
   return (
     <div style={{ marginTop: 10, border: '1px solid var(--line)', borderRadius: 'var(--radius-chip)', padding: '8px 12px' }}>
-      <div className="small">{t('ordersResto.pickupCodeLabel')}</div>
-      <div style={{ fontWeight: 700, fontSize: 28, letterSpacing: 6, color: 'var(--ink)' }}>{order.pickupCode}</div>
-      <div className="small" style={{ color: 'var(--ink-soft)' }}>{t('ordersResto.pickupCodeHelp')}</div>
+      {order.handoverNumber != null ? (
+        <>
+          <div className="small">{t('ordersResto.handoverLabel')}</div>
+          <div style={{ fontWeight: 800, fontSize: 40, lineHeight: 1.1, letterSpacing: 4, color: 'var(--ink)' }}>{order.handoverNumber}</div>
+          <div className="small" style={{ color: 'var(--ink-soft)' }}>{t('ordersResto.handoverHelp')}</div>
+          {code && <div className="small" style={{ color: 'var(--ink-soft)', marginTop: 4 }}>{t('ordersResto.pickupCodeOld', { code })}</div>}
+        </>
+      ) : (
+        <>
+          <div className="small">{t('ordersResto.pickupCodeLabel')}</div>
+          <div style={{ fontWeight: 700, fontSize: 28, letterSpacing: 6, color: 'var(--ink)' }}>{code}</div>
+          <div className="small" style={{ color: 'var(--ink-soft)' }}>{t('ordersResto.pickupCodeHelp')}</div>
+        </>
+      )}
     </div>
   );
 }
@@ -374,8 +393,77 @@ export default function OrdersPage() {
     if (r.ok || r.code === 'STATUS_CHANGED') {
       if (annulation) { setAAnnuler(null); setSelectedOrder(null); } else setARefuser(null);
     }
+    if (r.ok) corrigerCause(motif);
   }
   const motifsRefus = [t('ordersResto.refuseReason1'), t('ordersResto.refuseReason2'), t('ordersResto.refuseReason3')];
+
+  /* LE MOTIF RÈGLE LA CAUSE (revue des frictions du commerce, 2026-11-08). Refuser pour « Plat épuisé » laissait le plat en
+   * vente : la commande suivante arrivait avec le même plat, et le même refus. Dans la fenêtre du refus, selon le motif
+   * choisi, une case facultative : les plats de la commande à mettre en rupture pour aujourd'hui (même route que
+   * RupturesDuJour), une pause de 30 minutes (« Cuisine débordée », même route que l'interrupteur), ou fermer pour
+   * aujourd'hui (« Fermeture imprévue », PUT close-today, ouvert à l'équipe). Rien n'est coché d'office ; le refus part
+   * d'abord et ne dépend jamais de la suite : un échec de la correction se dit par un message, le refus reste fait. */
+  const [correctif, setCorrectif] = useState({ plats: [], pause: false, fermer: false });
+  const commandeAMotif = aRefuser || aAnnuler;
+  useEffect(() => { setCorrectif({ plats: [], pause: false, fermer: false }); }, [commandeAMotif?.id]);
+  const correctifPour = useRef(null);
+  correctifPour.current = correctif;
+  async function corrigerCause(motif) {
+    const c = correctifPour.current;
+    setCorrectif({ plats: [], pause: false, fermer: false });
+    try {
+      if (motif === motifsRefus[0] && c.plats.length) {
+        const noms = [];
+        for (const id of c.plats) {
+          const rep = await api(`/restaurants/${restoId}/menu/${id}/stock`, { method: 'POST', token, body: { outOfStock: true } });
+          noms.push((restaurant?.menu || []).find((p) => p.id === id)?.name || '');
+          modifierRestaurant?.((r) => (r ? { ...r, menu: (r.menu || []).map((p) => (p.id === id ? { ...p, available: rep.available, outOfStockToday: rep.outOfStockToday } : p)) } : r));
+        }
+        toast(t('ordersResto.refuseFixSoldOutDone', { plats: noms.filter(Boolean).join(', ') }));
+      } else if (motif === motifsRefus[1] && c.pause) {
+        const rep = await api(`/restaurants/${restoId}/pause`, { method: 'PUT', token, body: { minutes: 30 } });
+        modifierRestaurant?.((r) => (r ? { ...r, pausedUntil: rep.pausedUntil } : r));
+        toast(t('ordersResto.refuseFixPauseDone'));
+      } else if (motif === motifsRefus[2] && c.fermer) {
+        const rep = await api(`/restaurants/${restoId}/close-today`, { method: 'PUT', token, body: { closed: true } });
+        modifierRestaurant?.((r) => (r ? { ...r, pausedUntil: rep.pausedUntil } : r));
+        const n = Array.isArray(rep.openOrders) ? rep.openOrders.length : 0;
+        toast(n === 0 ? t('ordersResto.refuseFixCloseDone') : t(n === 1 ? 'ordersResto.refuseFixCloseOpenOne' : 'ordersResto.refuseFixCloseOpenN', { n }));
+      } else return;
+      loadDashboard(restoId, { silencieux: true });
+    } catch (e) { toast(e.message, 'erreur'); }
+  }
+  // Les cases sous le motif : les plats de la commande encore en vente pour « Plat épuisé », la pause, la fermeture du jour.
+  const caseCorrectif = (coche, libelle, onChange, cle) => (
+    <label key={cle} className="row small" style={{ gap: 10, alignItems: 'center', minHeight: 44, cursor: 'pointer' }}>
+      <input type="checkbox" checked={coche} onChange={(e) => onChange(e.target.checked)} style={{ width: 20, height: 20 }} />
+      <span>{libelle}</span>
+    </label>
+  );
+  const correctifRefus = (o) => (motif) => {
+    if (!o) return null;
+    const enPause = restaurant?.pausedUntil && restaurant.pausedUntil > Date.now();
+    if (motif === motifsRefus[0]) {
+      const vus = new Set();
+      const plats = (o.items || []).filter((i) => {
+        if (!i.itemId || vus.has(i.itemId)) return false;
+        vus.add(i.itemId);
+        const p = (restaurant?.menu || []).find((x) => x.id === i.itemId);
+        return !p || !p.outOfStockToday;
+      });
+      if (!plats.length) return null;
+      return (
+        <div role="group" aria-label={t('ordersResto.refuseFixSoldOut')} style={{ margin: '0 0 12px' }}>
+          <p className="small" style={{ margin: '0 0 4px', fontWeight: 700 }}>{t('ordersResto.refuseFixSoldOut')}</p>
+          {plats.map((i) => caseCorrectif(correctif.plats.includes(i.itemId), i.name,
+            (v) => setCorrectif((c) => ({ ...c, plats: v ? [...c.plats, i.itemId] : c.plats.filter((x) => x !== i.itemId) })), i.itemId))}
+        </div>
+      );
+    }
+    if (motif === motifsRefus[1] && !enPause) return <div style={{ margin: '0 0 12px' }}>{caseCorrectif(correctif.pause, t('ordersResto.refuseFixPause'), (v) => setCorrectif((c) => ({ ...c, pause: v })))}</div>;
+    if (motif === motifsRefus[2] && !enPause) return <div style={{ margin: '0 0 12px' }}>{caseCorrectif(correctif.fermer, t('ordersResto.refuseFixClose'), (v) => setCorrectif((c) => ({ ...c, fermer: v })))}</div>;
+    return null;
+  };
 
   async function signalerPasVenu() {
     if (!pasVenu) return;
@@ -534,9 +622,18 @@ export default function OrdersPage() {
   const rienAEncaisser = (o) => ['refuse', 'annule'].includes(o.status);
   // Pourquoi une commande de l'historique s'est fermée (audit du 19/10, shop-203) : motif du refus, délai dépassé, faute de
   // livreur… Le badge « Client pas venu » dit déjà le sien.
+  // Annulée d'office (personne n'a accepté à temps, aucun livreur) depuis moins de 24 h : de quoi joindre Fairride sous la
+  // raison (revue des frictions du commerce, 2026-11-08).
+  const annuleeDOffice = (o) => (o.expiredUnaccepted || o.deliveryIncident === 'no_courier_cancelled') && Date.now() - o.createdAt < 86400000;
   const ligneRaison = (o) => {
     const r = o.pickupNoShow ? null : raisonFermeture(o);
-    return r?.cle ? <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t(r.cle, { client: o.clientName || '', ...r.valeurs })}</p> : null;
+    if (!r?.cle) return null;
+    return (
+      <>
+        <p className="small" style={{ margin: '4px 0 0', color: 'var(--ink-soft)' }}>{t(r.cle, { client: o.clientName || '', ...r.valeurs })}</p>
+        {annuleeDOffice(o) && <JoindreFairride compact />}
+      </>
+    );
   };
   const qui = (o) => (
     <span className="ec-remise-qui">
@@ -641,7 +738,7 @@ export default function OrdersPage() {
       {/* Le livreur, une personne : qui vient, s'il est là (et depuis quand), son pourboire. */}
       <LivreurCommande order={o} />
       {o.status === 'pret' && o.orderType === 'delivery' && o.deliveryBy !== 'restaurant' && !o.driverId && (
-        <p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p>
+        <><p className="small" style={{ marginTop: 8, marginBottom: 0 }}>{t('ordersResto.waitingDriver')}</p><JoindreFairride compact /></>
       )}
     </div>
     );
@@ -803,7 +900,9 @@ export default function OrdersPage() {
           confirmLabel={t('ordersResto.refuse')}
           suggestions={motifsRefus} loading={motifEnvoi}
           onCancel={() => setARefuser(null)}
-          onConfirm={(motif) => envoyerMotif(aRefuser, motif)} />
+          onConfirm={(motif) => envoyerMotif(aRefuser, motif)}>
+          {correctifRefus(aRefuser)}
+        </ReasonDialog>
         {/* Annulation après acceptation (shop-207) : même route et même motif obligatoire que le refus ; le client reçoit
             « a dû annuler ta commande » avec le motif, remboursé s'il avait payé en ligne, et le livreur déjà en route est prévenu. */}
         <ReasonDialog open={!!aAnnuler} danger
@@ -818,7 +917,9 @@ export default function OrdersPage() {
           confirmLabel={t('ordersResto.cancelAccepted')}
           suggestions={motifsRefus} loading={motifEnvoi}
           onCancel={() => setAAnnuler(null)}
-          onConfirm={(motif) => envoyerMotif(aAnnuler, motif, { annulation: true })} />
+          onConfirm={(motif) => envoyerMotif(aAnnuler, motif, { annulation: true })}>
+          {correctifRefus(aAnnuler)}
+        </ReasonDialog>
         {/* A1 : accepter une commande avec demande d'allergie, c'est s'engager à la respecter. */}
         <ConfirmDialog open={!!allergieAConfirmer}
           title={t('conformite.allergyConfirmTitle')}
@@ -914,7 +1015,7 @@ export default function OrdersPage() {
         <CodeRetrait order={o} t={t} />
         <LivreurCommande order={o} />
         {o.status === 'pret' && o.orderType === 'delivery' && o.deliveryBy !== 'restaurant' && !o.driverId && (
-          <p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.waitingDriver')}</p>
+          <><p className="small" style={{ margin: '8px 0 0' }}>{t('ordersResto.waitingDriver')}</p><JoindreFairride compact /></>
         )}
         {['terminee', 'annulee'].includes(stageKey) && ligneRaison(o)}
       </article>

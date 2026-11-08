@@ -205,7 +205,9 @@ the phone, with location already allowed (never asked for this), is more than 1 
   stay out (`simulation.sqlCommandeReelle`).
 - **Alcohol order, customer absent for the ID check**: no refund, like « client absent » (`delivery_incident` `client_absent`,
   or `pickup_not_collected` for takeaway), with its own customer text (`orders.noCourier_incident_age_absent`).
-- **Pickup code**: the courier types the pickup code to confirm « J'ai la commande »; before « Prête » the server requires it,
+- **Pickup code, then handover number (Owen, 2026-11-08)**: the courier confirms « J'ai la commande » with the 2-digit
+  handover number the counter reads him (or printed on the bag ticket, never sent to him: backend `numeroRemise.js`), or with
+  his 4-digit pickup code for orders without a number and apps frozen in the stores; before « Prête » the server requires one,
   and the shop reads « Retirée par le livreur avant que tu l'aies dite prête » (`orders.picked_up_before_ready`).
 - Payout screens: « Prochain virement » no longer lists refused/cancelled refunded orders (except the incidents above) and
   shows shares still waiting apart, outside the total; Admin › Paiements › Versements shows the share minus what was taken

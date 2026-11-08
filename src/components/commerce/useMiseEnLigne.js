@@ -153,7 +153,8 @@ export default function useMiseEnLigne({ restaurant, restoId, token, onConnect, 
       if (issue === 'ok') { toast(t('notifs.onDone'), 'succes'); await onChange?.(); } else toast(t(issue === 'refuse' ? 'notifs.refused' : 'notifs.failed'), 'erreur');
     };
     etapes.push(alertes.appareils
-      ? { cle: 'sonnerie', fait: true, icone: 'cloche', titre: t('miseEnLigne.alertsDeviceDone') }
+      // Concentration et silencieux retiennent la sonnerie (2026-11-08) : la ligne reste sous l'étape faite.
+      ? { cle: 'sonnerie', fait: true, icone: 'cloche', titre: t('miseEnLigne.alertsDeviceDone'), sous: t('miseEnLigne.alertsDeviceDoneSub') }
       : { cle: 'sonnerie', icone: 'cloche', titre: t('miseEnLigne.alertsDevice'), sous: t('miseEnLigne.alertsDeviceSub'),
           // Cet appareil ne sait pas en recevoir (iPhone sans l'écran d'accueil, navigateur trop ancien) : le guide, section 4.
           action: activerIci ? { libelle: push.occupe ? '…' : t('miseEnLigne.alertsDeviceBtn'), onClick: activer, disabled: push.occupe }

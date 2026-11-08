@@ -124,6 +124,17 @@ Scripts : `npm run app:sync` (build + `cap sync`), `npm run app:android`, `npm r
     `Theme.AppCompat.Light.NoActionBar` + `forceDarkAllowed=false` dans `android/app/src/main/res/values/styles.xml`).
     **iOS** : FAIT, `UIUserInterfaceStyle` = `Light` dans `Info.plist` ; sans elle, un iPhone en mode sombre affiche le
     clavier, les sélecteurs de date et les fenêtres du système en noir sur nos écrans blancs.
+13. **Commandes qui passent le mode Concentration** (iPhone, 8 nov. 2026, À FAIRE à la main) : le serveur envoie déjà la
+    nouvelle commande et son rappel au commerce avec `interruption-level` = `time-sensitive` (backend `fcm.js`). Sans le
+    droit ci-dessous, iOS les traite comme des notifications ordinaires (rien ne casse, mais Concentration et Ne pas
+    déranger les retiennent). Dans l'ordre, sinon la signature du build échoue :
+    1. Apple Developer › Certificates, Identifiers & Profiles › Identifiers › `be.fairide.app` › cocher
+       *Time Sensitive Notifications* › Save (le profil « Fairide App Store CI » est à regénérer s'il ne le prend pas).
+    2. Ajouter dans `ios/App/App/App.entitlements` la clé `com.apple.developer.usernotifications.time-sensitive` à `true`.
+    3. Un build store (TestFlight puis App Store) : c'est un changement du socle natif, une mise à jour directe ne le porte
+       pas. Ensuite, le commerce peut autoriser « Notifications urgentes » pour Fairride dans Réglages › Concentration.
+    Le mode silencieux (le bouton sur le côté) coupe toujours le son : l'étape « Fais sonner tes commandes » dit de le couper
+    pendant le service.
 
 ## Sortir une version iPhone
 

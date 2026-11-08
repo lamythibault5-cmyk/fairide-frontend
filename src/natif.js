@@ -505,7 +505,11 @@ export async function positionPrecise() {
  * Le greffon n'a pas de code JavaScript : il s'appelle par registerPlugin, et n'existe donc que dans la coque — le site ne
  * télécharge rien de plus. Greffon absent (ancienne version de l'appli) : retour au watchPosition, sans erreur.
  * Rend une fonction d'arrêt. `onPosition({ latitude, longitude })`, `onErreur()` une fois en cas de refus. */
-export async function suivrePositionCourse({ arrierePlan = false, titre, message, onPosition, onErreur }) {
+/* `economie` (Owen, 2026-11-08, batterie) : sans course en main, la position ne sert qu'à trier les offres les plus proches
+ * d'abord (Dashboard.jsx, rien n'est envoyé) : à 100 m près, cela suffit. Le GPS à pleine précision toutes les 5 s vidait la
+ * batterie d'un livreur qui attend des heures. En économie : précision réseau (enableHighAccuracy false) et une position
+ * gardée jusqu'à une minute. Le suivi en arrière-plan d'une livraison (le greffon, plus bas) ne change pas. */
+export async function suivrePositionCourse({ arrierePlan = false, economie = false, titre, message, onPosition, onErreur }) {
   if (arrierePlan && estNatif()) {
     try {
       const { registerPlugin } = await import('@capacitor/core');
@@ -524,7 +528,7 @@ export async function suivrePositionCourse({ arrierePlan = false, titre, message
   const watchId = navigator.geolocation.watchPosition(
     (pos) => onPosition({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
     (e) => onErreur?.(e),
-    { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
+    economie ? { enableHighAccuracy: false, timeout: 30000, maximumAge: 60000 } : { enableHighAccuracy: true, timeout: 8000, maximumAge: 5000 }
   );
   return () => navigator.geolocation.clearWatch(watchId);
 }

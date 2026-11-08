@@ -106,7 +106,7 @@ export default function InvoicesPage() {
       // apiDownload gère désormais POST + corps JSON, et surtout le 401 : un client dont la session a
       // expiré est renvoyé vers la connexion au lieu de voir « téléchargement impossible ».
       await apiDownload('/orders/invoices/download', {
-        token, method: 'POST', body: { orderIds: [...selected] }, filename: 'factures-fairide.zip'
+        token, method: 'POST', body: { orderIds: [...selected] }, filename: 'recus-fairide.zip'
       });
     } catch (e) {
       toast(e.message, 'erreur');

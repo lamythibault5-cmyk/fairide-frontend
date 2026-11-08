@@ -10,7 +10,7 @@ import { useLanguage } from '../../context/LanguageContext';
 import Icone from '../../components/Icone';
 import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
 import InfosRetrait from '../../components/client/InfosRetrait';
-import { formatOrderItem, orderTypeLabel } from '../../orderStatus';
+import { formatOrderItem, orderTypeLabel, heureArrivee } from '../../orderStatus';
 import { euros } from '../../prixPlat';
 import { RappelCodeAmi } from '../../components/CodeAmi';
 
@@ -127,8 +127,9 @@ function ResultatCommande({ success }) {
         const orders = await api('/orders/mine?suivi=1', { token });
         if (cancelled) return;
         const order = orders.find((o) => o.id === orderId || String(o.id) === String(orderId));
+        // Gardée dans tous les cas : son numéro du jour, s'il existe, se lit aussi sous « en cours » ou « échec ».
+        if (order) setCommande(order);
         if (order?.paid) {
-          setCommande(order);
           setState('paid');
           vibrer('succes'); // paiement confirmé : la sensation « succès » du téléphone (audit « Look and feel » 6a)
           // Statistiques (sans donnée personnelle) : la commande est finalisée, par mode.
@@ -189,13 +190,26 @@ function ResultatCommande({ success }) {
      « Voir mes commandes » reste la seule action lime. Les autres états (vérification, attente, échec) restent sobres.
      Sur le site, sur un ordinateur (site-commande.css) : le bandeau va d'un bord à l'autre, la feuille passe en deux colonnes
      — le récapitulatif à gauche, les deux actions dans un cadre à droite. */
+  /* LE NUMÉRO DU JOUR (« #012 »), JAMAIS L'IDENTIFIANT (revue des frictions client, 2026-11-08). « Commande n°3f9a1c2e » (les
+   * premiers caractères de l'identifiant) ne correspondait à rien de ce que le commerce ou l'aide voient : sans numéro, rien. */
+  const numero = commande?.orderNumber != null ? `#${String(commande.orderNumber).padStart(3, '0')}` : null;
+
   if (state === 'paid') {
     // Comme Mes commandes : le pourboire payé avec la commande est débité en plus du total (backend pourboireCommande.js).
     // Payée sur place : rien n'est débité — le montant à payer au comptoir est dit dans le bloc du retrait (InfosRetrait).
     const surPlace = commande?.paymentMode === 'on_site';
     const debite = commande && !surPlace ? Number(commande.total) + (commande.tipPaid && commande.tipAtCheckout > 0 ? Number(commande.tipAtCheckout) : 0) : null;
-    const numero = commande?.orderNumber != null ? `#${String(commande.orderNumber).padStart(3, '0')}` : null;
     const lieu = commande?.orderType === 'pickup' ? commande.restaurantAddress : commande?.address;
+    /* LE TITRE NOMME LE COMMERCE, ET LE CLIENT S'IL EST CONNU (revue des frictions client, 2026-11-08) : « Maestro a ta commande,
+     * Owen. » plutôt qu'un « Merci pour ta commande ! » qu'on lit partout. Dessous, en grand, l'heure : « Chez toi vers 12:52 »
+     * (« Prête vers » à emporter), la même estimation que le paiement montrait (Checkout.jsx, « Dès que possible ») et que le
+     * suivi reprend (heureArrivee). Pas d'heure pour une commande programmée : le bloc du retrait ou la ligne du mode la dit. */
+    const prenomClient = String(user?.firstName || user?.name || '').trim().split(/\s+/)[0];
+    const titre = !commande ? view.title
+      : prenomClient ? t('orderResult.successTitleNom', { restaurant: commande.restaurantName, name: prenomClient })
+        : t('orderResult.successTitleResto', { restaurant: commande.restaurantName });
+    const heure = commande ? heureArrivee(commande) : null;
+    const [avantHeure, apresHeure] = heure ? t(commande.orderType === 'pickup' ? 'orderStatus.grand.pretVers' : 'orderStatus.grand.arriveVers', { time: '\u0000' }).split('\u0000') : [];
     return (
       <div className="ec-page ec-merci sc-page">
         <BandeauCommande className="ec-merci-bandeau">
@@ -206,16 +220,19 @@ function ResultatCommande({ success }) {
             <Icone nom="retour" taille={18} />
           </Link>
           <span className="ec-coche-merci" aria-hidden="true"><Icone nom="valider" taille={30} /></span>
-          <h1 className="ec-titre">{view.title}</h1>
+          <h1 className="ec-titre">{titre}</h1>
+          {heure && !heure.late && <p className="ec-merci-heure">{avantHeure}<b>{heure.time}</b>{apresHeure}</p>}
           {/* À emporter avec un numéro : il est déjà en grand dans le cadre du comptoir, juste dessous. */}
-          {orderId && !(commande?.orderType === 'pickup' && numero) && <p className="ec-sous">{t('orderResult.orderNumber', { id: numero ? numero.slice(1) : String(orderId).slice(0, 8) })}</p>}
+          {numero && commande?.orderType !== 'pickup' && <p className="ec-sous">{t('orderResult.orderNumber', { id: numero })}</p>}
         </BandeauCommande>
         <FeuilleCommande>
           {/* Site sur ordinateur (site-commande.css) : le récapitulatif à gauche, les deux actions à droite. Ailleurs, ces deux
               enveloppes sont en `display: contents` : la feuille reste une colonne. */}
           <div className="sc-merci-grille">
           <div className="sc-merci-texte">
-          <p className="ec-merci-texte">{surPlace ? t('orderResult.successTextOnSite') : view.text}</p>
+          <p className="ec-merci-texte">{surPlace ? t('orderResult.successTextOnSite') : view.text}
+            {/* La garantie, une petite ligne sous ce qui rassure (elle ouvrait le texte sur l'échec). */}
+            {!surPlace && commande && <small className="ec-merci-garantie">{t('orderResult.successGarantie')}</small>}</p>
           {/* À emporter : le NUMÉRO de commande à montrer au comptoir, puis tout le retrait. Plus de code depuis le 2026-10-20
               (fondateur, après le test chez Maestro Pizza) : le commerce touche « Remis au client » à côté de ce numéro et du
               prénom du client. Le numéro est posé à la réception par le commerce ; tant qu'il manque, le nom suffit. */}
@@ -274,7 +291,7 @@ function ResultatCommande({ success }) {
       <h2 className="etat-vide-titre">{view.title}</h2>
       <p className="small">
         {view.text}
-        {orderId && <><br />{t('orderResult.orderNumber', { id: String(orderId).slice(0, 8) })}</>}
+        {numero && <><br />{t('orderResult.orderNumber', { id: numero })}</>}
       </p>
       {/* Pendant la vérification, aucun bouton : on ne veut pas qu'un client quitte la page à la
           seconde où le webhook est sur le point d'arriver. */}

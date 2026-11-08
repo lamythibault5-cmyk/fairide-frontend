@@ -170,6 +170,8 @@
 .ecl-glisser .glisser-confirmer { margin-top: 0; }
 /* Le code du client, chiffre par chiffre. Un seul vrai champ, transparent, posé sur les quatre cases. */
 .ecl-code-cases { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; max-width: 340px; cursor: text; }
+/* Numéro de remise du comptoir (2026-11-08) : deux cases, à la taille des quatre. */
+.ecl-code-cases.deux { grid-template-columns: repeat(2, 1fr); max-width: 170px; }
 .ecl-code-cases input { position: absolute; inset: 0; width: 100%; height: 100%; margin: 0; padding: 0; border: 0; opacity: 0; font-size: 16px; caret-color: transparent; }
 .ecl-code-cases > span { height: 56px; border-radius: 14px; border: 1.5px solid var(--line); background: #fff; display: grid; place-items: center; font-size: 26px; font-weight: 800; color: var(--iris); transition: border-color .15s; }
 .ecl-code-cases > span.plein { border-color: var(--iris); animation: ecl-saute .3s var(--ecl-ressort); }

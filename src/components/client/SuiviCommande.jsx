@@ -30,6 +30,17 @@ function noterVus(ids) {
 }
 const aToi = (o) => o.status === 'pret' && o.orderType === 'pickup';
 
+/* CE QUE LA BANDE ROUGE DIT DE L'ARGENT (revue des frictions client, 2026-11-08). Elle disait « Tu es remboursé » pour tout
+ * refus ou annulation payé autrement que sur place : aussi quand le remboursement avait échoué (refundPending) ou quand la
+ * commande reste due (client absent, à emporter non retirée ou close d'office, absent au contrôle d'âge). Même règle que Mes
+ * commandes (orderStatus.jsx, ProchaineEtape) : null quand il n'y a rien à dire de l'argent. */
+function argentArret(o, t) {
+  if (o.paymentMode === 'on_site') return t('orders.suiviRienPaye');
+  if (o.refundPending) return t('orders.suiviRemboursementEnCours');
+  if (o.pickupAutoClosed || ['client_absent', 'pickup_not_collected'].includes(o.deliveryIncident) || o.ageCheck === 'refused_absent') return null;
+  return t('orders.suiviRembourse');
+}
+
 export default function SuiviCommande() {
   const { t } = useLanguage();
   const { pathname } = useLocation();
@@ -73,7 +84,8 @@ export default function SuiviCommande() {
   // Laquelle montrer : un refus pas encore vu, puis une commande prête à venir chercher, puis la plus récente en cours,
   // puis « Bon appétit ! ». Le refus seulement s'il n'a pas été suivi d'une autre commande (2026-10-28, même règle que le
   // bandeau de Mes commandes) : sinon il passait devant celle qu'on attend. /orders/mine arrive de la plus récente à la plus ancienne.
-  const refus = commandes.find((o, i) => i === 0 && ARRET.includes(o.status) && !vus.has(o.id) && Date.now() - new Date(o.createdAt).getTime() < SIX_HEURES);
+  // Jamais payée (paiement en ligne abandonné, close par le ménage des impayées) : le commerce ne l'a jamais vue, pas de bande.
+  const refus = commandes.find((o, i) => i === 0 && ARRET.includes(o.status) && o.paid !== false && !vus.has(o.id) && Date.now() - new Date(o.createdAt).getTime() < SIX_HEURES);
   const enCours = commandes.filter(commandeSuivie);
   const commande = refus || enCours.find(aToi) || enCours[0] || fin?.commande || null;
   const visible = !!commande && pathname !== '/orders';
@@ -95,7 +107,7 @@ export default function SuiviCommande() {
   let haut;
   let bas;
   if (arretee) {
-    haut = commande.paymentMode === 'on_site' ? t('orders.suiviRienPaye') : t('orders.suiviRembourse');
+    haut = argentArret(commande, t) || orderTypeLabel(commande, t);
     bas = t(commande.status === 'refuse' ? 'orders.suiviRefuse' : 'orders.suiviAnnule', { name: commande.restaurantName });
   } else {
     haut = `${commande.restaurantName} · ${orderTypeLabel(commande, t)}`;

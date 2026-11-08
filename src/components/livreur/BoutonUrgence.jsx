@@ -14,7 +14,11 @@ import AppelerFairide from './AppelerFairide';
  * cours (tâche urgente, e-mail et push à l'équipe). L'écran ne promet plus « Elle va t'appeler » : il dit que l'équipe est
  * prévenue et donne le numéro de Fairide (audit du 19/10, courier-13). La position n'est lue qu'au moment de l'appui
  * sur « Prévenir l'équipe ». Rien n'est noté contre le livreur : l'alerte sert à l'aider. */
-export default function BoutonUrgence({ token, toast }) {
+/* APRÈS UN ACCIDENT, QUOI FAIRE (Owen, 2026-11-08). L'alerte partie, l'écran ne disait plus rien : la personne choquée au
+ * bord de la route ne savait pas par quoi commencer. Pour le motif « accident », les étapes dans l'ordre : le 112 si
+ * quelqu'un est blessé, puis Fairride (appel ou WhatsApp, la commande déjà écrite), des photos, et l'équipe qui fait la
+ * déclaration avec lui. `commande` : le numéro de la course en main, s'il y en a une. */
+export default function BoutonUrgence({ token, toast, commande = null }) {
   const { t } = useLanguage();
   const [ouvert, setOuvert] = useState(false);
   const [motif, setMotif] = useState('accident');
@@ -50,7 +54,18 @@ export default function BoutonUrgence({ token, toast }) {
               <p className="small" role="status" style={{ fontWeight: 600 }}>
                 {t(envoye.positionSent ? 'dashDriver.sosSent' : 'dashDriver.sosSentNoPosition')}
               </p>
-              <AppelerFairide numero={envoye.telephone} />
+              {motif === 'accident' && (
+                <>
+                  <p className="small" style={{ margin: '12px 0 6px', fontWeight: 700 }}>{t('dashDriver.sosAccidentTitre')}</p>
+                  <ol className="small" style={{ margin: '0 0 12px', paddingLeft: 20 }}>
+                    <li>{t('dashDriver.sosAccident1')}</li>
+                    <li>{t('dashDriver.sosAccident2')}</li>
+                    <li>{t('dashDriver.sosAccident3')}</li>
+                    <li>{t('dashDriver.sosAccident4')}</li>
+                  </ol>
+                </>
+              )}
+              <AppelerFairide numero={envoye.telephone} commande={commande} />
             </>
           ) : (
             <>

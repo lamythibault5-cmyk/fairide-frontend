@@ -80,6 +80,10 @@ const MIN_LOCATION_SEND_INTERVAL_MS = 12000;
 // « Annuler » après « Refuser » : 5 secondes avant que le refus parte au serveur (audit du 06/11, G93).
 const DELAI_ANNULER_REFUS_MS = 5000;
 
+// Le pourboire déjà payé par le client avec sa commande (100 % au livreur) ; 0 sinon. Un pourboire posé mais pas payé ne
+// compte pas (G59).
+const pourboirePaye = (o) => (o?.tipPaid ? Number(o.tipAmount || 0) : 0);
+
 function formatClock(date) {
   return date.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 }
@@ -155,14 +159,15 @@ function BoutonsItineraire({ adresse, lat, lng, t }) {
  * posé sur les cases : le clavier numérique, le collage et le lecteur d'écran marchent comme avant. Les codes de remise ont
  * quatre chiffres (serveur, routes/orders.js) ; la validation reste celle de deliver() et du serveur. */
 // `manque` : on a glissé « Confirmer la livraison » sans le code — les cases s'encadrent d'iris (L2 de maquettes/audit-ecrans).
-function CodeCases({ valeur, onChange, onValider, libelle, manque = false, id }) {
+// `longueur` : 4 (code du client, code de retrait des commandes d'avant), 2 (numéro de remise du comptoir, 2026-11-08).
+function CodeCases({ valeur, onChange, onValider, libelle, manque = false, id, longueur = 4 }) {
   return (
-    <label className={`ecl-code-cases${manque ? ' manque' : ''}`}>
-      <input id={id} aria-label={libelle} inputMode="numeric" autoComplete="off" maxLength={4} value={valeur}
-        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, 4))}
+    <label className={`ecl-code-cases${manque ? ' manque' : ''}${longueur === 2 ? ' deux' : ''}`}>
+      <input id={id} aria-label={libelle} inputMode="numeric" autoComplete="off" maxLength={longueur} value={valeur}
+        onChange={(e) => onChange(e.target.value.replace(/\D/g, '').slice(0, longueur))}
         onKeyDown={(e) => { if (e.key === 'Enter') onValider(); }} />
-      {[0, 1, 2, 3].map((k) => (
-        <span key={`${k}-${valeur[k] || ''}`} aria-hidden="true" className={`${valeur[k] ? 'plein' : ''}${k === Math.min(valeur.length, 3) ? ' actuel' : ''}`}>{valeur[k] || ''}</span>
+      {Array.from({ length: longueur }, (_, k) => (
+        <span key={`${k}-${valeur[k] || ''}`} aria-hidden="true" className={`${valeur[k] ? 'plein' : ''}${k === Math.min(valeur.length, longueur - 1) ? ' actuel' : ''}`}>{valeur[k] || ''}</span>
       ))}
     </label>
   );
@@ -390,7 +395,8 @@ export default function DriverDashboard() {
       const [availableData, mineData, planData] = await Promise.all([
         api(`/orders/available${positionBloqueeRef.current ? '?positionBloquee=1' : ''}`, { token }),
         // Courses en main et récentes seulement (audit du 19/10, courier-21 : tout l'historique, toutes les 15 s).
-        api('/orders/mine/deliveries?recent=1', { token }),
+        // Même `positionBloquee` (2026-11-08) : ce relevé notait le livreur vu alors que l'écran lui cachait les offres.
+        api(`/orders/mine/deliveries?recent=1${positionBloqueeRef.current ? '&positionBloquee=1' : ''}`, { token }),
         // Le trajet ne fait jamais échouer la page : sans lui, les courses en main gardent leur ordre d'avant.
         api('/orders/mine/tournee', { token }).catch(() => null)
       ]);
@@ -427,14 +433,14 @@ export default function DriverDashboard() {
     // l'objet restaurant, adminStatus inclus, à chaque poll), le statut d'approbation du livreur vit
     // sur l'objet user mis en cache depuis la connexion — sans ce refresh périodique, une approbation
     // admin ne se refléterait ici qu'après une reconnexion manuelle.
+    // Le relevé périodique est plus bas (sa cadence dépend de la pause).
     load();
     refreshUser().catch(() => {});
-    const interval = setInterval(() => { load(); refreshUser().catch(() => {}); }, 15000);
     // Notification reçue app ouverte (« Nouvelle course », pushNatif.js) : la liste tout de suite, pas au relevé suivant, jusqu'à
     // 15 secondes plus tard sur une course où le premier qui accepte l'a (audit du 06/11, G121 ; le commerce fait pareil).
     const surNotification = () => load();
     window.addEventListener('fairide:commande-arrivee', surNotification);
-    return () => { clearInterval(interval); window.removeEventListener('fairide:commande-arrivee', surNotification); };
+    return () => { window.removeEventListener('fairide:commande-arrivee', surNotification); };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
   // Retour sur l'onglet après une absence : relecture immédiate, sans attendre le prochain cycle (compte Stripe compris : courier-3).
   useRevalidation(() => { load(); return relireConnect() || refreshUser(); });
@@ -473,6 +479,15 @@ export default function DriverDashboard() {
   // src/miseAJour.js). Pas remis à zéro en quittant l'écran : Mon compte pendant une course ne doit pas l'ouvrir.
   const courseEnMain = mine.some((o) => ['preparation', 'pret', 'livraison'].includes(o.status));
   useEffect(() => { signalerOccupe('course', courseEnMain); }, [courseEnMain]);
+  /* LA CADENCE DU RELEVÉ (Owen, 2026-11-08, batterie) : quatre requêtes toutes les 15 secondes, même en pause, pendant des
+   * heures. En pause sans course en main, aucune offre ne lui est montrée (le serveur rend une liste vide) et il ne compte
+   * pas libre : un relevé par minute suffit (une validation de l'équipe arrive encore). Disponible ou course en main : 15 s,
+   * comme avant (offres, présence, selfie de contrôle). Se remettre disponible relit tout de suite (basculerPause). */
+  const releveLent = !!user?.driverPaused && !courseEnMain;
+  useEffect(() => {
+    const interval = setInterval(() => { load(); refreshUser().catch(() => {}); }, releveLent ? 60000 : 15000);
+    return () => clearInterval(interval);
+  }, [releveLent]); // eslint-disable-line react-hooks/exhaustive-deps
   /* LA POSITION N'EST DEMANDÉE QUE QUAND ELLE SERT (audit du 19/10, courier-14). Le suivi démarrait à l'ouverture de
    * « Courses » pour tout livreur : le navigateur demandait la position à un nouvel inscrit dont le dossier n'était même pas
    * envoyé, contre la promesse de l'inscription (driverGeoNotice : « que lorsque tu voudras recevoir des courses »). Il
@@ -509,6 +524,8 @@ export default function DriverDashboard() {
 
     suivrePositionCourse({
       arrierePlan: enLivraison,
+      // Sans course en main : précision réduite (natif.js, `economie`) ; le tri des offres n'a pas besoin du GPS fin.
+      economie: !courseEnMain,
       titre: t('dashDriver.bgTrackingTitle'),
       message: t('dashDriver.bgTrackingMessage'),
       onPosition: ({ latitude, longitude }) => {
@@ -551,7 +568,7 @@ export default function DriverDashboard() {
       clearInterval(heartbeat);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile, relanceSuivi]);
+  }, [token, user?.locationSharingEnabled, enLivraison, suiviUtile, relanceSuivi, courseEnMain]);
 
   // Refuser une course (B23bis) : elle quitte SA liste, et rien d'autre — le refus n'est relu par aucune
   // autre décision (docs/dispatch.md côté serveur). Un seul envoi par course (audit du 19/10, CROSS-36) : un deuxième appui,
@@ -678,7 +695,7 @@ export default function DriverDashboard() {
     try {
       await api(`/orders/${id}/deliver`, { method: 'PATCH', token, body: { code, ...(ageVerifie ? { ageCheck: 'verified' } : {}) } });
       setCodeInputs((prev) => { const next = { ...prev }; delete next[id]; return next; });
-      setTerminee({ id, fee: order.driverFee ?? order.deliveryFee });
+      setTerminee({ id, fee: order.driverFee ?? order.deliveryFee, tip: pourboirePaye(order) });
       toast(t('dashDriver.toastDelivered'));
       load();
     } catch (e) {
@@ -707,14 +724,20 @@ export default function DriverDashboard() {
   /* LE CODE DE RETRAIT, TOUJOURS (G142, décision d'Owen du 06/11/2026). Un glisser de travers disait au client « en route »
    * pendant que la commande cuisait : la question « Tu as bien la commande ? » demande maintenant les 4 chiffres du code
    * montré au comptoir, vérifiés par le serveur. Retirée avant « Prête », le commerce lit « retirée par le livreur ». */
+  /* LE NUMÉRO DE REMISE (décision d'Owen du 2026-11-08, remplace le code ci-dessus). Retaper son propre code ne prouvait rien.
+   * Le livreur dit son numéro de commande au comptoir ; le personnel lui lit le numéro de remise à deux chiffres affiché
+   * en grand chez lui (ou il le lit sur le ticket du sac), et il le tape ici. Le serveur ne l'envoie jamais à l'appli : faux,
+   * c'est que le sac n'est pas le bon. Une commande sans numéro (d'avant, handoverNumberExpected false) garde le code. */
   const [codeRetraitSaisi, setCodeRetraitSaisi] = useState('');
   const [codeRetraitManque, setCodeRetraitManque] = useState(false);
+  const parNumero = (o) => o?.handoverNumberExpected === true;
   function demanderRetrait(o) { setCodeRetraitSaisi(''); setCodeRetraitManque(false); setRetraitAConfirmer(o); }
   async function confirmerRetrait(order) {
-    if (codeRetraitSaisi.length !== 4) { setCodeRetraitManque(true); toast(t('dashDriver.pickupCodeMissing'), 'erreur'); return false; }
+    const numero = parNumero(order);
+    if (codeRetraitSaisi.length !== (numero ? 2 : 4)) { setCodeRetraitManque(true); toast(t(numero ? 'dashDriver.handoverMissing' : 'dashDriver.pickupCodeMissing'), 'erreur'); return false; }
     setRetraitEnCours(order.id);
     try {
-      await api(`/orders/${order.id}/picked-up`, { method: 'PATCH', token, body: { code: codeRetraitSaisi } });
+      await api(`/orders/${order.id}/picked-up`, { method: 'PATCH', token, body: numero ? { numero: codeRetraitSaisi } : { code: codeRetraitSaisi } });
       toast(t('dashDriver.toastPickedUp'));
       load();
       return true;
@@ -839,7 +862,8 @@ export default function DriverDashboard() {
     sousBandeau = [tourneeActive && t('ecranLivreur.arretNsurM', { n: 1, total: arretsPlan.length }), t('dashDriver.deliveryAt', { address: principale.address }), principale.travelMinutes && t('ecranLivreur.minutes', { min: principale.travelMinutes })].filter(Boolean).join(' · ');
   } else if (course) {
     titreBandeau = t('ecranLivreur.terminee');
-    sousBandeau = `${t('dashDriver.rideFee', { fee: fraisCourse(course) })} · ${t('ecranLivreur.termineeSous')}`;
+    // « Course : 5,22 € + 2,00 € pourboire » (Owen, 2026-11-08) : le pourboire payé avec la commande, versé avec la course.
+    sousBandeau = `${t('dashDriver.rideFee', { fee: fraisCourse(course) })}${course.tip > 0 ? ` ${t('ecranLivreur.plusPourboire', { amount: dec(course.tip) })}` : ''} · ${t('ecranLivreur.termineeSous')}`;
   } else if (peutRouler && !enPause && selfie?.blocking) {
     // Délai du selfie de contrôle écoulé : aucune offre n'arrive. Le bandeau ne dit plus « Tu es disponible » (audit du
     // 19/10, LIVE-25) ; la carte du selfie, juste dessous, porte le bouton.
@@ -902,10 +926,20 @@ export default function DriverDashboard() {
   // À récupérer : le code du comptoir, puis glisser (app) ou le bouton (site) une fois la commande en main.
   const detailRetrait = (o, auBandeau) => (
     <>
-      <div className="ecl-code">
-        <div className="ecl-code-lib">{t('dashDriver.codeForRestaurant')}</div>
-        <div className="ecl-code-valeur">{o.pickupCode}</div>
-      </div>
+      {/* Numéro de remise (2026-11-08) : il dit son numéro de commande, le comptoir lui lit le numéro de remise. Commande
+          d'avant : le code à montrer, comme avant. */}
+      {parNumero(o) ? (
+        <div className="ecl-code">
+          <div className="ecl-code-lib">{t('dashDriver.orderNumberForShop')}</div>
+          <div className="ecl-code-valeur">{o.orderNumber != null ? `#${String(o.orderNumber).padStart(3, '0')}` : o.restaurantName}</div>
+          <div className="small" style={{ marginTop: 6 }}>{t('dashDriver.handoverHow')}</div>
+        </div>
+      ) : (
+        <div className="ecl-code">
+          <div className="ecl-code-lib">{t('dashDriver.codeForRestaurant')}</div>
+          <div className="ecl-code-valeur">{o.pickupCode}</div>
+        </div>
+      )}
       {/* « Elle sera bientôt prête » disait la même chose qu'elle soit en avance ou en retard (4 A) : l'heure prévue, ou le retard
           en rouge. Sans heure (serveur plus ancien), la phrase d'avant. */}
       {o.status !== 'pret' && (etatPrete(o).classe === 'doux' && !plan?.commandes?.[o.id]?.readyAt && !o.readyAt
@@ -939,9 +973,10 @@ export default function DriverDashboard() {
         onConfirm={async () => { if (await confirmerRetrait(o)) setRetraitAConfirmer(null); }}
         onCancel={() => setRetraitAConfirmer(null)}
       >
-        <p className="small" style={{ margin: '10px 0 6px' }}>{t('dashDriver.pickupCodeLabel')}</p>
-        <CodeCases id={`code-retrait-${o.id}`} libelle={t('dashDriver.pickupCodeLabel')} valeur={codeRetraitSaisi} manque={codeRetraitManque}
-          onChange={(v) => { setCodeRetraitSaisi(v); if (v.length === 4) setCodeRetraitManque(false); }} onValider={() => confirmerRetrait(o).then((ok) => { if (ok) setRetraitAConfirmer(null); })} />
+        <p className="small" style={{ margin: '10px 0 6px' }}>{t(parNumero(o) ? 'dashDriver.handoverLabel' : 'dashDriver.pickupCodeLabel')}</p>
+        <CodeCases id={`code-retrait-${o.id}`} libelle={t(parNumero(o) ? 'dashDriver.handoverLabel' : 'dashDriver.pickupCodeLabel')} valeur={codeRetraitSaisi} manque={codeRetraitManque}
+          longueur={parNumero(o) ? 2 : 4}
+          onChange={(v) => { setCodeRetraitSaisi(v); if (v.length === (parNumero(o) ? 2 : 4)) setCodeRetraitManque(false); }} onValider={() => confirmerRetrait(o).then((ok) => { if (ok) setRetraitAConfirmer(null); })} />
       </ConfirmDialog>
     </>
   );
@@ -983,7 +1018,7 @@ export default function DriverDashboard() {
       {!appli && <button type="button" className="btn-teal ecl-code-envoi" disabled={livraisonEnCours === o.id} onClick={() => deliver(o)}>{livraisonEnCours === o.id ? '…' : t('dashDriver.confirmDelivery')}</button>}
       {/* Application : le code du client tapé, on glisse pour livrer (même raison que pour la récupération). */}
       {appli && <div className="ecl-glisser"><GlisserPourConfirmer libelle={t('dashDriver.confirmDelivery')} disabled={livraisonEnCours === o.id} onConfirmer={() => deliver(o)} /></div>}
-      <PhotoDepot order={o} token={token} toast={toast} onLivree={() => { setTerminee({ id: o.id, fee: o.driverFee ?? o.deliveryFee }); load(); }} />
+      <PhotoDepot order={o} token={token} toast={toast} onLivree={() => { setTerminee({ id: o.id, fee: o.driverFee ?? o.deliveryFee, tip: pourboirePaye(o) }); load(); }} />
       <IncidentsCourse order={o} token={token} toast={toast} onChange={load} />
     </>
   );
@@ -1026,6 +1061,17 @@ export default function DriverDashboard() {
     );
   };
 
+  /* CE QUI L'ATTEND À LA PORTE, AVANT DE PRENDRE (Owen, 2026-11-08) : la consigne du client (« Déposer devant la porte »,
+     « M'appeler »…), que l'offre porte déjà (offreSansDonneesClient côté serveur), et l'alcool, qui demande une pièce
+     d'identité à la remise. La note libre du client reste réservée au livreur qui a pris la course : elle peut contenir un
+     nom ou un code de porte. */
+  const consignesOffre = (o) => (o.deliveryInstructions || o.containsAlcohol ? (
+    <>
+      {o.deliveryInstructions && <p className="ecl-impact"><Icone nom={DELIVERY_INSTRUCTION_OPTIONS.find((x) => x.value === o.deliveryInstructions)?.icon || 'sonnette'} taille={18} /><span>{deliveryInstructionLabel(o.deliveryInstructions, t)}</span></p>}
+      {o.containsAlcohol && <p className="ecl-impact"><Icone nom="alerte" taille={18} /><span>{t('ecranLivreur.offreAlcool')}</span></p>}
+    </>
+  ) : null);
+
   /* Une course proposée : sa route, son prix dans une pastille iris, « Prendre la course » en lime pour la PREMIÈRE seulement
      (fondateur, 2026-10-27, réponse 4 A de maquettes/ecrans-pro ; design.md règle 4 : un seul lime à l'écran, les suivantes en
      contour). AVEC DES COURSES EN MAIN (5 A) : « Sur ton chemin », ce qu'elle ajoute à sa tournée et l'arrêt où il la retire,
@@ -1044,6 +1090,7 @@ export default function DriverDashboard() {
           <span>{o.restaurantAddress ? t('dashDriver.pickupAt', { address: o.restaurantAddress }) : null}</span>
           <span>{t('dashDriver.deliveryAt', { address: o.address })}<br /><span className="ecl-faint">{t('conformite.offerApproxAddress')}</span></span>
         </div>
+        {consignesOffre(o)}
         {ajout && (
           <>
             <p className="ecl-impact"><Icone nom="valider" taille={18} /><span>{t('ecranLivreur.ajoutTournee', { min: ajout.minutes })}</span></p>
@@ -1067,7 +1114,7 @@ export default function DriverDashboard() {
   /* L'URGENCE NE DÉPEND PAS DES PAIEMENTS (G123, 2026-11-06). Elle suivait `peutRouler`, qui exige un compte Stripe actif :
      un compte restreint par Stripe en pleine tournée, ou un livreur suspendu avec une course en main, perdait le bouton au
      moment où il pouvait servir. Elle reste pour tout livreur validé, et pour quiconque tient une course. */
-  const urgence = (user?.adminStatus === 'approved' || nEnMain > 0) && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} /></span>;
+  const urgence = (user?.adminStatus === 'approved' || nEnMain > 0) && <span className="ecl-urgence"><BoutonUrgence token={token} toast={toast} commande={principale?.orderNumber ?? null} /></span>;
 
   /* ---------- Le site (jamais l'app) : le bandeau du tableau de bord, la liste et le détail d'une course ---------- */
   const site = !appli;
@@ -1144,9 +1191,10 @@ export default function DriverDashboard() {
   const bandeauAppli = (
     <section className="ecl-bandeau">
       <div className="ecl-b-haut">
+        {/* Sans course en main, les gains du jour, comme le site (bandeauSite, Owen 2026-11-08) : « Aujourd'hui · 2 courses · 12,44 € ». */}
         {tourneeActive ? <span>{ctxTournee}</span> : course
           ? <span><b>{t('ecranLivreur.course')}</b> · {t('ecranLivreur.prixMontant', { fee: fraisCourse(course) })}</span>
-          : <span><b>{t('nav.rides')}</b></span>}
+          : <span><b>{t('nav.rides')}</b>{peutRouler && livreesAujourdhui.length > 0 && <> · {livreesAujourdhui.length === 1 ? t('siteLivreur.aujourdhuiUne') : t('siteLivreur.aujourdhuiCourses', { n: livreesAujourdhui.length })} · {euros(gainsJour)}</>}</span>}
         {/* Urgence (accident, agression, malaise) : 112 d'abord, puis l'équipe Fairide avec la position (BoutonUrgence.jsx). */}
         <span className="ecl-b-droite">{!principale && course && <span className="ecl-chip">{t('ecranLivreur.livree')}</span>}{urgence}</span>
       </div>
@@ -1367,6 +1415,7 @@ export default function DriverDashboard() {
         </div>
         {routeOffre(o)}
         {lieux(o, true)}
+        {consignesOffre(o)}
         {articles(o)}
         <DeliveryTiming order={o} />
         {o.bonusCents > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{t('conformite.offerBonus', { amount: dec(o.bonusCents / 100) })}</p>}

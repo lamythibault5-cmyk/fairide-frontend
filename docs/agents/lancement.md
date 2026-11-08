@@ -56,7 +56,10 @@ ignored since, and can be deleted.
   and bikes only within `VELO_MAX_KM`, and **free** (`couriers.sqlLivreurLibre`, founder 2026-11-06, G1/G2/G30): not paused,
   seen in the app within `courier_presence_min` minutes (15; `users.driver_seen_at`, written at most once a minute by the
   courier screen's `GET /orders/available` — one timestamp, never a history), at least one push device, location sharing
-  not off, current contract version signed. Approved or reinstated couriers start paused; logging out, or turning location
+  not off, current contract version signed. **Phone in pocket (Owen, 2026-11-08):** « seen » also counts within the courier's
+  session (`courier_session_h`, 3 h) as long as he is not « silent »: a « Nouvelle course » sent 10 min ago or more
+  (`users.driver_offer_pushed_at`, the first offer since his last visit, overwritten) with no visit to the app since. Then no
+  more offers until he comes back; no effect on pay or account (`couriers.sqlVuRecemment`, backend `docs/dispatch.md`). Approved or reinstated couriers start paused; logging out, or turning location
   off, pauses them. Each free courier covers `delivery_orders_per_free_courier` (1) delivery already sold and still waiting
   for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time). An open
   Stripe page reserves nothing: the rule runs again when the payment lands (`fermeALArriveeDuPaiement`, reason `livreur`,

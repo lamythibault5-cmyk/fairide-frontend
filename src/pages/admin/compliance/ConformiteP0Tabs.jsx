@@ -404,6 +404,12 @@ export function ParametersTab() {
             <input id={`${id}-presence`} type="number" min="5" max="120" step="1" inputMode="numeric" value={champ('courier_presence_min') || '15'} onChange={changer('courier_presence_min')} />
             <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramPresenceHelp')}</p>
           </div>
+          {/* Téléphone en poche (Owen, 2026-11-08 ; backend couriers.heuresSession) : la session d'un livreur disponible. */}
+          <div className="field">
+            <label htmlFor={`${id}-session`}>{t('conformite.paramSession')}</label>
+            <input id={`${id}-session`} type="number" min="1" max="12" step="1" inputMode="numeric" value={champ('courier_session_h') || '3'} onChange={changer('courier_session_h')} />
+            <p className="small" style={{ margin: '4px 0 0' }}>{t('conformite.paramSessionHelp')}</p>
+          </div>
           <div className="field">
             <label htmlFor={`${id}-capacite`}>{t('conformite.paramCapacity')}</label>
             <select id={`${id}-capacite`} value={champ('delivery_orders_per_free_courier') || '1'} onChange={changer('delivery_orders_per_free_courier')}><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
