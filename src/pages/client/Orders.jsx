@@ -19,6 +19,8 @@ import { useCart } from '../../context/CartContext';
 import { preparerNouvelleCommande } from '../../recommander';
 import SignalerProbleme from '../../components/client/SignalerProbleme';
 import SansLivreur from '../../components/client/SansLivreur';
+import { AttenteSuivi, RouteCommande } from '../../components/client/AttenteCommande';
+import { modeAttente } from '../../attenteCommande';
 import LivreurALaPorte from '../../components/client/LivreurALaPorte';
 import ChangerAdresse from '../../components/client/ChangerAdresse';
 import { ChoixPourboire, FeuillePourboire } from '../../components/client/Pourboire';
@@ -32,7 +34,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
-import { DeliveryTiming, ProchaineEtape, RouteSuivi, TitreHeure, heureArrivee, prenomLivreur, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
+import { DeliveryTiming, ProchaineEtape, TitreHeure, heureArrivee, prenomLivreur, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
 import { SkeletonCards } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
 import DriverBadge from '../../components/DriverBadge';
@@ -549,7 +551,7 @@ export default function Orders() {
         <div style={{ margin: '6px 0' }}><DriverBadge name={o.driverName} phone={o.driverPhone} photoUrl={o.driverPhotoUrl} size={40} /></div>
       )}
       <VendeurLivraison order={o} />
-      <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
+      <SansLivreur order={o} court={modeAttente(o) === 'recherche'} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
       {issueCommande(o) && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${issueCommande(o)}`)}</p>}
     </>
   );
@@ -811,14 +813,15 @@ export default function Orders() {
         enAvant={enCours[0] ? (enCours[0].driverName ? t('orders.notifyMeDriver', { name: prenomLivreur(enCours[0]) }) : t('orders.notifyMe')) : null} />
     </>
   );
-  // L'en-tête iris d'une commande en cours (version 1C, RouteSuivi dans orderStatus.jsx).
+  // L'en-tête iris d'une commande en cours (version 1C ; sa route : RouteCommande, AttenteCommande.jsx).
   const enteteSuivi = (o) => (
     <div className="suivi-bandeau">
       <div className="suivi-bandeau-haut"><span><b>{o.restaurantName}</b> · {orderTypeLabel(o, t)}</span><span>{quand(o.createdAt)}</span></div>
-      <h2 className="suivi-bandeau-titre" key={o.status}>{titreSuivi(o, t)}</h2>
+      <h2 className="suivi-bandeau-titre" key={o.status}>{modeAttente(o) === 'confirmation' ? t('attente.titreConfirmee', { restaurant: o.restaurantName }) : titreSuivi(o, t)}</h2>
       <DeliveryTiming order={o} />
       {/* Pas encore reçue par le commerce (paiement non terminé, ou sur place jamais envoyée) : pas de route qui dirait « Envoyée ». */}
-      {!(o.status === 'nouveau' && !o.paid) && <RouteSuivi status={o.status} orderType={o.orderType} />}
+      {/* Une seule route du paiement à la fin, le vélo ne recule jamais (RouteCommande, AttenteCommande.jsx, 2026-11-08). */}
+      {!(o.status === 'nouveau' && !o.paid) && <RouteCommande order={o} />}
     </div>
   );
 
@@ -849,18 +852,19 @@ export default function Orders() {
     const enRoute = o.status === 'livraison';
     // La note « et maintenant ? » : utile tant que la carte n'a rien d'autre à montrer. En route, le code et le livreur disent
     // tout ; en préparation ou prête, la note s'efface dès que le livreur est nommé (sa rangée la remplace).
-    const note = !enRoute && !(livraison && o.driverName && ['preparation', 'pret'].includes(o.status)) && <ProchaineEtape order={o} />;
+    const note = !enRoute && !modeAttente(o) && !(livraison && o.driverName && ['preparation', 'pret'].includes(o.status)) && <ProchaineEtape order={o} />;
     return (
       <>
         <LivreurALaPorte order={o} />
         {blocNonTermine(o)}
+        <AttenteSuivi order={o} />
         {enRoute && blocCarte(o)}
         {blocEquipe(o)}
         {note}
         {boutonAnnuler(o)}
         {!enRoute && blocPhoto(o)}
         {rangeeLivreur(o)}
-        <SansLivreur order={o} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
+        <SansLivreur order={o} court={modeAttente(o) === 'recherche'} token={token} toast={toast} onUpdated={(maj) => setOrders((prev) => prev.map((x) => (x.id === maj.id ? maj : x)))} />
         {issueCommande(o) && <p className="small" style={{ marginTop: 8 }}>{t(`orders.noCourier_incident_${issueCommande(o)}`)}</p>}
         {codeDeRemise(o)}
         {rangeeAdresse(o)}
@@ -903,7 +907,7 @@ export default function Orders() {
     // colonnes s'effacent (display: contents) et l'ordre se lit : code, suivi, carte, total, actions.
     const suivi = (
       <>
-        <div className="sc-suivi-etape">{o.status !== 'livre' && <ProchaineEtape order={o} />}</div>
+        <div className="sc-suivi-etape">{o.status !== 'livre' && !modeAttente(o) && <ProchaineEtape order={o} />}<AttenteSuivi order={o} /></div>
         <div className="sc-suivi-articles">{blocArticles(o)}</div>
         <div className="sc-suivi-details">{blocDetails(o)}</div>
       </>
@@ -931,10 +935,10 @@ export default function Orders() {
             <h1 className="sc-surtitre">{titre}</h1>
             <div className="ec-haut"><span className="ec-haut-texte"><b>{vedette.restaurantName}</b> · {orderTypeLabel(vedette, t)} · {quand(vedette.createdAt)}</span></div>
             {heureArrivee(vedette) ? <TitreHeure order={vedette} className="ec-titre sc-titre-suivi" key={vedette.status} /> : <>
-              <h2 className="ec-titre sc-titre-suivi" key={vedette.status}>{titreSuivi(vedette, t)}</h2>
+              <h2 className="ec-titre sc-titre-suivi" key={vedette.status}>{modeAttente(vedette) === 'confirmation' ? t('attente.titreConfirmee', { restaurant: vedette.restaurantName }) : titreSuivi(vedette, t)}</h2>
               <DeliveryTiming order={vedette} />
             </>}
-            {!(vedette.status === 'nouveau' && !vedette.paid) && <RouteSuivi status={vedette.status} orderType={vedette.orderType} />}
+            {!(vedette.status === 'nouveau' && !vedette.paid) && <RouteCommande order={vedette} />}
           </div>
         </header>
       ) : arretee ? (

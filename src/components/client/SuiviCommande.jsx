@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import useCommandeEnCours, { commandeSuivie } from '../../hooks/useCommandeEnCours';
-import { STEPS, PICKUP_STEPS, titreSuivi, orderTypeLabel } from '../../orderStatus';
+import { titreSuivi, orderTypeLabel } from '../../orderStatus';
+import { routeCommande } from '../../attenteCommande';
 import { imgProps } from '../../images';
 import { vibrer } from '../../gestes';
 import Icone from '../Icone';
@@ -98,10 +99,12 @@ export default function SuiviCommande() {
   }, [visible]);
   if (!visible) return null;
 
-  const etapes = commande.orderType === 'delivery' ? STEPS : PICKUP_STEPS;
   const arretee = commande === refus;
   const finie = !arretee && commande.status === 'livre';
-  const part = arretee || finie ? 1 : (etapes.indexOf(commande.status) + 1) / etapes.length;
+  // L'anneau suit la même route que le bandeau du suivi (routeCommande, 2026-11-08) : il ne recule jamais, et le livreur trouvé
+  // le fait avancer comme le vélo.
+  const route = routeCommande(commande);
+  const part = arretee || finie ? 1 : (route.etats[route.etat].place + 1) / route.arrets.length;
   const tour = 2 * Math.PI * 21;
 
   let haut;

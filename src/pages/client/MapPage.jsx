@@ -229,7 +229,7 @@ export default function MapPage() {
             )}
             {!chargement && !echec && (
               <p className="carte-compte">
-                {liste.length === 0 ? t('mapClient.noneMatch') : t('mapClient.count', { n: liste.length })}
+                {liste.length === 0 ? t('mapClient.noneMatch') : (liste.length === 1 ? t('mapClient.countOne') : t('mapClient.count', { n: liste.length }))}
               </p>
             )}
             {filtreActif && (

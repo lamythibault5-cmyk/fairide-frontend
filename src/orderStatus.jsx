@@ -229,26 +229,36 @@ export function RouteSuivi({ status, orderType }) {
   const labels = livraison
     ? [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), t('orderStatus.progress.onTheWay'), dernier]
     : [t('orderStatus.progress.sent'), t('orderStatus.progress.preparation'), t('orderStatus.progress.ready'), dernier];
-  const pas = 100 / steps.length;
+  return <RouteArrets labels={labels} idx={idx} enRoute={status === 'livraison'} />;
+}
+
+/* La route à arrêts du bandeau iris : un arrêt par libellé. `fait` : les arrêts cochés en lime ; `place` : où est le vélo
+ * (un demi : entre deux arrêts). Sans eux, `idx` sert aux deux (l'arrêt où l'on est). Quand la place change, la transition
+ * CSS de .rs-velo et .rs-fait (client-ui.css) fait rouler le vélo. Partagée par le suivi du commerce (RouteSuivi) et la route
+ * du client, du paiement à la fin (RouteCommande, components/client/AttenteCommande.jsx, 2026-11-08). */
+export function RouteArrets({ labels, idx = 0, fait = idx, place = idx, enRoute = false }) {
+  const pas = 100 / labels.length;
+  const ici = Math.min(place, labels.length - 1);
+  const libActuel = Math.floor(ici);
   return (
     <>
-      <div className={`route-suivi${status === 'livraison' ? ' en-route' : ''}`} aria-hidden="true">
+      <div className={`route-suivi${enRoute ? ' en-route' : ''}`} aria-hidden="true">
         <span className="rs-voie" style={{ left: `${pas / 2}%`, right: `${pas / 2}%` }} />
-        <i className="rs-fait" style={{ left: `${pas / 2}%`, width: `${idx * pas}%` }} />
-        {steps.map((s, k) => (
-          <span key={s} className={`rs-arret${k < idx ? ' fait' : k === idx ? ' actuel' : ''}`} style={{ left: `${(k + 0.5) * pas}%` }}>
-            {k < idx && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>}
+        <i className="rs-fait" style={{ left: `${pas / 2}%`, width: `${ici * pas}%` }} />
+        {labels.map((l, k) => (
+          <span key={k} className={`rs-arret${k < fait ? ' fait' : k === ici ? ' actuel' : ''}`} style={{ left: `${(k + 0.5) * pas}%` }}>
+            {k < fait && <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5" /></svg>}
           </span>
         ))}
-        <span className="rs-velo" style={{ left: `${(idx + 0.5) * pas}%` }}>
+        <span className="rs-velo" style={{ left: `${(ici + 0.5) * pas}%` }}>
           <svg viewBox="-3 5 82 42" width="42" height="22">
             <g fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round"><circle cx="15" cy="29" r="12.5" /><circle cx="61" cy="29" r="12.5" /></g>
             <g fill="currentColor"><rect x="16" y="8" width="44" height="5" rx="2.5" /><g transform="rotate(42 27 22.5)"><rect x="13" y="20" width="28" height="5" rx="2.5" /></g></g>
           </svg>
         </span>
       </div>
-      <ol className="rs-libs" style={{ gridTemplateColumns: `repeat(${steps.length}, 1fr)` }}>
-        {labels.map((l, k) => <li key={l} className={k < idx ? 'fait' : k === idx ? 'actuel' : ''} aria-current={k === idx ? 'step' : undefined}>{l}</li>)}
+      <ol className="rs-libs" style={{ gridTemplateColumns: `repeat(${labels.length}, 1fr)` }}>
+        {labels.map((l, k) => <li key={k} className={k === libActuel ? 'actuel' : k < fait ? 'fait' : ''} aria-current={k === libActuel ? 'step' : undefined}>{l}</li>)}
       </ol>
     </>
   );

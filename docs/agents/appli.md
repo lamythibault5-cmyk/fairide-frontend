@@ -280,7 +280,18 @@ are gone (ConnexionAppli, Auth.jsx, bienvenue.js `codeEnAttente`); an account le
 opens with its password or Apple / Google. **The address comes from the welcome position**: « Où te livrer ? » shows the
 address found (`GET /restaurants/lookup/reverse`) in a card, « C'est bien ici » in one tap, an optional box field (sent as
 « 120 bte 3 »), « Une autre adresse » for the search and fields (prefilled); without a position, or no house number found,
-the fields. **Password: 8 characters, no upper/lower-case rule** (`mdpValide`, validation.js; the backend still refuses
+the fields. **The account address becomes « Maison » in the address book** (2026-11-08, mockup
+`maquettes/retours-08-11`): the first read of an empty book copies it there once (backend `amorcerCarnet`, migration 122
+`users.carnet_amorce_at`; a deleted Maison never comes back). The book (ChoixAdresse.jsx) pins **Maison** and **Travail** on
+top (« Ajouter » / « Changer »; one of each per account, `PATCH /auth/me/addresses/:id {label}`), every new address goes through
+the number step with chips Maison / Travail / Autre (labels stored as `maison` / `travail`, shown via `nomAdresse.js`), and the
+list header says « Livrer à · Maison ». **Position at every opening** (`hooks/usePositionLancement.js`, app and site): read
+without asking if allowed, the system question once if never asked (`fairide_position_demandee`), never after a refusal;
+re-read after 30 min in the background; nothing waits for it and it never leaves the phone. Within 150 m of a saved address
+(and a position finer than 150 m) that address is selected silently; more than 1 km from the chosen address (after removing
+the phone's error margin) the bubble « Tu es à 4,2 km de … On livre bien là ? » points at the header (BulleAdresseLoin.jsx):
+« Livrer à ma position » opens the book on « Utiliser ma position » (precise position, number check), « Oui, garder » hides
+it for that address until the next opening (sessionStorage). Visitors: the position only sorts the list. **Password: 8 characters, no upper/lower-case rule** (`mdpValide`, validation.js; the backend still refuses
 leaked passwords). The « Confirme ton adresse e-mail » card of Mes commandes shows only when the server says it serves
 (`user.emailReminder`: newsletter opt-in, a team address, or a customer with a paid order, 2026-11-06 G52; the order
 confirmation also says « Reçu envoyé à {email} · Changer »). Lost access to the address (typo, Apple relay): « Mot de passe

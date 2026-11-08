@@ -8,7 +8,7 @@
 //   - le commerce peut offrir une part fixe (deliveryFeeDiscount : 1,50 € → livraison dès 3 €), la totalité
 //     (freeDelivery), ou la totalité dès un montant de commande (freeDeliveryMinOrder). Ce qu'il offre, il le reçoit
 //     en moins sur son virement, et le livreur touche sa part complète.
-import { getLocale } from './context/LanguageContext';
+import { eurosCourt } from './prixPlat';
 import { haversineDistanceKm } from './menuCategories';
 /* LE FORFAIT DE LIVRAISON VIENT DU SERVEUR (comparaison front / serveur, 2026-11-05). La copie fixe d'ici disait encore 5 € le
  * 06/11 alors que le serveur facture 5,80 € depuis le 31/10 (pricing.js, migration 101) : « Livraison dès 5 € » partout, et
@@ -34,13 +34,10 @@ export function tarifLivraison(r) {
   };
 }
 
-// Dans le format de la langue affichée (« 3 € », « €3 », « € 3 ») : écrit à la main au format français, il donnait
-// « Delivery from 3 € » à côté de « -€3 » sur la liste anglaise (test de bout en bout du 6 oct. 2026). Sans « ,00 »
-// pour un montant rond, comme eurosCourt dans prixPlat.js.
-export const eurosCourts = (v) => {
-  const n = Number(v) || 0;
-  return new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', minimumFractionDigits: Number.isInteger(n) ? 0 : 2 }).format(n);
-};
+// Même format que tous les prix (« 3 € », « 2.50 € », prixPlat.js, Owen 2026-11-08) : c'est eurosCourt, gardé sous ce nom
+// pour la liste et la fiche. Écrit à la main au format français, il donnait « Delivery from 3 € » à côté de « -€3 » sur la
+// liste anglaise (6 oct. 2026) ; un seul formateur pour tous évite ces écarts.
+export const eurosCourts = (v) => eurosCourt(v);
 
 /* HORS ZONE DE LIVRAISON (audit du 19/10, discovery-03). Le serveur refuse une livraison au-delà de la distance du commerce
  * (routes/orders.js, OUT_OF_DELIVERY_RADIUS) : vol d'oiseau arrondi au dixième (geocode.estimateDeliveryMinutes), comparé

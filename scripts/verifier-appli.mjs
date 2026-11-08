@@ -113,6 +113,9 @@ function simuler(chemin, methode, profil, vue = null) {
   if (/^\/restaurants$/.test(chemin) && vue === 'liste') return LISTE_COMMERCES.map(({ menu, ...r }) => ({ ...r, resumeCarte: { plats: menu.length, healthy: 0, bio: 0, vegan: 0, halal: 0, sansGluten: 0, promoPlat: null } }));
   if (/^\/restaurants$/.test(chemin) && vue === 'plats') return LISTE_COMMERCES.map((r) => ({ id: r.id, plats: r.menu }));
   if (/^\/restaurants$/.test(chemin)) return LISTE_COMMERCES;
+  // La rangée des commerces inscrits (GET /restaurants/landing) : une liste, comme en production. Prise pour une fiche (plus
+  // bas), elle faisait planter la liste au second passage, cache rempli au premier (vu par la vérification des catégories).
+  if (/^\/restaurants\/landing$/.test(chemin)) return LISTE_COMMERCES.map(({ menu: _menu, ...r }) => r);
   if (/^\/restaurants\/[^/]+\/capacity$/.test(chemin)) return { full: false };
   // Statistiques du commerce (backend analytiqueCommerce.js) : 30 jours d'une petite pizzeria, forme exacte de la réponse.
   if (methode === 'GET' && /^\/restaurants\/[^/]+\/analytics$/.test(chemin)) {
@@ -403,6 +406,58 @@ try {
     if (!(await page.locator('.agir-bandeau').filter({ hasText: 'Prouve ton numéro' }).count())) r2.problemes.push('Commandes sans le bandeau « Prouve ton numéro »');
     resultats.push({ profil: 'murNumero', page: '/dashboard/orders (numéro à prouver)', ...r2 });
     await ctx.close();
+  }
+  /* UNE CATÉGORIE TOUCHÉE DANS LA RECHERCHE OUVRE LA LISTE SUR CETTE CATÉGORIE (cassé deux fois : 2026-10-27, puis 2026-11-08,
+   * Owen : « make sure it doesn't happen a third time »). Trois chemins : la Recherche ouverte directement ; la Recherche
+   * ouverte par son onglet alors que la liste est déjà montée derrière ; une spécialité tapée (« pizza »). Chaque fois, la
+   * liste doit avoir la bulle Pizza allumée, visible dans la bande, et pas une autre. Voir src/filtresEnvoyes.js. */
+  {
+    const bulle = async (page) => {
+      await page.waitForURL(/\/restaurants(\?|$)/, { timeout: 8000 });
+      await page.waitForTimeout(700);
+      return page.evaluate(() => {
+        const on = [...document.querySelectorAll('.lt-puce[data-cuisine].on')];
+        if (on.length !== 1) return on.length ? `${on.length} bulles allumées` : 'aucune bulle allumée';
+        const p = on[0];
+        const d = p.closest('.lt-defile');
+        const b = p.getBoundingClientRect();
+        const c = d ? d.getBoundingClientRect() : { left: 0, right: innerWidth };
+        if (b.right <= c.left || b.left >= c.right) return `bulle « ${p.textContent.trim()} » hors de l'écran`;
+        return p.textContent.trim() === 'Pizza' ? '' : `bulle « ${p.textContent.trim()} » au lieu de Pizza`;
+      });
+    };
+    const chemins = [
+      ['tuile « Par envie », Recherche ouverte directement', async (page) => {
+        await page.goto(`${base}/recherche`);
+        await page.locator('.recherche-tuile', { hasText: 'Pizza' }).first().click({ timeout: 8000 });
+      }],
+      ['tuile « Par envie », liste déjà ouverte derrière', async (page) => {
+        await page.goto(`${base}/restaurants`);
+        await page.waitForTimeout(1200);
+        // « Repère ce badge » (EcranBadge.jsx) s'ouvre une fois sur la liste : on le ferme comme un client.
+        const compris = page.getByRole('button', { name: 'Compris' });
+        if (await compris.count()) { await compris.first().click(); await page.waitForTimeout(500); }
+        await page.locator('a[href="/recherche"]').first().click({ timeout: 8000 });
+        await page.waitForURL(/\/recherche/, { timeout: 8000 });
+        await page.locator('.recherche-tuile', { hasText: 'Pizza' }).first().click({ timeout: 8000 });
+      }],
+      ['spécialité tapée « pizza »', async (page) => {
+        await page.goto(`${base}/recherche`);
+        await page.locator('input[type="search"], .recherche-champ input, input').first().fill('pizza', { timeout: 8000 });
+        await page.locator('.recherche-ligne', { hasText: 'Dans la catégorie Pizza' }).first().click({ timeout: 8000 });
+      }]
+    ];
+    for (const [nom, parcours] of chemins) {
+      const { ctx, page } = await ouvrir(navigateur, base, { profil: 'client' });
+      const r = { arrivee: '', problemes: [] };
+      try {
+        await parcours(page);
+        const souci = await bulle(page);
+        if (souci) r.problemes.push(`catégorie perdue : ${souci}`);
+      } catch (e) { r.problemes.push(`catégorie perdue : parcours impossible (${e.message.split('\n')[0]})`); }
+      resultats.push({ profil: 'client', page: `/recherche → Pizza (${nom})`, ...r });
+      await ctx.close();
+    }
   }
   // Premier lancement sans réponse sur les rapports de panne : ni la carte cookies du site, ni un écran plein qui bloque
   // (fondateur, 2026-10-16 : la question se pose par une case à l'inscription, au moment d'une panne et dans Mon compte).

@@ -8,7 +8,8 @@ import ConfirmDialog from '../ConfirmDialog';
 // (POST /orders/:id/no-courier-cancel : Fairide paie, le commerce garde son dû).
 // Livreur attribué qui n'est pas venu chercher la commande prête (chasse aux bogues d'avant GO, 2026-11-06, G5 ; backend
 // courierNoShow) : même issue, mais pas « nous cherchons encore un livreur » à côté de son nom.
-export default function SansLivreur({ order, token, toast, onUpdated }) {
+// `court` : les ondes de l'attente (AttenteCommande.jsx) disent déjà qu'on cherche un livreur et l'heure limite.
+export default function SansLivreur({ order, token, toast, onUpdated, court = false }) {
   const { t } = useLanguage();
   const [maintenant, setMaintenant] = useState(() => Date.now());
   const [confirmer, setConfirmer] = useState(false);
@@ -17,6 +18,8 @@ export default function SansLivreur({ order, token, toast, onUpdated }) {
   if (!order.noCourierCancelAt) return null;
   const possible = maintenant >= order.noCourierCancelAt;
   const heure = new Date(order.noCourierCancelAt).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
+  // Les ondes de l'attente disent déjà qu'on cherche et jusqu'à quelle heure : ici, seulement quand on peut annuler.
+  if (court && !possible && !order.courierNoShow) return null;
 
   async function annuler() {
     setEnCours(true);

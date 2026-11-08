@@ -1,0 +1,24 @@
+/* La bulle « Tu es à 4,2 km de … » (BulleAdresseLoin.jsx), sous le bouton « Livrer à » du bandeau collé (TeteListe.jsx).
+ * Blanche sur l'iris, ombre douce, la pointe vers la maison de l'adresse (16 px du bord + la moitié de l'icône). Elle entre en
+ * fondu et en glissant de 6 px, sans rebond (appli.md : les fenêtres n'ont plus de glissement long). */
+.bulle-loin {
+  position: absolute; z-index: 5; left: 12px; right: 12px; top: calc(100% - 10px);
+  max-width: 420px; box-sizing: border-box; padding: 14px 14px 12px;
+  background: #fff; color: #17142B; border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(23, 20, 43, .22), 0 1px 3px rgba(23, 20, 43, .12);
+  animation: bulle-loin-entre .22s ease-out both;
+}
+.bulle-loin-pointe {
+  position: absolute; top: -7px; left: 14px; width: 16px; height: 16px;
+  background: #fff; border-radius: 3px; transform: rotate(45deg);
+}
+.bulle-loin-texte { position: relative; margin: 0 0 12px; font-size: 14.5px; line-height: 1.4; }
+.bulle-loin-texte b { font-weight: 700; }
+.bulle-loin-actions { display: flex; gap: 8px; }
+.bulle-loin-actions button {
+  flex: 1; min-height: 44px; padding: 0 12px; border-radius: 999px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.bulle-loin-ici { background: var(--lime); color: #17142B; border: 0; }
+.bulle-loin-garder { background: #fff; color: var(--iris); border: 1.5px solid var(--iris-tint, #EFEDFB); }
+@keyframes bulle-loin-entre { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .bulle-loin { animation: none; } }

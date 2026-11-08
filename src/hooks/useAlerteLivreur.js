@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useLanguage, getLocale } from '../context/LanguageContext';
+import { useLanguage } from '../context/LanguageContext';
 import { playChime, notifier } from './useNewOrderAlert';
 import { vibrer } from '../gestes';
 import { estNatif } from '../natif';
+import { euros } from '../prixPlat';
 
 // Alertes du livreur. Jusqu'ici, une course disponible n'était signalée par RIEN : ni son, ni notification — le
 // livreur devait fixer son écran. Même principe que l'alerte du restaurateur (useNewOrderAlert.js), sur ses
@@ -121,7 +122,7 @@ export default function useAlerteLivreur({ disponibles, mesCourses, pret, actif,
     const nouvelles = disponibles.filter((o) => !avant.has(o.id));
     if (!nouvelles.length) return;
     const o = nouvelles[0];
-    const gain = o.driverFee != null ? new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR' }).format(Number(o.driverFee)) : '';
+    const gain = o.driverFee != null ? euros(o.driverFee) : '';
     alerter(
       NOTES_NOUVELLE, 'alerte',
       nouvelles.length > 1 ? t('driverAlert.notifNewMany', { n: nouvelles.length }) : t('driverAlert.notifNewOne', { name: o.restaurantName || '' }),

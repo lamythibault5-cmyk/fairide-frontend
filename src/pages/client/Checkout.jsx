@@ -491,7 +491,12 @@ export default function Checkout() {
     oublierSaisiePaiement(restaurantId);
     cart.clear();
     vibrer('succes');
-    navigate(`/order-success?order=${order.id}`, { replace: true });
+    navigate(`/order-success?order=${order.id}`, { replace: true, state: indicesAttente(true) });
+  }
+  // Ce que l'écran d'attente (OrderResult, AttenteCommande.jsx) doit savoir avant d'avoir relu la commande : sans paiement en
+  // ligne, pas de ligne « Paiement sécurisé vérifié » ; en livraison par Fairride, l'arrêt « Livreur » sur la route.
+  function indicesAttente(surPlace) {
+    return { attente: { surPlace, livraison: fulfillmentType === 'delivery', parCommerce: livreParCommerce } };
   }
 
   async function placeOrder() {
@@ -607,7 +612,7 @@ export default function Checkout() {
         cart.clear();
         vibrer('succes');
         if (user?.simulation) toast(t('checkout.toastOrderPaid'), 'succes');
-        navigate(`/order-success?order=${order.id}`, { replace: true });
+        navigate(`/order-success?order=${order.id}`, { replace: true, state: indicesAttente(false) });
       } else {
         // Le panier est mis de côté, pas vidé et pas laissé en place — voir stashForPayment() dans
         // CartContext.jsx pour le raisonnement complet. En résumé : le vider ici faisait perdre son
@@ -633,7 +638,7 @@ export default function Checkout() {
         commandeTermineeRef.current = true;
         oublierSaisiePaiement(restaurantId);
         if (e.code === 'ALREADY_PAID') cart.clear(); else cart.stashForPayment(order.id);
-        navigate(`/order-success?order=${order.id}`, { replace: true });
+        navigate(`/order-success?order=${order.id}`, { replace: true, state: indicesAttente(false) });
         return;
       }
       toast(e.message, 'erreur');
@@ -667,7 +672,7 @@ export default function Checkout() {
       if (e.code === 'ALREADY_PAID') {
         commandeTermineeRef.current = true; oublierSaisiePaiement(restaurantId); cart.clear();
         toast(e.message);
-        navigate(`/order-success?order=${pendingOrder.id}`, { replace: true });
+        navigate(`/order-success?order=${pendingOrder.id}`, { replace: true, state: indicesAttente(false) });
         return;
       }
       toast(e.message, 'erreur');

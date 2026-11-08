@@ -438,6 +438,8 @@ export async function demarrerNatif(historique) {
  * approximative laissait la plupart des livreurs sur « approximative » : en livraison, le greffon de suivi en arrière-plan
  * (suivrePositionCourse) exige la position exacte et refusait de démarrer — aucune position envoyée de toute la course. Le
  * client, lui, garde l'approximative : elle suffit pour trouver les commerces proches. */
+// Rend aussi `precision` (mètres, null si inconnue) : la position approximative tombe à un ou deux kilomètres, et la position
+// au lancement (usePositionLancement.js) n'en tire rien qu'elle ne peut affirmer.
 export async function demanderPosition({ delai = 10000, precise = false } = {}) {
   const options = { enableHighAccuracy: false, timeout: delai, maximumAge: 5 * 60 * 1000 };
   if (estNatif()) {
@@ -447,12 +449,12 @@ export async function demanderPosition({ delai = 10000, precise = false } = {}) 
       if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: [precise ? 'location' : 'coarseLocation'] });
       if (droit.location !== 'granted' && droit.coarseLocation !== 'granted') return null;
       const p = await Geolocation.getCurrentPosition(options);
-      return { lat: p.coords.latitude, lng: p.coords.longitude };
+      return { lat: p.coords.latitude, lng: p.coords.longitude, precision: p.coords.accuracy ?? null };
     } catch { return null; }
   }
   if (!('geolocation' in navigator)) return null;
   return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition((p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }), () => resolve(null), options);
+    navigator.geolocation.getCurrentPosition((p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude, precision: p.coords.accuracy ?? null }), () => resolve(null), options);
   });
 }
 

@@ -11,6 +11,8 @@ import Icone from '../../components/Icone';
 import { BandeauCommande, FeuilleCommande } from '../../components/EcranCommande';
 import InfosRetrait from '../../components/client/InfosRetrait';
 import { formatOrderItem, orderTypeLabel, heureArrivee } from '../../orderStatus';
+import { ListeAttente, RouteArretsAttente } from '../../components/client/AttenteCommande';
+import { etapesAttente, lignesCochees, titreAttente, useEtatAttente } from '../../attenteCommande';
 import { euros } from '../../prixPlat';
 import { RappelCodeAmi } from '../../components/CodeAmi';
 
@@ -75,8 +77,26 @@ function ResultatCommande({ success }) {
     return success ? 'checking' : 'failed';
   });
 
-  // La commande payée, telle que le serveur la renvoie : son récapitulatif monte dans la feuille de l'écran de succès.
+  // La commande telle que le serveur la renvoie (dès la première lecture, payée ou pas) : son nom et son mode nourrissent la
+  // liste de l'attente ; payée, son récapitulatif monte dans la feuille de l'écran de succès.
   const [commande, setCommande] = useState(null);
+  const location = useLocation();
+  /* L'ATTENTE PAS À PAS (fondateur, 2026-11-08, maquettes/retours-08-11/attente-v2.html) : pendant la vérification, le bandeau iris
+     avec la route de la commande (la même que le suivi : Paiement · Confirmée · Livreur · En route · Livrée) et la liste qui se
+     coche. Le paiement confirmé par le serveur coche « Paiement sécurisé vérifié » (le vélo part vers Confirmée), puis
+     « Commande envoyée » (le commerce la reçoit au paiement ; le vélo arrive à Confirmée), un pas à la fois ; puis l'écran de
+     succès. La même horloge reprend sur le suivi, sans rejouer ces pas (useEtatAttente, clé de la commande).
+     `payee` : confirmé, l'écran de succès attend la dernière coche. */
+  const [payee, setPayee] = useState(false);
+  const indicesAttente = location.state?.attente || {};
+  const attente = etapesAttente(commande, t, indicesAttente);
+  const suiteAttente = useEtatAttente(commande, { cle: orderId, indices: indicesAttente, etatMax: 2 });
+  const vu = suiteAttente.vu;
+  useEffect(() => {
+    if (!payee || state !== 'checking' || vu < 2) return undefined;
+    const id = setTimeout(() => setState('paid'), 700);
+    return () => clearTimeout(id);
+  }, [payee, state, vu]);
 
   const cartRef = useRef(cart);
   cartRef.current = cart;
@@ -130,7 +150,8 @@ function ResultatCommande({ success }) {
         // Gardée dans tous les cas : son numéro du jour, s'il existe, se lit aussi sous « en cours » ou « échec ».
         if (order) setCommande(order);
         if (order?.paid) {
-          setState('paid');
+          // La liste coche « payé » et « envoyée », puis l'écran passe au merci (setState('paid') plus haut, après 700 ms).
+          setPayee(true);
           vibrer('succes'); // paiement confirmé : la sensation « succès » du téléphone (audit « Look and feel » 6a)
           // Statistiques (sans donnée personnelle) : la commande est finalisée, par mode.
           suivre('commande_finalisee', { mode: order.orderType === 'pickup' ? 'emporter' : 'livraison' });
@@ -280,6 +301,24 @@ function ResultatCommande({ success }) {
           <Link to="/restaurants" className="btn-ghost ec-merci-retour">{t('ecranCommande.retourCommerces')}</Link>
           </div>
           </div>
+        </FeuilleCommande>
+      </div>
+    );
+  }
+
+  // Vérification en cours : le bandeau iris avec la route (un arrêt par étape, le vélo sur l'étape en cours) et la liste.
+  // Toujours aucun bouton : on ne veut pas qu'un client quitte la page à la seconde où la confirmation arrive.
+  if (state === 'checking') {
+    return (
+      <div className="ec-page sc-page at-page">
+        <BandeauCommande haut={commande?.restaurantName ? <><b>{commande.restaurantName}</b> · {orderTypeLabel(commande, t)}</> : null}>
+          <h1 className="ec-titre" key={Math.min(vu, 2)} aria-live="polite">{titreAttente(commande, t, vu, attente.enLigne)}</h1>
+          {/* La même route que le suivi : ici, au plus jusqu'à « Confirmée » (le commerce a la commande). */}
+          <RouteArretsAttente arrets={suiteAttente.arrets} position={suiteAttente.position} />
+        </BandeauCommande>
+        <FeuilleCommande>
+          <ListeAttente etapes={attente.etapes} coches={lignesCochees(vu, attente.enLigne)} />
+          <p className="small at-note">{t('attente.neFermePas')}</p>
         </FeuilleCommande>
       </div>
     );
