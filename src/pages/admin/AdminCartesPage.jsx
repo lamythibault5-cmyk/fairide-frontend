@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
@@ -7,6 +7,7 @@ import { useLanguage, getLocale } from '../../context/LanguageContext';
 import AdminPageHeader from '../../components/admin/AdminPageHeader';
 import AdminDataTable, { useTableSort } from '../../components/admin/AdminDataTable';
 import urlSure from '../../urlSure';
+import { ChangementsTextes, HaussesAVerifier } from '../../components/admin/HaussesCartes';
 import '../../terminal.css'; // pastilles d'état (.print-etat)
 import '../../simulation.css'; // pastilles de filtre (.simu-filtres)
 
@@ -18,6 +19,9 @@ import '../../simulation.css'; // pastilles de filtre (.simu-filtres)
 // non vérifiés (Snack bodrum, Punjab…), le cas le plus urgent — en tête de son état et compté à part.
 const ETATS = ['sans_carte', 'prix_a_verifier', 'a_publier', 'en_ligne'];
 const TON = { sans_carte: 'erreur', prix_a_verifier: 'attente', a_publier: 'attente', en_ligne: 'ok' };
+// Trois vues (Owen, 2026-11-08, maquettes/carte-hausses) : les cartes, les hausses dont la photo attend l'équipe, et les textes
+// que les commerces ont changés eux-mêmes. `?vue=` garde la vue au rechargement et permet un lien direct.
+const VUES = ['cartes', 'hausses', 'textes'];
 const PLATEFORMES = { uber_eats: 'Uber Eats', deliveroo: 'Deliveroo', takeaway: 'Takeaway', website: 'Site web', other: 'Autre' };
 
 export default function AdminCartesPage() {
@@ -28,6 +32,17 @@ export default function AdminCartesPage() {
   const [donnees, setDonnees] = useState(null);
   const [filtre, setFiltre] = useState('a_faire');
   const { sort, toggle } = useTableSort('aFaire', 'asc');
+  const [params, setParams] = useSearchParams();
+  const vue = VUES.includes(params.get('vue')) ? params.get('vue') : 'cartes';
+  const changerVue = (v) => { const p = new URLSearchParams(params); if (v === 'cartes') p.delete('vue'); else p.set('vue', v); setParams(p, { replace: true }); };
+  // Le nombre de hausses qui attendent l'équipe, sur l'onglet, quelle que soit la vue ouverte.
+  const [nbHausses, setNbHausses] = useState(null);
+  const compterHausses = useCallback(() => {
+    api('/admin/menu/hausses?statut=a_verifier', { token })
+      .then((r) => setNbHausses((Array.isArray(r) ? r : r?.hausses || r?.rows || []).length))
+      .catch(() => setNbHausses(null));
+  }, [token]);
+  useEffect(() => { compterHausses(); }, [compterHausses]);
 
   const charger = useCallback(() => {
     api('/admin/cartes', { token }).then(setDonnees).catch((e) => toast(e.message, 'erreur'));
@@ -87,6 +102,17 @@ export default function AdminCartesPage() {
   return (
     <div>
       <AdminPageHeader module="cartes" actions={<button type="button" className="btn-outline" onClick={charger}>{tr('adminCartes.refresh')}</button>} />
+      <div className="simu-filtres" role="tablist" style={{ display: 'flex', gap: 6, flexWrap: 'wrap', margin: '0 0 14px' }}>
+        {VUES.map((v) => (
+          <button key={v} type="button" role="tab" aria-selected={vue === v} className={`chip${vue === v ? ' active' : ''}`}
+            style={v === 'hausses' && nbHausses && vue !== v ? { borderColor: 'var(--red)', color: 'var(--red)' } : undefined} onClick={() => changerVue(v)}>
+            {tr(`adminHausses.vue_${v}`)}{v === 'hausses' && nbHausses ? ` (${nbHausses})` : ''}
+          </button>
+        ))}
+      </div>
+      {vue === 'hausses' && <HaussesAVerifier onChange={compterHausses} />}
+      {vue === 'textes' && <ChangementsTextes />}
+      {vue === 'cartes' && <>
       <div className="stat-grid">
         {ETATS.map((e) => {
           // « En ligne » compte tous les commerces vus des clients ; ceux dont les prix ne sont pas vérifiés sont dits en rouge.
@@ -114,6 +140,7 @@ export default function AdminCartesPage() {
           <AdminDataTable columns={colonnes} rows={visibles} sort={sort} onSort={toggle} onRowClick={(l) => navigate(`/admin/restaurants/${l.id}/menu`)} />
         </div>
       )}
+      </>}
     </div>
   );
 }
