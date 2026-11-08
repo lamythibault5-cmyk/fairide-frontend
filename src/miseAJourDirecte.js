@@ -17,7 +17,7 @@ import { notificationToucheeRecemment } from './pushNatif';
  * commande suivie, course en main, commande à accepter). L'appli recharge alors ses écrans derrière l'écran de lancement.
  *
  * SI UN PAQUET NE DÉMARRE PAS : l'appli dit au greffon qu'elle tourne (notifyAppReady) seulement une fois montée, sans page
- * plantée, 3 secondes après ; sans ce signal dans les 15 secondes (appReadyTimeout), le greffon revient seul au paquet
+ * plantée, 3 secondes après ; sans ce signal dans les 30 secondes (appReadyTimeout, 15 jusqu'au 8 nov. 2026), le greffon revient seul au paquet
  * d'avant, et ce paquet-là n'est plus jamais retenté sur ce téléphone (RATES). L'équipe peut aussi retirer un paquet côté
  * serveur : les applis reviennent au précédent, sinon à la version du store (« retour »).
  *
@@ -49,9 +49,15 @@ let enCours = false;
 const lire = (cle, defaut = null) => { try { return JSON.parse(localStorage.getItem(cle) || 'null') ?? defaut; } catch { return defaut; } };
 const ecrire = (cle, v) => { try { if (v == null) localStorage.removeItem(cle); else localStorage.setItem(cle, JSON.stringify(v)); } catch { /* stockage indisponible */ } };
 
+/* DANS UNE BOÎTE, JAMAIS SEUL (8 nov. 2026, trouvé au logcat sur la Galaxy Tab S7+). Un greffon Capacitor répond à
+ * N'IMPORTE QUEL nom de méthode, `then` compris : rendu tel quel par une fonction async, il passe pour une promesse, et
+ * `await charger()` appelait CapacitorUpdater.then(…), une méthode que le greffon natif n'a pas et qui ne répond jamais.
+ * verifier() restait bloqué là (aucun téléchargement, enCours jamais remis à false) et notifyAppReady() n'était jamais
+ * appelé : du 6 au 8 novembre, AUCUNE appli n'a reçu de mise à jour directe, sans la moindre erreur. Même piège que la
+ * connexion Google du 17 oct. (natif.js, preparerConnexion). Rendre { u }, jamais le greffon lui-même. */
 async function charger() {
   if (!greffon) ({ CapacitorUpdater: greffon } = await import('@capgo/capacitor-updater'));
-  return greffon;
+  return { u: greffon };
 }
 
 // Le paquet mis en place au dernier démarrage n'est pas celui qui tourne : le greffon l'a écarté.
@@ -71,7 +77,7 @@ async function appliquer() {
   if (!pret || estOccupe() || (notificationToucheeRecemment() && niveauMiseAJour() !== 'obligatoire')) return;
   // Déjà celui qui tourne (téléchargé une seconde fois pendant qu'il se mettait en place) : rien à recharger.
   if (pret.version === ID) { ecrire(PRET, null); return; }
-  const u = await charger();
+  const { u } = await charger();
   ecrire(PRET, null);
   if (pret.retour) { await u.reset(); return; }
   ecrire(ESSAI, pret.version);
@@ -93,7 +99,7 @@ async function verifier() {
   derniereDemande = Date.now();
   try {
     const r = await api(`/app/paquet?os=${os}&socle=${socle}&id=${encodeURIComponent(ID)}&ordre=${ORDRE}`, { logoutOn401: false });
-    const u = await charger();
+    const { u } = await charger();
     if (r?.retour) {
       // Seulement si l'appli tourne sur un paquet : la version du store, elle, reste.
       if ((await u.current())?.bundle?.id !== 'builtin') ecrire(PRET, { retour: true });
@@ -142,7 +148,7 @@ function attendreDemarrage() {
   if (!root?.children.length || root.querySelector('[data-prerendu]')) { setTimeout(attendreDemarrage, 100); return; }
   setTimeout(async () => {
     if (document.querySelector('[data-page-plantee]')) return;
-    try { await (await charger()).notifyAppReady(); } catch { /* greffon absent de cette coque */ }
+    try { await (await charger()).u.notifyAppReady(); } catch { /* greffon absent de cette coque */ }
     verifier();
   }, 3000);
 }
