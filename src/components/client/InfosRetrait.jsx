@@ -8,11 +8,12 @@ import { euros } from '../../prixPlat';
  * carte de la commande (Mes commandes) :
  *   - quand elle sera prête (heure estimée par le serveur : temps de préparation du commerce, ou l'heure programmée) ;
  *   - où (adresse), avec « Itinéraire » (Google Maps) et « Appeler » quand le commerce montre son numéro ;
- *   - payée sur place : le montant à payer au comptoir et ce que le commerce accepte ;
- *   - payée sur place : ce qui arrive si on ne vient pas.
+ *   - payée sur place : le montant à payer au comptoir et ce que le commerce accepte.
+ * Ce qui arrive si on ne vient pas (retrait.noShowRule) est dit UNE fois, au paiement, sans icône d'alerte (revue des
+ * frictions client, 2026-11-08) : répété sur la confirmation et le suivi, il disait « on ne te fait pas confiance ».
  * Mêmes rangées que le récapitulatif de la confirmation (.ec-recap, ecran-commande.css) : icône iris, texte, petite ligne.
  * `compact` (carte de Mes commandes) : la carte dit déjà l'heure, l'adresse et le montant ; on n'ajoute que ce qui lui
- * manquait — Itinéraire, Appeler, ce que le commerce accepte, et la règle du non-retrait. */
+ * manquait — Itinéraire, Appeler, ce que le commerce accepte. */
 const LIBELLES_PAIEMENT = { especes: 'payEspeces', bancontact: 'payBancontact', carte: 'payCarte', payconiq: 'payPayconiq', titres_repas: 'payTitresRepas' };
 const heure = (ms) => new Date(ms).toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' });
 
@@ -42,14 +43,13 @@ export default function InfosRetrait({ order, compact = false }) {
       {order.restaurantPhone && <a href={`tel:${order.restaurantPhone.replace(/\s/g, '')}`} className="btn-outline btn-sm"><Icone nom="telephone" taille={16} />{t('retrait.call')}</a>}
     </span>
   );
-  const regle = surPlace && <p className="retrait-note"><Icone nom="alerte" taille={14} className="icone-texte" />{' '}{t('retrait.noShowRule')}</p>;
 
   if (compact) {
+    if (!boutons && !(surPlace && moyens)) return null;
     return (
       <div className="retrait retrait--compact">
         {boutons}
         {surPlace && moyens && <p className="retrait-note">{t('retrait.accepted', { list: moyens })}</p>}
-        {regle}
       </div>
     );
   }
@@ -77,7 +77,6 @@ export default function InfosRetrait({ order, compact = false }) {
           <b className="ec-recap-montant">{euros(Number(order.total))}</b>
         </div>
       )}
-      {regle}
     </div>
   );
 }

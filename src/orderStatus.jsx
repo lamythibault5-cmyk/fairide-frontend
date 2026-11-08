@@ -267,8 +267,14 @@ export function ProchaineEtape({ order }) {
   // Pas encore payée en ligne, ou jamais envoyée au commerce (sur place) : la carte de la commande propose ses deux choix.
   if (status === 'nouveau' && order.paid === false) return null;
   if (status === 'nouveau' && order.acceptDeadline) {
-    // Payée sur place : rien n'a été débité, il n'y a rien à rembourser (audit du 18/10/2026).
-    return <div className="small order-next">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatDateTime(order.acceptDeadline) })}</div>;
+    // Payée sur place : rien n'a été débité, il n'y a rien à rembourser (audit du 18/10/2026). D'abord ce qui rassure (« Maestro
+    // a reçu ta commande. »), la garantie en petit dessous (revue des frictions client, 2026-11-08) : elle ouvrait sur l'échec.
+    return (
+      <div className="small order-next">
+        {t('orderStatus.next_nouveau_recu', { restaurant: order.restaurantName })}
+        <span className="order-next-detail">{t(order.paymentMode === 'on_site' ? 'orderStatus.next_nouveau_deadline_on_site' : 'orderStatus.next_nouveau_deadline', { time: formatDateTime(order.acceptDeadline) })}</span>
+      </div>
+    );
   }
   // Remboursement automatique refusé par Stripe (audit du 19/10/2026, AO-02, backend refundPending) : on ne dit pas
   // « remboursée » tant que l'équipe ne l'a pas refait.

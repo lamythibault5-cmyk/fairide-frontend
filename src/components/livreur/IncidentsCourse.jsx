@@ -91,7 +91,7 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
       {enLivraison && (order.deliveryIncident === 'courier_stuck_after_pickup' ? (
         <div style={{ width: '100%' }} role="status">
           <p className="small" style={{ margin: '0 0 8px', fontWeight: 600 }}>{t('dashDriver.incident_stuckNotice')}</p>
-          <AppelerFairide numero={telephone} />
+          <AppelerFairide numero={telephone} commande={order.orderNumber} />
         </div>
       ) : (
         <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={() => setConfirmer('bloque')}>{t('dashDriver.incident_cannotFinish')}</button>

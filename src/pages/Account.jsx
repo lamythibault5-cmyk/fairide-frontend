@@ -454,7 +454,8 @@ export default function Account({ integre = false, milieu = null }) {
   // (fondateur, 2026-10-27) : c'est déjà un onglet de la barre du bas, une rubrique ne figure qu'à un endroit.
   const raccourcis = role === 'client'
     ? [{ to: '/favorites', icone: 'favoris', libelle: t('nav.favorites') },
-       { to: '/invoices', icone: 'document', libelle: t('accountUi.myInvoices') }]
+       // « Mes reçus » : le client n'a pas de facture, le commerce est le vendeur (revue des frictions client, 2026-11-08).
+       { to: '/invoices', icone: 'document', libelle: t('accountUi.myReceipts') }]
     // Le livreur non plus (fondateur, 2026-10-27, L1 de maquettes/audit-ecrans) : « Mes commandes » ouvrait l'onglet Courses sous un
     // autre nom, « Gains » est un onglet. Restent ses papiers.
     : role === 'driver'

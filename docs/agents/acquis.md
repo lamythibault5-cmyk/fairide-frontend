@@ -41,8 +41,14 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   livraison » then « Livrée »; the customer is told why there is no live position and can call the shop. « Renfort Fairride »
   (Commandes) sends NEW orders to Fairride couriers at the Fairride price during a rush. Forgotten « en livraison » after 60
   min: push to the shop; after 90 min: a task for the team.
-- **Pickup without a restaurant click** (2026-10-10): the restaurant sees the pickup code and compares it by eye; the
-  **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from `preparation` too). `/confirm-pickup` still exists.
+- **Pickup without a restaurant click** (2026-10-10): the **courier** confirms (`PATCH /orders/:id/picked-up`, accepted from
+  `preparation` too). `/confirm-pickup` (the shop types the code) still exists. Since 2026-11-08 (Owen: « the shop confirms
+  without touching its screen »), each Fairride-courier delivery has a 2-digit **handover number** (10-99, unique among the
+  shop's orders still at the counter, `orders.handover_number`, backend `numeroRemise.js`), shown big on the shop's order
+  card and printed on the ticket, **never sent to the courier**. The courier says the order number, the staff reads him the
+  handover number (or he reads it on the bag ticket), he types it (`numero`); a wrong one means the wrong bag. The 4-digit
+  pickup code (G142) stays accepted for orders without a number and for app builds frozen in the stores (Play 28, iOS 286),
+  and stays small on the shop's card for them. « J'attends au commerce » pushes the shop and, after 10 min, opens a team task.
   « Ma carte et mes engagements » ([ConformiteCarte](../../src/components/conformite/ConformiteCarte.jsx)) is one checkbox,
   one name, one button that posts each pending signature to its own route — each keeps its own version and hash.
 - **Client absent at the door** (2026-10-10): the courier taps « Je suis à la porte », the client gets an e-mail, a push

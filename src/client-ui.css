@@ -253,6 +253,8 @@
 @media (prefers-reduced-motion: reduce) { .suivi-etapes li.est-actuel .suivi-etape-point::after { animation: none; } }
 
 .suivi-carte .order-next { background: var(--surface-softer); border-radius: 10px; padding: 10px 12px; margin: 8px 0; color: var(--ink); font-size: 13px; }
+/* La garantie sous « Maestro a reçu ta commande. » : une petite ligne, pas le titre (revue des frictions client, 2026-11-08). */
+.order-next-detail { display: block; margin-top: 3px; font-size: 12px; line-height: 1.4; color: var(--ink-soft); }
 .suivi-lieu { color: var(--ink-soft); margin: 6px 0; }
 /* « Changer » à côté de l'adresse de livraison (fondateur, 2026-10-27, components/client/ChangerAdresse.jsx) : un lien iris, pas un
    second bouton lime, la prochaine action de la carte reste la sienne. Zone de toucher de 44 px. */

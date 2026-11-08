@@ -4863,6 +4863,10 @@ body:has(> .plat-feuille) > .confirm-voile { z-index: 310; }
 /* Une adresse longue se coupe plutôt que de pousser le chevron hors de l'écran. */
 .checkout-rangee-titre { font-weight: 600; font-size: 15px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .checkout-rangee-sous { font-size: 13px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Un seul mode possible (Checkout.jsx, modeUnique) : une rangée qui l'énonce, sans rien à toucher ; l'adresse entière. */
+.checkout-rangee.checkout-rangee--fixe { cursor: default; }
+.checkout-rangee.checkout-rangee--fixe:hover { background: none; }
+.checkout-rangee--fixe .checkout-rangee-sous { white-space: normal; }
 /* Ce qui manque se dit en rouge d'état, jamais en lime : le lime est l'accent, pas un signal. */
 .checkout-rangee-sous.est-requis { color: var(--red); font-weight: 600; }
 .checkout-rangee-chevron { flex: 0 0 auto; font-size: 22px; color: var(--ink-faint); line-height: 1; }

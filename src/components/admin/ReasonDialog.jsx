@@ -33,7 +33,7 @@ export default function ReasonDialog({ open, title, message, label, placeholder,
       <div className="modal-box admin-reason-dialog" onClick={(e) => e.stopPropagation()} style={{ maxWidth: 440 }} role="dialog" aria-modal="true" aria-label={title}>
         <h3 style={{ margin: '0 0 8px' }}>{title}</h3>
         {message && <p className="small" style={{ margin: '0 0 12px' }}>{message}</p>}
-        {children}
+        {typeof children === 'function' ? null : children}
         {suggestions?.length > 0 && (
           <div style={{ marginBottom: 10 }}>
             <ChoixPastilles libelle={label || tr('adminCommon.reasonLabel')} valeur={suggestions.includes(motif) ? motif : null}
@@ -46,6 +46,9 @@ export default function ReasonDialog({ open, title, message, label, placeholder,
             ? <textarea id={idsA11y + '-reasonlabel'} rows={3} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus />
             : <input id={idsA11y + '-reasonlabel'} value={motif} onChange={(e) => setMotif(e.target.value)} placeholder={placeholder} autoFocus onKeyDown={(e) => { if (e.key === 'Enter' && !bloque) onConfirm(motif.trim()); }} />}
         </div>
+        {/* `children` en fonction du motif (refus d'une commande, 2026-11-08) : ce qui dépend du motif choisi, sous le champ
+            (« Plat épuisé » propose de mettre le plat en rupture dans le même geste). */}
+        {typeof children === 'function' ? children(motif.trim()) : null}
         <div className="row" style={{ gap: 8, justifyContent: 'flex-end' }}>
           <button type="button" className="btn-ghost" onClick={onCancel} disabled={loading}>{tr('adminCommon.cancel')}</button>
           <button type="button" className={danger ? 'btn-outline' : 'btn-gold'} style={danger ? { borderColor: 'var(--red)', color: 'var(--red)' } : undefined} disabled={bloque} onClick={() => onConfirm(motif.trim())}>

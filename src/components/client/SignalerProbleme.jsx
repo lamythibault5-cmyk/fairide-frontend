@@ -3,12 +3,19 @@ import SousEcran from '../SousEcran';
 import { experienceApp } from '../../natif';
 import { api, apiUpload } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
+import { vibrer } from '../../gestes';
+import Icone from '../Icone';
 import ReclamationPlat, { EtatReclamation, peutReclamer } from './ReclamationPlat';
 
 // Signaler un problème sur une commande livrée ou récupérée (plan de test USR-10, 2 octobre 2026) : article manquant,
 // mauvais article, froid, jamais reçue… Avant, le client n'avait aucun moyen de le dire depuis le site. Le serveur crée
 // un ticket support lié à la commande (POST /orders/:id/problem) et envoie un accusé de réception par e-mail.
 const TYPES = ['missing_item', 'wrong_item', 'cold', 'never_received', 'other'];
+/* REVUE DES FRICTIONS CLIENT (2026-11-08). Une liste native (<select>) au milieu d'une feuille, et un texte obligatoire même
+ * quand le type dit tout : « jamais reçue » ou « froide », l'équipe sait quoi regarder avec la commande liée. Maintenant des
+ * rangées à toucher (celles des feuilles de l'application, .bv-option), le texte facultatif pour ces deux types (le serveur
+ * suit : routes/client.js, TYPES_PROBLEME › messageFacultatif) et la photo en bouton, comme dans ReclamationPlat. */
+const MESSAGE_FACULTATIF = ['cold', 'never_received'];
 
 export default function SignalerProbleme({ order, token, toast, signalement, onSignale, reclamation, onReclame }) {
   const { t } = useLanguage();
@@ -34,7 +41,7 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
   async function envoyer(e) {
     e.preventDefault();
     if (!type) { toast(t('orders.problem_kindRequired'), 'erreur'); return; }
-    if (message.trim().length < 5) { toast(t('orders.problem_messageRequired'), 'erreur'); return; }
+    if (!MESSAGE_FACULTATIF.includes(type) && message.trim().length < 5) { toast(t('orders.problem_messageRequired'), 'erreur'); return; }
     setEnvoi(true);
     try {
       const r = photo
@@ -53,6 +60,7 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
   // Plat manquant ou mauvais plat, sur une commande livrée et payée en ligne depuis moins de 24 heures : le commerce décide
   // (fondateur, 2026-10-31), au lieu d'un ticket pour l'équipe.
   const parLeCommerce = ['missing_item', 'wrong_item'].includes(type) && peutReclamer(order) && !!onReclame;
+  const facultatif = MESSAGE_FACULTATIF.includes(type);
   // Application : le formulaire s'ouvre dans une feuille au lieu de s'insérer au milieu de la carte de commande.
   if (experienceApp()) {
     return (
@@ -68,28 +76,33 @@ export default function SignalerProbleme({ order, token, toast, signalement, onS
     <form onSubmit={envoyer} style={enLigne ? { background: 'var(--cream-dim)', borderRadius: 10, padding: 14, marginTop: 8 } : undefined}>
       <p className="small" style={{ margin: '0 0 8px', fontWeight: 700 }}>{t('orders.problem_title')}</p>
       <div className="field">
-        <label htmlFor={`${idBase}-type`}>{t('orders.problem_kindLabel')}</label>
-        <select id={`${idBase}-type`} value={type} onChange={(e) => setType(e.target.value)}>
-          <option value="">{t('orders.problem_kindPlaceholder')}</option>
-          {TYPES.map((k) => <option key={k} value={k}>{t(`orders.problem_kind_${k}`)}</option>)}
-        </select>
+        <span className="field-intitule" id={`${idBase}-type`}>{t('orders.problem_kindLabel')}</span>
+        <div role="radiogroup" aria-labelledby={`${idBase}-type`}>
+          {TYPES.map((k) => (
+            <button key={k} type="button" role="radio" aria-checked={type === k} className={`bv-option${type === k ? ' on' : ''}`}
+              onClick={() => { if (type !== k) vibrer(); setType(k); }}>
+              {t(`orders.problem_kind_${k}`)}
+            </button>
+          ))}
+        </div>
       </div>
       {parLeCommerce ? (
         <ReclamationPlat order={order} token={token} toast={toast} onAnnuler={() => setOuvert(false)}
           onReclame={(r) => { setOuvert(false); onReclame(r); }} />
       ) : (<>
       <div className="field">
-        <label htmlFor={`${idBase}-message`}>{t('orders.problem_messageLabel')}</label>
-        <textarea id={`${idBase}-message`} rows={3} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('orders.problem_messagePlaceholder')} aria-describedby={`${idBase}-message-aide`} />
+        <label htmlFor={`${idBase}-message`}>{t(facultatif ? 'orders.problem_messageLabelOptional' : 'orders.problem_messageLabel')}</label>
+        <textarea id={`${idBase}-message`} rows={3} maxLength={2000} value={message} onChange={(e) => setMessage(e.target.value)} placeholder={t('orders.problem_messagePlaceholder')} aria-describedby={facultatif ? undefined : `${idBase}-message-aide`} />
         {/* Le minimum se lit avant l'envoi, pas seulement dans le toast d'erreur (audit du 19/10, AO-19). */}
-        <small id={`${idBase}-message-aide`} className="small">{t('orders.problem_messageHint')}</small>
+        {!facultatif && <small id={`${idBase}-message-aide`} className="small">{t('orders.problem_messageHint')}</small>}
       </div>
-      <div className="field">
-        <label htmlFor={`${idBase}-photo`}>{t('orders.problem_photoLabel')}</label>
-        {/* Sans `capture` (audit du 19/10, AO-19) : le téléphone propose l'appareil photo OU la galerie ; avec, il ouvrait
-            directement l'appareil, et une photo prise plus tôt ne pouvait pas être choisie. */}
-        <input id={`${idBase}-photo`} type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
-      </div>
+      {/* Sans `capture` (audit du 19/10, AO-19) : le téléphone propose l'appareil photo OU la galerie ; avec, il ouvrait
+          directement l'appareil, et une photo prise plus tôt ne pouvait pas être choisie. */}
+      <label className={`reclamation-photo${photo ? ' ok' : ''}`}>
+        <Icone nom="photo" taille={20} />
+        <span>{photo ? t('orders.reclamationPhotoOk') : t('orders.problem_photoLabel')}</span>
+        <input type="file" accept="image/*" onChange={(e) => setPhoto(e.target.files?.[0] || null)} />
+      </label>
       <p className="small" style={{ margin: '0 0 8px' }}>{t('orders.problem_responseTime', { hours: 24 })}</p>
       <div className="row" style={{ gap: 8 }}>
         <button type="submit" className="btn-teal" disabled={envoi}>{envoi ? '…' : t('orders.problem_submit')}</button>

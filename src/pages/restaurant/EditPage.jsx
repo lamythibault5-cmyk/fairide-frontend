@@ -24,6 +24,7 @@ import { experienceApp } from '../../natif';
 import { imgProps, cacherImageCassee } from '../../images';
 import Icone from '../../components/Icone';
 import { BandeauSoir, TuilesCommerce } from '../../components/commerce/CeSoir';
+import JoindreFairride from '../../components/commerce/JoindreFairride';
 import { euros } from '../../prixPlat';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import Account from '../Account';
@@ -215,6 +216,9 @@ export default function EditPage() {
           depuis le 2026-10-22 : « Type de commerce » et « Autres types de cuisine » sont devenus le même écran. */}
       {ligne('type', { icone: 'restaurants', titre: t('specialites.groupe'), sous: type })}
     </div>
+
+    {/* Joindre Fairride (2026-11-08) : l'appel et WhatsApp étaient réservés aux livreurs. */}
+    <JoindreFairride />
     </>
   );
   return (

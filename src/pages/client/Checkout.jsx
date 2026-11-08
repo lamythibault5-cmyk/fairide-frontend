@@ -355,9 +355,16 @@ export default function Checkout() {
   const notesSurPlace = (
     <>
       {moyensSurPlace && <p className="small" style={{ margin: '4px 0 0' }}>{t('retrait.accepted', { list: moyensSurPlace })}</p>}
-      <p className="small checkout-regle-retrait"><Icone nom="alerte" taille={14} className="icone-texte" />{' '}{t('retrait.noShowRule')}</p>
+      {/* Dite ici seulement, et sans icône d'alerte (revue des frictions client, 2026-11-08) : plus sur la confirmation ni le suivi. */}
+      <p className="small checkout-regle-retrait">{t('retrait.noShowRule')}</p>
     </>
   );
+  /* UN SEUL MODE POSSIBLE, UNE PHRASE (revue des frictions client, 2026-11-08). Avant le GO, l'à emporter est souvent le seul
+   * mode : « Comment récupérer ta commande ? » avec une seule carte, puis « Tu viendras chercher ta commande toi-même chez… »
+   * juste dessous, posaient une question sans choix. Avec un seul mode, une rangée qui le dit (et où, à emporter). */
+  const modeLivraisonPossible = restaurant.offersDelivery && (serviceOuvert('delivery', user) || !restaurant.offersPickup);
+  const modesRecuperation = cart.count > 0 ? [modeLivraisonPossible && 'delivery', restaurant.offersPickup && 'pickup'].filter(Boolean) : [];
+  const modeUnique = modesRecuperation.length === 1 ? modesRecuperation[0] : null;
   // Avant le GO, l'à emporter ne se paie que sur place : si le commerce laisse le choix, « sur place » est
   // imposé ; s'il n'accepte que le paiement en ligne, la commande attend l'ouverture.
   const enLigneFerme = fulfillmentType === 'pickup' && !paiementEnLigneOuvert(user);
@@ -770,7 +777,15 @@ export default function Checkout() {
                 <button type="button" className="btn-outline btn-sm" onClick={() => cart.removeLine(lineKey)}>{t('checkout.removeLine')}</button>
               </div>
             ))}
-            {(
+            {modeUnique ? (
+              <div className="checkout-rangee checkout-rangee--fixe">
+                <Icone nom={modeUnique === 'pickup' ? 'sac' : 'velo'} taille={20} />
+                <span className="checkout-rangee-texte">
+                  <span className="checkout-rangee-titre">{t(`orderStatus.orderType.${modeUnique}`)}</span>
+                  {modeUnique === 'pickup' && <span className="checkout-rangee-sous">{restaurant.name}{restaurant.address ? `, ${restaurant.address}` : ''}</span>}
+                </span>
+              </div>
+            ) : (
             <div className="field">
               {/* Intitulé d'un GROUPE de boutons, pas d'un champ unique : un htmlFor n'aurait rien à
                   désigner. role="group" + aria-labelledby fait annoncer « Comment la recevoir » avant
@@ -825,7 +840,7 @@ export default function Checkout() {
                 postal et l'horaire. Chez Uber c'est un écran qu'on ouvre depuis le paiement
                 (« Dropoff options »), et c'est ce qu'elles méritent : c'est la seule consigne que le
                 client donne à quelqu'un qui viendra chez lui. */}
-            {fulfillmentType === 'pickup' && (
+            {fulfillmentType === 'pickup' && !modeUnique && (
               <p className="small" style={{ margin: '0 0 10px' }}>{t('checkout.pickupSelf', { name: restaurant.name, address: restaurant.address ? `, ${restaurant.address}` : '' })}</p>
             )}
             {/* LE COMMERCE CHOISIT LE MODE DE PAIEMENT A EMPORTER (modeEmporter, pose par main) :
@@ -1205,7 +1220,7 @@ export default function Checkout() {
             const reste = manqueConformite(conformite, restaurant, Object.values(cart.lines), fulfillmentType, t);
             if (reste) { toast(reste); return; }
             setSousEcran(null); placeOrder();
-          }}>{surPlaceChoisi ? t('checkout.confirmOnSite') : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}</button>
+          }}>{surPlaceChoisi ? t('checkout.confirmOnSite', { total: euros(montantDebite) }) : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}</button>
         }>
           {(telAVerifier() || telOk.current) && (
             <div className="co-telephone">
@@ -1308,7 +1323,7 @@ export default function Checkout() {
           <div className="row" style={{ gap: 8, marginTop: 4 }}>
             <button className="btn-gold" disabled={paying || cancelling} onClick={() => confirmAndPay()}>
               {paying ? '...'
-                : pendingOrder.paymentMode === 'on_site' ? t('checkout.confirmOnSite')
+                : pendingOrder.paymentMode === 'on_site' ? t('checkout.confirmOnSite', { total: euros(Number(pendingOrder.total)) })
                 : user?.simulation ? t('checkout.confirmAndPaySimulated') : t('checkout.confirmAndPay')}
             </button>
             <button className="btn-ghost" disabled={paying || cancelling} onClick={() => cancelOrder({ modifier: true })}>{t('checkout.modifier')}</button>

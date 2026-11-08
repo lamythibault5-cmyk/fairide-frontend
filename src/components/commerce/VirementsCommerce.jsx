@@ -12,6 +12,8 @@ const eur = (n) => euros(n);
 const jourLong = (ms) => new Date(ms).toLocaleDateString(getLocale(), { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'Europe/Brussels' });
 const dateCourte = (ms) => new Date(ms).toLocaleDateString(getLocale(), { day: 'numeric', month: 'numeric', timeZone: 'Europe/Brussels' });
 const majuscule = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+// Les codes de motifsAnnulation.js (backend) qui ont leur libellé ici (i18n virements.motif_<code>).
+const MOTIFS_RETENUE = ['commerce_ferme', 'plat_indisponible', 'commande_non_preparee', 'demande_commerce', 'livreur', 'probleme_fairide', 'geste_commercial', 'probleme_paiement', 'autre'];
 
 // Le prochain virement, partagé avec la tuile de l'accueil (CeSoir) : une seule lecture.
 export function useVirements(restoId, token) {
@@ -36,7 +38,15 @@ function Ligne({ l, t }) {
     );
   }
   if (l.nature === 'retenue') {
-    return <div className="ec-vir-ligne moins"><span>{l.numero ? t('virements.retenueCommande', { n: l.numero }) : t('virements.retenue')}</span><b>{eur(l.montant)}</b></div>;
+    /* POURQUOI CETTE RETENUE (revue des frictions du commerce, 2026-11-08 ; backend virementsCommerce.js) : « Plat manquant :
+       1× Coca », « Annulée : commerce fermé »…, puis la commande et la date. Un serveur plus ancien n'envoie pas `motif` :
+       la ligne d'avant. Un code inconnu de cette version : « Remboursement au client ». */
+    if (!('motif' in l)) return <div className="ec-vir-ligne moins"><span>{l.numero ? t('virements.retenueCommande', { n: l.numero }) : t('virements.retenue')}</span><b>{eur(l.montant)}</b></div>;
+    const titre = l.motif === 'plat_manquant'
+      ? t('virements.motif_plat_manquant', { plats: (l.plats || []).map((p) => `${p.qty}× ${p.name}`).join(', ') })
+      : MOTIFS_RETENUE.includes(l.motif) ? t(`virements.motif_${l.motif}`) : t('virements.motifInconnu');
+    const sous = l.numero ? (l.date ? t('virements.retenueSous', { n: l.numero, date: dateCourte(l.date) }) : t('virements.retenueSousSansDate', { n: l.numero })) : (l.date ? dateCourte(l.date) : '');
+    return <div className="ec-vir-ligne moins"><span>{titre}{sous && <small>{sous}</small>}</span><b>{eur(l.montant)}</b></div>;
   }
   return <div className="ec-vir-ligne"><span>{t('virements.autre')}</span><b>{eur(l.montant)}</b></div>;
 }

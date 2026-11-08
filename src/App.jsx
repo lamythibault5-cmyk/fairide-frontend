@@ -189,7 +189,7 @@ export default function App() {
     ['/favorites', t('nav.favorites'), <ProtectedRoute role="client"><Favorites /></ProtectedRoute>],
     ['/demandes', t('demandes.mesTitre'), <ProtectedRoute role="client"><MesDemandes /></ProtectedRoute>],
     ['/orders', t('nav.orders'), <ProtectedRoute role="client"><Orders /></ProtectedRoute>],
-    ['/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>],
+    ['/invoices', t('accountUi.myReceipts'), <ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>],
     ['/documents', t('mesDocuments.rowTitle'), <ProtectedRoute><DocumentsPage /></ProtectedRoute>],
     ['/driver/earnings', t('nav.earnings'), <ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>],
     ['/driver/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>]

@@ -217,6 +217,10 @@
 @keyframes ec-apparait { from { transform: scale(.3); opacity: 0; } to { transform: none; opacity: 1; } }
 .ec-coche-merci svg { stroke-width: 2.8; }
 .ec-merci-texte { margin: 0 0 10px; line-height: 1.5; color: var(--ink-soft); font-size: 14.5px; }
+/* « Chez toi vers 12:52 » sous le titre, en grand (revue des frictions client, 2026-11-08) ; la garantie en petit sous le texte. */
+.ec-merci-heure { margin: 0 0 4px; color: #fff; font-family: var(--font-titre); font-size: 20px; font-weight: 600; line-height: 1.2; }
+.ec-merci-heure b { font-weight: 800; font-variant-numeric: tabular-nums; }
+.ec-merci-garantie { display: block; margin-top: 4px; font-size: 12.5px; color: var(--ink-faint); line-height: 1.4; }
 /* « Reçu envoyé à … · Changer » (G52) : une ligne discrète sous le récapitulatif, l'adresse entière même longue. */
 .ec-merci-recu { margin: 10px 0 0; color: var(--ink-faint); overflow-wrap: anywhere; }
 .ec-merci-recu a { color: var(--iris); font-weight: 600; }
