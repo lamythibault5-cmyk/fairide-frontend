@@ -9,7 +9,7 @@ import { EtapeNotices } from '../../components/conformite/LivreurConformite';
 import { DocumentsVente, TarifMinimum } from '../../components/conformite/EspaceVendeurLivreur';
 import { AvantDeCommencer, Notifications, ChangementStatut, NumeroEntrepriseEnAttente, PiecesARemplacer, MesCourses, PiecesSejour } from './dossierBlocs';
 import { STATUTS, ouvrirPdf } from './dossierCommun';
-import { EcranIdentite, EcranPaiement } from './DossierAppli';
+import { EcranIdentite, EcranPaiement, FeuilleActivite } from './DossierAppli';
 import { API_BASE } from '../../api';
 import VerifTelephone from '../../components/VerifTelephone';
 import '../../ecran-livreur.css';
@@ -68,7 +68,12 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
   const versementAFaire = (d.user?.stripeConnectStatus || user?.stripeConnectStatus) !== 'active';
   // Numéro d'entreprise ou n° de TVA encore attendu après l'envoi (audit du 19/10, courier-11 : le n° de TVA aussi).
   const bceAttendu = manques.includes('bce') || manques.includes('tva_numero');
-  const aAgir = piecesRefusees || textesARelire || bceAttendu || identiteARefaire || versementAFaire || etat === 'blocked_threshold';
+  /* RÉGIME TVA ET SIÈGE ENCORE ATTENDUS APRÈS L'ENVOI (Owen, 08/11). Le dossier part sans eux (MANQUES_APRES_ENVOI), et rien ici
+   * ne les demandait : « Dossier envoyé », alors que lui seul pouvait les donner. Ils ouvrent « Ton activité » dans une feuille. */
+  const activiteAFaire = manques.includes('tva') || manques.includes('siege');
+  // Le nom et le siège se reprennent de la pièce et du compte Stripe (serveur, 09/11) : souvent, seule la question TVA reste.
+  const titreActivite = t(manques.includes('siege') ? 'ecranLivreur.dosActiviteTitre' : 'ecranLivreur.dosTvaTitre');
+  const aAgir = piecesRefusees || textesARelire || bceAttendu || activiteAFaire || identiteARefaire || versementAFaire || etat === 'blocked_threshold';
 
   /* CE QUI RESTE AU LIVREUR, EN HAUT (fondateur, 2026-11-03, maquettes/dossier-livreur-simple, version RA). Le 03/11, trois
    * dossiers « envoyés » n'attendaient que leur livreur (nouveau contrat à signer), mais l'écran disait « Dossier envoyé, réponse
@@ -82,6 +87,7 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
     piecesRefusees && { cle: 'pieces', ancre: 'dos-pieces', titre: t('ecranLivreur.dosPiecesTitre'), duree: t('ecranLivreur.dosDureeDocument'), bouton: t('ecranLivreur.dosRemplacer') },
     versementAFaire && { cle: 'versement', titre: t('ecranLivreur.dosVersementTitre'), duree: t('ecranLivreur.dosDureeVersement'), bouton: t('ecranLivreur.dosActiverCompte') },
     telephoneAFaire && { cle: 'telephone', ancre: 'dos-telephone', titre: t('verifTel.dossierTitre'), duree: t('ecranLivreur.dosDureeTelephone'), bouton: t('ecranLivreur.dosProuverNumero') },
+    activiteAFaire && { cle: 'activite', titre: titreActivite, duree: t('ecranLivreur.dosDureeActivite'), bouton: t('ecranLivreur.dosCompleterActivite') },
     bceAttendu && { cle: 'numero', ancre: 'dos-numero', titre: t('ecranLivreur.dosNumeroTitre'), duree: t('ecranLivreur.dosNumeroSous'), bouton: t('ecranLivreur.dosAjouterNumero') }
   ].filter(Boolean);
   const aSonTour = restes.length > 0 && ['pending_review', 'approved'].includes(etat);
@@ -162,12 +168,13 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
             {etat === 'blocked_threshold' && (
               <p className="ecl-note"><Icone nom="alerte" taille={18} /><span>{t('courierOnboarding.blockedExplain', { year: legal.year ?? new Date().getFullYear() })}</span></p>
             )}
-            {(identiteARefaire || versementAFaire || textesARelire) && (
+            {(identiteARefaire || versementAFaire || textesARelire || activiteAFaire) && (
               <ul className="ecl-etapes ecl-a-faire">
                 {[
                   identiteARefaire && ['identite', t('ecranLivreur.dosPieceTitre'), c.identity?.rejectedReason ? t('courierOnboarding.rejectedReason', { reason: c.identity.rejectedReason }) : t('courierOnboarding.identityFailed')],
                   versementAFaire && ['versement', t('ecranLivreur.dosVersementTitre'), t('ecranLivreur.dosVersementSous')],
-                  textesARelire && ['textes', t('ecranLivreur.dosTextesTitre'), t('ecranLivreur.dosTextesSous')]
+                  textesARelire && ['textes', t('ecranLivreur.dosTextesTitre'), t('ecranLivreur.dosTextesSous')],
+                  activiteAFaire && ['activite', titreActivite, t('ecranLivreur.dosActiviteSous')]
                 ].filter(Boolean).map(([cle, titreLigne, sousLigne]) => (
                   <li key={cle}>
                     <button type="button" className="ecl-etape" onClick={() => setFeuille(cle)}>
@@ -241,6 +248,11 @@ export default function DossierSuivi({ d, token, user, busy, action, charger, on
       {feuille === 'identite' && (
         <SousEcran titre={t('appli.exPieceTitre')} onFermer={() => setFeuille(null)}>
           <div className="bv-form"><EcranIdentite d={d} t={t} token={token} busy={busy} action={action} onSuivant={() => { setFeuille(null); charger(); }} /></div>
+        </SousEcran>
+      )}
+      {feuille === 'activite' && (
+        <SousEcran titre={t('appli.exActiviteTitre')} onFermer={() => setFeuille(null)}>
+          <div className="bv-form"><FeuilleActivite d={d} t={t} token={token} busy={busy} action={action} onFait={() => setFeuille(null)} /></div>
         </SousEcran>
       )}
       {feuille === 'versement' && (

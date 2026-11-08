@@ -35,7 +35,16 @@ const ONGLETS = ['dossiers', 'controles', 'parametres', 'exports', 'journal'];
 /* « À regarder » = ce que l'équipe doit vérifier (teamChecks) ET pourquoi un dossier envoyé attend son bouton Valider même
  * quand tout est vert (humanReview : revue_equipe, noms, date_naissance ; validationLivreur.raisonsRevueHumaine). Sans le
  * second, un dossier qui n'attendait plus que la team n'apparaissait ni dans le filtre ni dans le compteur (06/11). */
-const pointsARegarder = (r) => [...(r.teamChecks ?? []), ...(r.lifecycleStatus === 'pending_review' ? r.humanReview ?? [] : [])];
+/* « À TOI DE DÉCIDER » = CE QU'OWEN PEUT TRANCHER MAINTENANT (Owen, 08/11 : un dossier « en vérification » attendait en fait son
+ * livreur). Tant qu'un dossier envoyé manque de quelque chose que seul le livreur donne (`missing` : régime TVA, siège, notice à
+ * relire, numéro d'entreprise, pièce à refaire), la validation est refusée par le serveur : les noms ou la date à regarder
+ * attendent, et la nationalité attend la nouvelle pièce. Les points de l'équipe qui se font déjà (BCE, titre de séjour) restent. */
+const attendLivreur = (r) => r.lifecycleStatus === 'pending_review' && (r.missing ?? []).length > 0;
+const pointsARegarder = (r) => {
+  if (r.lifecycleStatus !== 'pending_review') return r.teamChecks ?? [];
+  const manque = r.missing ?? [];
+  return [...(r.teamChecks ?? []).filter((p) => !(p === 'nationalite' && manque.includes('identite'))), ...(manque.length ? [] : r.humanReview ?? [])];
+};
 const couleurCycle = (s) =>(s === 'approved' ? 'var(--teal-deep)' : ['rejected', 'suspended', 'blocked_threshold'].includes(s) ? 'var(--red)' : 'inherit');
 
 // apiDownload et non un fetch à la main : c'est ce qui branche ces exports (précompte, DAC7) sur le
@@ -84,6 +93,7 @@ export default function AdminCouriersPage() {
   }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const lifecycle = (s) => tr(`courierOnboarding.lifecycle_${s}`);
+  const libelleCycle = (r) => (attendLivreur(r) ? tr('adminCouriers.exAttendLivreur') : lifecycle(r.lifecycleStatus));
   const statut = (s) => (s && STATUTS.includes(s) ? tr(`courierOnboarding.status_${s}`) : s || '-');
   const pretDe = (r) => prets.get(r.userId);
   const colonnes = [
@@ -102,7 +112,7 @@ export default function AdminCouriersPage() {
       : r.autoApprovedAt ? <span className="pill" style={{ color: 'var(--green)' }}><Icone nom="valider" taille={14} className="icone-texte" />{' '}{tr('adminCouriers.exAuto')}</span> : '-'),
       sortValue: (r) => (pointsARegarder(r).length ? 0 : 1) },
     { key: 'statusType', label: tr('adminCouriers.colStatus'), get: (r) => <>{statut(r.statusType)}{r.statusVerifiedAt ? <Icone nom="valider" taille={16} className="icone-texte" /> : ''}</>, sortValue: (r) => r.statusType || '' },
-    { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>, sortValue: (r) => r.lifecycleStatus },
+    { key: 'lifecycleStatus', label: tr('adminCommon.status'), get: (r) => <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{libelleCycle(r)}</span>, sortValue: (r) => r.lifecycleStatus },
     { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? <Icone nom="horloge" taille={16} className="icone-texte" /> : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
     { key: 'gross', label: tr('adminCouriers.colGross'), get: (r) => euro(r.grossTotal ?? 0), sortValue: (r) => Number(r.grossTotal || 0), align: 'right' },
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
@@ -177,7 +187,7 @@ export default function AdminCouriersPage() {
                 <b>{r.name}</b>
                 <div className="row" style={{ gap: 6 }}>
                   {estCompteSupprime(r) ? <DeletedBadge /> : estCompteTest(r) && <TestBadge />}
-                  <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{lifecycle(r.lifecycleStatus)}</span>
+                  <span className="pill" style={{ color: couleurCycle(r.lifecycleStatus) }}>{libelleCycle(r)}</span>
                 </div>
               </div>
               <div className="small">{r.email}</div>
@@ -310,11 +320,15 @@ function VerifierPiece({ d, tr, busy, agir, token, toast, onDocuments, onRefuser
 
 function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIdentite, onValider }) {
   const c = d.courier; const id = c.identity ?? {};
-  const points = d.teamChecks ?? [];
+  // Mêmes règles que la liste (pointsARegarder) : rien à valider tant que le livreur doit encore remplir quelque chose.
+  const ligneListe = { lifecycleStatus: c.lifecycleStatus, teamChecks: d.teamChecks, humanReview: d.humanReview, missing: d.missing };
+  const aTrancher = pointsARegarder(ligneListe);
+  const manque = attendLivreur(ligneListe) ? d.missing : [];
+  const points = (d.teamChecks ?? []).filter((p) => aTrancher.includes(p));
   // Ce qu'aucune machine ne tranche : le dossier attend le bouton Valider, même tout vert (pointsARegarder).
-  const humains = c.lifecycleStatus === 'pending_review' ? d.humanReview ?? [] : [];
+  const humains = (c.lifecycleStatus === 'pending_review' ? d.humanReview ?? [] : []).filter((p) => aTrancher.includes(p));
   const photo = (d.documents ?? []).find((x) => x.docType === 'profile_photo' && !x.rejectedReason);
-  if (!points.length && !humains.length && !d.autoApprovedAt) return null;
+  if (!points.length && !humains.length && !d.autoApprovedAt && !manque.length) return null;
   const verifier = (corps, ok) => agir(() => api(`/admin/couriers/${c.id}/verify`, { method: 'PATCH', token, body: corps }), ok);
   const chiffres = String(c.independent?.companyNumber || '').replace(/\D/g, '');
   const registre = d.companyRegistry;
@@ -347,6 +361,12 @@ function ARegarder({ d, tr, token, toast, busy, agir, onDocuments, onRefuserIden
           <b><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr('adminCouriers.exAutoLe', { date: fmt(d.autoApprovedAt) })}</b>
           {photo && !photo.verifiedAt && <div className="small" style={{ margin: '2px 0 6px' }}>{tr('adminCouriers.exPhotoARegarder')}</div>}
           {photo && !photo.verifiedAt && <button className="btn-outline" onClick={onDocuments}>{tr('adminCouriers.exVoirDocuments')}</button>}
+        </div>
+      )}
+      {manque.length > 0 && (
+        <div className="card" style={{ padding: '10px 12px', marginBottom: 8 }}>
+          <b>{tr('adminCouriers.exRienAFaire')}</b>
+          <div className="small" style={{ marginTop: 2 }}>{tr('adminCouriers.exIlDoitEncore', { quoi: manque.map((m) => libelleManque(m, tr)).join(', ') })}</div>
         </div>
       )}
       {(points.length > 0 || humains.length > 0) && <h4 className="drawer-section-title" style={{ color: 'var(--red)' }}>{tr('adminCouriers.exARegarder')}</h4>}
@@ -435,7 +455,7 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
     <RecordDrawer
       title={d?.user?.name || '…'}
       subtitle={d ? `${d.user?.email || ''}${d.user?.phone ? ` · ${d.user.phone}` : ''}` : ''}
-      badge={c ? <span className="pill" style={{ color: couleurCycle(c.lifecycleStatus) }}>{tr(`courierOnboarding.lifecycle_${c.lifecycleStatus}`)}</span> : null}
+      badge={c ? <span className="pill" style={{ color: couleurCycle(c.lifecycleStatus) }}>{attendLivreur({ lifecycleStatus: c.lifecycleStatus, missing }) ? tr('adminCouriers.exAttendLivreur') : tr(`courierOnboarding.lifecycle_${c.lifecycleStatus}`)}</span> : null}
       tabs={d ? [
         { key: 'dossier', label: tr('adminCouriers.tabFile') },
         { key: 'documents', label: tr('adminCommon.tabDocuments'), count: documents.length },
@@ -599,12 +619,15 @@ export function DossierDrawer({ id, tr, token, toast, onClose, onChanged }) {
       {onglet === 'decision' && (
         <>
           <h4 className="drawer-section-title">{tr('adminCouriers.secDecision')}</h4>
-          {missing.length > 0 && <p className="small" style={{ margin: '0 0 8px', color: 'var(--gold-deep)' }}>{tr('adminCouriers.missingList')} {missing.map((m) => libelleManque(m, tr)).join(', ')}</p>}
+          {/* Un dossier envoyé qui attend son livreur : la phrase dit qu'il n'y a rien à décider, sans bouton Valider grisé. */}
+          {missing.length > 0 && (c.lifecycleStatus === 'pending_review'
+            ? <p className="small" style={{ margin: '0 0 8px' }}><b>{tr('adminCouriers.exRienAFaire')}.</b> {tr('adminCouriers.exIlDoitEncore', { quoi: missing.map((m) => libelleManque(m, tr)).join(', ') })}</p>
+            : <p className="small" style={{ margin: '0 0 8px', color: 'var(--gold-deep)' }}>{tr('adminCouriers.missingList')} {missing.map((m) => libelleManque(m, tr)).join(', ')}</p>)}
           <div className="row" style={{ gap: 8, flexWrap: 'wrap' }}>
             {/* RÉACTIVER = RÉTABLIR LA DÉCISION (audit du 19/10, admin-37) : le serveur lève le dossier du registre et envoie
                 le motif au livreur ; il est donc obligatoire. Approuver reste sans motif (sauf validation forcée). */}
             {c.lifecycleStatus === 'suspended' && <button className="btn-teal" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.reactivate'), message: tr('adminCouriers.reactivateBody'), label: tr('adminCouriers.reactivateReason'), confirmLabel: tr('adminCouriers.reactivate'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'reactivate', reason } }), tr('adminCouriers.toastReactivated')) })}>{tr('adminCouriers.reactivate')}</button>}
-            {!['approved', 'suspended'].includes(c.lifecycleStatus) && <button className="btn-teal" disabled={busy || missing.length > 0} title={missing.length ? tr('adminCouriers.missingHint', { n: missing.length }) : ''} onClick={() => setMotifDialog({ title: tr('adminCouriers.approve'), message: tr('adminCouriers.approveBody'), required: false, confirmLabel: tr('adminCouriers.approve'), run: (reason) => validerDossier(reason, false) })}>{tr('adminCouriers.approve')}</button>}
+            {!['approved', 'suspended'].includes(c.lifecycleStatus) && !missing.length && <button className="btn-teal" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.approve'), message: tr('adminCouriers.approveBody'), required: false, confirmLabel: tr('adminCouriers.approve'), run: (reason) => validerDossier(reason, false) })}>{tr('adminCouriers.approve')}</button>}
             {/* Validé par erreur (audit du 19/10, admin-71) : retour « à valider » avec un motif, avant toute course. */}
             {c.lifecycleStatus === 'approved' && <button className="btn-ghost" disabled={busy} onClick={() => setMotifDialog({ title: tr('adminCouriers.unapprove'), message: tr('adminCouriers.unapproveBody'), label: tr('adminCouriers.unapproveReason'), confirmLabel: tr('adminCouriers.unapprove'), run: (reason) => agir(() => api(`/admin/couriers/${id}/review`, { method: 'PATCH', token, body: { decision: 'unapprove', reason } }), tr('adminCouriers.toastUnapproved')) })}>{tr('adminCouriers.unapprove')}</button>}
             {/* Demander une info sans rien refuser (audit du 19/10, admin-70), comme pour un commerce : message dans
