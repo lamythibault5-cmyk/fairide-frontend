@@ -11,8 +11,8 @@ import { vibrer } from '../../gestes';
  *      le badge « Prix du comptoir »).
  *   4. Une baisse, un nouveau plat : sur l'honneur, comme avant. Un plat remis sous le même nom, plus cher, est une hausse :
  *      le serveur répond PREUVE_REQUISE et la feuille demande la photo.
- * LA RÈGLE DORT tant que le serveur ne dit pas `regleHausses.photoRequise` (elle entre dans le contrat RESTO-2026.25, publié
- * après l'avis de l'avocat) : sans elle, une hausse reste sur l'honneur, exactement comme le 29/10 (AjoutPlat.jsx). Le
+ * LA RÈGLE SUIT LE CONTRAT : seulement quand le serveur dit `regleHausses.photoRequise` (le commerce a accepté le contrat
+ * RESTO-2026.25, publié le 08/11/2026) ; sinon une hausse reste sur l'honneur, exactement comme le 29/10 (AjoutPlat.jsx). Le
  * serveur reste seul juge : s'il exige une photo que l'écran n'a pas vue venir, il répond PREUVE_REQUISE et on la demande.
  * Ce fichier n'exporte que des crochets et des fonctions (rafraîchissement à chaud de Vite, comme ajoutPlatOutils.jsx). */
 

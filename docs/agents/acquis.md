@@ -19,7 +19,7 @@ Each one has a test in `../fairide-backend/tests/correctifs-08-10.test.js`. What
   the business despite `MENU_LOCKED`; a rate change for everyone gives 7 days to refuse (Admin › Commerces). So are, since
   2026-10-29, a new dish, a dish's price (both declared on honour at the counter price) and a dish photo, and since
   2026-11-08 a dish's name, description and section and a paid extra's price; a price rise carries a photo of the price
-  board once the server's rule is on (dormant until contract RESTO-2026.25, cartes.md).
+  board once the server's rule is on (for shops that accepted contract RESTO-2026.25, published 11-08, cartes.md).
 - **Alcohol is closed** until `ALCOHOL_ENABLED=true` on the server. Insurance, the AFSCA document and the alcohol licence are
   **alerts**, no longer blockers (business number, AFSCA number, contract, validated menu, allergens still block).
   Since 2026-10-10 the business no longer has to give its AFSCA number if it signs the professional declaration

@@ -64,9 +64,10 @@ rule below. Options and new extras still go through the team (« Une modificatio
 [haussesOutils.jsx](../../src/components/commerce/haussesOutils.jsx), the price sheet in AjoutPlat.jsx, the team side in
 [HaussesCartes.jsx](../../src/components/admin/HaussesCartes.jsx) (Admin › Cartes › « Hausses à vérifier » and
 « Changements de texte », `?vue=hausses|textes`).
-- **The photo rule is dormant**: it applies only when the owner payload says `regleHausses.photoRequise` (absent = false), which
-  the backend turns on with contract **RESTO-2026.25**, published only after the lawyer's OK (can a rise wait, or need a
-  proof, and still be « applying the prices the shop asks »?). Rule off: a rise is on honour exactly as on 10-29.
+- **The photo rule follows the contract**: it applies only when the owner payload says `regleHausses.photoRequise` (absent =
+  false), i.e. the shop accepted contract **RESTO-2026.25** (published 2026-11-08, no lawyer: Owen's call; narrow price
+  parity, block-exempted by Reg. 2022/720; its reason is public, help page `prices4`, P2B art. 10). A shop still on an older
+  version: a rise is on honour exactly as on 10-29.
 - Rule on: a dish or extra whose shown price goes UP needs a photo of the price board / printed menu / till showing the new
   counter price (`POST /:id/menu/proof`, then `proofId` with the declaration). Live at once, badge kept; the team checks the
   photo within `regleHausses.delaiHeures` (48 h). A drop and a new dish stay on honour; a dish re-added under the same name at
