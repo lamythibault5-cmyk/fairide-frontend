@@ -239,16 +239,7 @@ export default function DossierAppli({ d, charger, token, user, busy, action, re
     titre = t('appli.exActiviteTitre'); sous = t('appli.exActiviteSous');
     contenu = <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} />;
     pied = continuer(async () => {
-      // Dénomination d'un indépendant en personne physique : son nom, si le registre ne l'a pas donnée.
-      const corps = corpsInfos({ ...f, legalName: f.legalName || d.companyRegistry?.name || d.user?.name || '' }, c);
-      const adresse = !d.user?.address && f.addressStreet ? { addressStreet: f.addressStreet, addressNumber: f.addressNumber, addressPostalCode: f.addressPostalCode, addressCity: f.addressCity } : {};
-      /* SIÈGE D'UN INDÉPENDANT (manque « siege »). Le registre le donne quand il connaît le numéro ; l'adresse tapée ici aussi
-       * (serveur : enregistrerAdresse). Restait le livreur qui a déjà une adresse (toutes les inscriptions du site jusqu'au
-       * 2026-10-25) et un numéro sous la franchise, que le registre ne connaît pas : aucun écran ne demandait son siège et le
-       * dossier restait incomplet. Comme le serveur le fait pour une adresse tapée, son adresse devient son siège. */
-      const siege = c.statusType === 'independent' && !c.independent?.seatAddress && !f.seatAddress && !adresse.addressStreet
-        && !(d.companyRegistry?.valid && d.companyRegistry?.address) && d.user?.address ? { seatAddress: d.user.address } : {};
-      const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: { ...corps, ...adresse, ...siege } }));
+      const ok = await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsActivite(f, d) }));
       if (ok) { setF((x) => ({ ...x, nationalNumber: '' })); suivant(); }
     });
   } else if (ouvert === 'courses') {
@@ -507,6 +498,37 @@ function SommaireDossier({ d, t, user, ecrans, docs, manques, aFaire, stripeActi
  * (PATCH /couriers/me : le serveur remplit dénomination, siège, adresse et zone avec ce que le registre dit) —, l'adresse quand
  * personne ne la donne, l'école d'un étudiant, la TVA et la caisse. Depuis le 2026-11-03 (maquettes/dossier-livreur-simple) :
  * le dernier écran du dossier, ouvert par « Oui, je l'ai » ; le statut et la nationalité sont dans « Ton statut » (EcranProfil). */
+// Ce que « Continuer » de « Ton activité » envoie (PATCH /couriers/me), dans le brouillon comme après l'envoi (FeuilleActivite).
+function corpsActivite(f, d) {
+  const c = d.courier;
+  // Dénomination d'un indépendant en personne physique : son nom, si le registre ne l'a pas donnée.
+  const corps = corpsInfos({ ...f, legalName: f.legalName || d.companyRegistry?.name || d.user?.name || '' }, c);
+  const adresse = !d.user?.address && f.addressStreet ? { addressStreet: f.addressStreet, addressNumber: f.addressNumber, addressPostalCode: f.addressPostalCode, addressCity: f.addressCity } : {};
+  /* SIÈGE D'UN INDÉPENDANT (manque « siege »). Le registre le donne quand il connaît le numéro ; l'adresse tapée ici aussi
+   * (serveur : enregistrerAdresse). Restait le livreur qui a déjà une adresse (toutes les inscriptions du site jusqu'au
+   * 2026-10-25) et un numéro sous la franchise, que le registre ne connaît pas : aucun écran ne demandait son siège et le
+   * dossier restait incomplet. Comme le serveur le fait pour une adresse tapée, son adresse devient son siège. */
+  const siege = c.statusType === 'independent' && !c.independent?.seatAddress && !f.seatAddress && !adresse.addressStreet
+    && !(d.companyRegistry?.valid && d.companyRegistry?.address) && d.user?.address ? { seatAddress: d.user.address } : {};
+  return { ...corps, ...adresse, ...siege };
+}
+
+/* « TON ACTIVITÉ » APRÈS L'ENVOI (Owen, 08/11 : un dossier « en vérification » alors que la dispense était accordée). Le dossier
+ * part sans régime TVA ni siège (MANQUES_APRES_ENVOI), mais une fois envoyé, aucun écran ne les demandait plus : le livreur lisait
+ * « Dossier envoyé, réponse sous 2 jours » et l'équipe ne pouvait pas valider. Le même écran que le brouillon, dans une feuille
+ * de DossierSuivi, avec la même sauvegarde. */
+export function FeuilleActivite({ d, t, token, busy, action, onFait }) {
+  const [f, setF] = useState(() => infosDepuisDossier(d.courier, d.zones));
+  const val = (k, v) => setF((x) => ({ ...x, [k]: v }));
+  const enregistrer = async () => { if (await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsActivite(f, d) }))) onFait?.(); };
+  return (
+    <>
+      <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} />
+      <button type="button" className="bv-btn btn-teal" disabled={busy || !f.vatStatus} onClick={enregistrer}>{busy ? t('common.loading') : t('common.save')}</button>
+    </>
+  );
+}
+
 // « RUE DU BAILLI 42 1050 IXELLES » (registre, en capitales) → « Rue Du Bailli 42 1050 Ixelles », lisible sur la carte.
 const adresseLisible = (a) => String(a || '').toLowerCase().replace(/(^|[\s'-])\p{L}/gu, (x) => x.toUpperCase());
 function EcranActivite({ d, f, val, t, token, action }) {
