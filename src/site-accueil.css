@@ -196,6 +196,9 @@ html:not(.appli) .sa-accueil .sa-appli p { margin: 4px 0 0; font-size: 14px; lin
 html:not(.appli) .sa-accueil .sa-appli-stores { display: flex; gap: 8px; flex: none; }
 html:not(.appli) .sa-accueil .sa-store { display: flex; flex-direction: column; font-size: 13px; font-weight: 700; line-height: 1.2; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; color: var(--ink); cursor: default; }
 html:not(.appli) .sa-accueil .sa-store small { font-size: 10.5px; font-weight: 500; color: var(--ink-faint); }
+/* Badge d'un store qui a l'appli (AppComingSoonSection.jsx, 2026-11-09) : un lien, filet iris au survol, pas d'ombre. */
+html:not(.appli) .sa-accueil .sa-store-lien { cursor: pointer; text-decoration: none; transition: border-color .15s; }
+html:not(.appli) .sa-accueil .sa-store-lien:hover { border-color: var(--iris); }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    3 · TABLETTE ET TÉLÉPHONE
