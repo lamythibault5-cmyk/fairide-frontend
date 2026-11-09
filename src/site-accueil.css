@@ -188,17 +188,17 @@ html:not(.appli) .sa-accueil .sa-porte-role { display: inline-flex; align-items:
 html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 20px; line-height: 1.2; flex: 1; }
 html:not(.appli) .sa-accueil .sa-porte-lien { font-size: 14.5px; font-weight: 700; color: var(--iris); }
 
-/* L'application, en une carte. */
-html:not(.appli) .sa-accueil .sa-appli { display: flex; align-items: center; gap: 18px; border: 1px solid var(--line); border-radius: 20px; padding: 20px 24px; margin-top: 56px; background: #fff; }
+/* L'application, en une carte (AppComingSoonSection.jsx, 2026-11-09) : fond iris très pâle, vraie icône de l'appli, badges
+   officiels d'Apple et de Google à la même hauteur. Pas d'ombre ; au survol, le badge s'éclaircit à peine. */
+html:not(.appli) .sa-accueil .sa-appli { display: flex; align-items: center; gap: 24px; border-radius: 24px; padding: 28px 32px; margin-top: 56px; background: var(--iris-tint); }
+html:not(.appli) .sa-accueil .sa-appli-icone { width: 88px; height: 88px; flex: none; border-radius: 22.5%; display: block; }
 html:not(.appli) .sa-accueil .sa-appli-texte { flex: 1; min-width: 0; }
-html:not(.appli) .sa-accueil .sa-appli h2 { font-size: 18px; margin: 0; }
-html:not(.appli) .sa-accueil .sa-appli p { margin: 4px 0 0; font-size: 14px; line-height: 1.5; color: var(--ink-soft); }
-html:not(.appli) .sa-accueil .sa-appli-stores { display: flex; gap: 8px; flex: none; }
-html:not(.appli) .sa-accueil .sa-store { display: flex; flex-direction: column; font-size: 13px; font-weight: 700; line-height: 1.2; border: 1px solid var(--line); border-radius: 12px; padding: 7px 12px; color: var(--ink); cursor: default; }
-html:not(.appli) .sa-accueil .sa-store small { font-size: 10.5px; font-weight: 500; color: var(--ink-faint); }
-/* Badge d'un store qui a l'appli (AppComingSoonSection.jsx, 2026-11-09) : un lien, filet iris au survol, pas d'ombre. */
-html:not(.appli) .sa-accueil .sa-store-lien { cursor: pointer; text-decoration: none; transition: border-color .15s; }
-html:not(.appli) .sa-accueil .sa-store-lien:hover { border-color: var(--iris); }
+html:not(.appli) .sa-accueil .sa-appli h2 { font-size: 26px; line-height: 1.15; margin: 0; }
+html:not(.appli) .sa-accueil .sa-appli p { margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 46ch; }
+html:not(.appli) .sa-accueil .sa-appli-stores { display: flex; gap: 12px; flex: none; }
+html:not(.appli) .sa-accueil .sa-badge { display: block; line-height: 0; border-radius: 9px; transition: opacity .15s; }
+html:not(.appli) .sa-accueil .sa-badge:hover { opacity: .82; }
+html:not(.appli) .sa-accueil .sa-badge img { height: 48px; width: auto; display: block; }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    3 · TABLETTE ET TÉLÉPHONE
@@ -209,8 +209,10 @@ html:not(.appli) .sa-accueil .sa-store-lien:hover { border-color: var(--iris); }
   html:not(.appli) .sa-accueil .sa-portes { grid-template-columns: 1fr; gap: 12px; }
   html:not(.appli) .sa-accueil .sa-porte { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 16px; }
   html:not(.appli) .sa-accueil .sa-porte-role { flex-basis: 100%; }
-  html:not(.appli) .sa-accueil .sa-appli { flex-wrap: wrap; }
-  html:not(.appli) .sa-accueil .sa-appli-stores { flex-basis: 100%; padding-left: 64px; }
+  html:not(.appli) .sa-accueil .sa-appli { flex-wrap: wrap; gap: 18px 20px; padding: 24px; }
+  html:not(.appli) .sa-accueil .sa-appli-icone { width: 72px; height: 72px; }
+  html:not(.appli) .sa-accueil .sa-appli h2 { font-size: 22px; }
+  html:not(.appli) .sa-accueil .sa-appli-stores { flex-basis: 100%; flex-wrap: wrap; }
 }
 @media (max-width: 640px) {
   html:not(.appli) .sa-accueil .sa-bandeau { padding: 26px 0 60px; gap: 24px; }
@@ -267,7 +269,9 @@ html:not(.appli) .sa-accueil .sa-store-lien:hover { border-color: var(--iris); }
   html:not(.appli) .sa-accueil .sa-porte { padding: 18px; }
   html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 18px; flex-basis: 100%; }
   html:not(.appli) .sa-accueil .sa-appli { padding: 18px; margin-top: 40px; }
-  html:not(.appli) .sa-accueil .sa-appli-stores { padding-left: 0; }
+  html:not(.appli) .sa-accueil .sa-appli-stores { padding-left: 0; gap: 10px; }
+  /* Les deux badges côte à côte sur un téléphone de 360 px et plus : à 48 px de haut, il manquait 4 px. */
+  html:not(.appli) .sa-accueil .sa-badge img { height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sa-accueil .sa-scene *, .sa-accueil .sa-belge, .sa-accueil .sa-feuille::before, .sa-accueil .sa-prix-ligne i b, .sa-accueil .sa-prix-rang i b { animation: none !important; }
