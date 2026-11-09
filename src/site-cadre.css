@@ -166,6 +166,9 @@
   position: fixed; z-index: 200; left: 24px; bottom: calc(24px + env(safe-area-inset-bottom));
   width: min(440px, calc(100vw - 24px)); box-sizing: border-box;
   background: var(--iris); color: #fff; border-radius: 20px; padding: 18px 18px 16px;
+  /* Filet blanc franc (Owen, 2026-11-09) : sans lui, la carte iris se fondait dans l'accueil et l'en-tête iris du téléphone.
+     Une bordure, pas une ombre (aplats seulement, design.md). */
+  border: 2px solid #fff;
   animation: site-monte .45s var(--site-ressort) backwards;
 }
 /* La carte prend le focus à son arrivée (CookieBanner.jsx) pour que la première tabulation mène aux choix : sans anneau. */
@@ -280,3 +283,15 @@
   html:not(.appli) .dashboard-main .compte-ecran .compte-bandeau { margin: -24px -28px 0; border-radius: 0; padding-left: max(60px, calc((100% - 1120px) / 2)); padding-right: max(60px, calc((100% - 1120px) / 2)); }
   html:not(.appli) .dashboard-main .compte-ecran .compte-feuille { margin-left: -28px; margin-right: -28px; padding-left: max(60px, calc((100% - 1120px) / 2)); padding-right: max(60px, calc((100% - 1120px) / 2)); }
 }
+
+/* LA BANDE « L'APPLI FAIRRIDE » SUR ANDROID (BandeauAndroid.jsx, 2026-11-09) : blanc plein, filet en bas, comme les bandes
+   collantes du site ; dans le flux au-dessus de l'en-tête iris, elle part au défilement. Contour iris pour « Installer » :
+   le lime reste l'action de la page. Jamais dans l'app (pas montée, et html.appli l'efface quand même). */
+.bandeau-android { display: flex; align-items: center; gap: 10px; padding: calc(8px + env(safe-area-inset-top)) 16px 8px 8px; background: #fff; border-bottom: 1px solid var(--line); color: var(--ink); }
+.bandeau-android .mark { flex: none; }
+.bandeau-android-croix { flex: none; display: grid; place-items: center; width: 32px; height: 32px; min-height: 0; padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--ink-faint); cursor: pointer; }
+.bandeau-android-texte { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
+.bandeau-android-texte strong { font-size: 14px; font-weight: 700; }
+.bandeau-android-texte small { font-size: 12.5px; color: var(--ink-soft); }
+.bandeau-android-bouton { flex: none; padding: 8px 16px; border: 1.5px solid var(--iris); border-radius: var(--radius-pill); color: var(--iris); font-size: 14px; font-weight: 700; text-decoration: none; }
+html.appli .bandeau-android { display: none; }

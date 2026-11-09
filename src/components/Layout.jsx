@@ -10,6 +10,7 @@ import BrandMark from './BrandMark';
 import MotMarque from './MotMarque';
 import Footer from './Footer';
 import CookieBanner from './CookieBanner';
+import BandeauAndroid from './BandeauAndroid';
 import Icone from './Icone';
 import LanguageSwitcher, { LangueCompacte } from './LanguageSwitcher';
 import DashboardSidebar from './DashboardSidebar';
@@ -301,6 +302,8 @@ export default function Layout() {
 
   return (
     <>
+      {/* « L'appli Fairride » sur Android, au-dessus de l'en-tête collant (BandeauAndroid.jsx) : le visiteur qui scanne un QR. */}
+      <BandeauAndroid />
       {/* L'en-tête s'efface quand on descend et revient quand on remonte : voir useEnteteDefilement. */}
       <div className={`hero${leanHeader ? ' hero-lean' : ''}${enteteCache ? ' hero-cache' : ''}`}>
         <div className="hero-inner">
