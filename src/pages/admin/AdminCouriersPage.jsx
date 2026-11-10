@@ -71,7 +71,8 @@ export default function AdminCouriersPage() {
   const [params] = useSearchParams();
   const [onglet, setOnglet] = useEtatPage('onglet', params.get('onglet') || 'dossiers', { forcer: !!params.get('onglet') });
   const [mode, setMode] = useViewMode('couriers', 'table');
-  const { sort, toggle } = useTableSort('updatedAt');
+  // Du dossier créé le plus récemment au plus ancien (Owen, 10/11 : par création de compte).
+  const { sort, toggle } = useTableSort('createdAt', 'desc');
 
   const load = () => {
     setErreur(null);
@@ -116,6 +117,7 @@ export default function AdminCouriersPage() {
     { key: 'identity', label: tr('adminCouriers.colIdentity'), get: (r) => (r.identity?.status === 'verified' ? <span className="pill"><Icone nom="valider" taille={16} className="icone-texte" />{' '}{tr(`adminCouriers.provider_${r.identity.provider || 'manual'}`)}</span> : r.identity?.status === 'pending' ? <Icone nom="horloge" taille={16} className="icone-texte" /> : '-'), sortValue: (r) => (r.identity?.status === 'verified' ? 1 : 0) },
     { key: 'gross', label: tr('adminCouriers.colGross'), get: (r) => euro(r.grossTotal ?? 0), sortValue: (r) => Number(r.grossTotal || 0), align: 'right' },
     { key: 'zone', label: tr('adminCouriers.colZone'), get: (r) => `${r.zone || '-'} · ${r.vehicleType ? tr(`courierOnboarding.vehicle_${r.vehicleType}`) : '-'}`, sortValue: (r) => r.zone || '' },
+    { key: 'createdAt', label: tr('adminCommon.registeredOn'), get: (r) => fmt(r.createdAt), sortValue: (r) => (r.createdAt ? new Date(r.createdAt).getTime() : 0) },
     { key: 'updatedAt', label: tr('adminCouriers.colUpdated'), get: (r) => fmt(r.updatedAt), sortValue: (r) => r.updatedAt }
   ];
   const lignes = useMemo(() => sortRows(filterBySearch((data?.rows ?? []).filter((r) => (filtre === 'all' || (filtre === 'a_regarder' ? pointsARegarder(r).length > 0 : r.lifecycleStatus === filtre)) && (typeFiltre === 'all' || r.statusType === typeFiltre) && natureOk(nature, r)), rechercheTel(search), (r) => [r.name, r.email, r.zone, r.statusType, telNational(r.phone)]), colonnes, sort), [data, filtre, typeFiltre, nature, search, sort]); // eslint-disable-line react-hooks/exhaustive-deps

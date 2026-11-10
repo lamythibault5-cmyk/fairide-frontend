@@ -10,15 +10,17 @@ import { iconeHtml } from '../iconeHtml';
 // autres commerciaux (petit point gris : on ne frappe pas deux fois à la même porte) et les zones proposées
 // (cercles ; salesZones.js côté serveur). Même bibliothèque et mêmes classes de pins que RestaurantsMap.
 // L'admin (pages/admin/AdminSalesPage.jsx) réutilise la carte pour TOUS les commerciaux : il passe ses propres
-// libellés (`legende`) et son propre texte d'infobulle de zone (`zoneTooltip`).
+// libellés (`legende`) et son propre texte d'infobulle de zone (`zoneTooltip`). Sur l'onglet Commerciaux, il colore les
+// pins par commercial (`couleurDe(p)`, mémorisée par l'appelant ; sinon couleur de l'étape) et passe sa propre légende
+// (`legendeItems` : [{ label, color }]).
 const BRUSSELS_CENTER = [50.8420, 4.3700];
 // Couleur du pin selon l'étape : gris (à contacter), bleu (en cours), or (rendez-vous), iris (inscrit), vert (actif), rouge (refus).
-const COULEURS = { a_contacter: '#8A8A8A', contacte: '#3B7DD8', interesse: '#3B7DD8', rdv: '#F5B800', inscrit: '#3B2FB5', carte_en_ligne: '#3B2FB5', actif: '#0F8049', plus_tard: '#8A8A8A', refuse: '#C8243A' };
+export const COULEURS = { a_contacter: '#8A8A8A', contacte: '#3B7DD8', interesse: '#3B7DD8', rdv: '#F5B800', inscrit: '#3B2FB5', carte_en_ligne: '#3B2FB5', actif: '#0F8049', plus_tard: '#8A8A8A', refuse: '#C8243A' };
 
-function pinProspect(p, icone, actif) {
+function pinProspect(p, icone, actif, couleur) {
   return L.divIcon({
     className: 'map-pin-wrap',
-    html: `<div class="map-pin crm-pin${actif ? ' active' : ''}" style="background:${COULEURS[p.stage] || '#8A8A8A'}"><span class="map-pin-emoji">${iconeHtml(icone || 'position', 15)}</span></div>`,
+    html: `<div class="map-pin crm-pin${actif ? ' active' : ''}" style="background:${couleur || COULEURS[p.stage] || '#8A8A8A'}"><span class="map-pin-emoji">${iconeHtml(icone || 'position', 15)}</span></div>`,
     iconSize: [34, 34], iconAnchor: [17, 32], popupAnchor: [0, -30]
   });
 }
@@ -33,7 +35,7 @@ export function distanceM(lat1, lng1, lat2, lng2) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-export default function CrmMap({ prospects, autres = [], zones = [], zoneActive = null, ouvert = null, stageIcones = {}, onOpen, onZone, height = 360, legende = null, zoneTooltip = null }) {
+export default function CrmMap({ prospects, autres = [], zones = [], zoneActive = null, ouvert = null, stageIcones = {}, onOpen, onZone, height = 360, legende = null, zoneTooltip = null, couleurDe = null, legendeItems = null }) {
   const { t } = useLanguage();
   const conteneur = useRef(null);
   const carte = useRef(null);
@@ -72,7 +74,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
     const points = [];
     for (const p of prospects) {
       if (p.lat === null || p.lat === undefined || p.lng === null || p.lng === undefined) continue;
-      const m = L.marker([p.lat, p.lng], { icon: pinProspect(p, stageIcones[p.stage], ouvert === p.id), zIndexOffset: ouvert === p.id ? 1000 : 0 });
+      const m = L.marker([p.lat, p.lng], { icon: pinProspect(p, stageIcones[p.stage], ouvert === p.id, couleurDe?.(p)), zIndexOffset: ouvert === p.id ? 1000 : 0 });
       m.bindTooltip(`<b>${escapeHtml(p.name)}</b>${p.commune ? `<br>${escapeHtml(p.commune)}` : ''}${p.agentName ? `<br>${escapeHtml(p.agentName)}` : ''}`, { direction: 'top', offset: [0, -30] });
       m.on('click', () => rappels.current.onOpen?.(p.id));
       couche.addLayer(m); points.push([p.lat, p.lng]);
@@ -88,7 +90,7 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
       else carte.current.setView(BRUSSELS_CENTER, 12);
     };
     recadrer.current();
-  }, [prospects, ouvert, stageIcones, zoneActive, zones]);
+  }, [prospects, ouvert, stageIcones, zoneActive, zones, couleurDe]);
 
   // Les commerces des autres commerciaux : de simples points, avec le prénom de qui les démarche.
   useEffect(() => {
@@ -104,9 +106,10 @@ export default function CrmMap({ prospects, autres = [], zones = [], zoneActive 
     <div className="crm-carte-wrap">
       <div ref={conteneur} className="crm-carte-map" style={{ height }} aria-label={t('sales.mapTitle')} />
       <div className="crm-legende small">
-        <span><i className="crm-leg-pin" style={{ background: '#3B7DD8' }} /> {legende?.mine || t('sales.mapLegendMine')}</span>
-        {(legende ? legende.others : true) && <span><i className="crm-leg-pin crm-leg-autre" /> {legende?.others || t('sales.mapLegendOthers')}</span>}
-        <span><i className="crm-leg-zone" /> {t('sales.mapLegendZones')}</span>
+        {legendeItems && legendeItems.map((x) => <span key={x.label}><i className="crm-leg-pin" style={{ background: x.color }} /> {x.label}</span>)}
+        {!legendeItems && <span><i className="crm-leg-pin" style={{ background: '#3B7DD8' }} /> {legende?.mine || t('sales.mapLegendMine')}</span>}
+        {!legendeItems && (legende ? legende.others : true) && <span><i className="crm-leg-pin crm-leg-autre" /> {legende?.others || t('sales.mapLegendOthers')}</span>}
+        {zones.length > 0 && <span><i className="crm-leg-zone" /> {t('sales.mapLegendZones')}</span>}
         <button type="button" className="btn-ghost btn-sm" onClick={() => recadrer.current?.()}>{t('sales.mapRecenter')}</button>
       </div>
     </div>

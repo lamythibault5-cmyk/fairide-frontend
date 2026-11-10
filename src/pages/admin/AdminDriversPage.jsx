@@ -75,8 +75,9 @@ export default function AdminDriversPage() {
   // Plus de liste « trier par » (allègement de la console, 23/09/2026) : des plus récents aux plus anciens ; en vue
   // tableau, les en-têtes de colonne trient.
   const triServeur = 'created_desc';
-  // Tri par nom par défaut, pas par nombre de livraisons : pas de palmarès des livreurs à l'ouverture.
-  const { sort, toggle } = useTableSort('name', 'asc');
+  // Tri par date d'inscription par défaut, le plus récent en haut (Owen, 10/11 : par création de compte, pas par ordre
+  // alphabétique) ; jamais par nombre de livraisons : pas de palmarès des livreurs à l'ouverture.
+  const { sort, toggle } = useTableSort('createdAt', 'desc');
   const [documents, setDocuments] = useState(null);
   const [showUploadDoc, setShowUploadDoc] = useState(false);
   const [onglet, setOnglet] = useState('apercu');

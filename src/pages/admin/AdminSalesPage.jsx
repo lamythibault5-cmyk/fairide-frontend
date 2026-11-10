@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
@@ -10,7 +10,7 @@ import RecordDrawer, { DrawerRow } from '../../components/admin/RecordDrawer';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import { ErrorCard } from '../../components/admin/AdminListTools';
 import useEtatPage from '../../hooks/useEtatPage';
-import CrmMap, { distanceM } from '../../components/CrmMap';
+import CrmMap, { distanceM, COULEURS as COULEURS_ETAPES } from '../../components/CrmMap';
 import '../../crm.css';
 import Icone from '../../components/Icone';
 
@@ -70,7 +70,11 @@ export default function AdminSalesPage() {
 // L'admin choisit ici quels comptes clients deviennent commerciaux : il cherche le compte (nom ou e-mail), clique
 // « Donner l'accès », et la rubrique « Sales » apparaît dans le Mon compte de cette personne. « Retirer
 // l'accès » sur la ligne la referme ; ses commerces démarchés restent visibles dans l'onglet suivant.
-function AgentsTab({ token, tr, fmt, toast, onChanged }) {
+// Carte « Qui démarche où » (Owen, 10/11) : tous les commerces démarchés, une couleur par commercial. Un clic sur un
+// commercial dans le tableau ne montre que les siens (couleur = étape) avec ses chiffres au-dessus ; un clic sur un pin
+// ouvre la fiche du commerce. Couleurs données dans l'ordre d'arrivée des commerciaux : elles ne changent pas quand on trie.
+const COULEURS_COMMERCIAUX = ['#3B2FB5', '#E4572E', '#0F8049', '#D89A00', '#3B7DD8', '#C8243A', '#8E44AD', '#16A3A3', '#B5651D', '#5D6D7E'];
+function AgentsTab({ token, tr, fmt, toast, onChanged, stageLabel }) {
   const euros = (n) => new Intl.NumberFormat(getLocale(), { style: 'currency', currency: 'EUR', maximumFractionDigits: 0 }).format(n || 0);
   const [agents, setAgents] = useState(null);
   const [erreur, setErreur] = useState(null);
@@ -78,9 +82,42 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
   const [resultats, setResultats] = useState(null);
   const [label, setLabel] = useState('');
   const [aRetirer, setARetirer] = useState(null);
-  const { sort, toggle } = useTableSort('activatedAt', 'desc');
-  const charger = useCallback(() => { setErreur(null); api('/admin/sales/agents', { token }).then(setAgents).catch((e) => setErreur(e.message)); }, [token]);
+  // Du compte créé le plus récemment au plus ancien (Owen, 10/11 : par création de compte, pas par ordre alphabétique).
+  const { sort, toggle } = useTableSort('accountCreatedAt', 'desc');
+  const [prospects, setProspects] = useState(null);
+  const [choisi, setChoisi] = useEtatPage('commercialCarte', null);
+  const [ouvert, setOuvert] = useState(null);
+  const carteRef = useRef(null);
+  const [carteVisible, setCarteVisible] = useState(() => { try { return localStorage.getItem('admin_sales_carte_agents') !== 'off'; } catch { return true; } });
+  const basculerCarte = () => setCarteVisible((v) => { try { localStorage.setItem('admin_sales_carte_agents', v ? 'off' : 'on'); } catch { /* sans stockage */ } return !v; });
+  const charger = useCallback(() => {
+    setErreur(null);
+    api('/admin/sales/agents', { token }).then(setAgents).catch((e) => setErreur(e.message));
+    api('/admin/sales/prospects', { token }).then(setProspects).catch(() => setProspects([]));
+  }, [token]);
   useEffect(() => { charger(); }, [charger]);
+
+  const couleurAgent = useMemo(() => {
+    const m = new Map();
+    [...(agents || [])].sort((a, b) => a.activatedAt - b.activatedAt).forEach((a, i) => m.set(a.userId, COULEURS_COMMERCIAUX[i % COULEURS_COMMERCIAUX.length]));
+    return m;
+  }, [agents]);
+  // Un commercial retiré entre-temps (choix gardé par la page) : on revient à tout le monde.
+  const agentChoisi = choisi ? (agents || []).find((a) => a.userId === choisi) || null : null;
+  const idChoisi = agentChoisi?.userId || null;
+  const pins = useMemo(() => (prospects || []).filter((p) => !idChoisi || p.agentUserId === idChoisi), [prospects, idChoisi]);
+  const sansPosition = pins.filter((p) => p.lat === null || p.lat === undefined).length;
+  const couleurDe = useCallback((p) => (idChoisi ? null : couleurAgent.get(p.agentUserId) || '#8A8A8A'), [idChoisi, couleurAgent]);
+  const legendeItems = idChoisi
+    ? STAGES.filter((s) => pins.some((p) => p.stage === s)).map((s) => ({ label: stageLabel(s), color: COULEURS_ETAPES[s] }))
+    : (agents || []).filter((a) => pins.some((p) => p.agentUserId === a.userId)).map((a) => ({ label: a.name, color: couleurAgent.get(a.userId) }));
+  // Stable : la fiche recharge le commerce quand onClose change. À la fermeture, les chiffres et la carte se mettent à jour.
+  const fermerFiche = useCallback(() => { setOuvert(null); charger(); }, [charger]);
+  function choisirAgent(a) {
+    setChoisi(idChoisi === a.userId ? null : a.userId);
+    if (!carteVisible) basculerCarte();
+    carteRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
 
   // Recherche d'un compte client (nom ou e-mail), avec un léger délai pour ne pas interroger à chaque frappe.
   useEffect(() => {
@@ -118,6 +155,7 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
     { key: 'eventsThisWeek', label: tr('adminSales.colWeekActions'), get: (a) => a.eventsThisWeek, align: 'right', sum: true },
     { key: 'overdue', label: tr('adminSales.colOverdue'), get: (a) => <span className={a.overdue ? 'crm-retard-texte' : ''}>{a.overdue}{a.dueToday ? ` (+${a.dueToday})` : ''}</span>, sortValue: (a) => a.overdue, align: 'right' },
     { key: 'lastActivity', label: tr('adminSales.colLastActivity'), get: (a) => fmt(a.lastActivity), sortValue: (a) => a.lastActivity || 0 },
+    { key: 'accountCreatedAt', label: tr('adminCommon.registeredOn'), get: (a) => fmt(a.accountCreatedAt), sortValue: (a) => a.accountCreatedAt || a.activatedAt },
     { key: 'activatedAt', label: tr('adminSales.colActivated'), get: (a) => fmt(a.activatedAt), sortValue: (a) => a.activatedAt },
     { key: 'actions', label: '', get: (a) => (
       <button type="button" className="btn-danger-ghost btn-sm" onClick={(e) => { e.stopPropagation(); setARetirer(a); }}>{tr('adminSales.removeAccess')}</button>
@@ -148,7 +186,40 @@ function AgentsTab({ token, tr, fmt, toast, onChanged }) {
           ))}
       </div>
       {erreur && <ErrorCard message={erreur} onRetry={charger} />}
-      {agents && <AdminDataTable columns={columns} rows={agents} sort={sort} onSort={toggle} emptyLabel={tr('adminSales.noAgents')} showTotals />}
+      {agents && agents.length > 0 && (
+        <div className="card crm-carte-carte" ref={carteRef}>
+          <div className="crm-carte-tete">
+            <div>
+              <b>{agentChoisi ? <><i className="crm-leg-pin" style={{ background: couleurAgent.get(agentChoisi.userId) }} /> {agentChoisi.name}</> : tr('adminSales.agentsMapTitle')}</b>
+              <p className="small" style={{ margin: '2px 0 0' }}>{tr('adminSales.agentsMapIntro')}</p>
+            </div>
+            <div className="row" style={{ gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+              {agentChoisi && <button type="button" className="btn-ghost btn-sm" onClick={() => setChoisi(null)}>{tr('adminSales.agentsMapAll')}</button>}
+              <button type="button" className="btn-ghost btn-sm" onClick={basculerCarte}>{carteVisible ? tr('sales.mapHide') : tr('sales.mapShow')}</button>
+            </div>
+          </div>
+          {agentChoisi && (
+            <div className="stat-grid" style={{ margin: '10px 0' }}>
+              <div className="stat-card"><div className="num">{agentChoisi.prospects}</div><div className="label">{tr('adminSales.colProspects')}</div></div>
+              <div className="stat-card highlight"><div className="num">{agentChoisi.signed}</div><div className="label">{tr('adminSales.colSigned')}</div></div>
+              <div className="stat-card"><div className="num">{agentChoisi.active}</div><div className="label">{tr('adminSales.colActiveRestos')}</div></div>
+              <div className="stat-card"><div className="num">{euros(agentChoisi.earned)}</div><div className="label">{tr('adminSales.colEarned')}</div></div>
+              <div className="stat-card"><div className="num">{euros(agentChoisi.paid)}</div><div className="label">{tr('adminSales.colPaid')}</div></div>
+              <div className={`stat-card${agentChoisi.overdue > 0 ? ' crm-retard' : ''}`}><div className="num">{agentChoisi.overdue}</div><div className="label">{tr('adminSales.colOverdue')}</div></div>
+            </div>
+          )}
+          {carteVisible && prospects && (pins.length === 0
+            ? <p className="small" style={{ margin: '8px 0 0' }}>{tr('adminSales.agentsMapEmpty')}</p>
+            : (
+              <>
+                <CrmMap prospects={pins} ouvert={ouvert} stageIcones={STAGE_ICONES} onOpen={setOuvert} couleurDe={couleurDe} legendeItems={legendeItems} height={400} />
+                {sansPosition > 0 && <p className="small" style={{ margin: '6px 0 0' }}>{tr('adminSales.agentsMapNoPosition', { n: sansPosition })}</p>}
+              </>
+            ))}
+        </div>
+      )}
+      {agents && <AdminDataTable columns={columns} rows={agents} sort={sort} onSort={toggle} onRowClick={choisirAgent} rowClassName={(a) => (a.userId === idChoisi ? 'is-selected' : '')} emptyLabel={tr('adminSales.noAgents')} showTotals />}
+      {ouvert && <ProspectDrawer id={ouvert} token={token} tr={tr} fmt={fmt} stageLabel={stageLabel} toast={toast} onClose={fermerFiche} />}
       <ConfirmDialog open={!!aRetirer} danger title={tr('adminSales.confirmRemoveTitle')} message={aRetirer ? tr('adminSales.confirmRemoveText', { name: aRetirer.name }) : ''} confirmLabel={tr('adminSales.removeAccess')} onConfirm={retirer} onCancel={() => setARetirer(null)} />
     </div>
   );
