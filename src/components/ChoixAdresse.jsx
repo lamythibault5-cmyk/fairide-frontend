@@ -121,7 +121,7 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle, de
     if (occupe || chercheIci) return;
     setChercheIci(true); setErreurIci('');
     try {
-      const p = await positionPrecise();
+      const p = await positionPrecise({ signalerDelai: true });
       if (!p) { setErreurIci(t('adresses.hereFailed')); return; }
       // Au-delà de 200 m, c'est la position approximative (ou un GPS qui cherche encore) : pas de quoi trouver une porte.
       if (p.precision > 200) { setErreurIci(t('adresses.hereVague')); return; }
@@ -129,8 +129,9 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle, de
       if (!r?.found) { setErreurIci(t('adresses.hereNotFound')); return; }
       setACompleter({ street: r.street, postalCode: r.postalCode, city: r.city, parPosition: true });
       setNumero(r.number || ''); setErreur(''); setLibelle(cible || '');
-    } catch {
-      setErreurIci(t('adresses.hereNotFound'));
+    } catch (e) {
+      // GPS sans réponse en 8 s (natif.js › borner, 2026-11-11) : « trop long », pas « autorise la localisation ».
+      setErreurIci(t(e?.code === 'POSITION_DELAI' ? 'adresses.hereSlow' : 'adresses.hereNotFound'));
     } finally {
       setChercheIci(false);
     }
