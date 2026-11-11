@@ -2,13 +2,13 @@
 // iOS 26, la barre passe en verre fumé, icônes blanches, au-dessus d'un fond sombre (les cartes iris « Demandés près de toi »,
 // un bandeau iris), et redevient claire sur le blanc. Dans l'app seulement : chargé avec import() par DashboardSidebar.jsx.
 //
-// ON NE LIT AUCUN PIXEL. Trois points sur la ligne du milieu de la barre (à 20, 50 et 80 % de la largeur de l'écran) : sous
-// chacun, le premier élément qui a une couleur de fond décide. Sombre s'il est foncé (luminance < 0,42 : l'iris l'est, le
+// ON NE LIT AUCUN PIXEL. Six points sous la barre (à 20, 50 et 80 % de la largeur de l'écran, au tiers et aux deux tiers de sa
+// hauteur) : sous chacun, le premier élément qui a une couleur de fond décide. Sombre s'il est foncé (luminance < 0,42 : l'iris l'est, le
 // lilas pâle non). Une photo, une tuile de carte ou une image de fond comptent comme claires : leur luminosité ne se lirait
-// qu'en les redessinant, trop cher. La barre est sombre quand deux points sur trois le sont.
+// qu'en les redessinant, trop cher. La barre est sombre dès que la moitié des points le sont.
 //
 // JAMAIS À CHAQUE IMAGE. Pendant un défilement (la page, ou une rangée qui défile de côté), une lecture toutes les 150 ms au
-// plus, puis une dernière 120 ms après l'arrêt ; et à chaque changement de page (`relire`). Une lecture : trois
+// plus, puis une dernière 120 ms après l'arrêt ; et à chaque changement de page (`relire`). Une lecture : six
 // elementsFromPoint et quelques getComputedStyle.
 const PAS = 150;
 const SEUIL = 0.42;
@@ -42,14 +42,16 @@ export function suivreTeinte(barre, poser) {
     const nav = barre.querySelector('.dashboard-nav');
     if (!nav || !nav.offsetHeight) return;
     const r = nav.getBoundingClientRect();
-    const y = r.top + r.height / 2;
     const largeur = window.innerWidth;
     let sombres = 0;
-    for (const f of [0.2, 0.5, 0.8]) {
-      const sous = document.elementsFromPoint(largeur * f, y).find((e) => !barre.contains(e));
-      if (sous && fonce(sous, barre)) sombres += 1;
+    // Deux lignes (au tiers et aux deux tiers de la hauteur) : une carte iris qui ne couvre que le bas de la barre compte déjà.
+    for (const fy of [0.3, 0.7]) {
+      for (const fx of [0.2, 0.5, 0.8]) {
+        const sous = document.elementsFromPoint(largeur * fx, r.top + r.height * fy).find((e) => !barre.contains(e));
+        if (sous && fonce(sous, barre)) sombres += 1;
+      }
     }
-    const sombre = sombres >= 2;
+    const sombre = sombres >= 3;
     if (sombre !== etat) { etat = sombre; poser(sombre); }
   };
   const surDefilement = () => {
