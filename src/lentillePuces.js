@@ -8,10 +8,8 @@
 //     le pointeur qu'après 6 px : un simple toucher reste le clic du bouton. Au doigt (2026-10-24) : un glissé tout de suite
 //     fait défiler la bande (ecran-liste.css) ; un doigt TENU 250 ms attrape la lentille, depuis n'importe quelle cuisine ;
 //   - le CONTOUR IRIS du dessin sous le doigt et de la cuisine choisie (2026-10-25, poserContours plus bas) ;
-//   - la RÉFRACTION des bords sur Chromium, avec les filtres de barreVerre.js — plus sur Android depuis le 2026-10-20
-//     (trop coûteuse sur un téléphone moyen, voir refractionPossible), où la bande garde le flou simple.
+//   - plus de RÉFRACTION depuis le 2026-11-11 (maquettes/barre-ios26) : la lentille est la pastille d'iOS 26, sans flou à courber.
 import { vibrer } from './gestes';
-import { poserFiltre, refractionPossible, suivreTaille } from './barreVerre';
 
 const SEUIL_GLISSE = 6;
 // Au doigt : tenir 250 ms attrape la lentille ; partir de plus de 8 px avant, c'est un défilement.
@@ -164,11 +162,6 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
   piste.addEventListener('lostpointercapture', perdu);
   piste.addEventListener('touchmove', bloque, { passive: false });
 
-  let debrancherTaille = null;
-  if (refractionPossible()) {
-    bande.classList.add('lt-puces--refraction');
-    debrancherTaille = suivreTaille([lentille], () => poserFiltre(lentille, '--verre-lentille', 22, true));
-  }
 
   return () => {
     piste.removeEventListener('pointerdown', appui);
@@ -181,6 +174,5 @@ export function brancherLentillePuces(bande, piste, lentille, choisir) {
     relacher();
     bande.classList.remove('lt-puces--contour');
     piste.removeEventListener('touchmove', bloque);
-    debrancherTaille?.();
   };
 }

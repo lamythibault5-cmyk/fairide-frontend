@@ -159,25 +159,20 @@
 
 /* Le verre : la recette de la barre d'onglets et de la barre du panier (styles.css). */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  /* iOS 26 (2026-11-11, maquettes/barre-ios26) : la matière de la barre d'onglets, plus dépolie pour porter des mots (blanc 40 %),
+     un filet de lumière, une ombre douce ; la lentille est une pastille à peine grise, une goutte de verre à l'appui. */
   html.appli .fiche-page.fiche-appli .category-quicknav--verre {
-    background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .6);
-    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-      0 10px 30px rgba(20, 18, 31, .14), 0 1px 3px rgba(20, 18, 31, .08);
+    background: rgba(255, 255, 255, .4); border-color: transparent;
+    -webkit-backdrop-filter: blur(8px) saturate(180%) brightness(1.04); backdrop-filter: blur(8px) saturate(180%) brightness(1.04);
+    box-shadow: var(--verre-ios-filet), 0 8px 26px rgba(20, 18, 31, .12), 0 1px 3px rgba(20, 18, 31, .07);
   }
   html.appli .fiche-appli .category-quicknav--verre button { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
   html.appli .fiche-appli .category-quicknav--verre button.active, html.appli .fiche-appli .category-quicknav--verre button.quicknav-survol { color: var(--iris); }
   html.appli .fiche-appli .category-quicknav--glisse button.active:not(.quicknav-survol) { color: rgba(20, 18, 31, .86); }
   html.appli .fiche-appli .category-quicknav--verre .quicknav-lentille {
-    background: rgba(255, 255, 255, .42); border: 1px solid rgba(255, 255, 255, .75);
-    -webkit-backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08); backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08);
-    box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 4px 0 7px -2px rgba(255, 70, 170, .32), inset -4px 0 7px -2px rgba(40, 190, 255, .36),
-      inset 0 -3px 6px -2px rgba(255, 220, 90, .28), 0 2px 10px rgba(20, 18, 31, .12);
+    background: var(--verre-pastille); border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
   }
-  html.appli .fiche-appli .category-quicknav--appui .quicknav-lentille {
-    box-shadow: inset 0 1.5px 1px #fff, inset 6px 0 9px -2px rgba(255, 70, 170, .45), inset -6px 0 9px -2px rgba(40, 190, 255, .5),
-      inset 0 -4px 8px -2px rgba(255, 220, 90, .38), 0 8px 24px rgba(20, 18, 31, .2);
-  }
+  html.appli .fiche-appli .category-quicknav--appui .quicknav-lentille { background: var(--verre-goutte-fond); box-shadow: var(--verre-goutte-ombre); }
 }
 /* Le fondu d'arrivée de la page éteignait le flou : réglé pour toutes les pages dans client-ui.css (.page-fade, `backwards`). */
 @media (prefers-reduced-transparency: reduce) {

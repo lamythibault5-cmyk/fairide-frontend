@@ -116,6 +116,8 @@
      ~0,15 s — à 0,45 puis 0,2 s le fondateur la trouvait encore trop lente (2026-10-13). */
   --ressort-ui: cubic-bezier(.2, .8, .2, 1);
   --ressort-ui: linear(0, .158, .413, .626, .773, .868, .925, .958, .977, .987, 1);
+  /* Un ressort qui dépasse un peu (9 %) et revient : la goutte de la barre d'onglets, son repli en rond (iOS 26, 2026-11-11). */
+  --rebond-ui: linear(0, .06 2.4%, .24 5.4%, .55 10.4%, .86 16.4%, 1.04 22.4%, 1.09 26.6%, 1.08 31%, 1.03 37.4%, .99 45.6%, .985 52%, 1 66%, 1);
   /* Hauteur des onglets flottants du bas, marge comprise (12 + 6 + 60 + 6 + 2 de filets) : les éléments
      fixés au-dessus (toast, pilule du panier, fiche de la carte) et le pied de page s'y calent. Sous 900 px, 74 px depuis le
      2026-10-21 (la barre est collée au bas, voir .dashboard-sidebar dans la requête max-width: 900px). */
@@ -2965,61 +2967,106 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   /* La console admin a une dizaine de pôles : sa pilule défile de côté au lieu d'écraser les onglets. */
   .dashboard-nav.admin { justify-content: flex-start; overflow-x: auto; scrollbar-width: none; contain: layout; }
   .dashboard-nav.admin::-webkit-scrollbar { display: none; }
-  /* TRANSLUCIDE, COMME CHEZ REVOLUT (demande du 2026-10-13), DANS L'APPLICATION SEULEMENT : essayée aussi sur le site
-     le même jour, puis remise en blanc plein sur le site à la demande du fondateur. Le contenu défile sous la barre, flouté. Exception voulue à la
-     règle 2 de l'identité (pas de flou), limitée à cette barre. Coût : un flou sur une bande de 74px, ce que Safari
-     fait déjà pour ses propres barres ; si un Android modeste saccade, c'est ce bloc qu'il faut limiter à html.natif.
-     Repli plein si le système demande moins de transparence. */
-  /* VERRE LIQUIDE (fondateur, 2026-10-16 : version 2 de maquettes/barre-onglets-verre/barre-onglets-verre.html, sur le modèle de la barre de
-     WhatsApp). Remplace le blanc translucide du 2026-10-13, toujours dans l'app seulement (html.appli : l'app native ET le
-     site ajouté à l'écran d'accueil) ; le site garde sa barre blanche pleine. La barre est presque transparente : un voile
-     blanc léger, un flou court qui laisse deviner la forme de ce qui passe dessous, la saturation qui ravive les couleurs,
-     un reflet clair en haut et une ombre douce qui la décolle. L'onglet actif n'est plus une pastille iris pleine mais
-     une LENTILLE de verre aux bords irisés (rose d'un côté, bleu de l'autre) ; à l'appui elle grossit, et on peut la
-     promener du doigt (barreVerre.js). Sur Android, les bords courbent en plus ce qui passe dessous (réfraction).
+  /* LA BARRE D'IOS 26 (fondateur, 2026-11-11, réponses 1 A, 2 A, 3 A et 4 A de maquettes/barre-ios26/barre-ios26.html : « j'ai
+     adoré toutes tes recommandations »). Remplace le verre liquide du 2026-10-16 (voile blanc fixe, lentille aux bords rose, bleu
+     et jaune, deux flous, 74 px). Dans l'app seulement (html.appli : l'app native ET le site ajouté à l'écran d'accueil) ; le
+     site garde sa barre blanche pleine. Ce qui la rapproche de celle d'Apple :
+       - plus fine : 64 px (onglets de 54, libellés de 10 px), les proportions d'iOS 26, toujours posée sur le bord du bas ;
+       - la matière : presque transparente (blanc 16 %), UN seul flou (la lentille n'en a plus), un filet de lumière en dégradé
+         (clair en haut à gauche et en bas à droite, presque rien sur les côtés : un masque, pas un flou) et un bord intérieur qui
+         concentre la lumière, l'épaisseur du verre. Ni bords irisés ni halo blanc derrière les icônes : Apple n'en a pas ;
+       - sombre au-dessus d'un fond sombre (`dashboard-sidebar--sombre`, teinteBarre.js : cartes iris, bandeaux), claire ailleurs ;
+       - l'onglet choisi : une pastille à peine grise et l'icône iris ; à l'appui, une goutte de verre qui sort de la barre
+         (+18 % en largeur, +32 % en hauteur) et grossit l'icône dessous, puis rebondit en place (--rebond-ui) ;
+       - au défilement, repliée en un rond (plus bas) ; la recherche du client dans un rond à part (DashboardSidebar.jsx).
+     Plus de réfraction (le filtre SVG de Chromium) : l'iPhone et Android ne l'avaient déjà pas, la barre est la même partout.
      Exceptions voulues à la règle 2 (flou, reflets, ombre), limitées à cette barre et à l'app. */
-  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-    html.appli .dashboard-nav {
-      background: rgba(255, 255, 255, .22);
-      -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
-      border-color: rgba(255, 255, 255, .6);
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-        0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
-      touch-action: none;
-    }
-    html.appli .dashboard-nav.admin { touch-action: pan-x; }
-    html.appli .dashboard-nav-link { -webkit-user-drag: none; }
-    html.appli .nav-curseur {
-      background: rgba(255, 255, 255, .42);
-      -webkit-backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08); backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08);
-      border: 1px solid rgba(255, 255, 255, .75);
-      box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 4px 0 7px -2px rgba(255, 70, 170, .32), inset -4px 0 7px -2px rgba(40, 190, 255, .36),
-        inset 0 -3px 6px -2px rgba(255, 220, 90, .28), 0 2px 10px rgba(20, 18, 31, .12);
-      transition: transform .42s var(--ressort-ui), width .3s var(--ressort-ui), height .3s var(--ressort-ui), opacity .15s, scale .3s var(--ressort-ui), box-shadow .2s;
-    }
-    /* Réfraction (Chromium seulement : barreVerre.js pose la classe et les filtres). */
-    html.appli .dashboard-nav--refraction {
-      -webkit-backdrop-filter: var(--verre-barre) blur(2px) saturate(190%) brightness(1.06); backdrop-filter: var(--verre-barre) blur(2px) saturate(190%) brightness(1.06);
-    }
-    html.appli .dashboard-nav--refraction .nav-curseur {
-      -webkit-backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08); backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08);
-    }
-    /* Onglets sur le verre : encre et non plus gris, avec un halo blanc léger, sinon ils disparaissaient sur une photo. */
-    html.appli .dashboard-nav-link { color: rgba(20, 18, 31, .8); text-shadow: 0 0 8px rgba(255, 255, 255, .7); }
-    html.appli .dashboard-nav-link .dashboard-nav-icon { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
-    html.appli .dashboard-nav-link.active, html.appli .dashboard-nav-link--survol { color: var(--iris); }
-    /* Le libellé un peu plus petit, pour qu'il ne touche plus le bord de la lentille (fondateur, 2026-10-16). */
-    html.appli .dashboard-nav-label { font-size: calc(9px * var(--libelle-ajuste, 1)); letter-spacing: 0; }
-    /* L'appui : la lentille grossit et ses bords s'irisent davantage ; en glissant, elle suit le doigt sans retard. */
-    html.appli .dashboard-nav--appui .nav-curseur { scale: 1.12 1.18; box-shadow: inset 0 1.5px 1px #fff, inset 6px 0 9px -2px rgba(255, 70, 170, .45), inset -6px 0 9px -2px rgba(40, 190, 255, .5),
-      inset 0 -4px 8px -2px rgba(255, 220, 90, .38), 0 8px 24px rgba(20, 18, 31, .2); }
-    html.appli .dashboard-nav--glisse .nav-curseur { transition: transform .05s linear, scale .3s var(--ressort-ui), box-shadow .2s; }
-    html.appli .dashboard-nav--appui { transform: none; }
+  html.appli { --hauteur-onglets: 64px; --pastille-onglet: rgba(20, 18, 31, .075); }
+  /* Alignée à gauche, centrée par les marges sur un écran large : rien ne saute quand elle se replie en rond ou se rouvre (centrée
+     par justify-content, le rond partait au milieu avant de s'ouvrir, et le toucher qui la rouvrait tombait sur la page dessous). */
+  html.appli .dashboard-sidebar, html.appli .dashboard-sidebar--compacte {
+    justify-content: flex-start; gap: 8px;
+    padding-left: max(14px, calc((100% - var(--groupe-onglets, 460px)) / 2)); padding-right: max(14px, calc((100% - var(--groupe-onglets, 460px)) / 2));
   }
+  html.appli .dashboard-sidebar:has(> .dashboard-recherche) { --groupe-onglets: 532px; }
+  html.appli .dashboard-recherche { margin-left: auto; }
+  html.appli .dashboard-nav { padding: 5px; border: 0; touch-action: none; transition: transform .15s var(--ressort-ui), width .42s var(--rebond-ui), background-color .35s, box-shadow .35s; }
+  html.appli .dashboard-nav.admin { touch-action: pan-x; }
+  html.appli .dashboard-nav-link { height: 54px; gap: 1px; -webkit-user-drag: none; transition: height .14s var(--ressort-ui), color .3s, flex-grow .42s var(--rebond-ui), opacity .2s, padding .3s; }
+  html.appli .dashboard-nav-label { font-size: calc(10px * var(--libelle-ajuste, 1)); font-weight: 600; line-height: 13px; max-height: 13px; letter-spacing: .005em; }
+  /* La recherche du client (4 A) : un rond de 64 px à droite de la pilule, la même matière. Il reste là quand la barre se replie. */
+  html.appli .dashboard-recherche {
+    position: relative; flex: none; width: 64px; height: 64px; border-radius: 50%; display: grid; place-items: center;
+    color: rgba(20, 18, 31, .84); pointer-events: auto; text-decoration: none; -webkit-tap-highlight-color: transparent;
+    transition: scale .35s var(--rebond-ui), color .3s, background-color .35s, box-shadow .35s;
+  }
+  html.appli .dashboard-recherche .dashboard-nav-icon { position: relative; z-index: 1; }
+  html.appli .dashboard-recherche.active { color: var(--iris); }
+  @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    html.appli :is(.dashboard-nav, .dashboard-recherche) {
+      background: rgba(255, 255, 255, .16);
+      -webkit-backdrop-filter: blur(7px) saturate(180%) brightness(1.04); backdrop-filter: blur(7px) saturate(180%) brightness(1.04);
+      box-shadow: 0 8px 26px rgba(20, 18, 31, .13), 0 1px 3px rgba(20, 18, 31, .07);
+    }
+    /* Le filet de lumière : un dégradé coupé à un pixel du bord par un masque (rien à recalculer au défilement). */
+    html.appli :is(.dashboard-nav, .dashboard-recherche)::before {
+      content: ""; position: absolute; inset: 0; z-index: 2; border-radius: inherit; padding: 1px; pointer-events: none;
+      background: linear-gradient(155deg, rgba(255, 255, 255, .98) 0%, rgba(255, 255, 255, .4) 20%, rgba(255, 255, 255, .07) 48%, rgba(255, 255, 255, .28) 78%, rgba(255, 255, 255, .9) 100%);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+      transition: opacity .35s;
+    }
+    /* L'épaisseur : le bord concentre la lumière (l'effet « lentille » d'iOS, sans courber le fond). Sur le rond de la recherche
+       allumé, la même pastille que l'onglet choisi. */
+    html.appli :is(.dashboard-nav, .dashboard-recherche)::after {
+      content: ""; position: absolute; inset: 0; z-index: 0; border-radius: inherit; pointer-events: none;
+      box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .3), inset 0 1px 12px rgba(255, 255, 255, .42), inset 0 -7px 12px -9px rgba(255, 255, 255, .75);
+      transition: opacity .35s;
+    }
+    html.appli .dashboard-recherche.active::after { background: radial-gradient(circle closest-side, var(--pastille-onglet) calc(100% - 5px), transparent calc(100% - 4.5px)); }
+    html.appli .dashboard-nav-link { color: rgba(20, 18, 31, .84); text-shadow: none; }
+    html.appli .dashboard-nav-link .dashboard-nav-icon { filter: none; }
+    html.appli .dashboard-nav-link.active, html.appli .dashboard-nav-link--survol { color: var(--iris); }
+    /* L'onglet choisi : une pastille à peine grise, sans flou ni bord ; l'icône iris dit où l'on est. */
+    html.appli .nav-curseur {
+      background: var(--pastille-onglet); border: 0; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none;
+      transition: transform .5s var(--rebond-ui), width .38s var(--rebond-ui), height .38s var(--rebond-ui), opacity .15s, scale .45s var(--rebond-ui), background-color .2s, box-shadow .25s;
+    }
+    /* L'appui : la goutte sort de la barre (8 px au-dessus et au-dessous), plus claire, un filet blanc et une ombre ; l'icône
+       qu'elle couvre grossit. En glissant, elle suit le doigt sans retard (barreVerre.js). */
+    html.appli .dashboard-nav--appui .nav-curseur {
+      scale: 1.18 1.32; background: rgba(255, 255, 255, .34);
+      box-shadow: 0 12px 28px rgba(20, 18, 31, .24), 0 2px 6px rgba(20, 18, 31, .12), inset 0 0 0 1.2px rgba(255, 255, 255, .95),
+        inset 0 3px 8px rgba(255, 255, 255, .95), inset 0 -6px 12px -5px rgba(255, 255, 255, .85);
+    }
+    html.appli .dashboard-nav--glisse .nav-curseur { transition: transform .05s linear, width .38s var(--rebond-ui), height .38s var(--rebond-ui), scale .3s var(--rebond-ui), background-color .2s, box-shadow .2s; }
+    html.appli .dashboard-nav--appui { transform: none; }
+    html.appli .dashboard-nav--appui .dashboard-nav-link--survol .dashboard-nav-icon { scale: 1.14; }
+    /* SUR UN FOND SOMBRE (teinteBarre.js) : verre fumé, icônes blanches, filet et bord plus discrets. */
+    html.appli .dashboard-sidebar--sombre { --pastille-onglet: rgba(255, 255, 255, .16); --icone-creux: #26233A; }
+    html.appli .dashboard-sidebar--sombre :is(.dashboard-nav, .dashboard-recherche) { background-color: rgba(26, 24, 38, .36); box-shadow: 0 8px 26px rgba(0, 0, 0, .22), 0 1px 3px rgba(0, 0, 0, .12); }
+    html.appli .dashboard-sidebar--sombre :is(.dashboard-nav, .dashboard-recherche)::before { opacity: .5; }
+    html.appli .dashboard-sidebar--sombre :is(.dashboard-nav, .dashboard-recherche)::after { opacity: .35; }
+    html.appli .dashboard-sidebar--sombre :is(.dashboard-nav-link, .dashboard-recherche) { color: rgba(255, 255, 255, .9); }
+    html.appli .dashboard-sidebar--sombre :is(.dashboard-nav-link.active, .dashboard-nav-link--survol, .dashboard-recherche.active) { color: #fff; }
+  }
+  /* AU DÉFILEMENT, REPLIÉE EN UN ROND (3 A, comme Musique ou News sur iOS 26). En descendant, la pilule se resserre en un rond de
+     64 px à gauche : l'onglet où l'on est, sans libellé ; le rond de la recherche reste à droite. En remontant, ou en touchant le
+     rond, elle revient (DashboardSidebar.jsx). Seulement quand un onglet est allumé : sur une sous-page sans onglet, elle reste
+     entière (icônes seules, comme sur le site). La pilule du panier et la bande de suivi ne bougent pas : la barre garde sa hauteur
+     (html.barre-compacte n'est posée que sur le site). */
+  html.appli .dashboard-sidebar--compacte .dashboard-nav-link { height: 54px; }
+  html.appli .dashboard-sidebar--compacte .dashboard-nav:has(> .dashboard-nav-link.active) { width: 64px; cursor: pointer; }
+  html.appli .dashboard-sidebar--compacte .dashboard-nav:has(> .dashboard-nav-link.active) > .dashboard-nav-link { overflow: hidden; }
+  html.appli .dashboard-sidebar--compacte .dashboard-nav:has(> .dashboard-nav-link.active) > .dashboard-nav-link:not(.active) { flex-grow: 0; opacity: 0; padding: 0; pointer-events: none; }
+  html.appli .dashboard-sidebar--compacte .dashboard-nav:has(> .dashboard-nav-link.active) > .nav-curseur { opacity: 0 !important; }
   @media (prefers-reduced-transparency: reduce) {
-    html.appli .dashboard-nav { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    html.appli :is(.dashboard-nav, .dashboard-recherche) { background: #fff; box-shadow: inset 0 0 0 1px var(--line); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    html.appli :is(.dashboard-nav, .dashboard-recherche)::before, html.appli :is(.dashboard-nav, .dashboard-recherche)::after { display: none; }
     html.appli .nav-curseur { background: var(--iris); -webkit-backdrop-filter: none; backdrop-filter: none; }
+    html.appli :is(.dashboard-nav-link, .dashboard-recherche) { color: rgba(20, 18, 31, .84); }
     html.appli .dashboard-nav-link.active, html.appli .dashboard-nav-link--survol { color: #fff; --icone-creux: var(--iris); }
+    html.appli .dashboard-recherche.active { color: #fff; background: var(--iris); --icone-creux: var(--iris); }
   }
   /* L'ICÔNE SE REMPLIT (fondateur, 2026-10-25, A de maquettes/appui-iris/appui-iris.html), dans l'app : la version pleine
      (IconePleine, Icone.jsx), posée sur les traits, apparaît d'un fondu sur l'onglet où l'on est (plein = là où tu es, la règle
@@ -3029,7 +3076,7 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   html.appli .dashboard-nav-icon { display: grid; place-items: center; transition: transform .1s ease-out, scale .25s var(--ressort-ui); }
   html.appli .dashboard-nav-icon > svg { grid-area: 1 / 1; }
   html.appli .dashboard-nav-plein { opacity: 0; transition: opacity .16s; }
-  html.appli .dashboard-nav-link.active .dashboard-nav-plein, html.appli .dashboard-nav-link--survol .dashboard-nav-plein { opacity: 1; }
+  html.appli .dashboard-nav-link.active .dashboard-nav-plein, html.appli .dashboard-nav-link--survol .dashboard-nav-plein, html.appli .dashboard-recherche.active .dashboard-nav-plein { opacity: 1; }
   html.appli .dashboard-nav:has(.dashboard-nav-link--survol) .dashboard-nav-link.active:not(.dashboard-nav-link--survol) .dashboard-nav-plein { opacity: 0; }
   html.appli .dashboard-nav-link--survol .dashboard-nav-icon { scale: 1.08; }
   .dashboard-sidebar--compacte .dashboard-nav-label { opacity: 0; max-height: 0; transform: translateY(4px); }
@@ -4507,7 +4554,7 @@ html.appli .panier-pilule {
   background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
   -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-    inset 4px 0 10px -4px rgba(255, 70, 170, .22), inset -4px 0 10px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+    inset 0 0 0 .5px rgba(255, 255, 255, .5), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
   animation: panier-arrive-app .35s cubic-bezier(.2, .9, .25, 1.15) both;
 }
 html.appli .panier-pilule--rebond { animation: panier-gelee .5s cubic-bezier(.34, 1.45, .64, 1) both; }

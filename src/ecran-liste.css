@@ -123,27 +123,19 @@
 .lt-trait { flex: none; align-self: center; width: 1px; height: 44px; margin: 0 6px; background: var(--line); }
 
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  /* LA LENTILLE D'IOS 26 (2026-11-11, maquettes/barre-ios26, comme celle de la barre d'onglets) : une pastille à peine grise au
+     repos, sans flou, sans bord, sans réfraction ; à l'appui, une goutte de verre claire. Elle avait des bords rose, bleu et jaune. */
   html.appli .lt-lentille {
-    background: rgba(255, 255, 255, .42); border: 1px solid rgba(255, 255, 255, .75);
-    -webkit-backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08); backdrop-filter: blur(1.5px) saturate(230%) brightness(1.08);
-    box-shadow: inset 0 1.5px 1px rgba(255, 255, 255, .95), inset 4px 0 7px -2px rgba(255, 70, 170, .32), inset -4px 0 7px -2px rgba(40, 190, 255, .36),
-      inset 0 -3px 6px -2px rgba(255, 220, 90, .28), 0 2px 10px rgba(20, 18, 31, .12);
-  }
-  /* Réfraction (Chromium seulement : lentillePuces.js pose la classe et les filtres). */
-  html.appli .lt-puces--refraction .lt-lentille {
-    -webkit-backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08); backdrop-filter: var(--verre-lentille) saturate(230%) brightness(1.08);
+    background: var(--verre-pastille); border: 1px solid transparent; box-shadow: none;
+    -webkit-backdrop-filter: none; backdrop-filter: none;
   }
   /* Sans `touch-action: none` sur la cuisine choisie (2026-10-24, même cause que la bande des sections d'une fiche,
      ecran-fiche.css) : la bande défile de côté d'où que parte le doigt. */
   html.appli .lt-puce[data-cuisine].on, html.appli .lt-puce--survol { color: var(--iris); font-weight: 600; }
   html.appli .lt-puce[data-regime].on { color: #fff; }
-  /* L'appui : la lentille grossit et ses bords s'irisent davantage ; en glissant, elle suit le doigt sans retard. */
-  html.appli .lt-puces--appui .lt-lentille {
-    scale: 1.08 1.14; opacity: 1;
-    box-shadow: inset 0 1.5px 1px #fff, inset 6px 0 9px -2px rgba(255, 70, 170, .45), inset -6px 0 9px -2px rgba(40, 190, 255, .5),
-      inset 0 -4px 8px -2px rgba(255, 220, 90, .38), 0 8px 24px rgba(20, 18, 31, .2);
-  }
-  html.appli .lt-puces--glisse .lt-lentille { transition: transform .05s linear, width .3s var(--ressort-ui), scale .3s var(--ressort-ui), box-shadow .2s; }
+  /* L'appui : la goutte grossit, plus claire, filet blanc et ombre ; en glissant, elle suit le doigt sans retard. */
+  html.appli .lt-puces--appui .lt-lentille { scale: 1.08 1.14; opacity: 1; background: var(--verre-goutte-fond); box-shadow: var(--verre-goutte-ombre); }
+  html.appli .lt-puces--glisse .lt-lentille { transition: transform .05s linear, width .3s var(--ressort-ui), scale .3s var(--ressort-ui), box-shadow .2s, background-color .2s; }
   html.appli .lt-puces--appui .lt-puce:active { transform: none; }
 }
 /* LE CONTOUR DU DESSIN, DANS L'APP (fondateur, 2026-10-25, A de maquettes/appui-iris/appui-iris.html). La cuisine choisie garde
@@ -245,19 +237,27 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
       0 8px 24px rgba(20, 18, 31, .14), 0 1px 3px rgba(20, 18, 31, .08);
     text-shadow: 0 0 8px rgba(255, 255, 255, .75);
   }
-  /* La recherche et la fiche ont les bords irisés de la lentille ; la fiche est un peu plus blanche pour se lire sur le plan. */
-  html.appli .carte-page .carte-recherche, html.appli .carte-page .carte-fiche {
+  /* LA RECHERCHE ET LES PASTILLES DU PLAN EN VERRE D'IOS 26 (fondateur, 2026-11-11 : « la carte, peut-être que ça peut être
+     amélioré », après maquettes/barre-ios26). Le voile blanc à 30 %, les bords roses et bleus de la recherche et le halo blanc
+     autour du texte faisaient un verre brouillé sur le plan. Comme la recherche de Plans sur iOS 26 : plus dépoli pour que le
+     texte se lise (blanc 50 %, flou 10 px), un filet de lumière, une ombre douce, rien autour des lettres (verre.css, --verre-ios-*). */
+  html.appli .carte-page :is(.carte-recherche, .carte-pastilles .cuisine-chip, .carte-compte) {
+    background: var(--verre-ios-fond); border-color: transparent; color: var(--ink); text-shadow: none;
+    -webkit-backdrop-filter: var(--verre-ios-flou); backdrop-filter: var(--verre-ios-flou);
+    box-shadow: var(--verre-ios-filet), var(--verre-ios-ombre);
+  }
+  html.appli .carte-page .carte-fiche {
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-      inset 5px 0 8px -4px rgba(255, 70, 170, .22), inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
+      0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
   }
   /* Les pastilles défilent de côté : leur conteneur rogne ce qui dépasse, l'ombre comprise (un rectangle gris se
      dessinait autour de la rangée). De la place pour l'ombre, rendue aussitôt par une marge négative, et une ombre courte. */
   html.appli .carte-page .carte-pastilles { margin: -6px -12px -12px; padding: 6px 12px 12px; max-width: none; align-self: stretch; }
-  html.appli .carte-page .carte-pastilles .cuisine-chip { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 0 14px rgba(255, 255, 255, .25), 0 3px 8px rgba(20, 18, 31, .14); }
+  html.appli .carte-page .carte-pastilles .cuisine-chip { box-shadow: var(--verre-ios-filet), 0 3px 8px rgba(20, 18, 31, .12); }
   html.appli .carte-page .carte-recherche { height: 50px; padding: 0 16px; }
   html.appli .carte-page .carte-recherche input { color: var(--ink); }
   html.appli .carte-page .carte-fiche, html.appli .carte-page .carte-panneau { background: rgba(255, 255, 255, .55); }
-  html.appli .carte-page .carte-pastilles .cuisine-chip svg, html.appli .carte-page .carte-recherche svg { filter: drop-shadow(0 0 4px rgba(255, 255, 255, .6)); }
+  html.appli .carte-page .carte-pastilles .cuisine-chip svg, html.appli .carte-page .carte-recherche svg { filter: none; }
   html.appli .carte-page .carte-pastilles .cuisine-chip.active, html.appli .carte-page .carte-panneau .cuisine-chip.active {
     background: var(--iris); border-color: var(--iris); color: #fff; text-shadow: none;
   }
