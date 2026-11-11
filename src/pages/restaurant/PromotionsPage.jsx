@@ -19,20 +19,28 @@ import Icone from '../../components/Icone';
 import EtatVide from '../../components/EtatVide';
 import ErrorCard from '../../components/ErrorCard';
 import { eurosCourt, libellePromo } from '../../prixPlat';
+import ChoixPlatsPromo from '../../components/commerce/ChoixPlatsPromo';
 
 /* PROMOTIONS — BANDEAU IRIS ET FEUILLE BLANCHE, DANS L'APP COMME SUR LE SITE (fondateur, 2026-10-19, « Proposal » de la
  * section 4 de finitions-appli.html). Sur le bandeau, le titre et le compte (« 1 active · 1 en pause ») ; dans la feuille,
  * les promotions en rangées à filet (tuile d'icône, titre, « Sur un plat · active ») avec un interrupteur iris à la place
  * de « Activer / Désactiver ». Supprimer : un glissement vers la gauche dans l'app native, un petit × sur le site
- * (LigneGlissante.jsx), puis la même ConfirmDialog — avant, le bouton supprimait sans rien demander. Mêmes appels au
- * serveur, mêmes champs de création, mêmes contrôles qu'avant ; les styles sont dans ecran-commerce.css (bloc « Promotions,
- * Avis, Factures », Avis retirés le 22/10/2026). */
+ * (LigneGlissante.jsx), puis la même ConfirmDialog — avant, le bouton supprimait sans rien demander. Les champs de
+ * création ont changé le 2026-11-11 (pastilles et plats à cocher, voir TYPES plus bas) ; les styles sont dans
+ * ecran-commerce.css (blocs « Promotions, Avis, Factures », Avis retirés le 22/10/2026, et « Plats d'une promo »). */
 
+/* LA NOUVELLE PROMO EN TOUCHERS (2026-11-11, un commerce voulait « 1 + 1 » sur plusieurs plats). Avant : trois menus
+ * déroulants (type, plat, valeur), un seul plat par promo. Maintenant : le type en pastilles, « 1 + 1 » d'abord (c'est
+ * l'offre que les clients cherchent, docs/agents/voix.md), la valeur en pastilles (1 + 1, 2 + 1… ou −10 %…), puis les
+ * plats à cocher (ChoixPlatsPromo.jsx) et un seul bouton qui dit ce qu'il fait : « Mettre 1 + 1 sur 3 plats ». Une seule
+ * requête pour tous les plats (POST /restaurants/:id/promotions/plats, tout ou rien). */
 const TYPES = [
-  { value: 'percent', label: 'typePercent' },
-  { value: 'bogo', label: 'typeBuyN' },
-  { value: 'cart_threshold', label: 'typeCart' }
+  { value: 'bogo', label: 'typeBogoChip' },
+  { value: 'percent', label: 'typePercentChip' },
+  { value: 'cart_threshold', label: 'typeCartChip' }
 ];
+const POURCENTS = [10, 15, 20, 25, 30, 40, 50];
+const N_ACHETES = [1, 2, 3, 4, 5];
 // La tuile de chaque rangée : l'étiquette pour un pourcentage, le cadeau pour « N achetés = 1 offert », le sac pour une
 // offre sur toute la commande.
 const ICONES = { percent: 'etiquette', bogo: 'cadeau', cart_threshold: 'sac' };
@@ -168,8 +176,8 @@ export default function PromotionsPage() {
   const [promos, setPromos] = useState(null);
   const [formOpen, setFormOpen] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [type, setType] = useState('percent');
-  const [itemId, setItemId] = useState('');
+  const [type, setType] = useState('bogo');
+  const [plats, setPlats] = useState(() => new Set());
   const [percentValue, setPercentValue] = useState('15');
   const [bogoN, setBogoN] = useState('1');
   const [discountValue, setDiscountValue] = useState('');
@@ -200,14 +208,15 @@ export default function PromotionsPage() {
         if (!y || y <= x) { toast(t('promosPage.toastThreshold'), 'erreur'); setSaving(false); return; }
         await api(`/restaurants/${restoId}/promotions`, { method: 'POST', token, body: { discountValue: x, minCartTotal: y } });
       } else {
-        if (!itemId) { toast(t('promosPage.toastChooseDish'), 'erreur'); setSaving(false); return; }
-        const body = type === 'percent' ? { type: 'percent', value: Number(percentValue) } : { type: 'bogo', value: Number(bogoN) };
-        await api(`/restaurants/${restoId}/menu/${itemId}/promotions`, { method: 'POST', token, body });
+        if (!plats.size) { toast(t('promosPage.toastChooseDish'), 'erreur'); setSaving(false); return; }
+        const valeur = type === 'percent' ? Number(percentValue) : Number(bogoN);
+        await api(`/restaurants/${restoId}/promotions/plats`, { method: 'POST', token, body: { type, value: valeur, itemIds: [...plats] } });
       }
+      const n = type === 'cart_threshold' ? 1 : plats.size;
       setFormOpen(false);
-      setItemId(''); setDiscountValue(''); setMinCartTotal('');
+      setPlats(new Set()); setDiscountValue(''); setMinCartTotal('');
       loadPromos();
-      toast(t('promosPage.toastCreated'), 'succes');
+      toast(n > 1 ? t('promosPage.toastCreatedMany', { n }) : t('promosPage.toastCreated'), 'succes');
     } catch (e) {
       toast(e.message, 'erreur');
     } finally {
@@ -253,57 +262,48 @@ export default function PromotionsPage() {
   const titrePromo = (p) => { const l = libellePromo(p, t) || p.label; return p.itemName ? `${l} · ${p.itemName}` : l; };
 
   // Les champs d'une nouvelle promotion : dans la feuille sur le site, dans une feuille par-dessus dans l'app.
-  const champsPromo = (
+  // La promo active de chaque plat, pour le dire sous son nom dans la liste à cocher (elle sera remplacée).
+  const promoParPlat = Object.fromEntries((propres || []).filter((p) => p.active && p.menuItemId).map((p) => [p.menuItemId, p]));
+  const offre = type === 'percent' ? t('restoListUi.promoPercent', { value: percentValue }) : t('promosPage.nPlusOne', { n: bogoN });
+  const libelleCreer = saving ? '...' : type === 'cart_threshold' || plats.size === 0 ? t('promosPage.createPromo')
+    : t(plats.size > 1 ? 'promosPage.applyOn_other' : 'promosPage.applyOn_one', { promo: offre, n: plats.size });
+  // Une rangée de pastilles à choix unique (le type, puis la valeur) : un toucher, pas de menu déroulant.
+  const pastilles = (cle, titre, options, valeur, choisir) => (
     <>
-        <div className="field">
-          <label htmlFor={idsA11y + '-type'}>{t('promosPage.type')}</label>
-          <select id={idsA11y + '-type'} value={type} onChange={(e) => setType(e.target.value)}>
-            {TYPES.map((tp) => <option key={tp.value} value={tp.value}>{t(`promosPage.${tp.label}`)}</option>)}
-          </select>
-        </div>
-
-        {type !== 'cart_threshold' && (
-          <div className="field">
-            <label htmlFor={idsA11y + '-dish'}>{t('promosPage.dish')}</label>
-            <select id={idsA11y + '-dish'} value={itemId} onChange={(e) => setItemId(e.target.value)}>
-              <option value="">{t('promosPage.chooseDish')}</option>
-              {(restaurant.menu || []).map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
-            </select>
-          </div>
-        )}
-
-        {type === 'percent' && (
-          <div className="field">
-            <label htmlFor={idsA11y + '-discount'}>{t('promosPage.discount')}</label>
-            <select id={idsA11y + '-discount'} value={percentValue} onChange={(e) => setPercentValue(e.target.value)}>
-              {[10, 15, 20, 25, 30, 40, 50].map((v) => <option key={v} value={v}>{v}%</option>)}
-            </select>
-          </div>
-        )}
-
-        {type === 'bogo' && (
-          <div className="field">
-            <label htmlFor={idsA11y + '-buyn'} className="etiquette-dessus">{t('promosPage.buyN')}</label>
-            <select id={idsA11y + '-buyn'} value={bogoN} onChange={(e) => setBogoN(e.target.value)}>
-              {[1, 2, 3, 4, 5].map((v) => <option key={v} value={v}>{t('promosPage.bogoOption', { n: v })}</option>)}
-            </select>
-          </div>
-        )}
-
-        {type === 'cart_threshold' && (
-          <div className="row" style={{ gap: 8 }}>
-            <div className="field" style={{ flex: 1 }}>
-              <label htmlFor={idsA11y + '-amountoff'}>{t('promosPage.amountOff')}</label>
-              <input id={idsA11y + '-amountoff'} inputMode="decimal" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
-            </div>
-            <div className="field" style={{ flex: 1 }}>
-              <label htmlFor={idsA11y + '-threshold'}>{t('promosPage.threshold')}</label>
-              <input id={idsA11y + '-threshold'} inputMode="decimal" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
-            </div>
-          </div>
-        )}
-
+      <p className="ec-feuille-titre" id={idsA11y + cle}>{titre}</p>
+      <div className="ec-montants ec-montants--choix" role="radiogroup" aria-labelledby={idsA11y + cle}>
+        {options.map((o) => (
+          <button key={o.value} type="button" role="radio" aria-checked={String(o.value) === String(valeur)}
+            className={`ec-puce${String(o.value) === String(valeur) ? ' on' : ''}`} onClick={() => { vibrer('choix'); choisir(String(o.value)); }}>
+            {o.label}
+          </button>
+        ))}
+      </div>
     </>
+  );
+  const champsPromo = (
+    <div className="ec-nouvelle-promo">
+      {pastilles('-type', t('promosPage.whichPromo'), TYPES.map((tp) => ({ value: tp.value, label: t(`promosPage.${tp.label}`) })), type, setType)}
+      {type === 'bogo' && pastilles('-n', t('promosPage.howManyBought'), N_ACHETES.map((n) => ({ value: n, label: t('promosPage.nPlusOne', { n }) })), bogoN, setBogoN)}
+      {type === 'percent' && pastilles('-pct', t('promosPage.discount'), POURCENTS.map((v) => ({ value: v, label: t('restoListUi.promoPercent', { value: v }) })), percentValue, setPercentValue)}
+
+      {type !== 'cart_threshold' && (
+        <ChoixPlatsPromo menu={restaurant.menu} choisis={plats} onChange={setPlats} promoParPlat={promoParPlat} />
+      )}
+
+      {type === 'cart_threshold' && (
+        <div className="row" style={{ gap: 8, marginTop: 14 }}>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-amountoff'}>{t('promosPage.amountOff')}</label>
+            <input id={idsA11y + '-amountoff'} inputMode="decimal" value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} placeholder="5" />
+          </div>
+          <div className="field" style={{ flex: 1 }}>
+            <label htmlFor={idsA11y + '-threshold'}>{t('promosPage.threshold')}</label>
+            <input id={idsA11y + '-threshold'} inputMode="decimal" value={minCartTotal} onChange={(e) => setMinCartTotal(e.target.value)} placeholder="30" />
+          </div>
+        </div>
+      )}
+    </div>
   );
 
   return (
@@ -335,7 +335,7 @@ export default function PromotionsPage() {
       ) : APPLI ? (
         // Application : le formulaire dans une feuille, « Créer » épinglé en bas (il était au bout d'une carte, sous la page).
         <SousEcran titre={t('promosPage.newPromo')} onFermer={() => setFormOpen(false)} pied={
-          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
+          <button type="button" className="btn-gold" style={{ width: '100%', minHeight: 48 }} disabled={saving} onClick={createPromo}>{libelleCreer}</button>
         }>
           {champsPromo}
         </SousEcran>
@@ -343,8 +343,11 @@ export default function PromotionsPage() {
         <div className="ec-formulaire">
           <p className="ec-feuille-titre">{t('promosPage.newPromo')}</p>
           {champsPromo}
-          <button type="button" className="ec-bouton ec-bouton--lime" disabled={saving} onClick={createPromo}>{saving ? '...' : t('promosPage.createPromo')}</button>
-          <button type="button" className="ec-bouton ec-bouton--texte" onClick={() => setFormOpen(false)}>{t('promosPage.cancel')}</button>
+          {/* Collé au bas de l'écran : avec une longue carte à cocher, le bouton restait loin sous le dernier plat (règle 5). */}
+          <div className="ec-pied-collant">
+            <button type="button" className="ec-bouton ec-bouton--lime" disabled={saving} onClick={createPromo}>{libelleCreer}</button>
+            <button type="button" className="ec-bouton ec-bouton--texte" onClick={() => setFormOpen(false)}>{t('promosPage.cancel')}</button>
+          </div>
         </div>
       )}
       <p className="ec-aide" style={{ marginTop: 10 }}>{t('promosPage.intro')}</p>
