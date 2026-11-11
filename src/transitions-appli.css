@@ -24,6 +24,15 @@ html.vt-recule::view-transition-new(root) { animation: vt-revient-dessous .35s c
 html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) .dashboard-sidebar { view-transition-name: onglets; }
 html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) .panier-pilule { view-transition-name: panier; }
 ::view-transition-group(onglets), ::view-transition-group(panier) { animation-duration: .25s; }
+/* PENDANT LA TRANSITION, LA BARRE EST DÉPOLIE (2026-11-11). Capturée à part, son verre n'a plus rien derrière lui à flouter : la
+   barre d'iOS 26 (blanc 16 %) apparaissait complètement transparente le temps du glissement. Un verre presque opaque, le temps
+   des deux captures ; le vrai verre revient à la fin (puis `verre-refait`, plus bas, le recrée). */
+/* Sans fondu (`transition: none`) : la capture est prise tout de suite après la pose de la classe. Au retour, la barre repasse
+   au verre en fondu, avec sa propre transition. */
+html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) :is(.dashboard-nav, .dashboard-recherche) { background-color: rgba(250, 250, 252, .9); transition: none; }
+html.vt:is(.vt-avance, .vt-recule, .vt-photo, .vt-feuille) .dashboard-sidebar--sombre :is(.dashboard-nav, .dashboard-recherche) { background-color: rgba(38, 35, 54, .9); }
+/* Le flou de tout le verre recréé après une transition (refaireVerre, transitionPhoto.js) : coupé une image, puis rendu. */
+html.verre-refait * { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }
 /* LE VERRE SOUS L'HEURE N'EST PAS DE LA TRANSITION (fondateur, 2026-10-25 : « une petite barre iris plus vive, en haut, qui
    cache “Livrer à” et la maison » au retour d'une fiche). Il était capturé à part, comme les onglets : le verre de la fiche
    défilée restait en place et se fondait pendant 250 ms par-dessus le bandeau de la liste, où il n'a rien à faire (verre.css,

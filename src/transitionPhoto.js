@@ -98,6 +98,19 @@ const idFiche = (chemin) => { const m = String(chemin || '').match(FICHE); retur
 
 let dernierToucher = -Infinity;
 let enCours = null;      // la transition qui joue : une seule à la fois
+
+/* LE VERRE SE REFAIT APRÈS CHAQUE TRANSITION (fondateur, 2026-11-11, iPhone : « Recherche, puis une catégorie : de retour sur
+ * la liste, la barre n'est plus du verre, elle est complètement transparente »). Après une View Transition, WebKit ne refait
+ * pas toujours le calque d'un backdrop-filter : le flou ne revient pas, le verre presque transparent laisse tout voir. On le
+ * force : `verre-refait` sur <html> coupe TOUS les flous de la page le temps d'une image (transitions-appli.css), puis les
+ * rend ; le navigateur les recrée. Toute l'app est couverte (barre d'onglets, rond de la recherche, ronds de la fiche, plan,
+ * bandes, messages), pas seulement la barre. Une fois par transition : un calcul de styles, pas à chaque image. */
+function refaireVerre() {
+  const racine = html();
+  racine.classList.add('verre-refait');
+  void racine.offsetHeight;
+  setTimeout(() => racine.classList.remove('verre-refait'), 34);
+}
 let photoAller = null;   // { img, id } : la carte touchée qui mène à une fiche
 let photoRetour = null;  // { id } : la fiche qu'on quitte, dont la couverture rentre dans sa carte
 
@@ -150,6 +163,7 @@ function lancer(sens, faire) {
     // Le verre sous l'heure se règle sur le nouvel écran pendant qu'il est encore caché (verreBarreEtat.js, transitions-appli.css).
     window.dispatchEvent(new Event('fairide:transition-finie'));
     racine.classList.remove(genre);
+    refaireVerre();
     denommer(arrivee);
     document.querySelectorAll('.sq-photo-img, img.fiche-couverture').forEach(denommer);
     if (enCours === t) enCours = null;
@@ -175,7 +189,7 @@ export function ouvrirAvecPhoto(ouvrir) {
     nommer(arrivee, NOM_PLAT);
   });
   enCours = t;
-  t.finished.finally(() => { racine.classList.remove('vt-feuille'); denommer(arrivee); if (enCours === t) enCours = null; });
+  t.finished.finally(() => { racine.classList.remove('vt-feuille'); denommer(arrivee); refaireVerre(); if (enCours === t) enCours = null; });
 }
 
 /* LE BOUT DE LA PAGE (point 4) : le rebond n'est permis qu'une fois passée la moitié de la page. Une classe posée au
@@ -247,6 +261,9 @@ export function installerTransitionsEcrans(historique) {
       setTimeout(() => { photoAller = null; }, TOUCHER_RECENT_MS);
     }
   }, true);
+
+  // Au retour de l'arrière-plan aussi : iOS peut avoir lâché les calques du verre pendant que l'app dormait.
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') refaireVerre(); });
 
   if (!vt) return;
   html().classList.add('vt');
