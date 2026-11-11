@@ -5768,12 +5768,18 @@ html.clavier-ouvert .plat-pied { padding-bottom: 12px; }
   }
 }
 
-/* Recherche dans une carte : le bouton qui valide (iris, une coche) et la ligne du nombre de plats trouvés. */
-.recherche-valider {
-  flex-shrink: 0; width: 34px; height: 34px; min-height: 0; padding: 0; border-radius: 50%; border: 0; cursor: pointer;
-  background: var(--iris); color: #fff; display: grid; place-items: center; margin-left: 4px;
+/* Recherche dans une carte (version A de maquettes/recherche-carte, 2026-11-11). La coche « Voir les résultats » est partie :
+   elle refaisait la touche « Rechercher » du clavier et débordait du champ. Recherche ouverte, la croix ronde du commerce se
+   retire (le cœur n'est plus rendu, RestaurantMenu.jsx) : une seule sortie, « Annuler », une pilule de la famille des ronds. */
+.flux-entete--flottant:has(.fiche-recherche) > .flux-bouton { display: none; }
+.fiche-page .flux-entete--flottant .flux-bouton.fiche-recherche-annuler {
+  width: auto; padding: 0 16px; border-radius: 22px; font-size: 16px; font-weight: 600; line-height: 1; white-space: nowrap;
 }
-.recherche-valider:active { transform: scale(.92); }
+/* La croix du champ : un petit rond gris (comme sur iPhone) dans une cible de 34px. Elle efface seulement. */
+.recherche-effacer--rond, .recherche-effacer--rond:hover { background: none; }
+.recherche-effacer--rond > span { width: 20px; height: 20px; border-radius: 50%; background: var(--ink-soft); color: #fff; display: grid; place-items: center; }
+.fiche-carte-plats--recherche { min-height: 100vh; min-height: 100dvh; }
+/* La ligne du nombre de plats trouvés. */
 .fiche-recherche-resultat { margin: -4px 0 10px; font-size: 13px; font-weight: 500; color: var(--iris); }
 
 /* LA BARRE DU PANIER DESCEND AVEC LES ONGLETS (fondateur, 2026-10-17). Sous 900 px seulement, là où la barre d'onglets se

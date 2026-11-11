@@ -8461,7 +8461,7 @@ export default {
       etaPickupValue: '~{min} min',
       etaPickupLabel: 'Ready in',
       searchDish: 'Search a dish',
-      searchSubmit: 'See results',
+      cancelSearch: 'Cancel',
       searchCountOne: '1 dish found',
       searchCount: '{n} dishes found',
       noDishMatch: 'No dish matches "{q}".',

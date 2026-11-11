@@ -8531,7 +8531,7 @@ export default {
       etaPickupValue: '~{min} min',
       etaPickupLabel: 'Prête en',
       searchDish: 'Rechercher un plat',
-      searchSubmit: 'Voir les résultats',
+      cancelSearch: 'Annuler',
       searchCountOne: '1 plat trouvé',
       searchCount: '{n} plats trouvés',
       noDishMatch: 'Aucun plat ne correspond à « {q} ».',
