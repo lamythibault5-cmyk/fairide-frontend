@@ -703,11 +703,11 @@ html.appli .confirm-feuille .modal-pied > .btn-ghost { width: 100%; color: var(-
   animation: panier-arrive-app .35s cubic-bezier(.2, .9, .25, 1.15) both;
   transition: bottom .14s var(--ressort-ui), background .3s, opacity .4s, transform .4s;
 }
+/* Le verre de la barre d'onglets (2026-11-11, verre.css --verre-26-*, filet de lumière en ::before), dosage « texte ». */
 html.appli .suivi-commande {
-  background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .6); text-shadow: 0 0 8px rgba(255, 255, 255, .75);
-  -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-    inset 0 0 0 .5px rgba(255, 255, 255, .5), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+  background: var(--verre-26-fond-texte); border-color: transparent; text-shadow: none;
+  -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
+  box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre);
 }
 .suivi-commande:active { transform: scale(.98); }
 .suivi-commande-rond { position: relative; flex: none; width: 46px; height: 46px; }

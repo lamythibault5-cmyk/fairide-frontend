@@ -165,12 +165,15 @@
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   /* iOS 26 (2026-11-11, maquettes/barre-ios26) : la matière de la barre d'onglets, plus dépolie pour porter des mots (blanc 40 %),
      un filet de lumière, une ombre douce ; la lentille est une pastille à peine grise, une goutte de verre à l'appui. */
+  /* Puis (2026-11-11, l'audit du verre après « la fiche de la carte n'est pas aussi sexy ») exactement la matière des autres
+     barres qui portent des mots (verre.css, --verre-26-* « texte ») avec le filet de lumière en dégradé (::before, verre.css), et
+     plus de halo blanc autour des noms de section. */
   html.appli .fiche-page.fiche-appli .category-quicknav--verre {
-    background: rgba(255, 255, 255, .4); border-color: transparent;
-    -webkit-backdrop-filter: blur(8px) saturate(180%) brightness(1.04); backdrop-filter: blur(8px) saturate(180%) brightness(1.04);
-    box-shadow: var(--verre-ios-filet), 0 8px 26px rgba(20, 18, 31, .12), 0 1px 3px rgba(20, 18, 31, .07);
+    background: var(--verre-26-fond-texte); border-color: transparent;
+    -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
+    box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre);
   }
-  html.appli .fiche-appli .category-quicknav--verre button { color: rgba(20, 18, 31, .86); text-shadow: 0 0 8px rgba(255, 255, 255, .75); }
+  html.appli .fiche-appli .category-quicknav--verre button { color: rgba(20, 18, 31, .86); text-shadow: none; }
   html.appli .fiche-appli .category-quicknav--verre button.active, html.appli .fiche-appli .category-quicknav--verre button.quicknav-survol { color: var(--iris); }
   html.appli .fiche-appli .category-quicknav--glisse button.active:not(.quicknav-survol) { color: rgba(20, 18, 31, .86); }
   html.appli .fiche-appli .category-quicknav--verre .quicknav-lentille {

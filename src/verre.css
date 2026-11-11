@@ -37,11 +37,7 @@ html.appli {
   --verre-clair-fond-appui: linear-gradient(rgba(59, 47, 181, .13), rgba(59, 47, 181, .13)), rgba(255, 255, 255, .55);
   --verre-clair-flou: blur(10px) saturate(160%);
   --verre-clair-ombre: inset 0 0 0 .5px rgba(59, 47, 181, .28);
-  /* Ce qui flotte sur une photo ou un plan : plus blanc pour que l'icône se lise, même filet, toujours sans ombre portée. */
-  --verre-flottant-fond: rgba(255, 255, 255, .72);
-  --verre-flottant-fond-appui: linear-gradient(rgba(59, 47, 181, .08), rgba(59, 47, 181, .08)), rgba(255, 255, 255, .72);
-  --verre-flottant-flou: blur(14px) saturate(170%);
-  --verre-flottant-ombre: inset 0 0 0 .5px rgba(59, 47, 181, .22);
+  /* Ce qui flotte sur un plan avait son verre « flottant » (blanc 72 %, filet iris) : remplacé le 2026-11-11 par --verre-26-*. */
   /* Le verre clair d'avant le verre fondu (fondateur, 2026-10-27 : « je veux certaines anciennes versions ») : blanc 82 %, ombre
      portée, filet iris, bords roses et bleus. Il reste sur les ronds de la fiche (croix, recherche, cœur) et sur tous les retours. */
   --verre-brillant-fond: linear-gradient(rgba(59, 47, 181, .10), rgba(59, 47, 181, .10)), rgba(255, 255, 255, .82);
@@ -57,19 +53,26 @@ html.appli {
   --verre-iris-flou: blur(8px) saturate(170%);
   --verre-iris-ombre: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 0 -1px 1px rgba(255, 255, 255, .18),
     0 4px 12px rgba(59, 47, 181, .3);
-  /* LE VERRE D'IOS 26 POUR CE QUI FLOTTE ET PORTE DU TEXTE (2026-11-11, maquettes/barre-ios26) : la recherche et les pastilles du
-     plan. Plus dépoli que la barre d'onglets (le texte doit se lire sur un plan), un filet de lumière clair en haut, plus doux en
-     bas, une ombre douce ; ni bords irisés ni halo blanc autour du texte. */
-  --verre-ios-fond: rgba(255, 255, 255, .5);
-  --verre-ios-flou: blur(10px) saturate(180%) brightness(1.04);
-  --verre-ios-filet: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .45), inset 0 0 0 .5px rgba(255, 255, 255, .55), inset 0 0 12px rgba(255, 255, 255, .3);
-  --verre-ios-ombre: 0 6px 20px rgba(20, 18, 31, .12), 0 1px 3px rgba(20, 18, 31, .07);
   /* La lentille d'iOS 26 (barre d'onglets, bande des cuisines, bande des sections) : une pastille à peine grise au repos, une
      goutte de verre claire à l'appui. */
   --verre-pastille: rgba(20, 18, 31, .075);
   --verre-goutte-fond: rgba(255, 255, 255, .34);
   --verre-goutte-ombre: 0 12px 28px rgba(20, 18, 31, .24), 0 2px 6px rgba(20, 18, 31, .12), inset 0 0 0 1.2px rgba(255, 255, 255, .95),
     inset 0 3px 8px rgba(255, 255, 255, .95), inset 0 -6px 12px -5px rgba(255, 255, 255, .85);
+  /* LA MATIÈRE DE LA BARRE D'ONGLETS POUR TOUT CE QUI FLOTTE (fondateur, 2026-11-11 : « la fiche d'un commerce sur la carte n'est
+     pas aussi transparente et sexy que notre nouveau verre »). Les mêmes valeurs que .dashboard-nav (styles.css) : presque
+     transparente, un seul flou, l'épaisseur (le bord intérieur qui concentre la lumière), une ombre douce, et le filet de lumière
+     en dégradé masqué (::before, plus bas). Deux dosages : clair (16 %, la barre) pour ce qui ne porte que des icônes, et
+     « texte » (30 %, flou 10 px) pour ce qui porte des mots, lisibles même au-dessus d'une carte iris sans la teinte sombre
+     calculée de la barre (teinteBarre.js). Ni bords irisés ni halo blanc autour des lettres. */
+  --verre-26-fond: rgba(255, 255, 255, .16);
+  --verre-26-fond-texte: rgba(255, 255, 255, .3);
+  --verre-26-flou: blur(7px) saturate(180%) brightness(1.04);
+  --verre-26-flou-texte: blur(10px) saturate(180%) brightness(1.04);
+  --verre-26-epaisseur: inset 0 0 0 .5px rgba(255, 255, 255, .3), inset 0 1px 12px rgba(255, 255, 255, .42), inset 0 -7px 12px -9px rgba(255, 255, 255, .75);
+  --verre-26-ombre: 0 8px 26px rgba(20, 18, 31, .13), 0 1px 3px rgba(20, 18, 31, .07);
+  --verre-26-ombre-appui: 0 12px 30px rgba(20, 18, 31, .17), 0 1px 3px rgba(20, 18, 31, .08);
+  --verre-26-filet: linear-gradient(155deg, rgba(255, 255, 255, .98) 0%, rgba(255, 255, 255, .4) 20%, rgba(255, 255, 255, .07) 48%, rgba(255, 255, 255, .28) 78%, rgba(255, 255, 255, .9) 100%);
 }
 
 /* ---------- 1. Sous la barre d'état ---------- */
@@ -194,23 +197,19 @@ html.appli body .fiche-appli .fiche-infos-lien {
   -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
 }
 
-/* ---------- La barre « Aller au paiement » (déjà en verre) : la pointe et le filet iris, pour qu'elle se voie sur du blanc ---------- */
-@media (max-width: 900px) {
-  html.appli body .ec-page .cart-bar.ec-barre {
-    background: linear-gradient(rgba(59, 47, 181, .06), rgba(59, 47, 181, .06)), rgba(255, 255, 255, .5);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .2), inset 0 0 18px rgba(255, 255, 255, .25),
-      inset 0 -1px 0 rgba(255, 255, 255, .5), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
-  }
-}
+/* ---------- La barre « Aller au paiement » : le verre de la barre d'onglets (2026-11-11, plus bas) ----------
+   Elle avait la pointe et le filet iris du verre d'avant (2026-10-23) pour se voir sur du blanc : l'ombre douce et le filet de
+   lumière suffisent, comme pour la barre d'onglets sur une page blanche. Sa matière est dans ecran-commande.css. */
 
-/* ---------- La carte : recentrer et zoom ---------- */
+/* ---------- La carte : recentrer et zoom, dans le verre de la barre d'onglets (2026-11-11) ---------- */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html.appli body .carte-page .carte-reinit,
   html.appli body .carte-page .leaflet-control-zoom.leaflet-bar {
-    border-color: transparent; color: var(--iris); text-shadow: none; background: var(--verre-flottant-fond); box-shadow: var(--verre-flottant-ombre);
-    -webkit-backdrop-filter: var(--verre-flottant-flou); backdrop-filter: var(--verre-flottant-flou);
+    border-color: transparent; color: var(--iris); text-shadow: none; background: var(--verre-26-fond-texte);
+    box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre);
+    -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
   }
-  html.appli body .carte-page .leaflet-control-zoom.leaflet-bar a { color: var(--iris); border-bottom-color: rgba(59, 47, 181, .15); }
+  html.appli body .carte-page .leaflet-control-zoom.leaflet-bar a { color: var(--iris); border-bottom-color: rgba(255, 255, 255, .45); }
 }
 
 /* ---------- Les messages (toasts) : verre iris ; une erreur reste rouge plein ---------- */
@@ -222,16 +221,45 @@ html.appli body .toast:not(.toast-erreur) {
 }
 
 /* ---------- La suite du verre fondu (fondateur, 2026-10-26, maquettes/verre-fondu/autres-endroits.html) ----------
-   Passent en verre fondu : les messages (plus haut) et ce qui flotte sous le haut du plan. Gardent leur verre, exprès : la
-   barre d'onglets et sa lentille, la lentille de la barre des cuisines, la barre de « Aller au paiement ».
-   Revenus à leur verre d'avant (fondateur, 2026-10-27) : la bande des sections d'une fiche et sa lentille (ecran-fiche.css),
-   la recherche et les pastilles en haut du plan (Offres, Ouvert, Cuisine : ecran-liste.css), les ronds de la fiche et tous
-   les retours (plus bas). */
+   Passés en verre fondu : les messages (plus haut). Ce qui flotte sur le plan (la fiche d'un commerce, le compte, le panneau des
+   cuisines, les résultats) l'avait aussi, blanc à 72 % à filet iris : depuis le 2026-11-11, le verre de la barre d'onglets
+   (ecran-liste.css). Revenus à leur verre d'avant (fondateur, 2026-10-27) : les ronds de la fiche et tous les retours (plus bas). */
+
+/* ---------- LE VERRE D'IOS 26 SUR TOUT CE QUI FLOTTE (fondateur, 2026-11-11) ----------
+   Après la barre d'onglets (maquettes/barre-ios26), le fondateur a trouvé l'ancien verre ailleurs : « quand j'ouvre la carte et que
+   je touche un restaurant, la fiche n'est pas aussi transparente et sexy que notre nouveau verre ». Audit de tout ce qui flotte
+   au-dessus d'un contenu dans l'app ; passent dans la matière de la barre (--verre-26-*, plus haut) : sur le plan, la fiche d'un
+   commerce et sa croix, la recherche, les pastilles, le compte, le panneau des cuisines, les résultats, recentrer et zoom
+   (ecran-liste.css) ; la bande « commande en cours » (client-ui.css), la barre « Aller au
+   paiement » (ecran-commande.css), la barre « Accepter » du commerce (ecran-commerce.css), la bande des sections d'une fiche
+   (ecran-fiche.css) et le bandeau de mise à jour (miseAJour.css). Restent tels quels, exprès : les contrôles posés DANS la page
+   (verre fondu, 2026-10-26 : rien derrière à flouter), les ronds sur la photo d'une fiche et les retours (leur verre d'avant,
+   voulu le 2026-10-27, blanc à 82 % pour se lire sur une photo sombre), les messages iris et le site.
+   La barre du panier n'en est pas : elle est lime partout depuis le 2026-10-25 (le prochain geste, styles.css).
+   Le filet de lumière : le même dégradé que la barre, coupé à un pixel du bord par un masque (rien à recalculer au défilement).
+   Le panneau des cuisines défile : un ::before absolu y défilerait avec son contenu, il garde le filet en ombre intérieure. */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  html.appli body .carte-page :is(.carte-compte, .carte-panneau, .carte-resultat, .carte-fiche) {
-    background: var(--verre-flottant-fond); border-color: transparent; box-shadow: var(--verre-flottant-ombre); text-shadow: none;
-    -webkit-backdrop-filter: var(--verre-flottant-flou); backdrop-filter: var(--verre-flottant-flou);
+  html.appli body :is(.carte-page .carte-fiche, .carte-page .carte-recherche, .carte-page .carte-compte, .carte-page .carte-resultat,
+    .carte-page .carte-pastilles .cuisine-chip:not(.active), .suivi-commande, .ec-barre-accepter, .maj-verre,
+    .fiche-appli .category-quicknav--verre)::before {
+    content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+    background: var(--verre-26-filet);
+    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+    mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
   }
+  @media (max-width: 900px) {
+    html.appli body .ec-page .cart-bar.ec-barre::before {
+      content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
+      background: var(--verre-26-filet);
+      -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
+      mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); mask-composite: exclude;
+    }
+  }
+}
+@media (prefers-reduced-transparency: reduce) {
+  html.appli body :is(.carte-page .carte-fiche, .carte-page .carte-recherche, .carte-page .carte-compte, .carte-page .carte-resultat,
+    .carte-page .carte-pastilles .cuisine-chip, .suivi-commande, .ec-barre-accepter, .maj-verre,
+    .fiche-appli .category-quicknav--verre, .ec-page .cart-bar.ec-barre)::before { display: none; }
 }
 
 /* « Réduire la transparence » (réglages d'accessibilité de l'iPhone) : des aplats, sans flou. */
@@ -297,15 +325,15 @@ html.appli body .sous-ecran-tete .flux-bouton {
 }
 
 /* Le filet s'allume au contact (le « miroitement » d'iOS 26). Les barres (sans bords irisés depuis le 2026-11-11) : */
-html.appli body :is(.fiche-appli .category-quicknav--verre, .panier-pilule).verre-lumiere {
-  box-shadow: inset 0 1px 0 #fff, inset 0 -1px 1px rgba(255, 255, 255, .6), inset 0 0 0 .5px rgba(255, 255, 255, .6), inset 0 0 22px rgba(255, 255, 255, .35),
-    0 14px 34px rgba(20, 18, 31, .2), 0 1px 3px rgba(20, 18, 31, .08);
+/* Depuis le 2026-11-11 dans la matière de la barre d'onglets : au contact, comme elle, l'ombre s'allonge un peu. */
+html.appli body :is(.fiche-appli .category-quicknav--verre, .panier-pilule, .carte-page .carte-pastilles .cuisine-chip:not(.active)).verre-lumiere {
+  box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre-appui);
 }
 /* La barre d'onglets (iOS 26) : son filet de lumière est un masque (styles.css) ; au contact, l'ombre s'allonge un peu. */
 html.appli body .dashboard-nav.verre-lumiere { box-shadow: 0 12px 30px rgba(20, 18, 31, .17), 0 1px 3px rgba(20, 18, 31, .08); }
 html.appli body .dashboard-sidebar--sombre .dashboard-nav.verre-lumiere { box-shadow: 0 12px 30px rgba(0, 0, 0, .26), 0 1px 3px rgba(0, 0, 0, .12); }
-/* … les pastilles du plan, les ronds de la fiche et les retours sur du blanc (leur verre d'avant, 2026-10-27) : */
-html.appli body :is(.carte-page .carte-pastilles .cuisine-chip, .fiche-appli .flux-entete--flottant .flux-bouton, .fiche-appli .favorite-heart--rond,
+/* … les ronds de la fiche et les retours sur du blanc (leur verre d'avant, 2026-10-27) : */
+html.appli body :is(.fiche-appli .flux-entete--flottant .flux-bouton, .fiche-appli .favorite-heart--rond,
   .dashboard-retour, .retour-compte, .cs-retour, .bv-rond, .sous-ecran-tete .flux-bouton).verre-lumiere {
   box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1.5px rgba(59, 47, 181, .3), inset 0 -1px 0 rgba(255, 255, 255, .7), inset 0 0 14px rgba(255, 255, 255, .4), 0 8px 22px rgba(20, 18, 31, .2);
 }
@@ -315,7 +343,7 @@ html.appli body :is(.fiche-appli .fiche-modes, .fiche-appli .fiche-infos-lien, .
   .recherche-pastille, .resa-filtres button:not(.actif), .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son, .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche).verre-lumiere {
   background: var(--verre-clair-fond-appui); box-shadow: var(--verre-clair-ombre);
 }
-html.appli body .carte-page .carte-reinit.verre-lumiere { background: var(--verre-flottant-fond-appui); box-shadow: var(--verre-flottant-ombre); }
+html.appli body .carte-page .carte-reinit.verre-lumiere { background: rgba(255, 255, 255, .42); box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre-appui); }
 html.appli body :is(.plat-pas, .fiche-appli .fiche-apercu-plus, .ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .btn-teal:not(:disabled)).verre-lumiere {
   background: var(--iris-vif-fond-appui); box-shadow: var(--iris-vif-ombre);
 }

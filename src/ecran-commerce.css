@@ -371,11 +371,11 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
   .ec-barre-accepter .ec-bouton--contour { flex: none; width: auto; padding: 0 18px; background: #fff; color: var(--ink); border: 1px solid var(--line); }
   .ec-espace-barre { height: 76px; }
   .ec-cmd-boutons-barre { display: none; }
+  /* Le verre de la barre d'onglets (2026-11-11, verre.css --verre-26-*, filet de lumière en ::before), dosage « texte ». */
   html.appli .ec-barre-accepter {
-    background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
-    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 0 .5px rgba(255, 255, 255, .5),
-      0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+    background: var(--verre-26-fond-texte); border: 1px solid transparent;
+    -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
+    box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre);
   }
 }
 @media (max-width: 900px) and (prefers-reduced-transparency: reduce) {

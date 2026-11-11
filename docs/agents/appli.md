@@ -173,10 +173,27 @@ name (Hill's) to fill the screen; section pills cut at 220 px with « … » (`.
 other places where the glass is badly done, just do it »)**. The tab bar is described in design.md (rule 2). The audit that
 followed: every pink / blue / yellow « iridescent » edge is gone from the app (verre.css tokens, the cart, checkout, « Accepter »
 and order-tracking bars, the update banner, back buttons, « Moi aussi », the touch light which is now white): one white
-highlight on top and a thin white rim instead. The map's search bar, chips and count use `--verre-ios-*` (white 50 %, 10 px blur,
-rim, soft shadow, no white halo around the text). The cuisine strip's lens and the restaurant sections strip's lens are the tab
-bar's: a faint grey pill (`--verre-pastille`), a clear glass drop when pressed (`--verre-goutte-*`); the sections strip takes the
-bar's glass, and no lens refracts any more (lentillePuces.js, barreVerre.js). One blur per bar, nothing computed per frame.
+highlight on top and a thin white rim instead. The cuisine strip's lens and the restaurant sections strip's lens are the tab
+bar's: a faint grey pill (`--verre-pastille`), a clear glass drop when pressed (`--verre-goutte-*`), and no lens refracts any
+more (lentillePuces.js, barreVerre.js). One blur per bar, nothing computed per frame.
+**Everything that floats has the tab bar's glass (2026-11-11, founder: « when I open the map and tap a restaurant, the pop-up is
+not as transparent and sexy as our new liquid glass »)**. One material, `--verre-26-*` in verre.css, the same values as
+`.dashboard-nav`: one blur, the inner edge glow (`--verre-26-epaisseur`), a soft shadow, and the light rim drawn as a masked
+gradient in `::before` (one shared rule at the end of verre.css). Two strengths: clear (white 16 %, the tab bar) and « texte »
+(white 30 %, 10 px blur) for anything carrying words, readable over an iris card without the tab bar's computed dark tint. It
+covers, on the map, the restaurant card and its ×, the search, chips, count, cuisine panel (rim as an inset shadow: it scrolls),
+results, recentre and zoom (ecran-liste.css; the card was white 72 % with an iris hairline, the « verre fondu » of 10-26); the
+order-tracking strip (client-ui.css), the « Aller au paiement » bar (ecran-commande.css; it lost its iris tint), the shop's
+« Accepter » bar (ecran-commerce.css), the sections strip of a restaurant (ecran-fiche.css) and the update banner (miseAJour.css,
+40 %: a title and two lines). The old `--verre-flottant-*` and `--verre-ios-*` tokens are gone. **Kept on purpose**: controls
+sitting IN a page (verre fondu, 10-26: nothing behind them to blur), the round buttons on a restaurant photo and every back
+button (their pre-fondu glass, asked back on 10-27, white 82 % to read on a dark photo), the iris toasts, the cart bar and bubble
+(lime since 10-25, the next gesture) and the whole website. A new floating bar or panel takes `--verre-26-*` and joins the
+`::before` list in verre.css (it must be positioned: relative, absolute, fixed or sticky).
+**The folded circle's icon is dead centre (2026-11-11, founder: « always in the middle, every time, in all three interfaces »)**:
+`html.appli .dashboard-nav-label` (max-height 13 px) beat the older rule that folds the label, so the hidden label kept its
+13 px and pushed the icon 7 px up on the customer, shop and courier bars; `html.appli .dashboard-sidebar--compacte` now folds it
+(max-height 0, gap 0). Measured: icon offset 0 / 0 px in the circle and in the Search circle, three roles, 375 and 430 px.
 
 **Glass that answers the finger (2026-10-24, version B of `maquettes/verre-appui/verre-appui.html`, « iOS 26 »)**, native app only, in
 [verreAppui.js](../../src/verreAppui.js) (loaded by `demarrerNatif`) + the end of verre.css: every glass control (its list is `VERRE` in that
