@@ -230,42 +230,40 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html.appli .carte-page .carte-recherche, html.appli .carte-page .carte-pastilles .cuisine-chip, html.appli .carte-page .carte-compte,
   html.appli .carte-page .carte-reinit, html.appli .carte-page .carte-panneau, html.appli .carte-page .leaflet-control-zoom.leaflet-bar,
-  html.appli .carte-page .carte-resultat, html.appli .carte-page .carte-fiche, html.appli .carte-page .carte-fiche-fermer::before {
-    background: rgba(255, 255, 255, .3); border: 1px solid rgba(255, 255, 255, .6); color: rgba(20, 18, 31, .9);
-    -webkit-backdrop-filter: blur(6px) saturate(190%) brightness(1.06); backdrop-filter: blur(6px) saturate(190%) brightness(1.06);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-      0 8px 24px rgba(20, 18, 31, .14), 0 1px 3px rgba(20, 18, 31, .08);
-    text-shadow: 0 0 8px rgba(255, 255, 255, .75);
+  html.appli .carte-page .carte-resultat, html.appli .carte-page .carte-fiche {
+    /* LE VERRE DE LA BARRE D'ONGLETS SUR TOUT LE PLAN (fondateur, 2026-11-11 : « quand j'ouvre la carte et que je touche un
+       restaurant, la fiche n'est pas aussi transparente et sexy que notre nouveau verre »). La fiche était blanche à 72 % à filet
+       iris (le verre fondu du 26/10, verre.css), la recherche et les pastilles blanches à 50 %. Tout ce qui flotte sur le plan
+       prend la matière de la barre (verre.css, --verre-26-*) au dosage « texte » : blanc 30 %, un flou de 10 px, l'épaisseur, une
+       ombre douce ; le filet de lumière en dégradé est un ::before (verre.css). Rien autour des lettres. */
+    background: var(--verre-26-fond-texte); border: 1px solid transparent; color: var(--ink); text-shadow: none;
+    -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
+    box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre);
   }
-  /* LA RECHERCHE ET LES PASTILLES DU PLAN EN VERRE D'IOS 26 (fondateur, 2026-11-11 : « la carte, peut-être que ça peut être
-     amélioré », après maquettes/barre-ios26). Le voile blanc à 30 %, les bords roses et bleus de la recherche et le halo blanc
-     autour du texte faisaient un verre brouillé sur le plan. Comme la recherche de Plans sur iOS 26 : plus dépoli pour que le
-     texte se lise (blanc 50 %, flou 10 px), un filet de lumière, une ombre douce, rien autour des lettres (verre.css, --verre-ios-*). */
-  html.appli .carte-page :is(.carte-recherche, .carte-pastilles .cuisine-chip, .carte-compte) {
-    background: var(--verre-ios-fond); border-color: transparent; color: var(--ink); text-shadow: none;
-    -webkit-backdrop-filter: var(--verre-ios-flou); backdrop-filter: var(--verre-ios-flou);
-    box-shadow: var(--verre-ios-filet), var(--verre-ios-ombre);
-  }
-  html.appli .carte-page .carte-fiche {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-      0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
-  }
+  html.appli .carte-page :is(.carte-recherche, .carte-compte, .carte-resultat, .carte-pastilles .cuisine-chip) { position: relative; }
+  /* Le panneau des cuisines défile : son filet est une ombre intérieure (un ::before absolu défilerait avec son contenu). */
+  html.appli .carte-page .carte-panneau { box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .5), var(--verre-26-epaisseur), var(--verre-26-ombre); }
   /* Les pastilles défilent de côté : leur conteneur rogne ce qui dépasse, l'ombre comprise (un rectangle gris se
      dessinait autour de la rangée). De la place pour l'ombre, rendue aussitôt par une marge négative, et une ombre courte. */
   html.appli .carte-page .carte-pastilles { margin: -6px -12px -12px; padding: 6px 12px 12px; max-width: none; align-self: stretch; }
-  html.appli .carte-page .carte-pastilles .cuisine-chip { box-shadow: var(--verre-ios-filet), 0 3px 8px rgba(20, 18, 31, .12); }
+  html.appli .carte-page .carte-pastilles .cuisine-chip { box-shadow: var(--verre-26-epaisseur), 0 3px 8px rgba(20, 18, 31, .12); }
   html.appli .carte-page .carte-recherche { height: 50px; padding: 0 16px; }
   html.appli .carte-page .carte-recherche input { color: var(--ink); }
-  html.appli .carte-page .carte-fiche, html.appli .carte-page .carte-panneau { background: rgba(255, 255, 255, .55); }
   html.appli .carte-page .carte-pastilles .cuisine-chip svg, html.appli .carte-page .carte-recherche svg { filter: none; }
   html.appli .carte-page .carte-pastilles .cuisine-chip.active, html.appli .carte-page .carte-panneau .cuisine-chip.active {
     background: var(--iris); border-color: var(--iris); color: #fff; text-shadow: none;
   }
   html.appli .carte-page .carte-pastilles .cuisine-chip.active svg { filter: none; }
-  html.appli .carte-page .carte-panneau .cuisine-chip { background: rgba(255, 255, 255, .5); border-color: rgba(255, 255, 255, .7); }
+  /* Dans le panneau, les cuisines non choisies : la pastille à peine grise des lentilles d'iOS 26, sans bord. */
+  html.appli .carte-page .carte-panneau .cuisine-chip:not(.active) { background: rgba(255, 255, 255, .34); border-color: transparent; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .6); }
   html.appli .carte-page .leaflet-control-zoom.leaflet-bar a { background: transparent; color: var(--ink); border-bottom-color: rgba(255, 255, 255, .6); }
   html.appli .carte-page .carte-fiche .btn-gold, html.appli .carte-page .carte-fiche-promo { text-shadow: none; }
-  html.appli .carte-page .carte-fiche-fermer::before { background: rgba(255, 255, 255, .6); }
+  /* La croix de la fiche : un petit rond de la même matière, comme le rond de la recherche à côté des onglets. */
+  html.appli .carte-page .carte-fiche-fermer::before {
+    background: rgba(255, 255, 255, .42); border: 0;
+    -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), var(--verre-26-epaisseur), 0 4px 12px rgba(20, 18, 31, .14);
+  }
   /* Les épingles et la maison se décollent du plan (ombre douce : l'app seulement) ; la maison respire. */
   html.appli .carte-page .map-pin.map-pin { box-shadow: 0 3px 8px rgba(20, 18, 31, .25); }
   /* La respiration : un rond lime derrière la maison qui grandit de 10 px et s'efface (transform, opacity), plus une ombre

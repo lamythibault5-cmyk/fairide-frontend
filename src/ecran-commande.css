@@ -184,11 +184,11 @@
   html.appli .ec-page .cart-bar.ec-barre {
     left: 14px; right: 14px; bottom: calc(14px + var(--bas-ecran)); max-width: 560px; margin: 0 auto;
     min-height: 64px; padding: 8px; gap: 10px; border-radius: 32px; flex-direction: row; flex-wrap: wrap; align-items: center;
-    color: var(--ink); text-shadow: 0 0 8px rgba(255, 255, 255, .75);
-    background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
-    -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-      inset 0 0 0 .5px rgba(255, 255, 255, .5), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+    /* Le verre de la barre d'onglets (2026-11-11, verre.css --verre-26-*, filet de lumière en ::before), dosage « texte ». */
+    color: var(--ink); text-shadow: none;
+    background: var(--verre-26-fond-texte); border: 1px solid transparent;
+    -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
+    box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre);
   }
   /* Un seul geste (fondateur, 2026-10-25, maquettes/une-action) : plus de pastille iris du montant à côté du bouton, le
      montant est dans le bouton (PanierPage, Checkout). */

@@ -3056,6 +3056,12 @@ main.page-fade { min-height: calc(100dvh - 140px); }
      entière (icônes seules, comme sur le site). La pilule du panier et la bande de suivi ne bougent pas : la barre garde sa hauteur
      (html.barre-compacte n'est posée que sur le site). */
   html.appli .dashboard-sidebar--compacte .dashboard-nav-link { height: 54px; }
+  /* L'ICÔNE AU CENTRE DU ROND (fondateur, 2026-11-11 : « que cette icône soit toujours au milieu, chaque fois, dans les trois
+     interfaces »). Le libellé de l'app (html.appli .dashboard-nav-label, max-height 13 px) l'emportait sur la règle qui le
+     replie (.dashboard-sidebar--compacte .dashboard-nav-label, plus bas, moins précise) : invisible mais toujours haut de 13 px,
+     il poussait l'icône 7 px au-dessus du centre, chez le client, le commerce et le livreur. Replié ici, sans l'espace de 1 px. */
+  html.appli .dashboard-sidebar--compacte .dashboard-nav-link { gap: 0; }
+  html.appli .dashboard-sidebar--compacte .dashboard-nav-label { max-height: 0; }
   html.appli .dashboard-sidebar--compacte .dashboard-nav:has(> .dashboard-nav-link.active) { width: 64px; cursor: pointer; }
   html.appli .dashboard-sidebar--compacte .dashboard-nav:has(> .dashboard-nav-link.active) > .dashboard-nav-link { overflow: hidden; }
   html.appli .dashboard-sidebar--compacte .dashboard-nav:has(> .dashboard-nav-link.active) > .dashboard-nav-link:not(.active) { flex-grow: 0; opacity: 0; padding: 0; pointer-events: none; }

@@ -3,11 +3,12 @@
    porter du texte. Sans flou possible (vieille WebView, transparence réduite) : blanc plein à filet. */
 .maj-verre { background: #fff; border: 1px solid var(--line); box-shadow: 0 12px 32px rgba(20, 18, 31, .2); }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  /* Le verre de la barre d'onglets (2026-11-11, verre.css --verre-26-*, filet de lumière en ::before), dosage « texte », un peu
+     plus blanc (40 %) et plus flou : il porte un titre et deux lignes. Repli blanc hors de l'app (les variables n'y existent pas). */
   .maj-verre {
-    background: rgba(255, 255, 255, .55); border-color: rgba(255, 255, 255, .7);
-    -webkit-backdrop-filter: blur(16px) saturate(190%) brightness(1.06); backdrop-filter: blur(16px) saturate(190%) brightness(1.06);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .4), inset 0 0 22px rgba(255, 255, 255, .28),
-      inset 0 0 0 .5px rgba(255, 255, 255, .55), 0 16px 40px rgba(20, 18, 31, .2), 0 1px 3px rgba(20, 18, 31, .1);
+    position: relative; background: rgba(255, 255, 255, .4); border-color: transparent;
+    -webkit-backdrop-filter: blur(14px) saturate(180%) brightness(1.04); backdrop-filter: blur(14px) saturate(180%) brightness(1.04);
+    box-shadow: var(--verre-26-epaisseur, inset 0 0 0 .5px rgba(255, 255, 255, .55)), 0 12px 32px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
   }
 }
 @media (prefers-reduced-transparency: reduce) {
