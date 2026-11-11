@@ -1,3 +1,5 @@
+import { Children, cloneElement, useId } from 'react';
+
 // Les icônes de l'interface, en traits.
 //
 // POURQUOI PAS DES EMOJIS. L'application en comptait 461 en guise d'icônes. Un emoji n'est pas
@@ -171,14 +173,20 @@ export const TRACES = {
 
 // LES ICÔNES PLEINES DE LA BARRE D'ONGLETS (fondateur, 2026-10-25, maquettes/appui-iris/appui-iris.html, A). Dans l'app,
 // l'onglet où l'on est et celui sous le doigt ne changent plus seulement de couleur : l'icône se remplit, comme les icônes
-// pleines d'Instagram. Chaque dessin est la forme à remplir ; les traits « creux » (classe icone-creux, styles.css) sont
-// redessinés dans la couleur du fond pour que l'icône pleine reste lisible (les plis de la carte, la dent de la fourchette,
-// le symbole de l'euro). Une icône sans version pleine garde ses traits.
+// pleines d'Instagram. Chaque dessin est la forme à remplir ; les traits « creux » (classe icone-creux) sont
+// découpés dans la forme (les plis de la carte, la fente de la fourchette, le symbole de l'euro). Une icône sans version pleine
+// garde ses traits.
+// DÉCOUPÉS, PAS PEINTS (fondateur, 2026-11-11 : « la fente de la fourchette, qu'elle soit le fond et pas l'icône »). Ils étaient
+// redessinés dans une couleur fixe (--icone-creux, blanc), qui se voyait en traits blancs sur le verre de la barre : un masque
+// les retire de la forme, on voit au travers ce qu'il y a derrière (le verre, la pastille iris, le verre fumé). La fente de la
+// fourchette s'ouvre par le haut, comme les dents d'une vraie fourchette. L'icône pleine est donc complète à elle seule (les
+// manches du couteau et de la fourchette, de la loupe et du sac y sont) : l'icône en traits, dessous, se cache quand elle se
+// montre (styles.css), sinon ses traits rempliraient les fentes.
 const PLEINS = {
-  restaurants: <><path d="M4 3v7a2 2 0 0 0 4 0V3Z" /><path d="M17 3c-1.7 0-3 2.2-3 5s1.3 4 3 4 3 0 3 0V3Z" /><path className="icone-creux" d="M6 3v4.5" /></>,
+  restaurants: <><path d="M4 3v7a2 2 0 0 0 4 0V3Z" /><path d="M17 3c-1.7 0-3 2.2-3 5s1.3 4 3 4 3 0 3 0V3Z" /><path fill="none" d="M6 12v9" /><path fill="none" d="M17 12v9" /><path className="icone-creux" d="M6 1v6.5" /></>,
   carte: <><path d="M9 4 3 7v13l6-3 6 3 6-3V4l-6 3-6-3Z" /><path className="icone-creux" d="M9 5.5v10" /><path className="icone-creux" d="M15 8.5v10" /></>,
-  recherche: <><circle cx="11" cy="11" r="7" /><path className="icone-creux" d="M8 9.2a3.6 3.6 0 0 1 2.4-2" /></>,
-  commandes: <><path d="M3 8h18l-1.3 11a2 2 0 0 1-2 1.8H6.3a2 2 0 0 1-2-1.8L3 8Z" /><path className="icone-creux" d="M8.5 11.5a3.5 3.5 0 0 0 7 0" /></>,
+  recherche: <><circle cx="11" cy="11" r="7" /><path fill="none" d="m20 20-3.5-3.5" /><path className="icone-creux" d="M8 9.2a3.6 3.6 0 0 1 2.4-2" /></>,
+  commandes: <><path d="M3 8h18l-1.3 11a2 2 0 0 1-2 1.8H6.3a2 2 0 0 1-2-1.8L3 8Z" /><path fill="none" d="M8 8V6a4 4 0 0 1 8 0v2" /><path className="icone-creux" d="M8.5 11.5a3.5 3.5 0 0 0 7 0" /></>,
   compte: <><circle cx="12" cy="8" r="4" /><path d="M4 21a8 8 0 0 1 16 0Z" /></>,
   commerce: <><path d="M4 9h16v11a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V9Z" /><path d="M3 9 5 4h14l2 5Z" /><path className="icone-creux" d="M5 9.6h14" /><path className="icone-creux" d="M10 20.5V16h4v4.5" /></>,
   dossier: <><rect x="2" y="5" width="20" height="14" rx="2" /><circle className="icone-creux" cx="8.5" cy="11" r="1.8" /><path className="icone-creux" d="M5.6 15.6c.7-1.2 1.8-1.7 2.9-1.7s2.2.5 2.9 1.7" /><path className="icone-creux" d="M15 10h3.5" /><path className="icone-creux" d="M15 14h3.5" /></>,
@@ -187,12 +195,26 @@ const PLEINS = {
 
 /* La version pleine d'une icône (rien si elle n'en a pas). Posée sur l'icône en traits, même taille : le CSS la montre ou la cache. */
 export function IconePleine({ nom, taille = 20, className }) {
+  // Un identifiant de masque par icône (plusieurs barres, plusieurs icônes pleines dans la page) ; sans « : » ni « « » ».
+  const masque = `creux${useId().replace(/[^\w-]/g, '')}`;
   const plein = PLEINS[nom];
   if (!plein) return null;
+  const morceaux = Children.toArray(plein.props.children);
+  const creux = morceaux.filter((m) => m.props.className === 'icone-creux');
+  const formes = morceaux.filter((m) => m.props.className !== 'icone-creux');
   return (
     <svg className={className} width={taille} height={taille} viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.8"
       strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false">
-      {plein}
+      {creux.length > 0 && (
+        <defs>
+          {/* Blanc : on garde ; noir : on découpe. Les creux perdent leur classe, sinon leur trait CSS les repeindrait. */}
+          <mask id={masque} maskUnits="userSpaceOnUse" x="-2" y="-2" width="28" height="28">
+            <rect x="-2" y="-2" width="28" height="28" fill="#fff" stroke="none" />
+            <g fill="none" stroke="#000" strokeWidth="1.4">{creux.map((c) => cloneElement(c, { className: undefined }))}</g>
+          </mask>
+        </defs>
+      )}
+      <g mask={creux.length > 0 ? `url(#${masque})` : undefined}>{formes}</g>
     </svg>
   );
 }
