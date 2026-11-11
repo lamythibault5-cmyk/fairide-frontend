@@ -80,6 +80,11 @@ export const TRACES = {
   // — États —
   etoile: <path d="m12 4 2.5 5.2 5.5.8-4 3.9 1 5.6-5-2.7-5 2.7 1-5.6-4-3.9 5.5-.8L12 4Z" />,
   horloge: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5.5l3.5 2" /></>,
+  // « Ouvert » allumé dans l'app (fondateur, 2026-11-11, maquettes/ouvert-verre) : le disque plein, les aiguilles DÉCOUPÉES
+  // (pair-impair) : le fond passe au travers, comme les creux des icônes pleines de la barre. Le contour des aiguilles est
+  // celui d'un trait de 1,8 à bouts et coude ronds : mêmes aiguilles que `horloge`, mêmes dimensions que son cercle (9 + 0,9).
+  horlogePleine: <path fill="currentColor" stroke="none" fillRule="evenodd"
+    d="M2.1 12a9.9 9.9 0 1 0 19.8 0a9.9 9.9 0 1 0-19.8 0ZM11.1 7A.9.9 0 0 1 12.9 7V11.98L15.95 13.72A.9.9 0 0 1 15.05 15.28L11.55 13.28A.9.9 0 0 1 11.1 12.5Z" />,
   interdit: <><circle cx="12" cy="12" r="9" /><path d="m5.6 5.6 12.8 12.8" /></>,
   position: <><path d="M12 21s7-5.6 7-11a7 7 0 1 0-14 0c0 5.4 7 11 7 11Z" /><circle cx="12" cy="10" r="2.6" /></>,
   cloche: <><path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z" /><path d="M10 19a2 2 0 0 0 4 0" /></>,

@@ -172,7 +172,8 @@ export default function MapPage() {
             </button>
             {pastilleOuvert && (
             <button type="button" className={`cuisine-chip${ouvertsSeuls ? ' active' : ''}`} aria-pressed={ouvertsSeuls} onClick={() => setOuvertsSeuls((v) => !v)}>
-              <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
+              {/* Allumée dans l'app, l'horloge se remplit, comme sur la liste (maquettes/ouvert-verre). */}
+              <Icone nom={ouvertsSeuls && app ? 'horlogePleine' : 'horloge'} taille={16} />{t('mapClient.filterOpen')}
             </button>
             )}
             {/* Un panneau de pastilles, plus un <select> natif : le menu du système s'ouvre au

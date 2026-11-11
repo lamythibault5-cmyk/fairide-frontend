@@ -186,10 +186,20 @@ results, recentre and zoom (ecran-liste.css; the card was white 72 % with an iri
 order-tracking strip (client-ui.css), the « Aller au paiement » bar (ecran-commande.css; it lost its iris tint), the shop's
 « Accepter » bar (ecran-commerce.css), the sections strip of a restaurant (ecran-fiche.css) and the update banner (miseAJour.css,
 40 %: a title and two lines). The old `--verre-flottant-*` and `--verre-ios-*` tokens are gone. **Kept on purpose**: controls
-sitting IN a page (verre fondu, 10-26: nothing behind them to blur), the round buttons on a restaurant photo and every back
+sitting IN a page (verre fondu, 10-26: nothing behind them to blur), except the choice chips (next paragraph), the round buttons on a restaurant photo and every back
 button (their pre-fondu glass, asked back on 10-27, white 82 % to read on a dark photo), the iris toasts, the cart bar and bubble
 (lime since 10-25, the next gesture) and the whole website. A new floating bar or panel takes `--verre-26-*` and joins the
 `::before` list in verre.css (it must be positioned: relative, absolute, fixed or sticky).
+**Choice chips have the tab bar's glass too (2026-11-11, founder on « Ouvert »: « it doesn't really fit with this liquid
+glass », answers to `maquettes/ouvert-verre`)**. On the white page the old clear glass (white 55 % tinted iris, iris hairline)
+had nothing to blur and read as a flat lilac web pill, and switched on it was a solid iris block with a halo. Now « Ouvert »
+stays in the same place as a bubble of the « texte » glass (ink word, rim, inner light, soft shadow: on white that is what shows,
+like the Search round). **Switched on it does what the chosen tab does**: the bubble keeps its glass, the tab's barely grey
+pill (`--pastille-onglet`) sits inside it 4 px from the edge (`::after`), word and icon turn iris, and « Ouvert » takes the
+filled clock with its hands cut out (`horlogePleine` in Icone.jsx, app only). The whole family follows: the commune and search
+chips above the list, the tip, the Search page chips, the gift-voucher filters, the shop's prep time and Factures tabs
+(verre.css), and « Offres », « Ouvert », « Cuisine » on the map (ecran-liste.css; in the cuisine panel the chosen cuisine is the
+grey pill alone). The website keeps its white pill with a hairline.
 **The folded circle's icon is dead centre (2026-11-11, founder: « always in the middle, every time, in all three interfaces »)**:
 `html.appli .dashboard-nav-label` (max-height 13 px) beat the older rule that folds the label, so the hidden label kept its
 13 px and pushed the icon 7 px up on the customer, shop and courier bars; `html.appli .dashboard-sidebar--compacte` now folds it

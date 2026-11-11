@@ -122,18 +122,28 @@ html.appli body .fiche-appli .fiche-modes-pouce {
   -webkit-backdrop-filter: none; backdrop-filter: none;
 }
 
-/* ---------- Les pastilles au-dessus de la liste (« Ouvert », commune, mot cherché) ---------- */
-/* Fondateur, 2026-10-26 (section « Ouvert en verre » de maquettes/filtre-ouvert) : comme Livraison / À emporter, verre clair éteinte,
-   iris vif sans reflet allumée ; elles grossissent au doigt (verreAppui.js), la lumière seulement sur le verre clair. Le site
-   garde sa pilule blanche à filet (styles.css, .cuisine-chip). Éteinte, verre fondu (2026-10-26) ; allumée, l'iris vif d'avant,
-   avec ses bords irisés et son halo (fondateur, 2026-10-27), sans foncer à l'appui (plus bas). */
-html.appli body .liste-filtres .cuisine-chip {
-  border-color: transparent; color: var(--iris); background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
-  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
+/* ---------- LES PASTILLES DE CHOIX DANS LE VERRE DE LA BARRE (fondateur, 2026-11-11, réponses à maquettes/ouvert-verre) ----------
+   « Ouvert » au-dessus de la liste « ne va pas avec ce verre liquide » : posé sur la page blanche, le verre clair d'avant (blanc
+   55 % teinté iris, filet iris) n'avait rien à flouter et donnait une pilule lilas plate, et allumé c'était un bloc iris plein à
+   halo. Réponses : la bulle de la barre d'onglets à la même place (1 : A) ; allumée, comme l'onglet choisi, une pastille à peine
+   grise DANS la bulle, le mot et l'icône en iris, l'horloge pleine (2) ; toute la famille suit (3 : la commune et le mot cherché
+   au-dessus de la liste, le pourboire, les pastilles de la Recherche, les filtres des bons cadeaux, le temps de préparation et
+   les onglets des Factures du commerce ; « Offres », « Ouvert » et « Cuisine » sur le plan, ecran-liste.css) ; le site garde sa
+   pilule blanche à filet (4, styles.css). Ce qui fait le verre sur du blanc : le filet, la lumière intérieure et l'ombre douce,
+   comme la loupe à côté des onglets. Elles grossissent au doigt (verreAppui.js), sans lumière sous le doigt (plus bas). */
+html.appli body :is(.liste-filtres .cuisine-chip, .ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button, .ec-segment:not(.ec-segment--lime) button) {
+  position: relative; isolation: isolate; border-color: transparent; color: var(--ink); text-shadow: none;
+  background: var(--verre-26-fond-texte); box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre);
+  -webkit-backdrop-filter: var(--verre-26-flou-texte); backdrop-filter: var(--verre-26-flou-texte);
 }
-html.appli body .liste-filtres .cuisine-chip.active {
-  color: #fff; background: var(--iris-vif-fond); box-shadow: var(--iris-vif-brillant-ombre);
-  -webkit-backdrop-filter: none; backdrop-filter: none;
+/* Allumée : la pastille de l'onglet choisi (--pastille-onglet, styles.css) posée à 4 px du bord, sous le libellé (contexte isolé
+   juste au-dessus). La bulle garde son verre : c'est l'iris du mot qui dit « choisi », plus un bloc de couleur. La commune et le
+   mot cherché sont toujours « allumés » (ils retirent un filtre, avec leur ×). */
+html.appli body :is(.liste-filtres .cuisine-chip.active, .ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .ec-segment:not(.ec-segment--lime) button.on) {
+  color: var(--iris); font-weight: 600;
+}
+html.appli body :is(.liste-filtres .cuisine-chip.active, .ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .ec-segment:not(.ec-segment--lime) button.on)::after {
+  content: ""; position: absolute; inset: 4px; z-index: -1; border-radius: inherit; background: var(--pastille-onglet); pointer-events: none;
 }
 
 /* ---------- LE VERRE PARTOUT (fondateur, 2026-10-26, réponses à maquettes/verre-partout/verre-partout.html) ----------
@@ -141,16 +151,8 @@ html.appli body .liste-filtres .cuisine-chip.active {
    Toutes passent dans les recettes ci-dessus ; restent sans verre, exprès : le bouton lime (le prochain geste), les grands choix du
    paiement (rangées à contour iris, maquettes/une-action), les cartes, tuiles et rangées, la croix sur la photo d'un plat, les ronds
    de choix d'un plat, les champs, les liens texte et tout le site. */
-/* 1. Les pastilles de choix (pourboire, Recherche, filtres des bons cadeaux) : verre clair, iris vif une fois choisies. */
-/* Les puces du commerce (temps de préparation, onglets des Factures : réponses 3 et 10 de maquettes/ecrans-pro, 2026-10-27) aussi. */
-html.appli body :is(.ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button, .ec-segment:not(.ec-segment--lime) button) {
-  border-color: transparent; color: var(--iris); background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre);
-  -webkit-backdrop-filter: var(--verre-clair-flou); backdrop-filter: var(--verre-clair-flou);
-}
-html.appli body :is(.ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .ec-segment:not(.ec-segment--lime) button.on) {
-  color: #fff; background: var(--iris-vif-fond); box-shadow: var(--iris-vif-ombre);
-  -webkit-backdrop-filter: none; backdrop-filter: none;
-}
+/* 1. Les pastilles de choix (pourboire, Recherche, filtres des bons cadeaux, temps de préparation et onglets des Factures du
+   commerce) : depuis le 2026-11-11, dans le verre de la barre avec « Ouvert » (plus haut, maquettes/ouvert-verre). */
 /* 2. Les interrupteurs (couverts au paiement, promos et « en vente » du commerce) : piste en verre clair, iris vif allumée ; le rond
    blanc garde son ombre. L'interrupteur lime « Ouvert / Fermé » du commerce reste lime : c'est son geste principal. Ils ne
    grossissent pas (pas dans VERRE) : leur rond s'étire déjà à l'appui, comme sur l'iPhone. */
@@ -240,8 +242,9 @@ html.appli body .toast:not(.toast-erreur) {
    Le panneau des cuisines défile : un ::before absolu y défilerait avec son contenu, il garde le filet en ombre intérieure. */
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   html.appli body :is(.carte-page .carte-fiche, .carte-page .carte-recherche, .carte-page .carte-compte, .carte-page .carte-resultat,
-    .carte-page .carte-pastilles .cuisine-chip:not(.active), .suivi-commande, .ec-barre-accepter, .maj-verre,
-    .fiche-appli .category-quicknav--verre)::before {
+    .carte-page .carte-pastilles .cuisine-chip, .suivi-commande, .ec-barre-accepter, .maj-verre,
+    .fiche-appli .category-quicknav--verre, .liste-filtres .cuisine-chip, .ec-pourboire .cuisine-chip, .recherche-pastille,
+    .resa-filtres button, .ec-segment:not(.ec-segment--lime) button)::before {
     content: ""; position: absolute; inset: 0; border-radius: inherit; padding: 1px; pointer-events: none;
     background: var(--verre-26-filet);
     -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor;
@@ -259,7 +262,8 @@ html.appli body .toast:not(.toast-erreur) {
 @media (prefers-reduced-transparency: reduce) {
   html.appli body :is(.carte-page .carte-fiche, .carte-page .carte-recherche, .carte-page .carte-compte, .carte-page .carte-resultat,
     .carte-page .carte-pastilles .cuisine-chip, .suivi-commande, .ec-barre-accepter, .maj-verre,
-    .fiche-appli .category-quicknav--verre, .ec-page .cart-bar.ec-barre)::before { display: none; }
+    .fiche-appli .category-quicknav--verre, .ec-page .cart-bar.ec-barre, .liste-filtres .cuisine-chip, .ec-pourboire .cuisine-chip,
+    .recherche-pastille, .resa-filtres button, .ec-segment:not(.ec-segment--lime) button)::before { display: none; }
 }
 
 /* « Réduire la transparence » (réglages d'accessibilité de l'iPhone) : des aplats, sans flou. */
@@ -292,7 +296,7 @@ html.appli verre-lueur {
 html.appli .verre-lumiere > verre-lueur { opacity: 1; transition-duration: .12s; }
 /* Sur l'iris (les « + », le « − 1 + », les retours des bandeaux), une lumière blanche plus douce. */
 /* Les « + », le « − 1 + » : sans reflet, donc sans lumière sous le doigt non plus (elle les faisait briller). */
-html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, .liste-filtres .cuisine-chip.active, .ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .btn-teal) > verre-lueur { display: none; }
+html.appli :is(.plat-pas, .ec-pas, .fiche-apercu-plus, .btn-teal) > verre-lueur { display: none; }
 /* Verre fondu (2026-10-26, réponse 4) : plus de lumière sous le doigt sur le verre clair, l'iris vif et les raccourcis de Mon
    compte ; leur teinte fonce un peu à la place (plus bas). La gardent, avec leur filet qui s'allume (réponse « À l'appui » de
    maquettes/verre-fondu/autres-endroits.html) : les barres, les pastilles du plan et les retours sur un bandeau iris ; et, revenus
@@ -326,7 +330,8 @@ html.appli body .sous-ecran-tete .flux-bouton {
 
 /* Le filet s'allume au contact (le « miroitement » d'iOS 26). Les barres (sans bords irisés depuis le 2026-11-11) : */
 /* Depuis le 2026-11-11 dans la matière de la barre d'onglets : au contact, comme elle, l'ombre s'allonge un peu. */
-html.appli body :is(.fiche-appli .category-quicknav--verre, .panier-pilule, .carte-page .carte-pastilles .cuisine-chip:not(.active)).verre-lumiere {
+html.appli body :is(.fiche-appli .category-quicknav--verre, .panier-pilule, .carte-page .carte-pastilles .cuisine-chip, .liste-filtres .cuisine-chip,
+  .ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button, .ec-segment:not(.ec-segment--lime) button).verre-lumiere {
   box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre-appui);
 }
 /* La barre d'onglets (iOS 26) : son filet de lumière est un masque (styles.css) ; au contact, l'ombre s'allonge un peu. */
@@ -339,12 +344,11 @@ html.appli body :is(.fiche-appli .flux-entete--flottant .flux-bouton, .fiche-app
 }
 /* Le verre fondu (2026-10-26, réponse 4) : le filet ne s'allume plus (il ramenait l'ombre portée et les bords irisés), la teinte
    fonce un peu tant que le doigt est posé. */
-html.appli body :is(.fiche-appli .fiche-modes, .fiche-appli .fiche-infos-lien, .liste-filtres .cuisine-chip:not(.active), .ec-pourboire .cuisine-chip:not(.active),
-  .recherche-pastille, .resa-filtres button:not(.actif), .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son, .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche).verre-lumiere {
+html.appli body :is(.fiche-appli .fiche-modes, .fiche-appli .fiche-infos-lien, .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son, .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche).verre-lumiere {
   background: var(--verre-clair-fond-appui); box-shadow: var(--verre-clair-ombre);
 }
 html.appli body .carte-page .carte-reinit.verre-lumiere { background: rgba(255, 255, 255, .42); box-shadow: var(--verre-26-epaisseur), var(--verre-26-ombre-appui); }
-html.appli body :is(.plat-pas, .fiche-appli .fiche-apercu-plus, .ec-pourboire .cuisine-chip.active, .resa-filtres button.actif, .btn-teal:not(:disabled)).verre-lumiere {
+html.appli body :is(.plat-pas, .fiche-appli .fiche-apercu-plus, .btn-teal:not(:disabled)).verre-lumiere {
   background: var(--iris-vif-fond-appui); box-shadow: var(--iris-vif-ombre);
 }
 html.appli body .compte-raccourci.verre-lumiere { background: rgba(255, 255, 255, .2); box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .45); }
@@ -411,8 +415,10 @@ html.appli body :is(.dashboard-retour, .retour-compte, .cs-retour, .ec-b-retour,
   html.appli body :is(.bv-rond, .dashboard-retour, .retour-compte, .cs-retour) { background: #EFEEFA; -webkit-backdrop-filter: none; backdrop-filter: none; }
   html.appli body :is(.page-feuille.page-feuille--sur-blanc .page-feuille-fermer, .site-bande.gn-bandeau > .gn-rond.gn-rond--flottant) { background: #EFEEFA; }
   /* Le verre partout (2026-10-26) : aplats sans flou. */
-  html.appli body :is(.liste-filtres .cuisine-chip:not(.active), .ec-pourboire .cuisine-chip:not(.active), .recherche-pastille, .resa-filtres button:not(.actif),
-    .co-interrupteur:not(.on), .ec-interrupteur:not(.ec-interrupteur--lime):not(.on), .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son,
+  html.appli body :is(.liste-filtres .cuisine-chip, .ec-pourboire .cuisine-chip, .recherche-pastille, .resa-filtres button, .ec-segment:not(.ec-segment--lime) button) {
+    background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; box-shadow: inset 0 0 0 1px var(--line);
+  }
+  html.appli body :is(.co-interrupteur:not(.on), .ec-interrupteur:not(.ec-interrupteur--lime):not(.on), .btn-outline:not(.ecl-urgence > .btn-outline), .alerte-compacte-son,
     .eg-bouton-iris, .tracking-expand-btn, .ec-pilule-blanche) { background: #EFEEFA; -webkit-backdrop-filter: none; backdrop-filter: none; }
   html.appli body :is(.compte-raccourci, .bv-iris .bv-langues, .bv-bandeau .bv-langues, .ecl-urgence > .btn-outline) { background: rgba(255, 255, 255, .2); -webkit-backdrop-filter: none; backdrop-filter: none; }
 }
