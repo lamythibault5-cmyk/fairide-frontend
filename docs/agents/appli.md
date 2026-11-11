@@ -177,6 +177,11 @@ highlight on top and a thin white rim instead. The map's search bar, chips and c
 rim, soft shadow, no white halo around the text). The cuisine strip's lens and the restaurant sections strip's lens are the tab
 bar's: a faint grey pill (`--verre-pastille`), a clear glass drop when pressed (`--verre-goutte-*`); the sections strip takes the
 bar's glass, and no lens refracts any more (lentillePuces.js, barreVerre.js). One blur per bar, nothing computed per frame.
+**After every screen transition the glass is rebuilt** (founder, 2026-11-11, iPhone: Search › a category › back on the list, the
+tab bar was fully see-through): WebKit does not always recreate a `backdrop-filter` layer after a View Transition. `refaireVerre`
+(transitionPhoto.js) sets `html.verre-refait` for one frame at the end of every transition and when the app comes back to the
+foreground, which turns every blur off and on again (transitions-appli.css). During a transition the tab bar and the Search circle
+are near-opaque frosted (their capture has nothing behind it to blur, and showed fully transparent).
 
 **Glass that answers the finger (2026-10-24, version B of `maquettes/verre-appui/verre-appui.html`, « iOS 26 »)**, native app only, in
 [verreAppui.js](../../src/verreAppui.js) (loaded by `demarrerNatif`) + the end of verre.css: every glass control (its list is `VERRE` in that
