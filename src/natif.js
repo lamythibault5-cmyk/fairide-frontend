@@ -440,6 +440,19 @@ export async function demarrerNatif(historique) {
  * client, lui, garde l'approximative : elle suffit pour trouver les commerces proches. */
 // Rend aussi `precision` (mètres, null si inconnue) : la position approximative tombe à un ou deux kilomètres, et la position
 // au lancement (usePositionLancement.js) n'en tire rien qu'elle ne peut affirmer.
+/* LE GPS DE L'APPLI A UN DÉLAI, POSÉ ICI (fondateur, 2026-11-11, sur iPhone : « Utiliser ma position » restait sur
+ * « Recherche de ta position… » très longtemps). Le greffon @capacitor/geolocation 7 IGNORE `timeout` dans getCurrentPosition :
+ * sur iPhone il ne lit que enableHighAccuracy (ios/…/GeolocationPlugin.swift), sur Android il ne l'applique pas non plus. Sans
+ * réponse du GPS (à l'intérieur, GPS qui cherche encore), la promesse ne se résolvait JAMAIS : l'adresse attendait sans fin, et
+ * l'alerte d'urgence du livreur (positionPrecise) ne partait pas. On borne l'attente nous-mêmes ; une réponse tardive du greffon
+ * est ignorée. Les questions d'autorisation ne sont pas bornées : c'est la personne qui répond, à son rythme. */
+const DELAI_DEPASSE = Symbol('delai-position');
+function borner(promesse, ms) {
+  let minuteur;
+  const delai = new Promise((resolve) => { minuteur = setTimeout(() => resolve(DELAI_DEPASSE), ms); });
+  return Promise.race([promesse, delai]).finally(() => clearTimeout(minuteur));
+}
+
 export async function demanderPosition({ delai = 10000, precise = false } = {}) {
   const options = { enableHighAccuracy: false, timeout: delai, maximumAge: 5 * 60 * 1000 };
   if (estNatif()) {
@@ -448,7 +461,8 @@ export async function demanderPosition({ delai = 10000, precise = false } = {}) 
       let droit = await Geolocation.checkPermissions();
       if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: [precise ? 'location' : 'coarseLocation'] });
       if (droit.location !== 'granted' && droit.coarseLocation !== 'granted') return null;
-      const p = await Geolocation.getCurrentPosition(options);
+      const p = await borner(Geolocation.getCurrentPosition(options), delai);
+      if (p === DELAI_DEPASSE) return null;
       return { lat: p.coords.latitude, lng: p.coords.longitude, precision: p.coords.accuracy ?? null };
     } catch { return null; }
   }
@@ -477,23 +491,34 @@ export async function autoriserPosition() {
 
 /* Position PRÉCISE ET FRAÎCHE, pour l'alerte d'urgence du livreur (components/livreur/BoutonUrgence.jsx) : haute
  * précision, 30 s de cache au plus, 8 s pour répondre — l'équipe doit pouvoir le retrouver, pas seulement sa commune.
- * Rend { lat, lng, precision } ou null, jamais d'erreur : l'alerte part quand même, sans position. */
-export async function positionPrecise() {
-  const options = { enableHighAccuracy: true, timeout: 8000, maximumAge: 30 * 1000 };
+ * Rend { lat, lng, precision } ou null, jamais d'erreur : l'alerte part quand même, sans position.
+ * Sert aussi à « Utiliser ma position » (ChoixAdresse.jsx), qui passe `signalerDelai` : un GPS qui ne répond pas dans les 8 s
+ * lève alors une erreur `code: 'POSITION_DELAI'`, pour dire « trop long » plutôt que « autorise la localisation ». */
+export async function positionPrecise({ signalerDelai = false } = {}) {
+  const delai = 8000;
+  const options = { enableHighAccuracy: true, timeout: delai, maximumAge: 30 * 1000 };
   const rendre = (p) => ({ lat: p.coords.latitude, lng: p.coords.longitude, precision: p.coords.accuracy });
+  let p = null;
   if (estNatif()) {
     try {
       const { Geolocation } = await import('@capacitor/geolocation');
       let droit = await Geolocation.checkPermissions();
       if (droit.location === 'prompt' || droit.location === 'prompt-with-rationale') droit = await Geolocation.requestPermissions({ permissions: ['location'] });
       if (droit.location !== 'granted' && droit.coarseLocation !== 'granted') return null;
-      return rendre(await Geolocation.getCurrentPosition(options));
+      p = await borner(Geolocation.getCurrentPosition(options), delai);
     } catch { return null; }
+  } else {
+    if (!('geolocation' in navigator)) return null;
+    // Le navigateur, lui, applique `timeout` : son erreur 3 (TIMEOUT) est le même « trop long ».
+    p = await new Promise((resolve) => {
+      navigator.geolocation.getCurrentPosition(resolve, (e) => resolve(e?.code === 3 ? DELAI_DEPASSE : null), options);
+    });
   }
-  if (!('geolocation' in navigator)) return null;
-  return new Promise((resolve) => {
-    navigator.geolocation.getCurrentPosition((p) => resolve(rendre(p)), () => resolve(null), options);
-  });
+  if (p === DELAI_DEPASSE) {
+    if (signalerDelai) throw Object.assign(new Error('position : délai dépassé'), { code: 'POSITION_DELAI' });
+    return null;
+  }
+  return p ? rendre(p) : null;
 }
 
 /* SUIVI DE POSITION DU LIVREUR, TÉLÉPHONE VERROUILLÉ COMPRIS (comparaison avec Uber Eats, 15 oct. 2026).

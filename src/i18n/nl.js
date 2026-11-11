@@ -8630,6 +8630,7 @@ export default {
       here: "Mijn locatie gebruiken",
       hereLoading: "Je locatie zoeken…",
       hereFound: "Gevonden met je locatie: controleer het huisnummer.",
+      hereSlow: "Je locatie laat te lang op zich wachten. Probeer het opnieuw bij een raam, of zoek je adres hierboven.",
       hereFailed: "Locatie niet gevonden. Geef Fairride toegang tot je locatie, of zoek je adres hierboven.",
       hereVague: "Je locatie is te onnauwkeurig om je deur te vinden. Zet de exacte locatie aan voor Fairride, of zoek je adres hierboven.",
       hereNotFound: "Geen adres gevonden op je locatie. Zoek het hierboven.",

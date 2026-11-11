@@ -8693,6 +8693,7 @@ export default {
       here: "Utiliser ma position",
       hereLoading: "Recherche de ta position…",
       hereFound: "Trouvée avec ta position : vérifie le numéro.",
+      hereSlow: "Ta position met trop de temps à arriver. Réessaie près d'une fenêtre, ou cherche ton adresse ci-dessus.",
       hereFailed: "Position introuvable. Autorise la localisation pour Fairride, ou cherche ton adresse ci-dessus.",
       hereVague: "Ta position est trop approximative pour trouver ta porte. Active la position exacte pour Fairride, ou cherche ton adresse ci-dessus.",
       hereNotFound: "Aucune adresse trouvée à ta position. Cherche-la ci-dessus.",
