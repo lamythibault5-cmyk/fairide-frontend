@@ -194,6 +194,11 @@ button (their pre-fondu glass, asked back on 10-27, white 82 % to read on a dark
 `html.appli .dashboard-nav-label` (max-height 13 px) beat the older rule that folds the label, so the hidden label kept its
 13 px and pushed the icon 7 px up on the customer, shop and courier bars; `html.appli .dashboard-sidebar--compacte` now folds it
 (max-height 0, gap 0). Measured: icon offset 0 / 0 px in the circle and in the Search circle, three roles, 375 and 430 px.
+**After every screen transition the glass is rebuilt** (founder, 2026-11-11, iPhone: Search › a category › back on the list, the
+tab bar was fully see-through): WebKit does not always recreate a `backdrop-filter` layer after a View Transition. `refaireVerre`
+(transitionPhoto.js) sets `html.verre-refait` for one frame at the end of every transition and when the app comes back to the
+foreground, which turns every blur off and on again (transitions-appli.css). During a transition the tab bar and the Search circle
+are near-opaque frosted (their capture has nothing behind it to blur, and showed fully transparent).
 
 **Glass that answers the finger (2026-10-24, version B of `maquettes/verre-appui/verre-appui.html`, « iOS 26 »)**, native app only, in
 [verreAppui.js](../../src/verreAppui.js) (loaded by `demarrerNatif`) + the end of verre.css: every glass control (its list is `VERRE` in that
