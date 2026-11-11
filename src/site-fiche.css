@@ -63,7 +63,7 @@
 .fiche-site .favorite-heart--rond svg path { fill: transparent; stroke: #fff; stroke-width: 2; }
 .fiche-site .favorite-heart--rond.is-active svg path { fill: #fff; stroke: #fff; }
 .fiche-site .favorite-heart--rond:disabled { opacity: 1; cursor: progress; }
-/* La recherche ouverte : un champ blanc à gauche du cœur. */
+/* La recherche ouverte : un champ blanc à gauche de « Annuler » (la croix et le cœur se retirent, styles.css). */
 .fiche-site .flux-entete--flottant .fiche-recherche {
   flex: 0 1 auto; width: 380px; max-width: calc(100cqw - 180px); min-width: 0; height: 46px; margin: 0; padding: 0 5px 0 14px; gap: 6px;
   background: #fff; border: 1.5px solid var(--line); border-radius: 23px;
@@ -80,9 +80,11 @@
   .fiche-site .flux-entete--flottant > .flux-bouton { top: 12px; left: 12px; }
   .fiche-site .flux-entete--flottant > .flux-actions { top: 12px; right: 12px; gap: 8px; }
   .fiche-site .flux-entete--flottant .flux-bouton, .fiche-site .favorite-heart--rond { width: 44px; height: 44px; }
-  .fiche-site .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: 64px; }
+  .fiche-site .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: 12px; }
   .fiche-site .flux-entete--flottant .fiche-recherche { flex: 1 1 auto; width: auto; max-width: none; height: 44px; }
-  .fiche-site.fiche-site--compact .flux-entete--flottant::before {
+  /* L'aplat blanc aussi pendant la recherche, même en haut de la page. */
+  .fiche-site.fiche-site--compact .flux-entete--flottant::before,
+  .fiche-site .flux-entete--flottant:has(.fiche-recherche)::before {
     content: ''; position: absolute; left: 0; right: 0; top: 0; height: 64px; background: #fff;
   }
 }

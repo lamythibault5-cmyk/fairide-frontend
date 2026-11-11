@@ -8470,7 +8470,7 @@ export default {
       etaPickupValue: '~{min} min',
       etaPickupLabel: 'Klaar in',
       searchDish: 'Zoek een gerecht',
-      searchSubmit: 'Resultaten bekijken',
+      cancelSearch: 'Annuleren',
       searchCountOne: '1 gerecht gevonden',
       searchCount: '{n} gerechten gevonden',
       noDishMatch: 'Geen gerecht komt overeen met "{q}".',

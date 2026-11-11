@@ -58,15 +58,19 @@
 .fiche-appli .favorite-heart--rond svg path { fill: transparent; stroke: #fff; stroke-width: 2; }
 .fiche-appli .favorite-heart--rond.is-active svg path { fill: #fff; stroke: #fff; }
 .fiche-appli .favorite-heart--rond:disabled { opacity: 1; cursor: progress; }
-/* La recherche ouverte : un champ blanc entre la croix et le cœur. */
-.fiche-appli .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: calc(64px - var(--fiche-g)); }
+/* La recherche ouverte : la croix et le cœur se retirent, un champ blanc va du bord gauche à « Annuler » (styles.css). Une
+   bande blanche derrière : les plats ne défilent plus entre le champ et le haut de l'écran. */
+.fiche-appli .flux-entete--flottant > .flux-actions:has(.fiche-recherche) { left: calc(12px - var(--fiche-g)); }
+.fiche-page.fiche-appli .flux-entete--flottant:has(.fiche-recherche)::before {
+  content: ''; position: absolute; top: 0; left: calc(-1 * var(--fiche-g)); right: calc(-1 * var(--fiche-g)); height: 66px; background: #fff;
+}
 .fiche-appli .flux-entete--flottant .fiche-recherche {
   flex: 1 1 auto; width: auto; min-width: 0; height: 44px; margin: 0; padding: 0 4px 0 12px; gap: 6px;
   background: #fff; border: 1.5px solid var(--line); border-radius: 22px;
 }
 .fiche-appli .flux-entete--flottant .fiche-recherche:focus-within { border-color: var(--iris); }
 .fiche-appli .flux-entete--flottant .fiche-recherche input { min-height: 0; padding: 0; font-size: 16px; }
-/* Les deux ronds du champ (effacer, valider) gardent leurs 34px : la règle générale des 44px de haut en faisait des ovales. */
+/* La croix du champ garde ses 34px : la règle générale des 44px de haut en faisait un ovale. */
 .fiche-page.fiche-appli .flux-entete--flottant .fiche-recherche button { min-height: 0; height: 34px; width: 34px; }
 
 

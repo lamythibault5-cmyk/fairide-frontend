@@ -24,7 +24,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 // l'affichage d'une fiche de commerce, qui est une page publique et indexable.
 const RestaurantsMap = lazy(() => import('../../components/RestaurantsMap'));
 import FichePlat from '../../components/FichePlat';
-import { envolerVersPanier, vibrer, defilement } from '../../gestes';
+import { envolerVersPanier, vibrer } from '../../gestes';
 import MenuCategorySections from '../../components/MenuCategorySections';
 import EnteteFlux from '../../components/EnteteFlux';
 import CategoryQuickNav from '../../components/CategoryQuickNav';
@@ -43,7 +43,7 @@ import { localizedItem } from '../../menuTranslation';
 import { resolveItemImage, restaurantTypeLabel, haversineDistanceKm } from '../../menuCategories';
 import { VeloMarque } from '../../components/EcranCommande';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
-import { experienceApp } from '../../natif';
+import { experienceApp, estNatif, plateforme, suspendreRetourIos } from '../../natif';
 import { photoEnVol, entreeParPhoto, ouvrirAvecPhoto } from '../../transitionPhoto';
 import { chargerAvecCache, lireCache, poserFavoriEnCache } from '../../cacheDonnees';
 import { CHEMIN_LISTE } from '../../resumeCarte';
@@ -292,6 +292,76 @@ export default function RestaurantMenu({ id }) {
   // toucher pour écrire dedans demande deux gestes là où on en attend un.
   useEffect(() => {
     if (rechercheOuverte) champRechercheRef.current?.focus();
+  }, [rechercheOuverte]);
+  /* UNE SEULE SORTIE, ÉCRITE EN MOTS (version A de maquettes/recherche-carte/recherche-carte.html, fondateur, 2026-11-11).
+     La recherche avait une croix grise (effacer ET fermer) et une coche (« Voir les résultats ») dans le champ, à côté de la
+     croix ronde qui quitte le commerce : deux croix au même dessin pour deux gestes, une coche qui débordait du champ et
+     refaisait la touche « Rechercher » du clavier. Maintenant : la croix du champ efface seulement, « Annuler » ferme et
+     ramène là où l'on était dans la carte, et la croix du commerce et le cœur se retirent tant que la recherche est ouverte. */
+  const debutCarteRef = useRef(null);
+  const defilementAvantRecherche = useRef(0);
+  function ouvrirRecherche() {
+    defilementAvantRecherche.current = window.scrollY;
+    setRechercheOuverte(true);
+  }
+  function fermerRecherche() {
+    setRequete('');
+    setRechercheOuverte(false);
+    const y = defilementAvantRecherche.current;
+    requestAnimationFrame(() => window.scrollTo({ top: y }));
+  }
+  const fermerRechercheRef = useRef(fermerRecherche);
+  fermerRechercheRef.current = fermerRecherche;
+  // Les plats juste sous le champ, dès la première lettre : la photo et le bandeau « À emporter… » ne s'intercalent plus
+  // entre ce qu'on tape et ce qu'on trouve. La bande des sections se pose à sa place collée, la ligne « N plats trouvés »
+  // juste dessous. Sans défilement animé : il suit chaque lettre.
+  const rechercheActive = rechercheOuverte && !!normaliserRecherche(requete);
+  useEffect(() => {
+    if (!rechercheActive) return;
+    const debut = debutCarteRef.current;
+    if (!debut) return;
+    // Sur un ordinateur, le champ part avec la photo (site-fiche.css, en-tête non collant) : remonter la carte le sortirait
+    // de l'écran. Les plats y sont de toute façon visibles sous l'en-tête.
+    const enteteFlux = champRechercheRef.current?.closest('.flux-entete');
+    if (!enteteFlux || getComputedStyle(enteteFlux).position !== 'sticky') return;
+    // Moins de deux sections trouvées : pas de bande (CategoryQuickNav), les plats commencent sous le champ.
+    const bande = debut.nextElementSibling?.classList.contains('category-quicknav') ? debut.nextElementSibling : null;
+    const sousChamp = (champRechercheRef.current?.getBoundingClientRect().bottom || 60) + 8;
+    debut.style.scrollMarginTop = `${bande ? parseFloat(getComputedStyle(bande).top) || sousChamp : sousChamp}px`;
+    debut.scrollIntoView({ block: 'start' });
+  }, [rechercheActive, requete]);
+  // Pendant la recherche : faire défiler du doigt range le clavier (le filtre reste, comme Uber Eats et Deliveroo) ; le
+  // Retour d'Android passe par « Annuler » (data-retour-natif, natif.js) ; sur iPhone, le balayage retour de WebKit se tait
+  // (il quittait le commerce) et un balayage depuis le bord gauche ferme la recherche, comme « Annuler ».
+  useEffect(() => {
+    if (!rechercheOuverte) return undefined;
+    const rangerClavier = (e) => {
+      const champ = champRechercheRef.current;
+      if (champ && document.activeElement === champ && !champ.form?.contains(e.target)) champ.blur();
+    };
+    window.addEventListener('touchmove', rangerClavier, { passive: true });
+    let rendreRetour = () => {};
+    let depart = null;
+    const debutBord = (e) => { const p = e.touches[0]; depart = p && p.clientX <= 24 ? { x: p.clientX, y: p.clientY } : null; };
+    const finBord = (e) => {
+      const p = e.changedTouches[0];
+      if (!depart || !p) return;
+      const dx = p.clientX - depart.x;
+      const dy = Math.abs(p.clientY - depart.y);
+      depart = null;
+      if (dx > 70 && dy < dx) fermerRechercheRef.current();
+    };
+    if (estNatif() && plateforme() === 'ios') {
+      rendreRetour = suspendreRetourIos();
+      window.addEventListener('touchstart', debutBord, { passive: true });
+      window.addEventListener('touchend', finBord, { passive: true });
+    }
+    return () => {
+      window.removeEventListener('touchmove', rangerClavier);
+      window.removeEventListener('touchstart', debutBord);
+      window.removeEventListener('touchend', finBord);
+      rendreRetour();
+    };
   }, [rechercheOuverte]);
   // Calculé une seule fois, avant que l'effet ci-dessous ne mette sessionStorage à jour : distingue un
   // rafraîchissement de cette même page (F5) d'une vraie navigation vers un autre restaurant.
@@ -602,6 +672,8 @@ export default function RestaurantMenu({ id }) {
   // où une pastille iris glisse d'une section à l'autre (`pouce`).
   const sectionsEtResultat = (
     <>
+      {/* Repère sans hauteur : là où la bande des sections commence avant de coller (les résultats s'alignent dessus). */}
+      <div ref={debutCarteRef} aria-hidden="true" />
       <CategoryQuickNav categories={sectionsFiltrees} verre={APPLI} pouce={!APPLI} />
       {/* Le résultat d'une recherche, dit en clair (et annoncé aux lecteurs d'écran) : la carte filtrée seule ne disait
           pas que le tri avait eu lieu. Zéro résultat : le message « aucun plat » plus bas suffit. */}
@@ -630,45 +702,49 @@ export default function RestaurantMenu({ id }) {
       flottant
       actions={<>{restaurant.menu.length > 8 ? (
         rechercheOuverte ? (
-          /* VALIDER LA RECHERCHE (retour du fondateur, 2026-10-14) : rien ne confirmait l'action — la touche Entrée ne
-             faisait rien et le rond gris restait vide. « Voir les résultats » (ou Entrée) ferme le clavier et amène à la
-             première section trouvée ; le nombre de plats s'affiche sous la barre des sections (fiche-recherche-resultat). */
-          <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => {
-            e.preventDefault();
-            champRechercheRef.current?.blur();
-            document.querySelector('[id^="menu-cat-"]')?.scrollIntoView({ behavior: defilement(), block: 'start' });
-          }}>
-            <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
-            <input
-              ref={champRechercheRef}
-              type="search" enterKeyHint="search" value={requete} onChange={(e) => setRequete(e.target.value)}
-              placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
-            />
-            {/* Fermer VIDE la recherche : replier le champ en gardant un filtre actif laisserait
-                une carte amputée sans rien à l'écran pour dire pourquoi. Une croix, plus le rond « interdit ». */}
-            <button
-              type="button" className="recherche-effacer"
-              onClick={() => { setRequete(''); setRechercheOuverte(false); }}
-              aria-label={t('restaurantMenu.clearSearch')} title={t('restaurantMenu.clearSearch')}
-            >
-              <Icone nom="croix" taille={16} />
+          <>
+            {/* La touche « Rechercher » du clavier (Entrée) range le clavier, le filtre reste. Plus de coche : elle refaisait
+                cette touche, et apparaissait à la première lettre en rétrécissant le champ sous le doigt. */}
+            <form className="recherche-champ fiche-recherche" role="search" onSubmit={(e) => {
+              e.preventDefault();
+              champRechercheRef.current?.blur();
+            }}>
+              <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={18} /></span>
+              <input
+                ref={champRechercheRef}
+                type="search" enterKeyHint="search" value={requete} onChange={(e) => setRequete(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Escape') { e.preventDefault(); fermerRecherche(); } }}
+                placeholder={t('restaurantMenu.searchDish')} aria-label={t('restaurantMenu.searchDish')}
+              />
+              {/* EFFACER SEULEMENT : le texte part, le curseur et le clavier restent (pointerdown retenu, sinon le champ perd
+                  le curseur avant le clic). Seulement quand il y a du texte, en petit rond gris comme sur iPhone. */}
+              {requete && (
+                <button
+                  type="button" className="recherche-effacer recherche-effacer--rond"
+                  onPointerDown={(e) => e.preventDefault()}
+                  onClick={() => { setRequete(''); champRechercheRef.current?.focus(); }}
+                  aria-label={t('restaurantMenu.clearSearch')} title={t('restaurantMenu.clearSearch')}
+                >
+                  <span aria-hidden="true"><Icone nom="croix" taille={12} /></span>
+                </button>
+              )}
+            </form>
+            {/* Fermer VIDE la recherche : replier le champ en gardant un filtre actif laisserait une carte amputée sans rien
+                à l'écran pour dire pourquoi. `data-retour-natif` : le Retour d'Android le touche (natif.js). */}
+            <button type="button" className="flux-bouton fiche-recherche-annuler" onClick={fermerRecherche} data-retour-natif>
+              {t('restaurantMenu.cancelSearch')}
             </button>
-            {requete.trim() && (
-              <button type="submit" className="recherche-valider" aria-label={t('restaurantMenu.searchSubmit')} title={t('restaurantMenu.searchSubmit')}>
-                <Icone nom="valider" taille={18} />
-              </button>
-            )}
-          </form>
+          </>
         ) : (
           <button
             type="button" className="flux-bouton"
-            onClick={() => setRechercheOuverte(true)}
+            onClick={ouvrirRecherche}
             aria-label={t('restaurantMenu.searchDish')} title={t('restaurantMenu.searchDish')}
           >
             <Icone nom="recherche" taille={20} />
           </button>
         )
-      ) : null}{coeur}</>}
+      ) : null}{!rechercheOuverte && coeur}</>}
     />
   );
 
@@ -990,7 +1066,9 @@ export default function RestaurantMenu({ id }) {
           <span>{t('restoMenuUi.orderingNotOpenInfo')}{restaurant.prixMasques && <> {t('restoMenuUi.pricesSoonInfo')}</>}</span>
         </div>
       )}
-      <div className="fiche-carte-plats">
+      {/* Pendant une recherche, la carte garde au moins un écran de haut : trois plats trouvés ne laisseraient pas assez de
+          page pour les remonter sous le champ, et le bandeau « À emporter… » restait entre le champ et eux. */}
+      <div className={`fiche-carte-plats${rechercheActive ? ' fiche-carte-plats--recherche' : ''}`}>
         {restaurant.menu.length === 0 && <div className="empty">{t('restaurantMenu.noMenuYet')}</div>}
         {restaurant.menu.length > 0 && menuFiltre.length === 0 && (
           <p className="small" style={{ margin: 0 }}>{t('restaurantMenu.noDishMatch', { q: requete })}</p>
