@@ -374,8 +374,8 @@ html.appli .ec-interrupteur::after { box-shadow: 0 1px 3px rgba(20, 18, 31, .25)
   html.appli .ec-barre-accepter {
     background: rgba(255, 255, 255, .22); border: 1px solid rgba(255, 255, 255, .6);
     -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 5px 0 8px -4px rgba(255, 70, 170, .22),
-      inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 0 .5px rgba(255, 255, 255, .5),
+      0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
   }
 }
 @media (max-width: 900px) and (prefers-reduced-transparency: reduce) {

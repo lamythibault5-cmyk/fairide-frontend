@@ -102,11 +102,14 @@ source spec and `maquettes/landing-iris/landing-iris.html` for the reference pag
 2. **Backgrounds are white or iris. No third background colour**, and no gradients, no blurred
    halos, no drop shadows. Elevation is expressed by a hairline border.
    *One exception (asked for):* in the **app only** (`html.appli`: native app and home-screen site), the bottom tab bar is
-   **liquid glass** since 2026-10-16 (version 2 of `maquettes/barre-onglets-verre/barre-onglets-verre.html`, after
-   WhatsApp): near-transparent, short blur, highlights and a soft shadow; the active tab is a glass lens with iridescent edges
-   that grows when pressed and follows the finger ([src/barreVerre.js](../../src/barreVerre.js), loaded with `import()` in the app only;
-   on desktop Chromium it also refracts what passes under its edges; not on Android since 2026-10-20, too heavy on a mid-range
-   phone). On the website it stays solid white. Since 2026-10-25 (`maquettes/appui-iris`) the app's tab icons fill with iris on the current tab and under the finger (`IconePleine`, Icone.jsx), and the cuisine drawings get an iris contour (appli.md).
+   **iOS 26 glass** since 2026-11-11 (answers 1 A, 2 A, 3 A, 4 A of `maquettes/barre-ios26/barre-ios26.html`; it replaced the
+   « liquid glass » of 2026-10-16): 64 px high, white 16 % with ONE blur, a light rim drawn as a masked gradient (bright top-left
+   and bottom-right) and an inner edge glow, a soft shadow; **no iridescent edges anywhere in the app** (Apple has none) and no
+   refraction. It turns smoked with white icons over a dark surface ([src/teinteBarre.js](../../src/teinteBarre.js): iris cards
+   and bands; photos count as light). The active tab is a faint grey pill with an iris icon; pressed, it becomes a glass drop
+   that sticks out of the bar and follows the finger ([src/barreVerre.js](../../src/barreVerre.js)). Scrolling down folds the bar
+   into one 64 px circle (the current tab), scrolling up or tapping it unfolds it; the customer's Search is a separate glass
+   circle on the right (DashboardSidebar.jsx, app on a phone only). On the website it stays solid white, five tabs. Since 2026-10-25 (`maquettes/appui-iris`) the app's tab icons fill with iris on the current tab and under the finger (`IconePleine`, Icone.jsx), and the cuisine drawings get an iris contour (appli.md).
 3. **One lime accent per view.** If a screen already has a `btn-gold`, its active tab / badge /
    nav item uses white or iris instead. *Exception (founder, 2026-10-16):* the app's welcome/sign-up screens pair the lime
    button with the lime check of ticked options and the « Salut ! » chip.

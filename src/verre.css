@@ -46,16 +46,30 @@ html.appli {
      portée, filet iris, bords roses et bleus. Il reste sur les ronds de la fiche (croix, recherche, cœur) et sur tous les retours. */
   --verre-brillant-fond: linear-gradient(rgba(59, 47, 181, .10), rgba(59, 47, 181, .10)), rgba(255, 255, 255, .82);
   --verre-brillant-flou: blur(8px) saturate(180%) brightness(1.3);
-  --verre-brillant-ombre: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22),
-    inset 4px 0 9px -4px rgba(255, 70, 170, .25), inset -4px 0 9px -4px rgba(40, 190, 255, .28), 0 6px 18px rgba(20, 18, 31, .18);
+  /* Sans bords roses et bleus depuis le 2026-11-11 (maquettes/barre-ios26 : « nos bords sont arc-en-ciel, ceux d'Apple non ») : le
+     reflet du haut et un filet blanc en bas, la lumière d'iOS 26. Même chose pour toutes les recettes de ce fichier. */
+  --verre-brillant-ombre: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22), inset 0 -1px 0 rgba(255, 255, 255, .55),
+    0 6px 18px rgba(20, 18, 31, .16);
   /* L'iris vif d'avant le verre fondu : filet blanc, bords roses et bleus, halo iris. Revenu le 2026-10-27 sur « Ouvert » allumé
      (fondateur : « un look plus vif, plus verre » une fois cliqué ; éteint, il garde le verre fondu). */
-  --iris-vif-brillant-ombre: inset 0 0 0 1px rgba(255, 255, 255, .3), inset 4px 0 8px -3px rgba(255, 90, 190, .5), inset -4px 0 8px -3px rgba(60, 200, 255, .55),
-    0 4px 12px rgba(59, 47, 181, .38);
+  --iris-vif-brillant-ombre: inset 0 0 0 1px rgba(255, 255, 255, .3), inset 0 1px 0 rgba(255, 255, 255, .4), 0 4px 12px rgba(59, 47, 181, .38);
   --verre-iris-fond: rgba(59, 47, 181, .72);
   --verre-iris-flou: blur(8px) saturate(170%);
   --verre-iris-ombre: inset 0 1px 0 rgba(255, 255, 255, .55), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 0 -1px 1px rgba(255, 255, 255, .18),
-    inset 4px 0 9px -4px rgba(255, 70, 170, .3), inset -4px 0 9px -4px rgba(40, 190, 255, .32), 0 4px 12px rgba(59, 47, 181, .3);
+    0 4px 12px rgba(59, 47, 181, .3);
+  /* LE VERRE D'IOS 26 POUR CE QUI FLOTTE ET PORTE DU TEXTE (2026-11-11, maquettes/barre-ios26) : la recherche et les pastilles du
+     plan. Plus dépoli que la barre d'onglets (le texte doit se lire sur un plan), un filet de lumière clair en haut, plus doux en
+     bas, une ombre douce ; ni bords irisés ni halo blanc autour du texte. */
+  --verre-ios-fond: rgba(255, 255, 255, .5);
+  --verre-ios-flou: blur(10px) saturate(180%) brightness(1.04);
+  --verre-ios-filet: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 0 rgba(255, 255, 255, .45), inset 0 0 0 .5px rgba(255, 255, 255, .55), inset 0 0 12px rgba(255, 255, 255, .3);
+  --verre-ios-ombre: 0 6px 20px rgba(20, 18, 31, .12), 0 1px 3px rgba(20, 18, 31, .07);
+  /* La lentille d'iOS 26 (barre d'onglets, bande des cuisines, bande des sections) : une pastille à peine grise au repos, une
+     goutte de verre claire à l'appui. */
+  --verre-pastille: rgba(20, 18, 31, .075);
+  --verre-goutte-fond: rgba(255, 255, 255, .34);
+  --verre-goutte-ombre: 0 12px 28px rgba(20, 18, 31, .24), 0 2px 6px rgba(20, 18, 31, .12), inset 0 0 0 1.2px rgba(255, 255, 255, .95),
+    inset 0 3px 8px rgba(255, 255, 255, .95), inset 0 -6px 12px -5px rgba(255, 255, 255, .85);
 }
 
 /* ---------- 1. Sous la barre d'état ---------- */
@@ -185,7 +199,7 @@ html.appli body .fiche-appli .fiche-infos-lien {
   html.appli body .ec-page .cart-bar.ec-barre {
     background: linear-gradient(rgba(59, 47, 181, .06), rgba(59, 47, 181, .06)), rgba(255, 255, 255, .5);
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .2), inset 0 0 18px rgba(255, 255, 255, .25),
-      inset 5px 0 8px -4px rgba(255, 70, 170, .22), inset -5px 0 8px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .18), 0 1px 3px rgba(20, 18, 31, .08);
+      inset 0 -1px 0 rgba(255, 255, 255, .5), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
   }
 }
 
@@ -245,7 +259,7 @@ html.appli body .toast:not(.toast-erreur) {
 html.appli verre-lueur {
   position: absolute; inset: 0; z-index: -1; border-radius: inherit; pointer-events: none; opacity: 0; transition: opacity .45s ease;
   background: radial-gradient(circle var(--verre-r, 60px) at var(--verre-x, 50%) var(--verre-y, 50%),
-    rgba(255, 255, 255, .95) 0, rgba(255, 255, 255, .5) 30%, rgba(140, 120, 255, .3) 62%, rgba(140, 120, 255, 0) 100%);
+    rgba(255, 255, 255, .95) 0, rgba(255, 255, 255, .5) 30%, rgba(255, 255, 255, .16) 62%, rgba(255, 255, 255, 0) 100%);
 }
 html.appli .verre-lumiere > verre-lueur { opacity: 1; transition-duration: .12s; }
 /* Sur l'iris (les « + », le « − 1 + », les retours des bandeaux), une lumière blanche plus douce. */
@@ -282,15 +296,18 @@ html.appli body .sous-ecran-tete .flux-bouton {
   -webkit-backdrop-filter: var(--verre-brillant-flou); backdrop-filter: var(--verre-brillant-flou);
 }
 
-/* Le filet s'allume au contact (le « miroitement » d'iOS 26). Les barres : */
-html.appli body :is(.dashboard-nav, .fiche-appli .category-quicknav--verre, .panier-pilule).verre-lumiere {
-  box-shadow: inset 0 1px 0 #fff, inset 0 -1px 1px rgba(255, 255, 255, .5), inset 0 0 22px rgba(255, 255, 255, .35),
-    inset 6px 0 12px -5px rgba(255, 70, 170, .35), inset -6px 0 12px -5px rgba(40, 190, 255, .38), 0 14px 34px rgba(20, 18, 31, .2), 0 1px 3px rgba(20, 18, 31, .08);
+/* Le filet s'allume au contact (le « miroitement » d'iOS 26). Les barres (sans bords irisés depuis le 2026-11-11) : */
+html.appli body :is(.fiche-appli .category-quicknav--verre, .panier-pilule).verre-lumiere {
+  box-shadow: inset 0 1px 0 #fff, inset 0 -1px 1px rgba(255, 255, 255, .6), inset 0 0 0 .5px rgba(255, 255, 255, .6), inset 0 0 22px rgba(255, 255, 255, .35),
+    0 14px 34px rgba(20, 18, 31, .2), 0 1px 3px rgba(20, 18, 31, .08);
 }
+/* La barre d'onglets (iOS 26) : son filet de lumière est un masque (styles.css) ; au contact, l'ombre s'allonge un peu. */
+html.appli body .dashboard-nav.verre-lumiere { box-shadow: 0 12px 30px rgba(20, 18, 31, .17), 0 1px 3px rgba(20, 18, 31, .08); }
+html.appli body .dashboard-sidebar--sombre .dashboard-nav.verre-lumiere { box-shadow: 0 12px 30px rgba(0, 0, 0, .26), 0 1px 3px rgba(0, 0, 0, .12); }
 /* … les pastilles du plan, les ronds de la fiche et les retours sur du blanc (leur verre d'avant, 2026-10-27) : */
 html.appli body :is(.carte-page .carte-pastilles .cuisine-chip, .fiche-appli .flux-entete--flottant .flux-bouton, .fiche-appli .favorite-heart--rond,
   .dashboard-retour, .retour-compte, .cs-retour, .bv-rond, .sous-ecran-tete .flux-bouton).verre-lumiere {
-  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1.5px rgba(59, 47, 181, .3), inset 5px 0 10px -4px rgba(255, 70, 170, .4), inset -5px 0 10px -4px rgba(40, 190, 255, .42), 0 8px 22px rgba(20, 18, 31, .22);
+  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1.5px rgba(59, 47, 181, .3), inset 0 -1px 0 rgba(255, 255, 255, .7), inset 0 0 14px rgba(255, 255, 255, .4), 0 8px 22px rgba(20, 18, 31, .2);
 }
 /* Le verre fondu (2026-10-26, réponse 4) : le filet ne s'allume plus (il ramenait l'ombre portée et les bords irisés), la teinte
    fonce un peu tant que le doigt est posé. */
@@ -313,8 +330,8 @@ html.appli body :is(.ec-rond, .gn-rond, .bv-bandeau .bv-haut .bv-rond, .bv-iris 
 html.appli body :is(.ec-b-retour, .ecl-b-retour, .eb-retour) {
   border: 0; color: #fff; background: rgba(255, 255, 255, .18);
   -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.15); backdrop-filter: blur(8px) saturate(160%) brightness(1.15);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 4px 0 8px -4px rgba(255, 90, 190, .45),
-    inset -4px 0 8px -4px rgba(60, 200, 255, .5), 0 4px 12px rgba(20, 10, 90, .3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(255, 255, 255, .25),
+    0 4px 12px rgba(20, 10, 90, .3);
 }
 /* Le bouton d'urgence du livreur, sur le bandeau iris : ce n'est pas un retour, il reste en verre fondu (blanc 12 %, filet blanc). */
 html.appli body .ecl-urgence > .btn-outline {
@@ -323,7 +340,7 @@ html.appli body .ecl-urgence > .btn-outline {
   box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .45);
 }
 html.appli body :is(.ec-rond, .gn-rond, .bv-bandeau .bv-haut .bv-rond, .bv-iris .bv-rond, .appli-barre.sur-iris .bv-rond, .page-feuille-fermer, .ec-b-retour, .ecl-b-retour, .eb-retour, .ecl-urgence > .btn-outline).verre-lumiere {
-  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255, 255, 255, .6), inset 5px 0 9px -4px rgba(255, 90, 190, .6), inset -5px 0 9px -4px rgba(60, 200, 255, .65), 0 6px 16px rgba(20, 10, 90, .35);
+  box-shadow: inset 0 1px 0 #fff, inset 0 0 0 1px rgba(255, 255, 255, .6), inset 0 0 14px rgba(255, 255, 255, .28), 0 6px 16px rgba(20, 10, 90, .35);
 }
 /* Tant que la page de la feuille n'a pas encore de bandeau (son code se charge : rien que des squelettes), son ‹ est sur du
    blanc : le verre clair des ronds de la fiche, pour qu'il ne disparaisse pas. */
@@ -380,16 +397,16 @@ html.appli body :is(.dashboard-retour, .retour-compte, .cs-retour, .ec-b-retour,
 html.appli body .dm-moi-aussi:not(.on) {
   color: var(--iris); background: rgba(255, 255, 255, .94);
   -webkit-backdrop-filter: blur(8px) saturate(110%) brightness(1.6); backdrop-filter: blur(8px) saturate(110%) brightness(1.6);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22), inset 4px 0 9px -4px rgba(255, 70, 170, .25),
-    inset -4px 0 9px -4px rgba(40, 190, 255, .28), 0 6px 18px rgba(20, 18, 31, .18);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22), inset 0 -1px 0 rgba(255, 255, 255, .55),
+    0 6px 18px rgba(20, 18, 31, .16);
 }
 /* « Un autre ? » est sur du blanc : son « Demander » garde le verre clair des autres boutons de l'app. */
 html.appli body .dm-ticket--autre .dm-moi-aussi { background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre); }
 html.appli body .dm-moi-aussi.on {
   color: #fff; background: rgba(255, 255, 255, .18);
   -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.15); backdrop-filter: blur(8px) saturate(160%) brightness(1.15);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 4px 0 8px -4px rgba(255, 90, 190, .45),
-    inset -4px 0 8px -4px rgba(60, 200, 255, .5), 0 4px 12px rgba(20, 10, 90, .3);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .75), inset 0 0 0 1px rgba(255, 255, 255, .42), inset 0 -1px 0 rgba(255, 255, 255, .25),
+    0 4px 12px rgba(20, 10, 90, .3);
 }
 @media (prefers-reduced-transparency: reduce) {
   html.appli body .dm-moi-aussi:not(.on) { background: #fff; -webkit-backdrop-filter: none; backdrop-filter: none; }

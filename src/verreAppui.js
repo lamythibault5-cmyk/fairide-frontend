@@ -23,6 +23,8 @@
    maquettes/barre-cuisines : plus de cadre, comme Uber Eats) : seule sa lentille est du verre, et lentillePuces.js la fait grossir. */
 const VERRE = [
   '.dashboard-nav', '.category-quicknav--verre', '.panier-pilule',
+  // Le rond de la recherche, à droite de la barre d'onglets (iOS 26, 2026-11-11) : il grossit comme un bouton.
+  '.dashboard-recherche',
   // Tous les ronds d'en-tête (la croix d'une fiche, le ‹ d'une sous-page de Mon compte) et tous les cœurs (la fiche, les cartes
   // de la liste, Mes favoris) — fondateur, 2026-10-25 : « ça ne marche pas pour le retour de Favoris, ni les cœurs ».
   '.flux-bouton', '.favorite-heart', '.fiche-appli .fiche-modes',

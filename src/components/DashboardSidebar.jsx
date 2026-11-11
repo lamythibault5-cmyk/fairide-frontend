@@ -1,4 +1,4 @@
-import { Suspense, useEffect, useRef } from 'react';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
@@ -166,14 +166,42 @@ export default function DashboardSidebar() {
   // Quasi instantané (retour du fondateur, 2026-10-14 : « elle met trop de temps à se réduire ») : 120px de défilement
   // avant la première réduction, c'était près d'un écran de pouce. Dans l'application, 24px et 3px de marge — dès que le
   // doigt descend ; sur le site, 60px et 6px, un peu plus de tolérance au tremblement d'un trackpad.
-  const compacte = useEnteteDefilement(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 });
+  const defile = useEnteteDefilement(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 });
+  /* DANS L'APP, REPLIÉE EN UN ROND (fondateur, 2026-11-11, réponse 3 A de maquettes/barre-ios26) : la barre se resserre sur
+   * l'onglet où l'on est (styles.css). Toucher le rond la rouvre sans changer de page ; elle se replie de nouveau après 60 px
+   * de défilement, ou revient d'elle-même quand on remonte. */
+  const [rouverte, setRouverte] = useState(false);
+  const rouvertureRef = useRef(false);
+  const compacte = defile && !rouverte;
+  useEffect(() => { if (!defile) setRouverte(false); }, [defile]);
+  useEffect(() => {
+    if (!rouverte) return undefined;
+    const depart = window.scrollY;
+    const voir = () => { if (Math.abs(window.scrollY - depart) > 60) setRouverte(false); };
+    window.addEventListener('scroll', voir, { passive: true });
+    return () => window.removeEventListener('scroll', voir);
+  }, [rouverte]);
   /* LA BARRE DU PANIER SUIT (fondateur, 2026-10-17 : « que le panier se réduise en même temps que la barre, avec la même
    * animation »). L'état est publié sur <html> (`barre-compacte`) : la pilule du panier (FloatingCart, styles.css) se
-   * réduit au même instant, avec les mêmes durées — un seul calcul de défilement pour les deux, donc jamais de décalage. */
+   * réduit au même instant, avec les mêmes durées — un seul calcul de défilement pour les deux, donc jamais de décalage.
+   * Sur le site seulement depuis le 2026-11-11 : dans l'app, la barre repliée en rond garde sa hauteur, la pilule ne bouge pas. */
   useEffect(() => {
-    document.documentElement.classList.toggle('barre-compacte', compacte);
+    document.documentElement.classList.toggle('barre-compacte', compacte && !NATIF);
     return () => document.documentElement.classList.remove('barre-compacte');
   }, [compacte]);
+  /* SOMBRE SUR UN FOND SOMBRE (fondateur, 2026-11-11, réponse 1 A de maquettes/barre-ios26) : teinteBarre.js regarde ce qui
+   * passe sous la barre, quelques fois par seconde au plus pendant un défilement ; chargé à part, l'app seulement. */
+  const asideRef = useRef(null);
+  const teinteRef = useRef(null);
+  const [sombre, setSombre] = useState(false);
+  useEffect(() => {
+    const barre = asideRef.current;
+    if (!NATIF || !barre) return undefined;
+    let fini = false;
+    import('../teinteBarre').then(({ suivreTeinte }) => { if (!fini) teinteRef.current = suivreTeinte(barre, setSombre); }).catch(() => {});
+    return () => { fini = true; teinteRef.current?.debrancher(); teinteRef.current = null; };
+  }, []);
+  useEffect(() => { teinteRef.current?.relire(); }, [pathname]);
   // Le compte admin (fairide.entreprise@gmail.com, voir middleware/auth.js isAdminEmail) sert
   // exclusivement à l'ERP interne : peu importe le rôle "métier" sous-jacent du compte ou la page visitée,
   // la sidebar ne montre jamais la nav client/restaurateur/livreur pour ce compte — seulement les 7
@@ -190,8 +218,26 @@ export default function DashboardSidebar() {
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
   const etroit = !useSiteLarge(900);
-  const items = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname, etroit);
+  const tous = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname, etroit);
+  /* LA RECHERCHE À PART (fondateur, 2026-11-11, réponse 4 A de maquettes/barre-ios26) : dans l'app, sur téléphone, elle sort de
+   * la pilule et devient un rond de verre à droite, comme sur iOS 26 (App Store, Musique). Le site garde ses cinq onglets. */
+  const recherche = NATIF && etroit ? tous.find((item) => item.to === '/recherche') : null;
+  const items = recherche ? tous.filter((item) => item !== recherche) : tous;
   const initial = (user?.name || '?').trim().charAt(0).toUpperCase();
+  // Toucher la barre repliée la rouvre : ni la lentille (barreVerre.js), ni le lien touché ne réagissent à ce toucher-là.
+  const rouvrir = (e) => {
+    if (!compacte || !NATIF || !navRef.current?.querySelector(':scope > .dashboard-nav-link.active')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    rouvertureRef.current = true;
+    setRouverte(true);
+  };
+  const avalerClic = (e) => {
+    if (!rouvertureRef.current) return;
+    rouvertureRef.current = false;
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
   function leavePreview() {
     exitPreview();
@@ -199,7 +245,7 @@ export default function DashboardSidebar() {
   }
 
   return (
-    <aside className={`dashboard-sidebar${compacte ? ' dashboard-sidebar--compacte' : ''}`}>
+    <aside ref={asideRef} className={`dashboard-sidebar${compacte ? ' dashboard-sidebar--compacte' : ''}${sombre ? ' dashboard-sidebar--sombre' : ''}`}>
       {/* La marque n'est pas un lien (fondateur, 2026-10-16) : elle menait à la liste des commerces, ce qu'on ne
           devine pas en la touchant. Les onglets juste en dessous y mènent déjà. */}
       <div className="dashboard-sidebar-brand">
@@ -218,7 +264,7 @@ export default function DashboardSidebar() {
           (au défilement) il n'y a plus que les icônes, et une icône seule ne dit rien à un lecteur
           d'écran ni au survol. */}
       {isAdminAccount ? <Suspense fallback={null}><AdminNav t={t} /></Suspense> : (
-      <nav className="dashboard-nav" ref={navRef}>
+      <nav className="dashboard-nav" ref={navRef} onPointerDownCapture={rouvrir} onClickCapture={avalerClic}>
         <span className="nav-curseur" aria-hidden="true" />
         {items.map((item) => (
           <NavLink key={item.to} to={item.to} end={item.end} title={item.label} aria-label={item.label} className={({ isActive }) => `dashboard-nav-link${isActive ? ' active' : ''}`}
@@ -234,6 +280,12 @@ export default function DashboardSidebar() {
           </NavLink>
         ))}
       </nav>
+      )}
+      {recherche && (
+        <NavLink to={recherche.to} title={recherche.label} aria-label={recherche.label} className={({ isActive }) => `dashboard-recherche${isActive ? ' active' : ''}`}
+          {...ongletAppli(recherche.to, pathname)}>
+          <span className="dashboard-nav-icon"><Icone nom="recherche" taille={22} /><IconePleine nom="recherche" taille={22} className="dashboard-nav-plein" /></span>
+        </NavLink>
       )}
       {/* LE BAS DE LA BARRE, SUR LE SITE (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : la langue et les liens
           légaux y descendent — ils étaient une rangée sous chaque page, et la langue n'existait que dans Mon compte. Rendu

@@ -487,6 +487,9 @@
     background: linear-gradient(to top, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.85) 45%, rgba(255, 255, 255, 0) 100%);
     pointer-events: none; z-index: -1;
   }
+  /* Pas dans l'app depuis la barre d'iOS 26 (fondateur, 2026-11-11 : « le flou en bas ne marche pas, pas nécessaire ») : le voile
+     blanc délavait ce que le verre doit laisser voir, et la barre passait en sombre sur des cartes iris rendues blanches. */
+  html.appli .dashboard-shell:not(.dashboard-shell--flux) .dashboard-sidebar::before { display: none; }
   .dashboard-sidebar { isolation: isolate; }
   /* Appui et sélection d'un onglet : un rebond court, le retour d'un vrai bouton. */
   .dashboard-nav-link { transition: transform .15s ease, background .15s ease, color .15s ease; }
@@ -704,7 +707,7 @@ html.appli .suivi-commande {
   background: rgba(255, 255, 255, .22); border-color: rgba(255, 255, 255, .6); text-shadow: 0 0 8px rgba(255, 255, 255, .75);
   -webkit-backdrop-filter: blur(5px) saturate(190%) brightness(1.06); backdrop-filter: blur(5px) saturate(190%) brightness(1.06);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .9), inset 0 -1px 1px rgba(255, 255, 255, .35), inset 0 0 18px rgba(255, 255, 255, .25),
-    inset 4px 0 10px -4px rgba(255, 70, 170, .22), inset -4px 0 10px -4px rgba(40, 190, 255, .26), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
+    inset 0 0 0 .5px rgba(255, 255, 255, .5), 0 10px 30px rgba(20, 18, 31, .16), 0 1px 3px rgba(20, 18, 31, .08);
 }
 .suivi-commande:active { transform: scale(.98); }
 .suivi-commande-rond { position: relative; flex: none; width: 46px; height: 46px; }
