@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { GourmandBord } from '../../components/Gourmandises';
 import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useAuth } from '../../context/AuthContext';
@@ -377,6 +378,8 @@ export default function Bienvenue() {
   // reste dans la feuille blanche, comme les écrans suivants.
   const fondIris = ['recherche', 'lvPromesses', 'coPromesses'].includes(ecran);
   const sansHaut = ['accueil', 'recherche'].includes(ecran);
+  // Deux petits dessins au bord droit des écrans à bandeau qui suivent l'accueil (maquettes/plus-gourmand, tour 7).
+  const gourmand = !sansHaut && !fondIris;
   // « Passer » saute la question, jamais le message : on atterrit sur « Ce que tu y gagnes ». Sur les envies : rien de coché.
   const passerQuestions = ecran === 'question' ? () => aller('pourquoi')
     : ecran === 'envies' ? () => { setEnvies([]); aller('compte'); } : null;
@@ -426,8 +429,9 @@ export default function Bienvenue() {
   return (
     // Les écrans blancs ont un bandeau iris en haut et une feuille blanche dessous (EcransBienvenue.jsx, Feuille).
     <div className={`bv${fondIris ? ' bv-iris' : ' bv-bandeau'}`}>
-      <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}`} key={ecran}>
+      <main className={`bv-ecran${recule ? ' bv-ecran--retour' : ''}${gourmand ? ' bv-ecran--gourmand' : ''}`} key={ecran}>
         {!sansHaut && <Haut onRetour={retour} progression={progression} onPasser={passerQuestions} />}
+        {gourmand && <GourmandBord />}
         {contenu}
       </main>
     </div>

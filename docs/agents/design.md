@@ -242,6 +242,18 @@ holds icon *names*, not emoji (`RESTAURANT_TYPES[].icone`, `ORDER_STAGES[].icon`
 monochrome glyph (✓ ✗). Message reactions are still *stored* as emoji (server values) and *shown* as icons
 ([reactions.jsx](../../src/reactions.jsx)).
 
+**The food drawings (founder, 2026-11-12, `maquettes/plus-gourmand/plus-gourmand-2.html`, 7 rounds).** The 3D food drawings
+(Fluent Emoji 3D, MIT: `public/cuisines` 112 px for the cuisine bar, `public/gourmand` 256 px for decoration) are *images*, not
+typed emoji, so the rule above holds. Decoration uses them in four places only, all in
+[Gourmandises.jsx](../../src/components/Gourmandises.jsx): the app welcome screen (the empty iris between the title and the bike,
+up to 8, fewer or none when that space is short, e.g. none on an iPhone SE), two small ones at the right edge of the following
+iris-band onboarding screens, the website front page (a cluster of 3 top right of the band on phones, ≤ 900 px; side margins
+only on computers, ≥ 1,300 px; nothing in between), and the store images (one per image, in the empty band under the caption,
+plus the banner and the search-results image, made in `maquettes/fiche-app-store`). Placement rules Owen set: never next to the
+punchline nor on what people read (address bar, price card, buttons), never on the road where the bike rides, never cut by an
+edge, tilted, mixed sizes, in clusters rather than lines; « trop » on the rest of the website page, so nothing below the band on
+phones.
+
 **Shop categories: specialities and families (founder, 2026-10-22, `maquettes/categories-commerce/`).** A shop picks up to 7
 specialities (~150, [specialites.js](../../src/specialites.js); the first is `restaurants.cuisine`, the others `extra_cuisines`);
 customers see 19 families, derived from the list and never stored. One picker everywhere, sign-up in the app and on the site,

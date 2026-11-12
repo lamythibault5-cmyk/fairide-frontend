@@ -5441,6 +5441,29 @@ html.clavier-ouvert .plat-pied { padding-bottom: 12px; }
 .bv-marque { display: inline-flex; align-items: center; gap: 9px; font-size: 24px; font-weight: 800; letter-spacing: -0.03em; }
 .bv-bandeau .bv-ecran > .bv-titre-accueil { font-size: clamp(30px, 9.4vw, 36px); line-height: 1.06; margin: 28px 0 0; }
 .bv-scene { display: block; width: 100%; max-width: 380px; height: auto; overflow: visible; color: var(--lime); margin: 12px 0 26px; }
+/* LES DESSINS GOURMANDS (fondateur, 2026-11-12, maquettes/plus-gourmand/plus-gourmand-2.html ; Gourmandises.jsx). Des images
+   décoratives (dessins 3D de public/gourmand), posées, penchées, jamais coupées par un bord ni sur la route du vélo.
+   Accueil : la zone est le vide entre le titre et le vélo (.bv-grandit) plus le haut libre de la scène, 44 px au-dessus du
+   vélo (mesuré à 390 × 844 : 346 × 194 px). Elle grandit avec l'écran ; trop basse, elle se vide (requêtes de conteneur). */
+.gourmand { position: absolute; display: block; width: var(--t); height: var(--t); transform: rotate(var(--a)); pointer-events: none;
+  user-select: none; -webkit-user-select: none; -webkit-user-drag: none; }
+.bv-grandit-gourmand { position: relative; }
+.bv-gourmand { position: absolute; inset: 0 0 -44px; container-type: size; pointer-events: none; z-index: 1; }
+.bv-gourmand .gourmand { left: calc((100% - var(--t)) * var(--x)); top: calc((100% - var(--t)) * var(--y)); }
+/* Haute de 194 px sur 390 × 844 : les huit ; à partir de 120 px, les quatre principaux ; en dessous (iPhone SE : 76 px), aucun. */
+@container (max-height: 169px) { .bv-gourmand .bv-gourmand-plus { display: none; } }
+@container (max-height: 119px) { .bv-gourmand .gourmand { display: none; } }
+/* Les écrans à bandeau qui suivent : deux petits dessins au bord droit, sous la ligne du haut (retour, progression, langues), à
+   hauteur du titre ; le titre et le sous-titre leur laissent 56 px. Sous 340 px de large, pas la place : rien. */
+.bv-ecran--gourmand { position: relative; }
+.bv-gourmand-bord { position: absolute; top: calc(74px + env(safe-area-inset-top)); right: 8px; width: 70px; height: 114px; pointer-events: none; }
+.bv-gourmand-bord .gourmand:first-child { top: 0; right: 18px; }
+.bv-gourmand-bord .gourmand:last-child { top: 54px; right: 0; }
+.bv-ecran--gourmand > .bv-titre, .bv-ecran--gourmand > .bv-sous { padding-right: 56px; }
+@media (max-width: 339px) {
+  .bv-gourmand-bord { display: none; }
+  .bv-ecran--gourmand > .bv-titre, .bv-ecran--gourmand > .bv-sous { padding-right: 0; }
+}
 .bv-scene-route { stroke: rgba(255,255,255,.35); animation: bv-route .45s linear 4; }
 @keyframes bv-route { to { stroke-dashoffset: 16; } }
 .bv-scene-repere { color: rgba(255,255,255,.92); transform-box: fill-box; transform-origin: 50% 100%; animation: bv-saute .45s var(--ressort-ui) 1.25s backwards; }
