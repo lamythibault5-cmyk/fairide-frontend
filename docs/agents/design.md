@@ -168,6 +168,27 @@ Courses family). One shop: its card full width (`.rc-grande`, photo 9:4; website
 underneath. Two or more: dish tiles (`.tuile-apercu`), 3 per shop, one shop after another, open first; a shop without a
 preview keeps its usual card. `RangeeApercu` in `RestaurantList.jsx`. The row « Supermarchés » is now « Courses ».
 
+**The full home page (founder, 2026-11-12, `maquettes/accueil-plein/accueil-plein.html`, sections 3-5; rules in
+[accueilRangees.js](../../src/accueilRangees.js)).** Measured before: 20-21 of 29 public shops never appeared, and the same
+2-3 nearest open shops led several rows. Now every shop is on the page, and a shop leads one row only:
+- **Rows, top to bottom:** À la une (unchanged) · Autour de toi (8, was 15) · Demandés près de toi (always shown) · delivery
+  rows, Offres, admin cuisine rows, Healthy (unchanged place) · **one row per craving** (bar categories with ≥ 4 shops, ≤ 6
+  rows, 10 cards, not courses / diets / « Europe » / « Cuisine familiale » / a category mostly covered by a kept row) ·
+  Courses · **Tous les commerces** (every shop once, one big card per line on the phone, photo 2:1; grid on the website) ·
+  « Il manque ton restaurant ? ». « Déjà sur fairride » and « À découvrir » are gone (a paid 'discover' slot shows in Tous).
+- **Order in every row:** open first (2026-10-25) → distance bands 1.5/3/5/8 km (no position: commune rings) → in a band,
+  a draw per visit (the 10-06 rule) → « one head per row »: the first 2 cards go to shops not already first higher up,
+  **only within the same (open, band) group**, never pulling a farther shop forward (Owen: « near Snack bodrum, don't send
+  him to Molenbeek »). So a lone open neighbour may lead several rows: wanted. À la une and Autour de toi keep pure nearest.
+  Orderable before open « Carte seule » only in Tous (tried everywhere: the 8 signed shops led everything again).
+- **Craving row title is a button** (« Pizza → », arrow in a pale circle, no count, `.section-titre-bouton`): it opens the
+  category like its chip and scrolls to the top. No « Voir les 11 » tile (Owen: it did the same as the chip).
+- **Website:** every row is one line (`.sl-une-ligne`: later rows of the grid are clipped), « Il en manque un ? » is a link
+  right of the title.
+- **Status bar:** an iris card is not a banner (`regardSousBarre.js` › `fondSous`): only an iris background ≥ 97 % of the
+  width turns the status bar iris, so sliding the iris request tickets under it no longer flips it.
+- /classement describes all of this (`conformite.ranking_rows`, `ranking_notPaid`): change it in the same commit.
+
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
 

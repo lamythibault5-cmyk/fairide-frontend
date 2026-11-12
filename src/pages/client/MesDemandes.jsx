@@ -58,6 +58,8 @@ export default function MesDemandes() {
         {liste && n === 0 && (
           <EtatVide icone="demande" titre={t('demandes.mesVide')} texte={t('demandes.mesVideTexte')}>
             <button type="button" className="btn-outline" onClick={() => ouvrir('')}>{t('demandes.finBouton')}</button>
+            {/* La page « Demandés près de toi » (accueil plein, 2026-11-12) : ce que les voisins demandent, « Moi aussi » en un toucher. */}
+            <button type="button" className="dm-lien" onClick={() => ouvrir('', { mode: 'voir' })}>{t('demandes.tousPres')}</button>
           </EtatVide>
         )}
         {liste && n > 0 && (
@@ -87,6 +89,7 @@ export default function MesDemandes() {
               })}
             </ul>
             <button type="button" className="btn-outline dm-mes-autre" onClick={() => ouvrir('')}><Icone nom="demande" taille={18} />{t('demandes.finBouton')}</button>
+            <button type="button" className="dm-lien" onClick={() => ouvrir('', { mode: 'voir' })}>{t('demandes.tousPres')}</button>
           </>
         )}
       </div>

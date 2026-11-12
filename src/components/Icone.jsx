@@ -146,6 +146,8 @@ export const TRACES = {
   verrine: <><path d="M6 4.5h12V16a4.5 4.5 0 0 1-4.5 4.5h-3A4.5 4.5 0 0 1 6 16Z" /><path d="M6 9.5c2 1.3 4 1.3 6 0s4-1.3 6 0" /></>,
   // Flèche de retour, et le oui / non des cartes à glisser (une coche nue : `coche` porte une case autour).
   retour: <path d="M15 5 8 12l7 7" />,
+  // « Voir tout » au bout d'un titre de rangée qui se touche (« Pizza → », accueilRangees.js, 2026-11-12).
+  fleche: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
   valider: <path d="m5 12.5 4.5 4.5L19 7.5" />,
   croix: <><path d="M6 6l12 12" /><path d="M18 6 6 18" /></>,
 

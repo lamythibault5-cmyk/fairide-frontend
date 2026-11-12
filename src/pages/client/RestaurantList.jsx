@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
+import { createContext, Fragment, useCallback, useContext, useDeferredValue, useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee, photoVue, retenirPhotoVue } from '../../images';
 import { CHEMIN_COMMANDES_RECENTES, chargerAvecCache, lireCache, poserFavoriEnCache, prechargerFiche } from '../../cacheDonnees';
 import { useActionOptimiste } from '../../actionOptimiste';
@@ -22,7 +22,7 @@ import CertifiedBadge from '../../components/CertifiedBadge';
 import PrixComptoir from '../../components/PrixComptoir';
 import AutoScrollRow from '../../components/AutoScrollRow';
 import { epingler, titreRangee } from '../../misesEnAvant';
-import { COMMUNES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal } from '../../menuCategories';
+import { COMMUNES, communeRingDistance, haversineDistanceKm, restaurantTypeLabel, communeDepuisCodePostal, illustrationCuisine } from '../../menuCategories';
 import { categoriesClient, libelleCategorie, specialite } from '../../specialites';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { statutOuverture } from '../../openingHours';
@@ -45,12 +45,14 @@ import { ecrireEtatEcran } from '../../etatEcran';
 import { useSiteLarge } from '../../hooks/useSiteLarge';
 import '../../ecran-liste.css';
 import '../../site-liste.css';
-import AvecMarque from '../../components/AvecMarque';
 import { lienFiche } from '../../murCompte';
 import { vibrer } from '../../gestes';
 import { normaliserRecherche } from '../../normaliserRecherche';
 import RangeeDemandes from '../../components/demandes/RangeeDemandes';
-import { FinDeListeDemande } from '../../components/demandes/CartesDemander';
+import { FinDeListeDemande, LienIlEnManque, RappelDemande, TuileIlEnManque } from '../../components/demandes/CartesDemander';
+import useDemandesPres from '../../components/demandes/useDemandesPres';
+import useFenetreDemande from '../../components/demandes/useFenetreDemande';
+import { creerRangement, rangeesEnvies, PAR_RANGEE_ENVIE } from '../../accueilRangees';
 import { filtresEnvoyes } from '../../filtresEnvoyes';
 import usePositionLancement, { aPorteeDUnCommerce } from '../../hooks/usePositionLancement';
 import BulleAdresseLoin from '../../components/client/BulleAdresseLoin';
@@ -90,10 +92,12 @@ const FILTRE_LIVRE = false;
 // Les commerces de la rangée « Courses » : la famille Courses & Épicerie (supermarché, night shop, boucherie, primeur…) et
 // les boulangeries, d'après leur type principal — comme la liste fixe d'avant (Supermarché, Night Shop, Boulangerie, Boucherie).
 const estCourses = (r) => specialite(r.cuisine)?.familles[0] === 'courses' || ['Boulangerie', 'Boulangerie du monde'].includes(specialite(r.cuisine)?.value);
-const DISCOVER_RADIUS_KM = 10;
 // Taille minimale d'une rangée thématique avant complément (voir completer()).
 const MIN_PAR_RANGEE = 6;
-const DISCOVER_MAX = 8;
+// « Tous les commerces » : le rappel des demandés se glisse après ce nombre de cartes (accueil plein, 2026-11-12).
+const RAPPEL_APRES = 10;
+// Sur le site en grille, une rangée ne montre que sa première ligne (.sl-une-ligne) : au plus 6 cartes, la ligne la plus large.
+const GRILLE_MAX = 6;
 
 // Normalise pour comparer "Ixelles", "ixelles", "Ixelles " ou une variante accentuée saisie librement
 // à l'inscription contre la liste officielle des 19 communes (comparaison insensible à la casse/aux accents).
@@ -273,27 +277,6 @@ function TuileApercu({ r, p, t }) {
   );
 }
 
-// Un vrai commerce déjà inscrit, pas encore ouvert aux commandes (fiche pas encore publiée par Fairide) : montré pour
-// ce qu'il est — un commerce qui arrive —, sans lien vers une fiche qui ne s'ouvrirait pas.
-// Commerce sans photo de couverture (ou photo qui ne charge pas) : un visuel aux couleurs de Fairide, avec
-// l'initiale du nom et l'emoji de sa cuisine — voir components/VisuelVide.jsx. Il est rendu sous la photo.
-
-function CarteBientot({ r, t }) {
-  return (
-    <div className="rest-card rc rc-bientot" aria-label={r.name}>
-      <div className="rc-media">
-        <VisuelVide nom={r.name} cuisine={r.cuisine} />
-        {r.coverImageUrl && <img loading="lazy" decoding="async" {...imgProps(r.coverImageUrl, 480, '(max-width: 640px) 70vw, 320px')} alt="" className="rc-photo" onError={cacherImageCassee} />}
-        <span className="rc-offre">{t('restaurantList.soonBadge')}</span>
-      </div>
-      <div className="rc-corps">
-        <h3 className="rest-card-name rc-nom"><span className="rest-card-name-text">{r.name}</span><CertifiedBadge /></h3>
-        <p className="rc-sous">{[r.cuisine && restaurantTypeLabel(r.cuisine, t), r.commune].filter(Boolean).join(' · ')}</p>
-      </div>
-    </div>
-  );
-}
-
 /* À LA UNE PRÈS DE TOI (fondateur, 2026-10-17, haut de la version B de « Liste » dans maquettes/commerces-marque/commerces-marque.html ; les
  * rangées d'aujourd'hui restent dessous, telles quelles). Une grande carte photo par écran, le nom écrit sur la photo, et des
  * points qui disent où l'on en est ; on passe de l'une à l'autre au doigt (défilement aimanté). Sur un ordinateur, trois de
@@ -373,20 +356,54 @@ function ouvertsDabord(liste) {
 // souris, une rangée qui défile se manie mal, et un écran large montre trois ou quatre commerces de front sans rien cacher
 // (maquettes/site-ordinateur/site-ordinateur.html, section « Liste »). Mêmes commerces, même ordre ; seule la disposition change.
 // Chaque rangée passe ici : les ouverts d'abord (ouvertsDabord) s'appliquent à toutes.
-function Section({ title, icon, list: rangee, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false }) {
+// LES RANGÉES PAR ENVIE (accueil plein, fondateur 2026-11-12 ; accueilRangees.js) passent aussi par ici, avec :
+//   - `dessin` : le dessin 3D de la catégorie à la place de l'icône (comme sa puce dans la bande) ;
+//   - `surTitre` : le titre se touche (« Pizza → », réponse 6 : la flèche, sans nombre) et ouvre la catégorie, comme sa puce ;
+//     pas de tuile « Voir les 11 » au bout, elle aurait fait la même chose en prenant la place d'une carte ;
+//   - `fin` : la tuile « Il en manque un ? » au bout de la rangée qui défile ; sur le site en grille, `finGrille` (un lien à
+//     droite du titre). Sur le site, toute rangée tient sur UNE ligne (.sl-une-ligne, ecran-demandes.css : 11 pizzerias en
+//     grille faisaient un mur) ; au plus GRILLE_MAX cartes, ce qu'une ligne peut montrer de plus large.
+// Ces rangées ne tournent pas en boucle : la tuile de fin doit rester la fin.
+function Section({ title, icon, dessin = null, list: rangee, favoriteIds, onToggleFavorite, t, loop, autoplay = false, cle, grille = false,
+  surTitre = null, fin = null, finGrille = null }) {
   if (rangee.length === 0) return null;
   const list = ouvertsDabord(rangee);
-  const titre = <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom={icon} taille={18} />{title}{cle && <EmplacementSponsor cle={cle} />}</h2>;
+  const tete = dessin
+    ? <img className="section-dessin" src={dessin} alt="" width="30" height="30" decoding="async" draggable="false" />
+    : <Icone nom={icon} taille={18} />;
+  const sponsor = cle && <EmplacementSponsor cle={cle} />;
+  const titre = surTitre ? (
+    <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}>
+      <button type="button" className="section-titre-bouton" onClick={surTitre} aria-label={t('restaurantList.voirTout', { nom: title })}>
+        {tete}<span>{title}</span>
+        <span className="section-vers" aria-hidden="true"><Icone nom="fleche" taille={16} /></span>
+      </button>
+      {sponsor}{grille && finGrille}
+    </h2>
+  ) : <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}>{tete}{title}{sponsor}</h2>;
   if (grille) {
     return (
       <section className="liste-section">
         {titre}
-        <div className="rest-grid sl-grille">
-          {list.map((r) => (
+        <div className="rest-grid sl-grille sl-une-ligne">
+          {list.slice(0, GRILLE_MAX).map((r) => (
             <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
           ))}
         </div>
       </section>
+    );
+  }
+  if (fin) {
+    return (
+      <div className="liste-section">
+        {titre}
+        <div className="rest-grid rest-grid-scroll">
+          {list.map((r) => (
+            <RestaurantCard key={r.id} r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={onToggleFavorite} t={t} />
+          ))}
+          {fin}
+        </div>
+      </div>
     );
   }
   if (loop && list.length > 1) {
@@ -514,7 +531,6 @@ export default function RestaurantList() {
     return () => retirerCommercePanier(commercePanier);
   }, [commercePanier]);
   const [favoriteIds, setFavoriteIds] = useState(() => new Set(token ? lireCache('/restaurants/favorites/ids', token) || [] : []));
-  const [orderedRestaurantIds, setOrderedRestaurantIds] = useState(() => new Set(token ? (lireCache(CHEMIN_COMMANDES_RECENTES, token) || []).map((o) => o.restaurantId) : []));
   const [loading, setLoading] = useState(() => !lireCache(CHEMIN_LISTE, jetonListe(user, token)));
   // La liste n'a pas pu être lue (réseau, serveur) : « Impossible de charger » et Réessayer, pas « Aucun commerce ».
   const [echecListe, setEchecListe] = useState(false);
@@ -587,15 +603,19 @@ export default function RestaurantList() {
     if (envoyes.search) setSearch(envoyes.search);
   }, [location.key, location.state, reinitialiserFiltres]);
   const [panneau, setPanneau] = useState(null);
-  // Les VRAIS commerces déjà inscrits (fondateur, 2026-09-30) : rangée en tête de liste, carte complète seulement ;
-  // les démos restent dessous, pour montrer l'étendue de l'offre.
-  const [inscrits, setInscrits] = useState(() => listeEnCache('/restaurants/landing').filter((r) => r.menuComplete));
+  // « Déjà sur fairride » (les commerces à la carte complète, fondateur 2026-09-30) est retiré de l'accueil (fondateur,
+  // 2026-11-12, maquettes/accueil-plein, réponse 5) : tous les commerces de la page sont sur Fairride, le titre ne disait rien
+  // au client, et 4 de ses 7 commerces étaient déjà dans « À la une ». /restaurants/landing ne sert plus qu'à leur date.
   // Date d'inscription de chaque commerce (ms), pour « Nouveau sur Fairide » sur les cartes « À la une ».
   const [inscritLe, setInscritLe] = useState(() => new Map(listeEnCache('/restaurants/landing').filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
   const [placementsTous, setPlacementsTous] = useState(() => lireCache('/placements/active')?.placements || []);
   // Rangées ouvertes à la vente par l'admin en plus de celles d'origine : une par type de cuisine (« Pizza »…).
   const [rangeesAjoutees, setRangeesAjoutees] = useState(() => lireCache('/placements/active')?.sections || []);
   const toast = useToast();
+  // LES DEMANDÉS PRÈS DE TOI ET LEUR PAGE, UNE FOIS POUR TOUT L'ACCUEIL (accueil plein, fondateur 2026-11-12, section 5) : la rangée,
+  // « Il en manque un ? » au bout de chaque envie, le rappel dans « Tous » et la carte de fin ouvrent la même page.
+  const demandesPres = useDemandesPres();
+  const { ouvrir: ouvrirDemande, fenetre: fenetreDemande } = useFenetreDemande(demandesPres.charger);
   // LE SITE SUR UN ORDINATEUR (maquettes/site-ordinateur/site-ordinateur.html, « Liste ») — jamais dans l'app : à partir de 900 px, des
   // grilles au lieu des rangées et Livraison / À emporter sur le bandeau ; à partir de 1 100 px, les filtres (Trier, Prix,
   // Envies) passent dans une colonne à gauche. Mêmes états, mêmes règles de tri et de filtre qu'avant : rien d'autre ne bouge.
@@ -616,7 +636,6 @@ export default function RestaurantList() {
     const deja = { landing: lireCache('/restaurants/landing'), placements: lireCache('/placements/active') };
     chargerAvecCache('/restaurants/landing', { forcer }).then((l) => {
       if (l === deja.landing) return;
-      setInscrits((l || []).filter((r) => r.menuComplete));
       setInscritLe(new Map((l || []).filter((r) => r.createdAt).map((r) => [r.id, Number(r.createdAt)])));
     }).catch(() => {});
     // Mises en avant payantes du jour (routes/placements.js) : sans réponse, la liste reste dans son ordre naturel.
@@ -625,9 +644,9 @@ export default function RestaurantList() {
     // clients connectés, inutile de les tenter (et de récolter un 401 silencieux) pour un visiteur anonyme.
     if (token) {
       const favoris = lireCache('/restaurants/favorites/ids', token);
-      const commandes = lireCache(CHEMIN_COMMANDES_RECENTES, token);
       chargerAvecCache('/restaurants/favorites/ids', { token, forcer }).then((ids) => { if (ids !== favoris) setFavoriteIds(new Set(ids)); }).catch(() => {});
-      chargerAvecCache(CHEMIN_COMMANDES_RECENTES, { token, forcer }).then((orders) => { if (orders !== commandes) setOrderedRestaurantIds(new Set(orders.map((o) => o.restaurantId))); }).catch(() => {});
+      // Plus de rangée « À découvrir » (accueil plein, 2026-11-12) : la lecture reste, elle garde « Mes commandes » prête.
+      chargerAvecCache(CHEMIN_COMMANDES_RECENTES, { token, forcer }).catch(() => {});
     }
     return commerces;
   }
@@ -708,12 +727,8 @@ export default function RestaurantList() {
   // RANGÉE SANS MISE EN AVANT → ORDRE ALÉATOIRE (fondateur, 2026-10-06) : personne n'a payé pour cette rangée dans cette
   // commune, donc personne n'y est avantagé par l'ordre. Mélange stable le temps de la visite (graine tirée une fois), sinon
   // chaque rafraîchissement d'état rebattrait les cartes sous les yeux du client. « Autour de vous » garde la distance.
+  // Depuis le 2026-11-12 (accueil plein) : dans une même bande de distance, chacun son tour (accueilRangees.js › creerRangement).
   const [graine] = useState(() => Math.random().toString(36).slice(2));
-  const melanger = (liste) => {
-    const poids = (id) => { let h = 2166136261; const s = `${graine}:${id}`; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return h >>> 0; };
-    return [...liste].sort((a, b) => rang(a) - rang(b) || poids(a.id) - poids(b.id));
-  };
-  const epinglerOuMelanger = (liste, pl, cle, admissibles) => (pl.some((p) => p.sectionKey === cle) || cle === 'nearby' ? epingler(liste, pl, cle, admissibles) : melanger(liste));
   // MANGER LOCAL (fondateur, 2026-10-06, précisé le 07/10) : chaque rangée montre D'ABORD les commerces de la commune du client
   // (`homeCommune` : adresse du compte, sinon adresse tapée sur l'accueil), PUIS ceux des communes voisines de proche en proche —
   // jamais une rangée ni une page vide. « Autour de vous » reste du plus proche au plus loin par rapport à son adresse. Les
@@ -809,23 +824,32 @@ export default function RestaurantList() {
   };
   const nonGrocery = base.filter((r) => !estCourses(r));
   const nonGroceryTous = restaurants.filter((r) => !estCourses(r)); // « Autour de vous » : toutes les communes
-  // MISES EN AVANT (fondateur, 2026-10-02) : un commerce qui a payé la 1re, 2e ou 3e position d'une rangée y remonte,
-  // marqué « Sponsorisé » — seulement s'il a sa place dans la rangée (voir misesEnAvant.js).
-  const groceryList = epinglerOuMelanger(base.filter(estCourses), placements, 'grocery');
+
+  /* L'ACCUEIL PLEIN (fondateur, 2026-11-12, maquettes/accueil-plein ; règles et raisons dans accueilRangees.js). Les rangées
+   * sont calculées DANS L'ORDRE OÙ LA PAGE LES MONTRE : la règle « une tête par rangée » retient, rangée après rangée, les
+   * commerces déjà premiers plus haut. Une rangée masquée (Bio, Vegan) n'est pas calculée : elle ne prendrait pas de tête. */
+  const rangement = creerRangement({
+    distanceDe: (r) => r.distanceKm ?? distanceDe(r), avecPosition: !!reperePos, rang, graine,
+    estOuvert, peutCommander: (r) => ouvertPourCommander(r, user, maintenant)
+  });
+  // La distance écrite sur chaque carte, comme dans « Autour de toi » : « près d'abord » se voit.
+  const avecKm = (liste) => (reperePos ? liste.map((r) => (r.distanceKm != null ? r : { ...r, distanceKm: distanceDe(r) })) : liste);
+  // Une rangée à thème : bande la plus proche d'abord, chacun son tour dans la bande, une tête par rangée, puis la position
+  // payée (MISES EN AVANT, fondateur 2026-10-02 : seulement si le commerce a sa place dans la rangée, misesEnAvant.js).
+  const ranger = (liste, cle, admissibles) => epingler(rangement.uneTete(rangement.parBandeEtTour(avecKm(liste))), placements, cle, admissibles);
+
   // AUTOUR DE VOUS, DU PLUS PROCHE AU PLUS LOIN (fondateur, 2026-10-01). Adresse géolocalisée : les commerces triés
   // par distance réelle, la distance affichée sur la carte. Sans position : sa commune d'abord, puis les communes
   // voisines de proche en proche (communeRingDistance). Les commerces sans coordonnées passent après.
-  const PROCHES_MAX = 15;
+  // 8 AU LIEU DE 15 (accueil plein, 2026-11-12) : tous les commerces sont maintenant plus bas (envies, « Tous »).
+  const PROCHES_MAX = 8;
   const parDistance = nonGroceryTous.map((r) => ({ ...r, distanceKm: distanceDe(r) })).filter((r) => r.distanceKm != null).sort((a, b) => a.distanceKm - b.distanceKm);
-  const nearbyList = completer(epingler(parDistance.length
-    ? parDistance.slice(0, PROCHES_MAX)
-    : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)).slice(0, PROCHES_MAX) : [],
-  placements, 'nearby', parDistance.length ? parDistance : nonGroceryTous));
+  const parAnneau = homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous;
   // À la une : voir ALaUne. Même ordre que « Autour de toi », mais SANS épinglage payant, avec photo, ouverts d'abord.
   // La boutique de test d'un compte de test (relecture des stores, fondateur 2026-10-26 : « le premier, à la une ») ouvre la
   // rangée, avec ou sans photo : le relecteur d'Apple ou de Google la trouve sans chercher. Les autres suivent la règle.
   const pourTesteurs = restaurants.filter((r) => r.pourTesteurs);
-  const aLaUne = [...pourTesteurs, ...(parDistance.length ? parDistance : homeCommune ? [...nonGroceryTous].sort((a, b) => communeRingDistance(homeCommune, a.commune) - communeRingDistance(homeCommune, b.commune)) : nonGroceryTous)
+  const aLaUne = [...pourTesteurs, ...(parDistance.length ? parDistance : parAnneau)
     // SA PROPRE PHOTO (audit du 19/10, discovery-05) : le serveur remplit toujours coverImageUrl, avec une photo d'illustration
     // quand le commerce n'en a pas ; `ownCover` dit si c'est la sienne. Une liste lue avant ce champ (undefined) garde l'ancien
     // comportement. Pas de commerce « Carte seule » (vitrine) en tête : on ne peut pas y commander (discovery-34).
@@ -834,61 +858,47 @@ export default function RestaurantList() {
     .sort((a, b) => a.o - b.o || a.i - b.i)
     .map(({ r }) => r)]
     .slice(0, UNE_MAX);
-  // LIVRAISON DÈS 3 € et LIVRAISON OFFERTE (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
+  // Une grande carte par écran : seule la première est vue sans glisser.
+  rangement.retenir(aLaUne, 1);
+  // « Autour de toi » : le plus proche, sans tour (son titre le promet) ; la tête ne s'échange qu'entre voisins de même bande.
+  const nearbyList = completer(epingler(rangement.uneTete(parDistance.length ? parDistance.slice(0, PROCHES_MAX) : homeCommune ? parAnneau.slice(0, PROCHES_MAX) : []),
+    placements, 'nearby', parDistance.length ? parDistance : nonGroceryTous));
+  // LIVRAISON OFFERTE et LIVRAISON DÈS 3 € (fondateur, 2026-10-01) : seulement les commerces concernés, jamais complétées.
   const SEUIL_PAS_CHER = 3;
   // Rangées « Livraison offerte » et « Livraison dès 3 € » : seulement après le GO (avant, seul l'à emporter est ouvert).
   // Ni hors zone, ni sans livreur libre (audit du 19/10, discovery-02 et 03).
   const livrables = livraisonOuverte(user) ? nonGrocery.filter((r) => livraisonPossibleIci(r, user)) : [];
-  const livraisonPasCher = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
-    .filter(({ tarif }) => !tarif.offerte && tarif.offerteDes == null && tarif.depart > 0 && tarif.depart <= SEUIL_PAS_CHER)
-    .sort((a, b) => a.tarif.depart - b.tarif.depart).map(({ r }) => r);
-  const livraisonPasCherEpinglee = epinglerOuMelanger(livraisonPasCher, placements, 'cheap_delivery');
-  const livraisonOfferte = livrables.map((r) => ({ r, tarif: tarifLivraison(r) }))
-    .filter(({ tarif }) => tarif.offerte || tarif.offerteDes != null)
-    .sort((a, b) => (a.tarif.offerte ? 0 : a.tarif.offerteDes) - (b.tarif.offerte ? 0 : b.tarif.offerteDes)).map(({ r }) => r);
-  const livraisonOfferteEpinglee = epinglerOuMelanger(livraisonOfferte, placements, 'free_delivery');
+  const livraisonOfferteEpinglee = ranger(livrables.filter((r) => { const tarif = tarifLivraison(r); return tarif.offerte || tarif.offerteDes != null; }), 'free_delivery');
+  const livraisonPasCherEpinglee = ranger(livrables.filter((r) => { const tarif = tarifLivraison(r); return !tarif.offerte && tarif.offerteDes == null && tarif.depart > 0 && tarif.depart <= SEUIL_PAS_CHER; }), 'cheap_delivery');
+  const offersList = ranger(base.filter((r) => r.hasPromo), 'offers');
   // Une rangée par type de cuisine ajoutée dans Admin › Mises en avant : les commerces de ce type (principal ou
   // secondaire), les épinglés en tête. Jamais complétée : une rangée « Pizza » ne montre que des pizzerias.
   const rangeesCuisine = rangeesAjoutees.filter((s) => s.kind === 'cuisine' && s.cuisine).map((s) => ({
     ...s,
-    liste: epinglerOuMelanger(base.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), placements, s.key)
+    liste: ranger(base.filter((r) => r.cuisine === s.cuisine || (r.extraCuisines || []).includes(s.cuisine)), s.key)
   })).filter((s) => s.liste.length > 0);
-  const offersList = epinglerOuMelanger(base.filter((r) => r.hasPromo), placements, 'offers');
-  // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy,
-  // voir la case à cocher dans la fiche d'un plat côté restaurateur). Trié par nombre de plats healthy
-  // décroissant plutôt que dans l'ordre du serveur : sans ça, une pizzeria qui propose une salade verte
-  // apparaît avant une enseigne dont toute la carte est healthy, alors que les deux sont légitimement
-  // dans la section. Les commerces de courses (Supermarchés) sont exclus, ils ont déjà leur section.
-  // Bio et Vegan : la case cochée par le restaurateur (menu_items.organic / .vegan) fait foi ; à défaut,
-  // le nom ou la description du plat suffit (« Burger vegan », « Vin bio ») pour que les rangées vivent
-  // avant que toutes les cartes soient annotées. Un commerce peut apparaître dans plusieurs rangées.
-  const parMention = (compte) => nonGrocery
-    .map((r) => ({ r, n: compte(r) }))
-    .filter(({ n }) => n > 0)
-    .sort((a, b) => b.n - a.n)
-    .map(({ r }) => r);
-  const bioList = epinglerOuMelanger(parMention(nbPlatsBio), placements, 'bio');
-  const veganList = epinglerOuMelanger(parMention(nbPlatsVegan), placements, 'vegan');
-  const healthyList = epinglerOuMelanger(nonGrocery
-    .map((r) => ({ r, n: nbPlatsHealthy(r) }))
-    .filter(({ n }) => n > 0)
-    .sort((a, b) => b.n - a.n)
-    .map(({ r }) => r), placements, 'healthy');
-  // Sans lat/lng sur le compte (adresse pas encore renseignée/géocodée), la section restait vide en
-  // permanence — pas juste lente, jamais affichée du tout, ce qui donnait l'impression d'un chargement
-  // sans fin. Avec position connue : restos à moins de DISCOVER_RADIUS_KM, comme avant. Sans position :
-  // repli sur une sélection aléatoire parmi tous (hors déjà commandés), pour que la section s'affiche
-  // toujours immédiatement dès que la liste des restos est chargée.
-  const discoverList = useMemo(() => {
-    const hasLocation = !!reperePos;
-    const eligible = nonGrocery.filter((r) => (
-      !orderedRestaurantIds.has(r.id) &&
-      (!hasLocation || (r.lat && r.lng && haversineDistanceKm(reperePos.lat, reperePos.lng, r.lat, r.lng) <= DISCOVER_RADIUS_KM))
-    ));
-    const des = new Map(eligible.map((r) => [r.id, Math.random()]));
-    return [...eligible].sort((a, b) => rang(a) - rang(b) || des.get(a.id) - des.get(b.id)).slice(0, DISCOVER_MAX);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [restaurants, homeCommune, orderedRestaurantIds, reperePos?.lat, reperePos?.lng]);
+  // Un seul plat marqué healthy par le restaurateur suffit à faire entrer le commerce ici (menu_items.healthy). Bio et Vegan :
+  // la case cochée par le restaurateur (menu_items.organic / .vegan) fait foi ; à défaut, le nom ou la description du plat
+  // (« Burger vegan », « Vin bio »). Un commerce peut apparaître dans plusieurs rangées. Les courses ont leur rangée.
+  const parMention = (compte) => nonGrocery.filter((r) => compte(r) > 0);
+  const healthyList = ranger(parMention(nbPlatsHealthy), 'healthy');
+  const bioList = MENTIONS_ALIMENTAIRES ? ranger(parMention(nbPlatsBio), 'bio') : [];
+  const veganList = MENTIONS_ALIMENTAIRES ? ranger(parMention(nbPlatsVegan), 'vegan') : [];
+  // LES RANGÉES PAR ENVIE (réponse 2) : une par catégorie de la bande, accueilRangees.js › rangeesEnvies. Pas deux fois la
+  // même : une catégorie qui a déjà sa rangée vendue dans Admin › Mises en avant, ou « Healthy » quand la rangée des plats
+  // healthy existe, n'en a pas une seconde.
+  const exclusEnvies = [...rangeesCuisine.map((s) => categories.deSpecialite(s.cuisine)).filter(Boolean), ...(healthyList.length ? ['healthy'] : [])];
+  const envies = rangeesEnvies(nonGroceryTous, categories, { exclure: exclusEnvies })
+    .map((e) => ({ ...e, liste: ranger(e.liste, `envie:${e.cle}`).slice(0, PAR_RANGEE_ENVIE) }));
+  const groceryList = ranger(base.filter(estCourses), 'grocery');
+  /* TOUS LES COMMERCES (réponse 3) : chacun une fois, une grande carte l'une sous l'autre (sur le site, la grille). D'abord ceux
+   * où l'on peut commander maintenant, puis les « Carte seule » ouverts, puis les fermés (réponse 4) ; dans chaque groupe, par
+   * bande de distance, chacun son tour. Une position achetée pour l'ancienne rangée « À découvrir » (Admin › Mises en avant,
+   * clé 'discover') y garde sa place, marquée « Sponsorisé » : la rangée a été remplacée par celle-ci. */
+  const tous = epingler(rangement.uneTete(rangement.parBandeEtTour(avecKm(restaurants)), { commande: true }), placements, 'discover', restaurants);
+  // Toucher le titre d'une rangée par envie (« Pizza → ») : la catégorie, comme sa puce dans la bande, et l'écran en haut
+  // (règle 5 de design.md : un toucher n'arrive jamais au milieu d'une page).
+  const ouvrirCategorie = (cle) => { vibrer('bascule'); setCategorie(cle); window.scrollTo(0, 0); };
 
   const avecPosition = !!reperePos;
   // Le nom de l'adresse choisie dans le carnet (« Maison », « Travail », ou celui tapé), vide sinon.
@@ -1113,24 +1123,10 @@ export default function RestaurantList() {
       {!loading && !hasActiveFilter && (
         <>
           {aLaUne.length > 0 && <ALaUne list={aLaUne} inscritLe={inscritLe} t={t} />}
-          {inscrits.length > 0 && (
-            <div className="liste-section">
-              <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="commerce" taille={18} /><span><AvecMarque>{t('restaurantList.sectionRegistered')}</AvecMarque></span></h2>
-              <div className={grand ? 'rest-grid sl-grille' : 'rest-grid rest-grid-scroll'}>
-                {/* Les ouverts d'abord (ouvertsDabord), puis l'ordre du serveur ; une carte « bientôt » ne prend pas de commande : avec les fermés. */}
-                {ouvertsDabord(inscrits.map((x) => restaurants.find((r) => r.id === x.id) || { ...x, open: false })).map((x) => {
-                  // Publié : la carte complète de la liste (horaires, offres, favori) ; sinon, une carte « bientôt ».
-                  const complet = restaurants.find((r) => r.id === x.id);
-                  return complet
-                    ? <RestaurantCard key={x.id} r={complet} isFavorite={favoriteIds.has(x.id)} onToggleFavorite={toggleFavorite} t={t} />
-                    : <CarteBientot key={x.id} r={x} t={t} />;
-                })}
-              </div>
-            </div>
-          )}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="nearby" />
           {/* « Demandés près de toi » (fondateur, 2026-10-26, version B de maquettes/demande-restaurant) : sous « Autour de toi ». */}
-          <RangeeDemandes grand={grand} />
+          {/* Toujours là, « Le tien ? » en premier (accueil plein, 2026-11-12, réponse 8). */}
+          <RangeeDemandes grand={grand} demandes={demandesPres} ouvrir={ouvrirDemande} />
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="velo" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="free_delivery" />
           <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="velo" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="cheap_delivery" />
           <RangeeApercu title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="offers" />
@@ -1142,15 +1138,35 @@ export default function RestaurantList() {
           <Section title={t('restaurantList.sectionBio')} icon="favoris" list={bioList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="bio" />
           <Section title={t('restaurantList.sectionVegan')} icon="favoris" list={veganList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="vegan" />
           </>}
+          {envies.map((e) => {
+            const dessin = illustrationCuisine(e.illustration, { plat: !experienceApp() });
+            return (
+              <Section key={e.cle} title={libelleCategorie(e.cle, t)} dessin={dessin} list={e.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t}
+                grille={grand} cle={`envie:${e.cle}`} surTitre={() => ouvrirCategorie(e.cle)}
+                fin={<TuileIlEnManque categorie={e.cle} dessin={dessin} onOuvrir={ouvrirDemande} />}
+                finGrille={<LienIlEnManque categorie={e.cle} onOuvrir={ouvrirDemande} />} />
+            );
+          })}
           <RangeeApercu title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="grocery" />
-          <Section title={t('restaurantList.sectionDiscover')} icon="etoile" list={epinglerOuMelanger(discoverList, placements, 'discover', nonGrocery)} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop autoplay grille={grand} cle="discover" />
-          {/* « Il manque ton restaurant ? » : là où la liste s'arrête et où l'on se dit qu'il manque le sien (2026-10-26). */}
-          {restaurants.length > 0 && <FinDeListeDemande />}
-          {restaurants.length > 0 && nearbyList.length === 0 && offersList.length === 0 && healthyList.length === 0 && bioList.length === 0 && veganList.length === 0 && discoverList.length === 0 && groceryList.length === 0 && (
-            <EtatVide icone="restaurants" titre={t('restaurantList.empty')} />
+          {tous.length > 0 && (
+            <section className="liste-section tous-section">
+              <h2 className="section-title section-titre-icone" style={{ fontSize: 17, margin: '0 0 12px' }}><Icone nom="restaurants" taille={18} />{t('restaurantList.sectionTous')}</h2>
+              <div className={grand ? 'rest-grid sl-grille tous-commerces' : 'rest-grid tous-commerces'}>
+                {tous.map((r, i) => (
+                  <Fragment key={r.id}>
+                    <RestaurantCard r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={toggleFavorite} t={t} />
+                    {/* Le rappel des demandés après le 10e (réponse 9) : un seul. */}
+                    {i === Math.min(RAPPEL_APRES, tous.length) - 1 && <RappelDemande demandes={demandesPres} onOuvrir={ouvrirDemande} />}
+                  </Fragment>
+                ))}
+              </div>
+            </section>
           )}
+          {/* « Il manque ton restaurant ? » : là où la liste s'arrête et où l'on se dit qu'il manque le sien (2026-10-26). */}
+          {restaurants.length > 0 && <FinDeListeDemande onOuvrir={ouvrirDemande} />}
         </>
       )}
+      {fenetreDemande}
       {/* Filtres trop serrés : « Aucun restaurant pour le moment » laissait croire qu'il n'y en avait aucun, sans moyen d'en
           sortir (audit du 15/10/2026). On dit que c'est le filtre, et on l'efface en un geste. */}
       {!loading && hasActiveFilter && list.length === 0 && restaurants.length > 0 && (videDisponibilite ? (
