@@ -514,3 +514,21 @@ html .ecl-factures table.ecl-recap-table, html.appli .dashboard-main .ecl-factur
 .ecl-trajet-arrets .ecl-velo { bottom: 19px; }
 .ecl-trajet-arrets .ecl-pt { position: absolute; bottom: 0; width: 34px; height: 34px; transform: translateX(-50%); background: var(--iris); font-weight: 800; font-size: 14px; }
 .ecl-trajet-arrets .ecl-pt.maison { background: var(--lime); }
+
+/* MA COMPTA ET LES RÈGLES DE COURSE (Owen, 12/11/2026 : « très basique, pas trop de boutons, un bouton clair en lime »).
+   Les années en pastilles, la jauge de la franchise TVA en iris sur filet gris, une ligne à filet par trimestre (les .ecl-etape
+   du dossier, sans flèche), le montant à droite ; puis LE bouton lime du récap (.btn-gold.ecl-bouton-dossier). */
+.ecl-compta-annees { display: flex; gap: 8px; flex-wrap: wrap; margin: 4px 0 6px; }
+.ecl-compta-annee { min-height: 36px; padding: 6px 14px; border: 1px solid var(--line); border-radius: var(--radius-pill); background: #fff; color: var(--ink); font: inherit; font-weight: 600; cursor: pointer; }
+.ecl-compta-annee.actif { background: var(--iris); border-color: var(--iris); color: #fff; }
+.ecl-compta-chiffre { margin: 0 0 8px; font-size: 15px; font-weight: 600; color: var(--ink); }
+.ecl-compta-jauge { height: 8px; border-radius: var(--radius-pill); background: var(--line); overflow: hidden; margin-bottom: 6px; }
+.ecl-compta-jauge span { display: block; height: 100%; background: var(--iris); border-radius: inherit; }
+.ecl-compta-trimestre { cursor: default; }
+.ecl-compta-montant { flex: none; font-size: 15.5px; font-variant-numeric: tabular-nums; }
+.ecl-compta-note { margin: 0 0 10px; color: var(--ink-soft); }
+.ecl-compta-guide h3 { margin: 16px 0 4px; font-size: 15px; }
+.ecl-compta-guide p { margin: 0; font-size: 14px; line-height: 1.5; color: var(--ink); }
+.ecl-compta-guide > p.small { margin-top: 18px; color: var(--ink-soft); }
+.ecl-regles-bloc p { margin: 0; font-size: 14.5px; line-height: 1.5; color: var(--ink); }
+.ecl-compta a.ecl-etape { text-decoration: none; }

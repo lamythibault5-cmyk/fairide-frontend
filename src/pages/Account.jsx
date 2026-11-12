@@ -459,7 +459,8 @@ export default function Account({ integre = false, milieu = null }) {
     // Le livreur non plus (fondateur, 2026-10-27, L1 de maquettes/audit-ecrans) : « Mes commandes » ouvrait l'onglet Courses sous un
     // autre nom, « Gains » est un onglet. Restent ses papiers.
     : role === 'driver'
-      ? [{ to: '/driver/invoices', icone: 'document', libelle: t('accountUi.myInvoices') },
+      // « Ma compta » (Owen, 12/11/2026) remplace « Mes factures » : récap annuel, TVA, export, et les relevés mensuels dedans.
+      ? [{ to: '/driver/compta', icone: 'document', libelle: t('comptaLivreur.titre') },
          { to: '/documents', icone: 'contrat', libelle: t('mesDocuments.rowTitle') }]
       : membreEquipe
         ? [{ to: '/dashboard/orders', icone: 'commandes', libelle: t('nav.orders') }]
@@ -1162,6 +1163,8 @@ export default function Account({ integre = false, milieu = null }) {
           {/* « Mes gains » est un onglet de la barre du bas depuis le 2026-09-23 ; c'est le dossier livreur,
               sorti de la barre une fois le compte validé, qui se rouvre d'ici. */}
           <LigneCompte to="/driver/onboarding" icone="dossier" titre={t('dashDriver.courierFileTitle')} sous={t('dashDriver.courierFileSub')} />
+          {/* Ce qui est payé quand ça ne se passe pas comme prévu (Owen, 12/11/2026, questions des livreurs). */}
+          <LigneCompte to="/driver/regles" icone="horloge" titre={t('reglesCourse.titre')} sous={t('reglesCourse.sous')} />
           <LigneCompte icone="euro" titre={t('accountUi.paymentRow')} sous={user.stripeConnectStatus === 'active' ? t('accountUi.driverPaymentRowSubActive') : t('accountUi.driverPaymentRowSub')} ouverte={ouvertes.has('paiement')} onClick={() => basculer('paiement')}>
             <PaiementLivreur user={user} deliveries={driverDeliveries} />
           </LigneCompte>

@@ -219,6 +219,38 @@ the phone, with location already allowed (never asked for this), is more than 1 
   shows shares still waiting apart, outside the total; Admin › Paiements › Versements shows the share minus what was taken
   back, and « à verser » means a share really waiting for its transfer.
 
+## Courier questions: paid waiting, cancelled after pickup, « Ma compta » (Owen, 2026-11-12)
+
+Couriers asked what happens when they wait, when an order is cancelled late, on detours, fuel, and whether Fairride helps
+with VAT and taxes. Owen's answers, built in backend PR « attente payée » and its frontend PR:
+- **Waiting at the shop is paid** (backend `attenteComptoir.js`, migration 124): 0,20 € per minute beyond 5 minutes, 4 € at
+  most per delivery (platform parameters `attente_grace_min`, `attente_cents_par_min`, `attente_plafond_cents`). Owen
+  feared couriers would stretch 4 minutes to 5, so the courier controls neither end: the clock starts at the ready time
+  **promised when he took the job** (`orders.attente_promise_at`, frozen at claim) or at his arrival if later, and **stops
+  when the shop taps « Prête »** (`ready_at`), never at pickup; per minute, no 5-minute steps. Arrival counts only if the
+  phone's position, sent with « J'attends au commerce », is within 300 m of the shop (`courier_waiting_verified`; no
+  position = waiting signalled but unpaid, and the screen says so). Paid by Fairride at pickup (complement `attente`,
+  613-ATTENTE), shown folded under its ride in Gains. Charging it back to late shops needs a clause in a future shop
+  contract: not done. It is a supplement on one job, capped, triggered by the shop's delay: never an hourly rate
+  (presumption of employment, criterion 4).
+- **Cancelled by the team after pickup = the whole delivery paid** (`annulationLivreur.payerCourseApresRetrait`, from Admin's
+  status override when the order was `livraison`), unless the team puts the cancellation on the courier (`responsibility`
+  `driver`). Before pickup it stays the 5,22 € trip. The courier's push says « Ta course est payée en entier ».
+- Unchanged and now written for couriers on **/driver/regles** (« Attente, annulations, détours »): 10 min + two calls at
+  the door then « client absent » paid in full; the customer can't cancel once the shop accepted; address changes only
+  before pickup, the courier keeps the higher price; no fuel index: the courier sets his own minimum, and Fairride reviews
+  its rates **at least every six months** (contract clause).
+- **Courier contract 2026.10** (`ETI-2026.10`, `IND-v4-2026.10`) writes the two new payments and the six-month review; every
+  courier re-signs in one screen (Owen: « ils doivent juste re-signer, c'est facile »).
+- **« Ma compta »** (**/driver/compta**, backend `comptaLivreur.js`, `GET /couriers/me/compta`): per quarter the deliveries,
+  sales, tips and total received; for a VAT-registered courier the VAT inside his sales and the amount excl. VAT (21 %
+  extracted like his monthly statement, tips outside VAT); for a franchise courier a counter against the franchise ceiling
+  (his Fairride turnover only); ONE lime button, the yearly summary PDF, whose totals are exactly the DAC7 figures Fairride
+  reports about him (test `attente-compta-livreur`); then the CSV of every earning line for his accountant, his monthly
+  statements, and « Ta compta en 5 minutes ». Fairride never calculates tax or social contributions (tax advice). It
+  replaces « Mes factures » in Mon compte's shortcuts; the monthly statements stay one row inside it.
+  ⚖️ To confirm with the accountant: the trip and waiting pay treated as VAT-inclusive sales like the delivery.
+
 ## Costs and break-even screen (founder, 2026-11-04)
 
 Admin › Finances › **Coûts et rentabilité** (`/admin/rentabilite`, owner / admin / finance): the company's fixed costs
