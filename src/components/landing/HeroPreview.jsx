@@ -6,6 +6,7 @@ import { CHEMIN_LISTE } from '../../resumeCarte';
 import { COMMUNES, categoryImage, restaurantTypeLabel } from '../../menuCategories';
 import { getOpenStatus } from '../../openingHours';
 import { useLanguage } from '../../context/LanguageContext';
+import { GourmandTitre } from '../Gourmandises';
 
 // Colonne droite de la bannière d'accueil : ce que Fairide EST, montré plutôt que dessiné. Un choix de
 // commune, puis trois commerces déjà partenaires, sans jamais prétendre connaître la position du visiteur
@@ -94,6 +95,8 @@ export default function HeroPreview({ restaurants, rangee = false }) {
         <span>{t('landing.heroPreviewTitle2')}</span>
         {/* Chiffre fixe des pré-inscriptions, pas la taille de la liste (qui compte aussi les commerces de démonstration). */}
         <span className="hero-preview-count">{t('landing.heroPreviewCount')}</span>
+        {/* Visible seulement sur la page d'accueil du site en téléphone (site-accueil.css). */}
+        {rangee && <GourmandTitre ou="apercu" />}
       </div>
       {choix.length === 0 ? (
         <div className="hero-preview-list">
