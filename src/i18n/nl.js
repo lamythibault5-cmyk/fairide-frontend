@@ -8425,7 +8425,7 @@ export default {
       emptyHint: 'Voeg een gerecht toe met „+”: het verschijnt hier.',
       oneMore: 'Nog een {name}',
       subtotal: 'Subtotaal',
-      noteDelivery: 'Bezorging en fooi bij het betalen.',
+      noteDelivery: 'Bezorgkosten bij het betalen.',
       notePickup: 'Afhalen: geen bezorgkosten.',
       radiusValue: '{km} km',
       radiusLabel: 'Bezorgstraal',
@@ -8662,7 +8662,7 @@ export default {
     },
     siteCommande: {
       recap: 'Overzicht',
-      suiteAuPaiement: 'Eventuele bezorging en fooi: in de volgende stap.',
+      suiteAuPaiement: 'Eventuele bezorgkosten: in de volgende stap.',
       stripe: 'Online betaling verwerkt door Stripe',
       colCommerce: 'Zaak',
       colDate: 'Datum',

@@ -8416,7 +8416,7 @@ export default {
       emptyHint: 'Add a dish with “+”: it shows up here.',
       oneMore: 'One more {name}',
       subtotal: 'Subtotal',
-      noteDelivery: 'Delivery and tip are added at checkout.',
+      noteDelivery: 'Delivery fee is added at checkout.',
       notePickup: 'Pickup: no delivery fee.',
       radiusValue: '{km} km',
       radiusLabel: 'Delivery radius',
@@ -8653,7 +8653,7 @@ export default {
     },
     siteCommande: {
       recap: 'Summary',
-      suiteAuPaiement: 'Any delivery fee and tip: next step.',
+      suiteAuPaiement: 'Any delivery fee: next step.',
       stripe: 'Online payment processed by Stripe',
       colCommerce: 'Shop',
       colDate: 'Date',
