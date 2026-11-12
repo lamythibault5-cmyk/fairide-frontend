@@ -70,14 +70,16 @@
 /* Le vélo du bandeau avance par `transform` (TeteListe.jsx, 2026-10-20, test de l'app Android) : il glissait par `left`,
    à chaque image de défilement — une mise en page par image, pendant qu'on fait défiler la liste. `left` reste la place
    de départ (et la place fixe de RouteVelo, posée en ligne). */
-.lt-velo { position: absolute; bottom: 7px; left: 8%; width: 30px; margin-left: -15px; line-height: 0; color: var(--lime); transition: transform .3s ease-out; }
+.lt-velo { position: absolute; bottom: 7px; left: 8%; width: 30px; margin-left: -15px; line-height: 0; color: var(--lime); }
 /* IL GLISSE À PLAT (fondateur, 2026-10-25, version A de maquettes/velo-sans-cahot, « pareil partout », site compris) : plus
    d'animation « pédale » qui le faisait monter de 1,5 px et pencher pendant qu'il roule. Il n'avance que de gauche à droite. */
 .lt-velo svg { display: block; }
-/* Pendant qu'il roule, sa place suit le doigt image par image (TeteListe.jsx) : la transition de .3s relançait une animation
-   à chaque image de défilement, ~60 par seconde (2026-10-23, app iPhone lente : « AcceleratedAnimationDidStart »). Elle ne
-   sert plus qu'au replacement d'un coup (taille de l'écran qui change). */
-.lt-velo.roule { transition: none; }
+/* IL NE GLISSE QUE POUR UNE LETTRE TAPÉE (`glisse`, Recherche, TeteListe.jsx). Sa place suit le défilement image par image,
+   sans transition : une transition relançait une animation à chaque image (2026-10-23, app iPhone lente :
+   « AcceleratedAnimationDidStart »). Et elle jouait aussi au retour sur l'onglet Restaurants (Owen, 2026-11-12 : « le vélo
+   se recharge pour arriver à sa position ») : remis au début de la route par le nouvel affichage, il glissait 0,3 s
+   jusqu'à la place gardée. Il y est maintenant posé avant la première image. */
+.lt-velo.glisse { transition: transform .3s ease-out; }
 /* Dans le bandeau, la route à la hauteur de la maquette (la route de la Recherche, RouteVelo, garde la sienne). */
 .lt-bandeau .lt-route { height: 22px; margin-top: 0; }
 
@@ -310,9 +312,9 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
 .eb-feuille {
   position: relative; margin: -24px calc(-1 * var(--eb-mg)) 0; padding: 20px var(--eb-mg) 0;
   background: #fff; border-radius: 26px 26px 0 0;
-  animation: eb-monte .45s cubic-bezier(.34, 1.45, .64, 1) backwards;
+  /* Plus de ressort à l'arrivée (2026-11-12, ecran-compte.css) : Commandes et Recherche sont des onglets, ils s'affichent
+     tout de suite. */
 }
-@keyframes eb-monte { from { transform: translateY(36px); opacity: .5; } to { transform: none; opacity: 1; } }
 .eb-feuille .etat-vide--scene { padding-top: 8px; }
 
 /* Les favoris : deux colonnes, la photo, le cœur des cartes de la liste, et trois lignes. */
