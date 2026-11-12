@@ -166,7 +166,8 @@ export default function DashboardSidebar() {
   // Quasi instantané (retour du fondateur, 2026-10-14 : « elle met trop de temps à se réduire ») : 120px de défilement
   // avant la première réduction, c'était près d'un écran de pouce. Dans l'application, 24px et 3px de marge — dès que le
   // doigt descend ; sur le site, 60px et 6px, un peu plus de tolérance au tremblement d'un trackpad.
-  const defile = useEnteteDefilement(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 });
+  // `cle` : un changement d'onglet ne replie jamais la barre de lui-même (voir useEnteteDefilement, 2026-11-12).
+  const defile = useEnteteDefilement({ ...(NATIF ? { seuil: 24, marge: 3 } : { seuil: 60, marge: 6 }), cle: pathname });
   /* DANS L'APP, REPLIÉE EN UN ROND (fondateur, 2026-11-11, réponse 3 A de maquettes/barre-ios26) : la barre se resserre sur
    * l'onglet où l'on est (styles.css). Toucher le rond la rouvre sans changer de page ; elle se replie de nouveau après 60 px
    * de défilement, ou revient d'elle-même quand on remonte. */

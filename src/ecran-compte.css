@@ -4,7 +4,7 @@
    sur l'iris, le vélo garé au bord. Dessous, la feuille blanche aux coins ronds qui remonte sur le bandeau : les mêmes
    rangées qu'avant (LigneCompte), dans le même ordre, sous un petit titre par groupe, l'icône iris dans sa tuile.
    Tout est rangé sous .compte-ecran : LigneCompte sert aussi aux tableaux de bord, qui ne changent pas.
-   Le ressort (rond qui saute, feuille qui monte) ne joue que dans l'app (html.appli) ; le site reste immobile. */
+   Le rond qui saute ne joue que dans l'app (html.appli) ; le site reste immobile. La feuille ne monte plus (2026-11-12, plus bas). */
 
 .compte-ecran { --compte-bord: 18px; }
 
@@ -134,15 +134,18 @@ html .compte-feuille.compte-feuille--gerer { margin: 0; padding: 0; border-radiu
   .compte-ecran { max-width: 760px; --compte-bord: 22px; }
 }
 
-/* ---------- Dans l'app seulement : le ressort ---------- */
+/* ---------- Dans l'app seulement : le ressort ----------
+   LA FEUILLE NE MONTE PLUS (Owen, 2026-11-12 : « quand je clique sur Compte, l'écran monte de 5 mm et redescend très
+   vite, ça ne fait pas premium »). Elle partait 40 px plus bas et son ressort (cubic-bezier .34, 1.45) la faisait
+   dépasser sa place avant de redescendre, à CHAQUE toucher de l'onglet. Un onglet s'affiche tout de suite, comme sur
+   iPhone (DashboardSidebar.jsx, ongletAppli) : même retrait sur les feuilles de Commandes, Recherche, du commerce et du
+   livreur (.eb-feuille, .ec-feuille, .ecl-feuille). Le rond des initiales garde son petit saut, dans le bandeau. */
 html.appli .compte-avatar { animation: compte-saute .45s cubic-bezier(.3, 1.8, .5, 1) backwards; }
-html.appli .compte-feuille { animation: compte-monte .45s cubic-bezier(.34, 1.45, .64, 1) backwards; }
 html.appli .compte-feuille .account-link-row:active { background: var(--cream-dim); transform: scale(.985); }
 @keyframes compte-saute { from { transform: scale(.3); } to { transform: none; } }
-@keyframes compte-monte { from { transform: translateY(40px); opacity: .4; } to { transform: none; opacity: 1; } }
 
 @media (prefers-reduced-motion: reduce) {
-  html.appli .compte-avatar, html.appli .compte-feuille { animation: none; }
+  html.appli .compte-avatar { animation: none; }
   .compte-raccourci, .compte-feuille .account-link-row { transition: none; }
   .compte-raccourci:active, html.appli .compte-feuille .account-link-row:active { transform: none; }
 }

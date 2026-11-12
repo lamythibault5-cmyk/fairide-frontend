@@ -23,7 +23,8 @@
 .ec-bandeau .ec-b-titre { font-family: var(--font-titre); font-size: 29px; line-height: 1.1; font-weight: 700; margin: 12px 0 6px; color: #fff; overflow-wrap: anywhere; }
 .ec-b-sous { margin: 0; color: rgba(255, 255, 255, .82); font-size: 14.5px; line-height: 1.4; }
 .ec-chip { flex: none; display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; padding: 4px 9px; border-radius: var(--radius-pill); background: rgba(255, 255, 255, .14); color: #fff; white-space: nowrap; }
-.ec-feuille { position: relative; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 8px; animation: ec-monte .45s var(--ec-ressort) both; }
+/* Sans ressort à l'arrivée (2026-11-12, ecran-compte.css) : Commandes, Menu et Commerce sont des onglets. */
+.ec-feuille { position: relative; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 8px; }
 .ec-feuille-titre { font-size: 12px; font-weight: 700; color: var(--ink-soft); margin: 20px 0 6px; letter-spacing: .05em; text-transform: uppercase; }
 .ec-feuille > .ec-feuille-titre:first-child { margin-top: 0; }
 .ec-feuille .card { border-radius: 18px; }

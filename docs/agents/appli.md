@@ -238,6 +238,13 @@ opens at the top instead when it was never scrolled, when the bookmark is gone, 
 when the screen shows a next step (`data-prochaine-etape`, EtapesMiseEnLigne). Always at the top (`ONGLETS_EN_HAUT`):
 Recherche, Mes commandes, the shop's Commandes, the courier's Courses and dossier. Going back (‹, gesture) restores the same
 way; re-tapping the current tab scrolls to the top.
+**A tab arrives still (Owen, 2026-11-12: « quand je clique sur Compte l'écran monte de 5 mm et redescend », « le vélo se
+recharge pour arriver à sa position », « ça ne fait pas premium »)**: the white sheets of tab screens no longer spring in
+(`.compte-feuille`, `.eb-feuille`, `.ec-feuille`, `.ecl-feuille`: they started 36-40 px low and overshot their place); the band
+bike is placed in a layout effect, after ScrollRestorer's, so it is already at its place on the first frame, and its .3 s
+transition only plays for a letter typed in Recherche (`.lt-velo.glisse`); the tab bar never folds by itself on a tab change
+(`useEnteteDefilement` `cle: pathname`: the restored scroll is not a finger, it waits for the first touch). Measured frame by
+frame in app mode (Chrome, 390×844): 0 layout shift on Restaurants → Compte → Restaurants. Mon compte's initials still pop.
 **The shop's tabs are Commandes · Menu · Commerce since 2026-10-27** (version A of `maquettes/compte-commerce`, founder's pick:
 on a phone, app and site, Mon compte lives INSIDE Commerce — EditPage mounts `<Account integre milieu={…}>`: « Gérer mon
 compte » first, then the tiles and the shop's rows, then « Argent, contrat et outils » (Aperçu client, terminal, trial orders,
