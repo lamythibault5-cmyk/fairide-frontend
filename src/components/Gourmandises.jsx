@@ -6,8 +6,8 @@
  *
  * Les règles de placement viennent des sept tours de la maquette : jamais à côté de la phrase choc ni sur ce qui se lit (barre
  * d'adresse, carte des prix, boutons), jamais sur la route où roule le vélo, jamais coupés par un bord, penchés, tailles variées,
- * en grappe plutôt qu'en ligne. Sur le site : rien plus bas que le bandeau sur téléphone, et seulement les marges sur
- * l'ordinateur (« trop » au tour 5). Les CSS donnent la zone de chaque groupe et cachent ce qui ne tient pas : styles.css
+ * en grappe plutôt qu'en ligne. Sur le site : en téléphone, la grappe du bandeau puis un petit dessin au bout de quatre titres
+ * (SITE_TITRES, ajouté après la mise en ligne) ; sur l'ordinateur, seulement les marges (« trop » dans le contenu au tour 5). Les CSS donnent la zone de chaque groupe et cachent ce qui ne tient pas : styles.css
  * (« Les dessins gourmands ») pour l'app, site-accueil.css pour le site. */
 
 // Accueil de l'app, entre le titre et le vélo. [nom, x, y, taille, angle, seulement si la zone est haute] : x et y sont des
@@ -28,6 +28,18 @@ const SITE_MARGES = [
   ['mexicain', 'g', 0.62, 0.329, 64, 18], ['pizza', 'd', 0.62, 0.427, 78, 12], ['kebab', 'g', 0.57, 0.645, 70, -16],
   ['asiatique', 'd', 0.67, 0.767, 70, 14], ['sushi', 'g', 0.61, 0.907, 56, -18],
 ];
+
+/* SITE, TÉLÉPHONE, PLUS BAS QUE LE BANDEAU (fondateur, 2026-11-12, après la mise en ligne : « des petits, sur les côtés, du même
+ * style que la version laptop »). Sur téléphone, tout le texte part du bord gauche : la seule place libre est au bout des titres
+ * de section, à droite. Chaque dessin est donc posé DANS son titre (position absolue) et le titre lui réserve sa largeur
+ * (.sa-avec-gourmand), pour que le texte ne passe jamais dessous, quelle que soit la langue. Petits (36 à 46 px), penchés tour à
+ * tour, jamais deux fois le même que la grappe du haut. Cachés hors du téléphone : l'ordinateur a ses marges. */
+const SITE_TITRES = {
+  apercu: ['belge', 40, -12],
+  alternative: ['asiatique', 46, 10],
+  decouvrir: ['kebab', 44, -14],
+  rejoindre: ['desserts', 38, 16],
+};
 
 function Dessin({ nom, taille, angle, classe = '', style }) {
   return (
@@ -52,6 +64,12 @@ export function GourmandBord() {
       {BORD.map(([nom, t, a], i) => <Dessin key={i} nom={nom} taille={t} angle={a} />)}
     </div>
   );
+}
+
+// Un petit dessin au bout d'un titre de section du site (téléphone seulement), voir SITE_TITRES.
+export function GourmandTitre({ ou }) {
+  const [nom, taille, angle] = SITE_TITRES[ou];
+  return <Dessin nom={nom} taille={taille} angle={angle} classe="sa-gourmand-titre" />;
 }
 
 export function GourmandSite() {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { imgProps, cacherImageCassee } from '../../images';
+import { GourmandTitre } from '../Gourmandises';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { restaurantTypeLabel } from '../../menuCategories';
@@ -38,9 +39,10 @@ export default function DiscoverSection({ restaurants }) {
     <section className="discover-section">
       <Reveal>
         <div className="discover-head">
-          <div>
+          <div className="sa-avec-gourmand">
             <span className="pill hero discover-eyebrow">{t('landing.discoverEyebrow')}</span>
             <h2 className="section-title" style={{ margin: '6px 0 0' }}>{t('landing.discoverTitle')}</h2>
+            <GourmandTitre ou="decouvrir" />
           </div>
         </div>
         <div className="discover-filtres" role="tablist">

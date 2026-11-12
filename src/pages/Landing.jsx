@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { GourmandSite } from '../components/Gourmandises';
+import { GourmandSite, GourmandTitre } from '../components/Gourmandises';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import AppComingSoonSection from '../components/AppComingSoonSection';
@@ -120,7 +120,7 @@ export default function Landing() {
 
         {/* « L'alternative à Uber Eats » a quitté le sous-titre le 2026-10-26 ; les gens la cherchent sur Google, donc elle
             reste sur la page en titre de section (et dans le titre et la description du résultat, seo.*). */}
-        <Reveal as="h2" className="sa-section-titre sa-alternative">{t('landing.altTitre')}</Reveal>
+        <Reveal as="h2" className="sa-section-titre sa-alternative sa-avec-gourmand">{t('landing.altTitre')}<GourmandTitre ou="alternative" /></Reveal>
         <div className="sa-arguments">
           {features(t).map((f, i) => (
             <Reveal className="sa-argument" key={f.title} delay={i * 90}>
@@ -136,7 +136,7 @@ export default function Landing() {
         <DiscoverSection restaurants={restaurants} />
 
         {/* « Rejoindre Fairide » en version courte (fondateur, 2026-10-09) : rôle, titre et lien. */}
-        <Reveal as="h2" className="sa-section-titre">{t('landing.joinTitle')}</Reveal>
+        <Reveal as="h2" className="sa-section-titre sa-avec-gourmand">{t('landing.joinTitle')}<GourmandTitre ou="rejoindre" /></Reveal>
         <div className="sa-portes">
           {joinCards(t).map((c, i) => (
             <Reveal as={Link} to={c.to} key={c.key} delay={i * 90} className="sa-porte">

@@ -11,8 +11,8 @@
 html:not(.appli) .wrap.wrap-accueil { max-width: calc(1120px + 2 * var(--gouttiere)); }
 
 /* LES DESSINS GOURMANDS (fondateur, 2026-11-12, maquettes/plus-gourmand/plus-gourmand-2.html, tour 7 ; Gourmandises.jsx, styles.css
-   pour .gourmand). Téléphone et tablette (≤ 900 px) : la grappe en haut à droite du bandeau, à côté du badge et du titre, rien
-   plus bas (« trop » au tour 5) ; sous 350 px, le badge la toucherait : rien. Ordinateur (≥ 1 300 px) : seulement les marges, à
+   pour .gourmand). Téléphone et tablette (≤ 900 px) : la grappe en haut à droite du bandeau, à côté du badge et du titre, puis
+   un petit dessin au bout de quatre titres de section (plus bas) ; sous 350 px, le badge la toucherait : rien. Ordinateur (≥ 1 300 px) : seulement les marges, à
    hauteur fixe de la page, la taille réduite si la marge est étroite. Entre les deux, pas de place sans gêner la lecture. */
 html:not(.appli) .sa-accueil { position: relative; }
 html:not(.appli) .sa-accueil .sa-gourmand-tel, html:not(.appli) .sa-accueil .sa-gourmand-marges { display: none; }
@@ -23,6 +23,16 @@ html:not(.appli) .sa-accueil .sa-gourmand-tel, html:not(.appli) .sa-accueil .sa-
   html:not(.appli) .sa-accueil .sa-gourmand-tel .gourmand:nth-child(3) { top: 135px; right: 10px; }
 }
 @media (max-width: 359px) { html:not(.appli) .sa-accueil .sa-gourmand-tel .gourmand:nth-child(3) { display: none; } }
+/* Plus bas (fondateur, 2026-11-12, après la mise en ligne : « des petits, sur les côtés, comme sur l'ordinateur ») : un petit
+   dessin au bout de quatre titres de section (Gourmandises.jsx, SITE_TITRES). Le titre garde à droite la largeur du dessin plus
+   10 px, pour que le texte ne passe jamais dessous ; le dessin est centré sur sa hauteur, penché, jamais coupé par le bord. */
+.sa-gourmand-titre { display: none; }
+@media (min-width: 350px) and (max-width: 900px) {
+  html:not(.appli) .sa-accueil .sa-avec-gourmand, html:not(.appli) .sa-accueil .hero-preview-head { position: relative; padding-right: 56px; }
+  html:not(.appli) .sa-accueil .sa-gourmand-titre { display: block; right: 4px; top: calc(50% - var(--t) / 2); z-index: 1; }
+  /* « Découvre » + titre : le bloc ne faisait que la largeur du texte (en-tête en flex), le dessin s'y collait au milieu. */
+  html:not(.appli) .sa-accueil .discover-head > .sa-avec-gourmand { flex: 1; }
+}
 @media (min-width: 1300px) {
   /* --m : la marge de chaque côté, 8 px laissés à la barre de défilement. Le contenu fait 1 120 px dès 1 300 px de large ; pas de
      « 100 % » ici : dans height, il vaudrait la hauteur de la page (la marge devenait négative et les dessins, hauts de 0 px). */
