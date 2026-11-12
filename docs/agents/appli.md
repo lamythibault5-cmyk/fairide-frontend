@@ -340,8 +340,10 @@ without asking if allowed, the system question once if never asked (`fairide_pos
 re-read after 30 min in the background; nothing waits for it and it never leaves the phone. Within 150 m of a saved address
 (and a position finer than 150 m) that address is selected silently; more than 1 km from the chosen address (after removing
 the phone's error margin) the bubble « Tu es à 4,2 km de … On livre bien là ? » points at the header (BulleAdresseLoin.jsx):
-« Livrer à ma position » opens the book on « Utiliser ma position » (precise position, number check), « Oui, garder » hides
-it for that address until the next opening (sessionStorage). Visitors: the position only sorts the list. **Password: 8 characters, no upper/lower-case rule** (`mdpValide`, validation.js; the backend still refuses
+« Livrer à ma position » opens the book on « Utiliser ma position » (precise position, number check; more than 40 km from
+Brussels with nothing found it says « trop loin »), « Oui, garder » hides it for that address while the phone stays within 3 km
+of where it was answered, 7 days at most (localStorage, place rounded to ~1 km; 2026-11-12, it used to come back at every
+opening). The bubble only shows within 15 km of a shop (`aPorteeDUnCommerce`): abroad, nothing. Visitors: the position only sorts the list. **Password: 8 characters, no upper/lower-case rule** (`mdpValide`, validation.js; the backend still refuses
 leaked passwords). The « Confirme ton adresse e-mail » card of Mes commandes shows only when the server says it serves
 (`user.emailReminder`: newsletter opt-in, a team address, or a customer with a paid order, 2026-11-06 G52; the order
 confirmation also says « Reçu envoyé à {email} · Changer »). Lost access to the address (typo, Apple relay): « Mot de passe
