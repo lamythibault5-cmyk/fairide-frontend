@@ -26,7 +26,10 @@ html:not(.appli) .sa-accueil .sa-gourmand-tel, html:not(.appli) .sa-accueil .sa-
 /* Plus bas (fondateur, 2026-11-12, après la mise en ligne : « des petits, sur les côtés, comme sur l'ordinateur ») : un petit
    dessin au bout de quatre titres de section (Gourmandises.jsx, SITE_TITRES). Le titre garde à droite la largeur du dessin plus
    10 px, pour que le texte ne passe jamais dessous ; le dessin est centré sur sa hauteur, penché, jamais coupé par le bord. */
-.sa-gourmand-titre { display: none; }
+/* Caché hors du téléphone, avec la même force que la règle qui le montre : `.sa-gourmand-titre` seul perdait contre le
+   `display` de .gourmand, et sur l'ordinateur le dessin de « Rejoindre fairride » dépassait sous le titre, coupé par la porte
+   Commerce (Owen, 2026-11-12). */
+.sa-gourmand-titre, html:not(.appli) .sa-accueil .sa-gourmand-titre { display: none; }
 @media (min-width: 350px) and (max-width: 900px) {
   html:not(.appli) .sa-accueil .sa-avec-gourmand { position: relative; padding-right: 56px; }
   html:not(.appli) .sa-accueil .sa-gourmand-titre { display: block; right: 4px; top: calc(50% - var(--t) / 2); z-index: 1; }
@@ -182,7 +185,7 @@ html:not(.appli) .sa-accueil .sa-essai-cadre { position: relative; overflow: hid
 html:not(.appli) .sa-accueil .sa-essai-cadre iframe { position: absolute; top: 0; left: 0; display: block; border: 0; background: #fff; transform-origin: 0 0; }
 .sa-essai-qr { display: flex; align-items: center; gap: 18px; }
 .sa-essai-qr img { width: 112px; height: 112px; padding: 10px; box-sizing: content-box; border: 1px solid var(--line); border-radius: 18px; background: #fff; display: block; flex: none; }
-.sa-essai-qr span { font-size: 16px; line-height: 1.35; color: var(--ink-soft); max-width: 15ch; }
+.sa-essai-qr span { font-size: 16px; line-height: 1.35; color: var(--ink-soft); max-width: 19ch; }
 .sa-essai-stores { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
 .sa-essai-stores .sa-badge { display: block; line-height: 0; border-radius: 9px; transition: opacity .15s; }
 .sa-essai-stores .sa-badge:hover { opacity: .82; }
@@ -190,6 +193,9 @@ html:not(.appli) .sa-accueil .sa-essai-cadre iframe { position: absolute; top: 0
 
 /* La fenêtre d'un toucher dans le faux téléphone (Modale, rendue dans <body>, hors de .sa-accueil). */
 .sa-essai-fenetre { position: relative; padding: 24px 26px 22px; border-radius: 26px; text-align: left; }
+/* La boîte reçoit le focus à l'ouverture (useDialogue). Ouverte par un clic DANS le cadre, Chrome la croit atteinte au clavier et
+   lui dessinait son gros contour noir (Owen, 2026-11-12) : la boîte n'est pas un contrôle, ses boutons gardent leur contour. */
+.sa-essai-fenetre:focus, .sa-essai-fenetre:focus-visible { outline: none; }
 .sa-essai-fermer { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
 .sa-essai-commerce { display: flex; align-items: center; gap: 14px; margin: 0 44px 16px 0; }
 .sa-essai-commerce img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; flex: none; }
@@ -246,7 +252,11 @@ html:not(.appli) .sa-accueil .sa-porte-iris .sa-porte-bouton { background: var(-
   html:not(.appli) .sa-accueil .sa-essai-raisons li > svg { width: 20px; height: 20px; }
   html:not(.appli) .sa-accueil .sa-essai-raisons .prix-comptoir { font-size: 13.5px; padding: 3px 10px; }
   html:not(.appli) .sa-accueil .sa-essai-tel { width: 72%; max-width: 330px; margin: 0 auto; }
-  html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte { flex-direction: column; align-items: flex-start; padding: 22px; }
+  /* Les deux portes restent une colonne SANS retour à la ligne : avec le `flex-wrap: wrap` des portes ci-dessus et le
+     `flex-basis: 100 %` du rôle, la colonne était remplie par le rôle seul et le titre, la ligne et le bouton partaient
+     dans une seconde colonne, hors de l'écran (Owen, 2026-11-12, téléphone 390 px). */
+  html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte { flex-direction: column; flex-wrap: nowrap; align-items: flex-start; padding: 22px; min-width: 0; }
+  html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte > * { flex-basis: auto; max-width: 100%; }
   html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte h3 { font-size: 21px; }
 }
 @media (max-width: 640px) {
@@ -287,6 +297,7 @@ html:not(.appli) .sa-accueil .sa-porte-iris .sa-porte-bouton { background: var(-
   html:not(.appli) .sa-accueil .sa-section-titre { font-size: 23px; margin: 48px 0 14px; }
   html:not(.appli) .sa-accueil .sa-porte { padding: 18px; }
   html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 18px; flex-basis: 100%; }
+  html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte h3 { flex-basis: auto; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sa-accueil .sa-scene *, .sa-accueil .sa-belge, .sa-accueil .sa-feuille::before, .sa-accueil .sa-prix-ligne i b, .sa-accueil .sa-prix-rang i b { animation: none !important; }

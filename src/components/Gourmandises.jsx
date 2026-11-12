@@ -23,10 +23,11 @@ const BORD = [['pizza', 48, 18], ['burger', 42, -14]];
 const SITE_TEL = [['pizza', 52, -16], ['burger', 44, 14], ['sushi', 28, -22]];
 // Site, ordinateur : les marges seulement. [nom, côté, fraction de la marge (0 = contre le contenu), hauteur en fraction de
 // la page, taille, angle], relevés sur fairride.be à 1440 px (marge de 152 px, page de 2 773 px).
+// Depuis le faux téléphone (EssaiAppli.jsx, 2026-11-12), seulement les quatre du bandeau iris : la page a raccourci et les cinq
+// autres tombaient à côté du téléphone, qu'Owen veut sans dessin autour (« retire-les »). Ils restent dans le bandeau tant que
+// la page fait moins de ~5 000 px de haut (0,131 × 5 000 = 655 px, le bas du bandeau est à ~745 px).
 const SITE_MARGES = [
   ['pizza', 'd', 0.64, 0.023, 100, -16], ['burger', 'd', 0.5, 0.13, 84, 12], ['belge', 'g', 0.62, 0.131, 80, -14], ['chinois', 'g', 0.5, 0.028, 50, 14],
-  ['mexicain', 'g', 0.62, 0.329, 64, 18], ['pizza', 'd', 0.62, 0.427, 78, 12], ['kebab', 'g', 0.57, 0.645, 70, -16],
-  ['asiatique', 'd', 0.67, 0.767, 70, 14], ['sushi', 'g', 0.61, 0.907, 56, -18],
 ];
 
 /* SITE, TÉLÉPHONE, PLUS BAS QUE LE BANDEAU (fondateur, 2026-11-12, après la mise en ligne : « des petits, sur les côtés, du même
