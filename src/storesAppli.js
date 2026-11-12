@@ -2,7 +2,8 @@
  * se voir proposer l'appli »). Les QR imprimés mènent à fairride.be/restaurants (maquettes/flyers/impression,
  * maquettes/kit-comptoir/impression) : avec l'appli installée, le lien universel l'ouvre déjà ; sans elle, c'est le site qui
  * doit la proposer — la bande Android (BandeauAndroid.jsx), la bannière de Safari (index.html, apple-itunes-app) et le bloc
- * de l'accueil (AppComingSoonSection.jsx).
+ * de l'accueil (EssaiAppli.jsx : le QR code à côté du faux téléphone, et les deux stores dessous sur téléphone, depuis le
+ * 2026-11-12 ; la bande « L'appli fairride », AppComingSoonSection.jsx, est partie avec).
  *
  * Les deux stores sont donnés comme disponibles (Owen, 2026-11-09 : « mets l'iPhone déjà disponible, je la publie ») :
  * mêmes adresses que la mise à jour des applis (miseAJour.js, backend routes/versionAppli.js). */

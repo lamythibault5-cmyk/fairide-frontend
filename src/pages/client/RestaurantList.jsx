@@ -16,6 +16,10 @@ import { CHEMIN_LISTE, jetonListe, nbPlatsHealthy, promoDUnPlat } from '../../re
 // est un affichage secondaire, choisi par l'utilisateur.
 import Icone from '../../components/Icone';
 import { experienceApp } from '../../natif';
+import { estApercu, signalerAuSite } from '../../apercuSite';
+
+// Le faux téléphone de l'accueil du site (apercuSite.js) : les cartes y sont toutes pareilles (RestaurantCard, ALaUne).
+const APERCU = estApercu();
 import ChoixAdresse from '../../components/ChoixAdresse';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
@@ -149,11 +153,14 @@ const CommuneListe = createContext(null);
 function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
   const { user, token } = useAuth();
   const communeListe = useContext(CommuneListe);
-  const offerLabel = offerLabelFor(r, t);
-  const deliveryOfferLabel = deliveryOfferLabelFor(r, t, user);
+  // L'APERÇU DE L'ACCUEIL DU SITE (apercuSite.js ; Owen, 2026-11-12, remarque 8 de maquettes/site-appli-essai) : toutes les
+  // cartes pareilles — ni offre, ni « Fermé », ni délai, ni services, ni « Carte seule », ni photo grisée. Restent le badge
+  // « Prix du comptoir » et « Sponsorisé » (une position payée est toujours dite, CDE VI.99). L'ORDRE, lui, ne change pas.
+  const offerLabel = APERCU ? null : offerLabelFor(r, t);
+  const deliveryOfferLabel = APERCU ? null : deliveryOfferLabelFor(r, t, user);
   // Pause, « fermé pour aujourd'hui » et interrupteur du commerce comptent, comme sur sa fiche (audit du 19/10, discovery-04).
   const etat = statutOuverture(r, new Date());
-  const isClosed = !etat.isOpen;
+  const isClosed = !APERCU && !etat.isOpen;
   const etatTexte = !isClosed ? null
     : etat.opensToday && etat.opensAt
       ? t('restoListUi.closedOpensAt', { time: etat.opensAt.toLocaleTimeString(getLocale(), { hour: '2-digit', minute: '2-digit' }) })
@@ -170,7 +177,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
    * rouvre). Livraison possible ici : la fourchette jusqu'à chez toi. Sinon (avant le GO, aucun livreur libre, hors zone) :
    * le temps de l'à emporter, s'il est commandable. Ni l'un ni l'autre : rien, plutôt qu'un temps qu'on ne tiendrait pas. */
   const minutes = livraisonPossible ? minutesLivraison(r, pointDuClient(user, communeListe)) : null;
-  const delaiTexte = isClosed || r.vitrine ? null
+  const delaiTexte = APERCU || isClosed || r.vitrine ? null
     : minutes != null ? t('restoListUi.etaRange', fourchette(minutes))
       : emporterPossible ? t('restoListUi.etaPickup', { min: prepAnnoncee(r) }) : null;
   /* LIVRAISON OU À EMPORTER, CÔTE À CÔTE (fondateur, 2026-10-31) : quand la pastille dit le temps de livraison et que le
@@ -178,7 +185,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
    * et non dans la pastille de la photo : une pastille « 25–35 min · ou prête en 15 min » était coupée sur les petites cartes. */
   const emporterTexte = minutes != null && aDeuxPas(r, user)
     ? t('restoListUi.servicePickupReady', { min: prepAnnoncee(r) }) : t('restoListUi.servicePickup');
-  const services = [emporterPossible && emporterTexte, livraisonPossible && t('restoListUi.serviceDelivery'), horsZone && t('restoListUi.outOfZone'), !emporterPossible && !livraisonOuverteIci && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && emporterPossible && t('restoListUi.pickupOnlyZone')].filter(Boolean);
+  const services = APERCU ? [] : [emporterPossible && emporterTexte, livraisonPossible && t('restoListUi.serviceDelivery'), horsZone && t('restoListUi.outOfZone'), !emporterPossible && !livraisonOuverteIci && (r.offersPickup || r.offersDelivery) && t('restoListUi.serviceSoon'), r.fairideDeliveryDisabled && emporterPossible && t('restoListUi.pickupOnlyZone')].filter(Boolean);
   // VISITEUR NON CONNECTÉ : la liste se parcourt librement (on y arrive depuis la barre d'adresse de
   // l'accueil), mais ouvrir un commerce demande un compte (fondateur, 2026-09-27). Le lien part vers
   // la connexion avec la fiche en `from`, et Auth.jsx y ramène une fois connecté ou inscrit.
@@ -221,12 +228,12 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
           {services.map((s) => <span key={s} className="rc-discret">{s}</span>)}
         </p>
         {/* Le badge « Prix du comptoir » sur la seconde ligne : sur la première (note, services), il était coupé dans l'app. */}
-        {(deliveryOfferLabel || r.vitrine || r.prixComptoir) && (
+        {(deliveryOfferLabel || (r.vitrine && !APERCU) || r.prixComptoir) && (
           <p className="rc-infos">
             {r.prixComptoir && <PrixComptoir />}
             {deliveryOfferLabel && <span className="rc-livraison">{deliveryOfferLabel}</span>}
             {/* COMMERCE VITRINE : carte listée, commande impossible — dit ICI, avant de composer un panier. */}
-            {r.vitrine && <span className="rc-vitrine">{t('restoListUi.showcaseOnly')}</span>}
+            {r.vitrine && !APERCU && <span className="rc-vitrine">{t('restoListUi.showcaseOnly')}</span>}
           </p>
         )}
         {apercu && (
@@ -256,7 +263,7 @@ function RestaurantCard({ r, isFavorite, onToggleFavorite, t, apercu = null }) {
 function TuileApercu({ r, p, t }) {
   const { user, token } = useAuth();
   const remise = prixRemise(p);
-  const ferme = !estOuvert(r);
+  const ferme = !APERCU && !estOuvert(r);
   return (
     <Link {...lienFiche(user, r, r.name)} className={`tuile-apercu${ferme ? ' tuile-apercu--fermee' : ''}`} onPointerDown={user ? () => prechargerFiche(r.id, token) : undefined}>
       <span className="ta-media">
@@ -304,9 +311,10 @@ function ALaUne({ list, inscritLe, t }) {
       <div className="une-rail" ref={rail} onScroll={surDefilement}>
         {list.map((r) => {
           // Même état que la fiche : pause et « fermé pour aujourd'hui » compris (audit du 19/10, discovery-04).
-          const ferme = !statutOuverture(r, new Date()).isOpen;
+          // Aperçu de l'accueil du site : ni « Fermé » ni « Nouveau sur Fairride », comme les autres cartes (apercuSite.js).
+          const ferme = !APERCU && !statutOuverture(r, new Date()).isOpen;
           const depuis = inscritLe.get(r.id);
-          const nouveau = depuis != null && maintenant - depuis < NOUVEAU_JOURS * 86400000;
+          const nouveau = !APERCU && depuis != null && maintenant - depuis < NOUVEAU_JOURS * 86400000;
           const sous = [[r.cuisine, ...(r.extraCuisines || [])].filter(Boolean).slice(0, 1).map((c) => restaurantTypeLabel(c, t) || c).join(''), r.neighborhood || r.commune,
             r.distanceKm != null && kmLisible(r.distanceKm)].filter(Boolean).join(' · ');
           return (
@@ -951,13 +959,15 @@ export default function RestaurantList() {
           Depuis le 2026-10-16, l'adresse est sur un bandeau iris et les pastilles de cuisine dans une bande collée en
           haut, la cuisine choisie sous une lentille : voir TeteListe.jsx. */}
       <TeteListe
+        // L'aperçu de l'accueil du site (apercuSite.js) montre le bandeau de l'appli même sans compte : « Livrer à · Ajoute ton
+        // adresse » ; le toucher ouvre la fenêtre du site (installer l'appli / créer un compte), comme un commerce touché.
         adresse={user ? (user.addressStreet && user.addressCity
           ? `${user.addressStreet} ${user.addressNumber || ''}, ${user.addressCity}`.replace(' ,', ',')
-          : t('restaurantMenu.noAddress')) : null}
+          : t('restaurantMenu.noAddress')) : APERCU ? t('restaurantMenu.noAddress') : null}
         // « Livrer à · Maison » quand l'adresse choisie a un nom dans le carnet (2026-11-08).
         intituleAdresse={nomEnCours ? t('restaurantMenu.deliverToNamed', { nom: nomEnCours }) : t('restaurantMenu.deliverTo')}
         libelleChanger={t('restaurantMenu.changeAddress')}
-        onAdresse={() => setChoixAdresse(true)}
+        onAdresse={() => (APERCU ? signalerAuSite({ type: 'ouvrir', chemin: '/adresse' }) : setChoixAdresse(true))}
         // Avec la colonne, Bio / Vegan / Halal / Sans gluten y sont (« Envies ») : la bande ne garde que les cuisines.
         options={colonne ? cuisineOptions.filter((o) => !o.regime) : cuisineOptions}
         estActive={chipActive}

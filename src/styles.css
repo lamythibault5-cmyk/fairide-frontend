@@ -3055,6 +3055,9 @@ html:not(.appli) .sq-fiche .sq-feuille { margin: -22px 0 0; }
     padding-left: max(14px, calc((100% - var(--groupe-onglets, 460px)) / 2)); padding-right: max(14px, calc((100% - var(--groupe-onglets, 460px)) / 2));
   }
   html.appli .dashboard-sidebar:has(> .dashboard-recherche) { --groupe-onglets: 532px; }
+  /* L'aperçu de l'accueil du site (apercuSite.js) : Restaurants et Carte seulement, sans rond Recherche (Owen, 2026-11-12) — la
+     même pilule, resserrée sur ses deux onglets et centrée par les marges ; repliée, le même rond au bord gauche du groupe. */
+  html.apercu .dashboard-sidebar, html.apercu .dashboard-sidebar--compacte { --groupe-onglets: 236px; }
   html.appli .dashboard-recherche { margin-left: auto; }
   html.appli .dashboard-nav { padding: 5px; border: 0; touch-action: none; transition: transform .15s var(--ressort-ui), width .42s var(--rebond-ui), background-color .35s, box-shadow .35s; }
   html.appli .dashboard-nav.admin { touch-action: pan-x; }

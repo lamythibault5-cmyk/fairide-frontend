@@ -269,8 +269,9 @@ typed emoji, so the rule above holds. Decoration uses them in four places only, 
 [Gourmandises.jsx](../../src/components/Gourmandises.jsx): the app welcome screen (the empty iris between the title and the bike,
 up to 8, fewer or none when that space is short, e.g. none on an iPhone SE), two small ones at the right edge of the following
 iris-band onboarding screens, the website front page (on phones, ≤ 900 px: a cluster of 3 top right of the band, then one small drawing, 38-46 px, at the
-right end of four section titles, which keep that width free so text never runs under it, Owen 2026-11-12 « des petits, sur
-les côtés »; on computers, ≥ 1,300 px: side margins only; nothing in between), and the store images (one per image, in the empty band under the caption,
+right end of the section titles, which keep that width free so text never runs under it, Owen 2026-11-12 « des petits, sur
+les côtés » — only « Rejoindre fairride » since the app preview replaced the other sections the same day, and never around the
+fake phone, Owen: « retire-les »; on computers, ≥ 1,300 px: side margins only; nothing in between), and the store images (one per image, in the empty band under the caption,
 plus the banner and the search-results image, made in `maquettes/fiche-app-store`). Placement rules Owen set: never next to the
 punchline nor on what people read (address bar, price card, buttons), never on the road where the bike rides, never cut by an
 edge, tilted, mixed sizes, in clusters rather than lines; « trop » on the rest of the website page, so nothing below the band on

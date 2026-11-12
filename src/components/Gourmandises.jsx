@@ -34,10 +34,9 @@ const SITE_MARGES = [
  * de section, à droite. Chaque dessin est donc posé DANS son titre (position absolue) et le titre lui réserve sa largeur
  * (.sa-avec-gourmand), pour que le texte ne passe jamais dessous, quelle que soit la langue. Petits (36 à 46 px), penchés tour à
  * tour, jamais deux fois le même que la grappe du haut. Cachés hors du téléphone : l'ordinateur a ses marges. */
+// « Déjà sur Fairride », « L'alternative » et « Découvre » sont partis avec l'appli sur l'accueil (EssaiAppli.jsx, 2026-11-12) ;
+// pas de dessin près du faux téléphone (Owen : « retire-les »). Reste « Rejoindre fairride ».
 const SITE_TITRES = {
-  apercu: ['belge', 40, -12],
-  alternative: ['asiatique', 46, 10],
-  decouvrir: ['kebab', 44, -14],
   rejoindre: ['desserts', 38, 16],
 };
 

@@ -26,6 +26,7 @@
 import { Capacitor, registerPlugin } from '@capacitor/core';
 import { traduire } from './context/LanguageContext';
 import { cheminPrecedent } from './i18n/historiqueLangue';
+import { estApercu } from './apercuSite';
 
 export function estNatif() {
   try { return Capacitor.isNativePlatform(); } catch { return false; }
@@ -49,8 +50,9 @@ export function achatsCommerceAutorises() {
 export function ecranAccueil() {
   try { return window.matchMedia?.('(display-mode: standalone)').matches === true || window.navigator.standalone === true; } catch { return false; }
 }
+// L'aperçu de l'accueil du site (apercuSite.js) : la vraie page de l'appli, dans un cadre de fairride.be.
 export function experienceApp() {
-  return estNatif() || ecranAccueil();
+  return estNatif() || ecranAccueil() || estApercu();
 }
 
 // 'web' | 'ios' | 'android'

@@ -18,6 +18,8 @@ import FloatingCart from './FloatingCart';
 import SuiviCommande from './client/SuiviCommande';
 import { SkeletonCards, SqueletteEcran } from './Skeleton';
 import { experienceApp, reculVersEcranVu } from '../natif';
+import { estApercu } from '../apercuSite';
+import GardeApercu from './GardeApercu';
 import { lireBienvenue } from '../bienvenue';
 import useBarreSurIris from '../hooks/useBarreSurIris';
 // Le cadre du site (barre latérale blanche, largeurs, bandeau et feuille, carte des cookies, connexion) : voir son en-tête.
@@ -45,6 +47,7 @@ const NouvellesConditions = lazy(() => import('./conformite/NouvellesConditions'
  * Retour, et « Se connecter »). Pas de carte cookies ni d'écran de consentement : l'app ne demande que l'envoi des
  * rapports de panne, par une case à l'inscription, sur l'écran d'une panne et dans Mon compte (2026-10-16). */
 const APPLI = experienceApp();
+const APERCU = estApercu();
 // Pages qui portent déjà leur « ← Mon compte » (RetourCompte.jsx) : pas de second Retour au-dessus.
 const AVEC_RETOUR_COMPTE = ['/aide', '/notre-histoire'];
 
@@ -211,7 +214,30 @@ export default function Layout() {
   // démonter là-bas casserait la mise en page pour rien. On ne retire donc PAS <DashboardSidebar />
   // du rendu — cela coûterait en prime un remontage complet à chaque entrée dans le parcours.
   const dansLeFlux = estFluxCommande(location.pathname);
-  if (user && (isDashboardPath(location.pathname) || APPLI || !HORS_COQUILLE.includes(location.pathname))) {
+  /* L'APERÇU DE L'ACCUEIL DU SITE (apercuSite.js) : la coquille à onglets de l'appli, connecté ou non — un visiteur de
+   * l'accueil y voit la vraie barre de verre (Restaurants et Carte), qui se plie au défilement comme dans l'appli. Aucun
+   * des écrans d'après l'inscription (notifications, badge, 5 € offerts, nouvelles conditions) : on est sur le site. */
+  if (APERCU) {
+    return (
+      <>
+        <div className="dashboard-shell dashboard-shell--apercu">
+          <DashboardSidebar />
+          <main className="dashboard-main">
+            <div className="page-fade" key={`${cleTransition(location.pathname)}-${remontage}`} ref={zone}>
+              <Suspense fallback={attentePage}>
+                <Outlet context={{ setRightSlot }} />
+              </Suspense>
+            </div>
+          </main>
+        </div>
+        <GardeApercu />
+      </>
+    );
+  }
+  // Revenu de l'inscription lancée depuis le faux téléphone (EssaiAppli.jsx, « /?essai ») : l'accueil du site, comme avant
+  // de s'inscrire, et non la coquille d'un compte — Owen veut retrouver la fausse appli (remarque 8, 2026-11-12).
+  const retourEssai = location.pathname === '/' && new URLSearchParams(location.search).has('essai');
+  if (user && !retourEssai && (isDashboardPath(location.pathname) || APPLI || !HORS_COQUILLE.includes(location.pathname))) {
     // Site : une page qui n'est à aucun espace (aide, pages légales…) se lit centrée sur la largeur de lecture
     // (.site-page-generique, site-cadre.css). Rien ne change dans l'app.
     const pageGenerique = !APPLI && !isDashboardPath(location.pathname);
