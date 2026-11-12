@@ -3,6 +3,7 @@ import Icone from './Icone';
 import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { illustrationCuisine } from '../menuCategories';
+import { PucesCuisineVides } from './Skeleton';
 
 /* LE HAUT DE LA LISTE DES COMMERCES (fondateur, 2026-10-16, proposition A de « Le haut de la liste des commerces »,
  * maquettes/tous-les-ecrans/tous-les-ecrans.html). Deux étages :
@@ -114,7 +115,7 @@ export function RouteVelo({ position = 12, className = '', roule = false, avance
  * C'est le filtre « À emporter » qui existait déjà (RestaurantList.jsx, `emporter`) : « À emporter » ne garde que les
  * commerces qui proposent l'emporter, « Livraison » les montre tous, comme la pastille éteinte d'avant. Même état, même
  * logique : seule la place change. Forme : { emporter, choisir(bool), libelleLivraison, libelleEmporter, libelleGroupe }. */
-export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, bulle = null }) {
+export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, bulle = null, chargement = false }) {
   const app = experienceApp();
   const bandeau = adresse != null;
 
@@ -240,6 +241,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
           <div className="lt-defile" ref={defile} role="group" aria-label={libelleBande}>
             <div className="lt-piste" ref={piste}>
               <span className="lt-lentille" ref={lentille} aria-hidden="true" />
+              {chargement && <PucesCuisineVides />}
               {options.map((opt, i) => {
                 const on = estActive(opt);
                 return [
