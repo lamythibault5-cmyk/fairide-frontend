@@ -8486,7 +8486,7 @@ export default {
       emptyHint: 'Ajoute un plat avec « + » : il apparaît ici.',
       oneMore: 'Un {name} de plus',
       subtotal: 'Sous-total',
-      noteDelivery: 'Livraison et pourboire au moment de payer.',
+      noteDelivery: 'Frais de livraison au moment de payer.',
       notePickup: 'À emporter : pas de frais de livraison.',
       radiusValue: '{km} km',
       radiusLabel: 'Rayon de livraison',
@@ -8725,7 +8725,7 @@ export default {
     },
     siteCommande: {
       recap: 'Récapitulatif',
-      suiteAuPaiement: 'Livraison et pourboire éventuels : à l’étape suivante.',
+      suiteAuPaiement: 'Frais de livraison éventuels : à l’étape suivante.',
       stripe: 'Paiement en ligne traité par Stripe',
       colCommerce: 'Commerce',
       colDate: 'Date',
