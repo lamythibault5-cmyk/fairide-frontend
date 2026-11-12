@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { cheminPermisEnApercu, signalerAuSite } from '../apercuSite';
+import { cheminSansPrefixe } from '../i18n/routing';
 
 /* LE FAUX TÉLÉPHONE NE QUITTE PAS RESTAURANTS ET CARTE (apercuSite.js ; Owen, 2026-11-12 : « quand on clique, ça nous demande
  * de l'installer ou de créer un compte »). Deux filets :
@@ -23,10 +24,14 @@ export default function GardeApercu() {
       if (!a) return;
       let url;
       try { url = new URL(a.getAttribute('href'), window.location.href); } catch { return; }
-      if (url.origin !== window.location.origin || cheminPermisEnApercu(url.pathname)) return;
+      // Le href d'un lien porte le préfixe de langue (/en/map, /nl/restaurants/…, i18n/routing.js) : on compare et on passe au
+      // site le chemin SANS préfixe, comme le lit le routeur. Sinon, en anglais ou en néerlandais, l'onglet Carte était pris
+      // pour une sortie du téléphone (fenêtre « Crée ton compte » sans commerce, Owen, 2026-11-12).
+      const chemin = cheminSansPrefixe(url.pathname);
+      if (url.origin !== window.location.origin || cheminPermisEnApercu(chemin)) return;
       e.preventDefault();
       e.stopPropagation();
-      signalerAuSite({ type: 'ouvrir', chemin: url.pathname });
+      signalerAuSite({ type: 'ouvrir', chemin });
     };
     // Sur window, en capture : il entend le clic avant tout écouteur du document (NavigationFeedback y lance sa barre de chargement).
     window.addEventListener('click', arreter, true);

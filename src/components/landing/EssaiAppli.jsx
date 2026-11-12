@@ -8,6 +8,7 @@ import { CHEMIN_LISTE } from '../../resumeCarte';
 import { cheminFiche } from '../../adresseFiche';
 import { lienStore } from '../../storesAppli';
 import { NOM_CADRE_APERCU, messageDeLApercu } from '../../apercuSite';
+import { cheminLocalise } from '../../i18n/routing';
 import { imgProps, cacherImageCassee } from '../../images';
 import { restaurantTypeLabel } from '../../menuCategories';
 import BelgianMark from '../BelgianMark';
@@ -176,8 +177,10 @@ export default function EssaiAppli() {
       </div>
       <div className="sa-essai-tel" ref={colonne}>
         <div className="sa-essai-cadre" style={{ width: LARGEUR_APPLI * echelle + 18, height: HAUTEUR_APPLI * echelle + 18, borderRadius: 50 * echelle + 9 }}>
-          {/* La langue du site est celle du cadre (même stockage) : on le recharge quand elle change. */}
-          <iframe key={language} name={NOM_CADRE_APERCU} src="/restaurants" title={t('landing.essaiCadre')} loading="lazy"
+          {/* Le cadre s'ouvre dans la langue de la page (/en/restaurants, /nl/restaurants : i18n/routing.js) et se recharge
+              quand elle change. Avec « /restaurants » tout court, un visiteur arrivé par /en sans préférence enregistrée avait
+              un téléphone en français. */}
+          <iframe key={language} name={NOM_CADRE_APERCU} src={cheminLocalise('/restaurants', language)} title={t('landing.essaiCadre')} loading="lazy"
             width={LARGEUR_APPLI} height={HAUTEUR_APPLI} style={{ transform: `scale(${echelle})`, borderRadius: 50 }} />
         </div>
         {!large && <BadgesStores t={t} language={language} />}
