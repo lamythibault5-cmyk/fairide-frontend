@@ -2576,6 +2576,71 @@ main.page-fade { min-height: calc(100dvh - 140px); }
   /* Immobile, le vélo du squelette reste au milieu de sa route, comme avant (left: 50 %). */
   .sq-velo { transform: translateX(50cqw); }
 }
+/* SQUELETTES À LA FORME DE L'ÉCRAN (fondateur, 2026-11-12 ; Skeleton.jsx). Chaque mesure est celle du contenu annoncé, citée
+   à côté : quand les données arrivent, rien ne bouge. Même entrée retardée que .sq-lignes (0,3 s, pas de clignotement). */
+.sq-entre { animation: sq-lignes-entrent .2s .3s backwards; }
+.skeleton.sq-trait { display: block; flex: none; max-width: 100%; border-radius: 6px; }
+.sq-rangee-titre { display: flex; align-items: center; gap: 8px; margin: 0 0 12px; }
+.skeleton.sq-tuile { flex: none; width: 28px; height: 28px; border-radius: 9px; }          /* .section-titre-icone > svg */
+.sq-rangee-titre .sq-trait { margin-block: 0 !important; max-width: 280px; }
+/* Accueil : « À la une » (.une-carte, 210 px), puis des cartes de commerce (.rest-card.rc, photo 16/10). */
+.skeleton.sq-une { flex: 0 0 100%; height: 210px; border-radius: 24px; }
+html:not(.appli) .sl-liste--grand .sq-une-rail { overflow: hidden; }
+.sq-accueil .une-points i.on { width: 18px; background: rgba(59, 47, 181, .2); }
+.sq-rangee { overflow: hidden; }
+.rest-card.rc.sq-carte { pointer-events: none; animation: none; }
+.skeleton.sq-carte-photo { display: block; background: #EFEDFB; border-radius: 0; }
+.skeleton.sq-carte-badge { border-radius: 999px; }
+.sq-carte .rc-corps { gap: 3px; }
+/* Les pastilles des cuisines (TeteListe) : le rond de 52 px du dessin, le nom dessous. */
+.lt-puce.sq-puce { pointer-events: none; }
+.skeleton.sq-puce-rond { display: block; width: 52px; height: 52px; border-radius: 50%; }
+.sq-puce .sq-trait { margin-block: 2px 0 !important; }
+/* Mes commandes : « Commandes passées » (.sc-sec-titre), puis les cartes de .sc-passees (téléphone) ou ses lignes (ordinateur). */
+.sq-commandes-titre { display: flex; align-items: center; gap: 10px; margin: 36px 0 12px; }
+.sq-commandes-titre .sq-trait { max-width: 260px; }
+html:not(.appli) .sq-commandes-titre { margin-top: 28px; }   /* .sc-sec-titre du site */
+.skeleton.sq-horloge { flex: none; width: 20px; height: 20px; border-radius: 50%; }
+.sq-commande {
+  display: grid; grid-template-columns: 56px minmax(0, 1fr) auto; grid-template-areas: "photo nom total" ". art statut" "act act act";
+  gap: 6px 12px; align-items: center; margin-top: 10px; padding: 14px; border: 1px solid var(--line); border-radius: 16px;
+}
+.skeleton.sq-commande-photo { grid-area: photo; width: 56px; height: 56px; border-radius: 12px; }
+.sq-commande-nom { grid-area: nom; display: block; min-width: 0; }
+.sq-commande-total { grid-area: total; justify-self: end; }
+.sq-commande-articles { grid-area: art; }
+.skeleton.sq-commande-statut { grid-area: statut; justify-self: end; width: 56px; height: 22px; border-radius: 999px; }
+.sq-commande-actions { grid-area: act; display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+.skeleton.sq-commande-bouton { display: block; width: 184px; height: 42px; border-radius: 999px; }
+@media (min-width: 901px) {
+  html:not(.appli) .sq-commande {
+    grid-template-columns: 48px minmax(0, 1fr) 90px 110px 70px 190px; grid-template-areas: "photo nom art statut total act";
+    margin: 0; padding: 12px; border: 0; border-bottom: 1px solid var(--line); border-radius: 0;
+  }
+  html:not(.appli) .skeleton.sq-commande-photo { width: 48px; height: 48px; }
+  html:not(.appli) .skeleton.sq-commande-statut { justify-self: start; }
+  html:not(.appli) .sq-commande-actions { margin: 0; justify-content: flex-end; gap: 12px; }
+  html:not(.appli) .skeleton.sq-commande-bouton { width: 150px; height: 36px; }
+}
+/* Mes favoris : .fav-photo (112 px, arrondi 14). */
+.skeleton--iris.sq-sous-iris { width: 30%; max-width: 120px; height: 13px; margin: 7px 0 6px; }   /* .eb-sous, une ligne de 20 px */
+.skeleton.sq-fav-photo { display: block; height: 112px; margin-bottom: 6px; border-radius: 14px; }
+/* Fiche d'un commerce (app) : .fiche-nom, .fiche-meta, le choix du mode, .fiche-apercu (tuiles de 148 px, photo 112). */
+.sq-fiche-pastilles { display: flex; gap: 6px; margin: 6px 0 4px; }
+.skeleton.sq-pastille { display: block; height: 24px; border-radius: 999px; }
+.skeleton.sq-fiche-mode { display: block; height: 56px; margin: 10px 0 0; border-radius: 16px; }
+.sq-fiche-sous-titre { margin-top: 22px !important; }
+.sq-fiche-plats { display: flex; gap: 10px; margin: 8px calc(-1 * var(--gouttiere, 16px)) 0 0; overflow: hidden; }
+.sq-fiche-plat { flex: none; width: 148px; display: block; }
+.skeleton.sq-fiche-plat-photo { display: block; height: 112px; margin-bottom: 6px; border-radius: 18px; }
+@media (max-width: 900px) { .sq-fiche .sq-feuille { padding: 22px 16px 24px; } }
+/* Site : la photo bord à bord comme .fiche-page.fiche-site (site-fiche.css, mêmes marges, 220 px puis 300 dès 700 px de
+   page) ; sur ordinateur, le contenu dans la colonne de la fiche (le panier occupe la droite). */
+html:not(.appli) .sq-fiche { container: sq-fiche / inline-size; margin: calc(-1 * var(--fiche-bord-h, 0px)) calc(-1 * var(--fiche-bord-d, 0px)) 0 calc(-1 * var(--fiche-bord-g, 0px)); }
+html:not(.appli) .sq-fiche .sq-photo { margin: 0; height: 220px; }
+html:not(.appli) .sq-fiche .sq-feuille { margin: -22px 0 0; }
+@container sq-fiche (min-width: 700px) { html:not(.appli) .sq-fiche .sq-photo { height: 300px; } }
+@media (min-width: 901px) { .sq-fiche .sq-feuille { margin: -22px 0 0; padding: 26px 32px 24px; } .sq-fiche .sq-feuille > .sq-entre { max-width: 490px; } .sq-fiche .sq-fiche-plats { margin-right: 0; } }
 
 /* TIRER POUR ACTUALISER (components/TirerPourActualiser.jsx, app seulement). La zone iris fixe en haut grandit avec le doigt
    (--tirer-p) pendant que le <main> descend d'autant : le bandeau de la page a l'air de s'étirer. Le vélo avance jusqu'à

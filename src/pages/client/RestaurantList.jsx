@@ -6,7 +6,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { api } from '../../api';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../context/ToastContext';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SqueletteAccueil } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
 import { MENTIONS_ALIMENTAIRES, nbPlatsBio, nbPlatsVegan, restoBio, restoVegan, restoHalal, restoSansGluten } from '../../dietary';
 import { CHEMIN_LISTE, jetonListe, nbPlatsHealthy, promoDUnPlat } from '../../resumeCarte';
@@ -955,6 +955,8 @@ export default function RestaurantList() {
         cuisine={categorie}
         choisirCuisine={setCategorie}
         libelleBande={t('ecranListe.cuisinesAria')}
+        // Liste pas encore lue : les ronds des cuisines attendent à leur place (Skeleton.jsx, PucesCuisineVides).
+        chargement={loading && cuisineOptions.length === 0}
         /* Seulement à portée d'un commerce (2026-11-12, usePositionLancement.js › HORS DE PORTÉE) : à Londres, rien. */
         bulle={lancement.loin && !choixAdresse && aPorteeDUnCommerce(lancement.position, restaurants) ? (
           <BulleAdresseLoin km={lancement.loin.km} user={user} onGarder={lancement.garder} onIci={() => { lancement.garder(); setChoixAdresse('ici'); }} />
@@ -1094,7 +1096,7 @@ export default function RestaurantList() {
           préférerait pas une carte, alors qu'un onglet dédié l'y emmène, c'est poser deux fois la
           même question. Cette page est la liste ; la carte est la carte. */}
       {!loading && hasActiveFilter && list.length > 0 && <div className="small" style={{ marginBottom: 14 }}>{t('restaurantList.count', { count: list.length })}</div>}
-      {loading && <SkeletonCards count={4} />}
+      {loading && <SqueletteAccueil grand={grand} />}
       {!loading && hasActiveFilter && (
         <div className={`rest-grid${grand ? ' sl-grille' : ''}`}>
           {list.map((r) => (

@@ -8,7 +8,7 @@ import { cheminFiche } from '../../adresseFiche';
 import { nbPlats } from '../../resumeCarte';
 import { useAuth } from '../../context/AuthContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SqueletteFavoris } from '../../components/Skeleton';
 import VisuelVide from '../../components/VisuelVide';
 import EtatVide from '../../components/EtatVide';
 import ErreurChargement from '../../components/ErreurChargement';
@@ -93,11 +93,13 @@ export default function Favorites() {
     <div className="ecran-bandeau fav-ecran">
       <div className="eb-bandeau">
         <h1 className="eb-titre">{t('favorites.title')}</h1>
+        {/* Pendant le chargement, « 5 commerces » attend à sa place : la grille ne remonte pas de sa hauteur. */}
+        {loading && <span className="eb-sous skeleton skeleton--iris sq-sous-iris" aria-hidden="true" />}
         {!loading && !echec && <p className="eb-sous" aria-live="polite">{n === 0 ? t('ecranListe.favorisAucun') : n === 1 ? t('ecranListe.favorisUn') : t('ecranListe.favorisN', { n })}</p>}
         <RouteVelo roule />
       </div>
       <div className="eb-feuille">
-        {loading && <SkeletonCards count={4} />}
+        {loading && <SqueletteFavoris />}
         {/* Un écran vide, pas une phrase dans un cadre en pointillés : quand le vide occupe toute la
             page, le rectangle hachuré se lit comme une panne. Voir le commentaire d'EtatVide. */}
         {!loading && echec && <ErreurChargement onReessayer={() => charger()} />}

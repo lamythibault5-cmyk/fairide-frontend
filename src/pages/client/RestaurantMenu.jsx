@@ -1,4 +1,4 @@
-import { Fragment, Suspense, lazy, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, Suspense, lazy, useEffect, useMemo, useRef, useState } from 'react';
 import { imgProps, cacherImageCassee, LARGEURS_TELEPHONE } from '../../images';
 import urlSure from '../../urlSure';
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
@@ -16,7 +16,7 @@ import { groupeEnCours } from '../../commandeGroupee';
 import VisuelVide from '../../components/VisuelVide';
 import { commandesOuvertes, livraisonOuverte, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import { useToast } from '../../context/ToastContext';
-import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
+import { SqueletteFiche } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
 import Modale from '../../components/Modale';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -45,6 +45,7 @@ import { VeloMarque } from '../../components/EcranCommande';
 import FicheVendeur from '../../components/conformite/FicheVendeur';
 import { experienceApp, estNatif, plateforme, suspendreRetourIos } from '../../natif';
 import { photoEnVol, entreeParPhoto, ouvrirAvecPhoto } from '../../transitionPhoto';
+import { useBordAbord } from '../../bordAbord';
 import { chargerAvecCache, lireCache, poserFavoriEnCache } from '../../cacheDonnees';
 import { CHEMIN_LISTE } from '../../resumeCarte';
 import { useActionOptimiste } from '../../actionOptimiste';
@@ -252,42 +253,8 @@ export default function RestaurantMenu({ id }) {
     const barre = document.querySelector('.appli-barre');
     if (barre) pageRef.current.style.setProperty('--fiche-haut', `${barre.offsetHeight}px`);
   }, [restaurant]);
-  /* SUR LE SITE, LA PHOTO VA D'UN BORD À L'AUTRE DE LA ZONE DE LA PAGE. La page est rendue dans la colonne principale
-     (.dashboard-main, connecté) ou dans le .wrap de 960px (visiteur), chacun avec sa marge intérieure : on MESURE de combien
-     sortir de chaque côté au lieu de recopier ces marges ici — elles changent avec la largeur de l'écran, et vivent dans
-     styles.css. Connecté : jusqu'aux bords de la colonne principale (la barre latérale reste à gauche) ; visiteur : jusqu'aux
-     bords de la fenêtre. Mesuré avant l'affichage (pas de saut), puis à chaque changement de taille. */
-  useLayoutEffect(() => {
-    const racine = pageRef.current;
-    if (APPLI || !racine) return undefined;
-    const zone = racine.closest('main');
-    if (!zone) return undefined;
-    const tableau = zone.classList.contains('dashboard-main');
-    const cadre = tableau ? zone : (zone.parentElement || zone);
-    // La place « naturelle » de la page = sa boîte actuelle plus les débords déjà appliqués. Pas la boîte de son parent : la
-    // marge négative du haut fusionne avec celle du parent (même bord, ni padding ni bordure), qui remonte avec elle — la
-    // mesure retombait à 0 au tour suivant, et la page sautait de 24px en boucle.
-    const applique = (nom) => parseFloat(racine.style.getPropertyValue(nom)) || 0;
-    function poser(nom, valeur) {
-      const v = `${Math.max(0, Math.round(valeur))}px`;
-      if (racine.style.getPropertyValue(nom) !== v) racine.style.setProperty(nom, v);
-    }
-    function mesurer() {
-      const r = racine.getBoundingClientRect();
-      const c = cadre.getBoundingClientRect();
-      const gauche = r.left + applique('--fiche-bord-g');
-      const droite = r.right - applique('--fiche-bord-d');
-      const haut = r.top + applique('--fiche-bord-h');
-      poser('--fiche-bord-g', tableau ? gauche - c.left : gauche);
-      poser('--fiche-bord-d', tableau ? c.right - droite : document.documentElement.clientWidth - droite);
-      poser('--fiche-bord-h', haut - c.top);
-    }
-    mesurer();
-    window.addEventListener('resize', mesurer);
-    const obs = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(mesurer);
-    obs?.observe(cadre);
-    return () => { window.removeEventListener('resize', mesurer); obs?.disconnect(); };
-  }, [restaurant]);
+  // Sur le site, la photo d'un bord à l'autre de la zone de la page (bordAbord.js, partagé avec le squelette de la fiche).
+  useBordAbord(pageRef, !APPLI && !!restaurant, restaurant);
   // Ouvrir la loupe donne le clavier tout de suite : un champ qui apparaît et qu'il faut ensuite
   // toucher pour écrire dedans demande deux gestes là où on en attend un.
   useEffect(() => {
@@ -509,8 +476,9 @@ export default function RestaurantMenu({ id }) {
      et celui-là ne guérira jamais — « Réessayer » seul y serait un cul-de-sac. Le bouton reste
      l'action principale (la plupart des échecs sont bien passagers), la sortie est dessous. */
   if (erreur) return <EchecFiche erreur={erreur} chemin={`/restaurants/${adresse}`} onReessayer={() => setEssai((n) => n + 1)} />;
-  // Chargement dans l'app : la fiche commence par sa photo, un aplat iris pâle la remplace en attendant (Skeleton.jsx).
-  if (!restaurant) return experienceApp() ? <SqueletteEcran photo src={photoEnVol(id)} /> : <SkeletonCards count={3} />;
+  // Chargement, dans l'app comme sur le site : la fiche commence par sa photo, un aplat iris pâle la remplace en attendant,
+  // puis le nom, les pastilles, le mode et les plats à leur place (Skeleton.jsx, SqueletteFiche).
+  if (!restaurant) return <SqueletteFiche src={experienceApp() ? photoEnVol(id) : null} />;
 
   const isFavorite = favoriteIds.has(id);
   const openStatus = statutOuverture(restaurant, now);

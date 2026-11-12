@@ -283,10 +283,15 @@ threshold + CSS transition) and, on iPhone, swiped right from the left edge (202
   plugin `Haptique` (ios/App/App/HaptiquePlugin.swift, registered by FairideViewController.swift; android/…/HaptiquePlugin.java,
   registered in MainActivity), with warmed-up generators; @capacitor/haptics is only the fallback for older builds. Old
   values (numbers, arrays, `selection`, `moyen`) are still mapped, but write meanings in new code.
-- **Loading** — [Skeleton.jsx](../../src/components/Skeleton.jsx): `SkeletonCards` are row-shaped light-iris skeletons;
-  `SqueletteEcran` is a whole loading screen in band + sheet (`titre` when the screen is known, shimmer bars otherwise,
-  `photo` for the restaurant page). App only at call sites (`experienceApp()`); the bike rides while a skeleton shows.
-  Skeleton rows (`.sq-lignes`) appear only after 0.3 s, so a fast answer never flickers. The full-screen `#splash` of
+- **Loading** — [Skeleton.jsx](../../src/components/Skeleton.jsx). **A skeleton has the shape of what it announces**
+  (founder, 2026-11-12, Instagram-style): `SqueletteAccueil` (home: cuisine circles via `PucesCuisineVides` in TeteListe,
+  « À la une » card, rows of `.rest-card.rc`), `SqueletteCommandes` (Mes commandes: order cards, table rows on desktop),
+  `SqueletteFavoris` (the `.fav-grille`), `SqueletteFiche` (a shop page: photo, name, pills, mode, dish tiles; app and
+  site, edge to edge through [bordAbord.js](../../src/bordAbord.js) like the page itself). They reuse the real classes or
+  measures so nothing moves when data lands; a new screen with its own layout gets its own skeleton, not the generic one.
+  `SkeletonCards` (thumbnail + two lines) stays for plain lists of rows; `SqueletteEcran` is a whole loading screen in
+  band + sheet (`titre` when the screen is known, shimmer bars otherwise). The bike rides while a skeleton shows.
+  Skeletons (`.sq-lignes`, `.sq-entre`) appear only after 0.3 s, so a fast answer never flickers. The full-screen `#splash` of
   [index.html](../../index.html) covers start-up only (app mounted), never the data wait: that is the skeletons' job
   (founder, 2026-10-26). On the website it is a plain white cover for the first second (it hides the prerendered text) and
   turns iris with the bike only on a slow load; in the app the native launch screen hands over to the iris bike directly.
