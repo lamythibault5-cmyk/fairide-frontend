@@ -223,8 +223,10 @@ the phone, with location already allowed (never asked for this), is more than 1 
 
 Couriers asked what happens when they wait, when an order is cancelled late, on detours, fuel, and whether Fairride helps
 with VAT and taxes. Owen's answers, built in backend PR « attente payée » and its frontend PR:
-- **Waiting at the shop is paid** (backend `attenteComptoir.js`, migration 124): 0,20 € per minute beyond 5 minutes, 4 € at
-  most per delivery (platform parameters `attente_grace_min`, `attente_cents_par_min`, `attente_plafond_cents`). Owen
+- **Waiting at the shop is paid** (backend `attenteComptoir.js`, migration 124): 0,10 € per minute beyond 10 minutes, 2 € at
+  most per delivery (contract 2026.11; the first setting, 0,20 € beyond 5 minutes and 4 € at most, contract 2026.10, looked
+  too expensive to Owen the same day and was brought close to Bolt Food, which pays 0,75 € for the first 15 minutes then
+  0,05 € a minute in Latvia and Lithuania; platform parameters `attente_grace_min`, `attente_cents_par_min`, `attente_plafond_cents`). Owen
   feared couriers would stretch 4 minutes to 5, so the courier controls neither end: the clock starts at the ready time
   **promised when he took the job** (`orders.attente_promise_at`, frozen at claim) or at his arrival if later, and **stops
   when the shop taps « Prête »** (`ready_at`), never at pickup; per minute, no 5-minute steps. Arrival counts only if the
