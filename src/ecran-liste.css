@@ -487,3 +487,24 @@ html:not(.appli) .sl-liste--grand .une-points { display: none; }
 .ta-prix small { font-size: 12px; font-weight: 500; color: var(--ink-faint); }
 .ta-chez { font-size: 12.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (prefers-reduced-motion: reduce) { .tuile-apercu:active { transform: none; } }
+/* ---------- L'ACCUEIL PLEIN (fondateur, 2026-11-12, maquettes/accueil-plein ; règles dans accueilRangees.js) ----------
+   Le titre d'une rangée par envie se touche (« Pizza → ») : tout le titre est le bouton, la flèche dans un rond pâle à droite.
+   Pas de nombre (réponse 6). Le dessin 3D de la catégorie remplace l'icône, comme sa puce dans la bande. */
+.section-titre-bouton {
+  display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; padding: 0; border: 0; background: none;
+  color: inherit; font: inherit; text-align: left; cursor: pointer;
+}
+.section-titre-bouton > span:not(.section-vers) { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.section-titre-bouton > svg:first-child {
+  flex: 0 0 auto; box-sizing: content-box; padding: 5px; border-radius: 9px; background: rgba(59, 47, 181, 0.08); color: var(--iris);
+}
+.section-titre-bouton:focus-visible { outline: 2px solid var(--iris); outline-offset: 3px; border-radius: 8px; }
+.section-vers { margin-left: auto; width: 30px; height: 30px; border-radius: 50%; background: var(--surface-soft); color: var(--ink); display: grid; place-items: center; flex: none; }
+.section-dessin { width: 30px; height: 30px; object-fit: contain; flex: none; margin: -2px 0; }
+/* « Tous les commerces » (réponse 3) : au téléphone et dans l'app, une grande carte par ligne, photo 2:1. Sur le site en grille
+   (.sl-grille, ordinateur), les cartes ordinaires. Le rappel des demandés prend toute la ligne de la grille. */
+.rest-grid.tous-commerces:not(.sl-grille) { grid-template-columns: 1fr; gap: 14px; }
+.rest-grid.tous-commerces:not(.sl-grille) .rc-media { aspect-ratio: 2 / 1; }
+.rest-grid.tous-commerces:not(.sl-grille) .rc-nom { font-size: 16.5px; }
+.rest-grid.tous-commerces:not(.sl-grille) .rc-sous { font-size: 13.5px; }
+.rest-grid.tous-commerces > .dm-rappel { grid-column: 1 / -1; }

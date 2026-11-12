@@ -159,8 +159,15 @@ orderable on Fairride; others say « Moi aussi ». The count is the proof the te
 
 - **Where**: Search with no result ([CartesDemander.jsx](../../src/components/demandes/CartesDemander.jsx), lime: the only
   action there), the end of the restaurant list (« Il manque ton restaurant ? », outline), a « Demandés près de toi » row under
-  « Autour de toi » ([RangeeDemandes.jsx](../../src/components/demandes/RangeeDemandes.jsx), within 10 km of the account,
-  hidden when empty) and Compte › Mes demandes (`/demandes`, a sheet page). Website same as the app.
+  « Autour de toi » ([RangeeDemandes.jsx](../../src/components/demandes/RangeeDemandes.jsx), within 10 km of the account)
+  and Compte › Mes demandes (`/demandes`, a sheet page). Website same as the app.
+  **Since 2026-11-12 (accueil plein, `maquettes/accueil-plein` section 5)** the end card fell 12-35 screens down, so: the row is
+  ALWAYS shown (empty = one thin dashed line), « Le tien ? » is its FIRST card, then the 8 most requested, then « Voir les
+  N » (backend `GET /demandes/pres?limite=` + `nombre`); « Il en manque un ? » ends every craving row (category preselected);
+  ONE reminder ticket after the 10th card of « Tous les commerces ». **One page for seeing and requesting**: the « Lequel ? »
+  window IS the « Demandés près de toi » page — nothing typed: the list (most requested first, category chips, « Moi
+  aussi » per line); a name typed: the search as before; dish + « Me prévenir » only once a restaurant is chosen. « Voir »
+  doors open it on the list, « Demander » doors with the field focused (`useFenetreDemande` › `ouvrir(texte, { mode, categorie })`).
   **Not on a « Carte seule » page** (founder, 2026-10-28): its « Tu voudrais commander ici ? » block read like « add this
   restaurant » on a restaurant already on Fairride, and 27 of the 30 public pages showed it. Don't bring it back.
 - **One request = one account with a verified phone, once per restaurant** (backend `demandesRestaurants.js`, migration 093;

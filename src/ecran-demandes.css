@@ -147,3 +147,77 @@ html.appli .dm-preuve-corps { padding-bottom: calc(110px + env(safe-area-inset-b
 .dm-preuve-garantie { font-size: 13px; opacity: .88; margin: 14px 0 16px; line-height: 1.45; }
 .dm-preuve-bouton { display: flex; width: 100%; justify-content: center; }
 .dm-preuve-petit { text-align: center; font-size: 13px; opacity: .85; margin: 10px 0 0; }
+/* ---------- L'ACCUEIL PLEIN (fondateur, 2026-11-12, maquettes/accueil-plein section 5) ----------
+   La rangée toujours là, « Le tien ? » en premier, « Voir les N » au bout ; la ligne fine quand il n'y a aucune demande ;
+   « Il en manque un ? » au bout des rangées par envie ; le rappel dans « Tous » ; la liste de la page « Demandés près de toi ». */
+.rest-grid-scroll .dm-ticket.dm-ticket--autre { flex-basis: 156px; }
+.dm-ticket.dm-ticket--voir {
+  background: var(--iris-tint); color: var(--iris); border: 0; align-items: center; justify-content: center; text-align: center;
+  gap: 4px; cursor: pointer; font: inherit;
+}
+.dm-ticket--voir::before { display: none; }
+.dm-ticket--voir b { font: 800 28px "Inter Tight", Inter, sans-serif; }
+.dm-ticket--voir span { font: 700 14px Inter, sans-serif; }
+.rest-grid-scroll .dm-ticket.dm-ticket--voir { flex-basis: 132px; }
+.dm-ticket--voir:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+
+.dm-fine { display: flex; align-items: center; gap: 12px; border: 1px dashed #cfcbe8; border-radius: var(--radius); padding: 12px 14px; background: #fff; }
+.dm-fine .dm-autre-rond { width: 40px; height: 40px; flex: none; }
+.dm-fine-texte { flex: 1; min-width: 0; display: grid; line-height: 1.3; }
+.dm-fine-texte b { font: 700 15px Inter, sans-serif; }
+.dm-fine-texte small { font-size: 12.5px; color: var(--ink-soft); }
+.dm-fine .dm-moi-aussi { width: auto; margin: 0; padding: 0 16px; min-height: 36px; flex: none; box-shadow: inset 0 0 0 1px var(--line); }
+
+/* « Il en manque un ? » : blanc à filet pointillé, comme « Le tien ? » ; pas de lime (un écran qui se parcourt). */
+.dm-manque {
+  flex: 0 0 132px; scroll-snap-align: start; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 6px; text-align: center; padding: 10px; border: 1px dashed #cfcbe8; border-radius: var(--radius); background: #fff;
+  color: var(--ink); font: inherit; cursor: pointer;
+}
+.dm-manque img { width: 44px; height: 44px; object-fit: contain; }
+.dm-manque b { font: 700 14px/1.25 Inter, sans-serif; }
+.dm-manque small { font: 700 13px Inter, sans-serif; color: var(--iris); }
+.dm-manque:focus-visible, .dm-manque-lien:focus-visible { outline: 2px solid var(--iris); outline-offset: 2px; }
+/* Sur le site en grille : un lien à droite du titre de la rangée. */
+.dm-manque-lien { margin-left: auto; display: inline-flex; align-items: center; gap: 6px; border: 0; background: none; color: var(--iris); font: 600 14px Inter, sans-serif; cursor: pointer; white-space: nowrap; }
+
+/* Le rappel au milieu de « Tous » : un ticket couché, mêmes couleurs que la carte « ticket ». */
+.dm-rappel {
+  position: relative; overflow: hidden; display: grid; grid-template-columns: 44px 1fr; gap: 2px 12px; align-items: center;
+  border-radius: var(--radius); background: var(--iris); color: #fff; padding: 14px;
+}
+.dm-rappel::before {
+  content: ""; position: absolute; width: 190px; height: 190px; border-radius: 50%; background: rgba(255, 255, 255, .08);
+  right: -70px; top: -90px; pointer-events: none;
+}
+.dm-rappel > img, .dm-rappel > .dm-ticket-icone { grid-row: span 2; width: 44px; height: 44px; object-fit: contain; position: relative; }
+.dm-rappel-haut { position: relative; font-size: 12.5px; opacity: .85; }
+.dm-rappel-nom { position: relative; font: 800 17px/1.2 "Inter Tight", Inter, sans-serif; }
+.dm-rappel-bas { position: relative; grid-column: 1 / -1; display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+.dm-rappel-bas .dm-moi-aussi { width: auto; flex: 1; margin: 0; }
+.dm-rappel-lien { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: #fff; font: 700 14px Inter, sans-serif; cursor: pointer; white-space: nowrap; }
+.dm-rappel-lien:focus-visible { outline: 2px solid var(--lime); outline-offset: 2px; }
+
+/* La page « Demandés près de toi » (la fenêtre « Lequel ? » sans rien de tapé). */
+.dm-pres { margin: 6px 0 4px; }
+.dm-cats { display: flex; flex-wrap: nowrap; gap: 8px; overflow-x: auto; scrollbar-width: none; margin: 2px -20px 8px; padding: 2px 20px; }
+.dm-cats::-webkit-scrollbar { display: none; }
+.dm-cat {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px 0 6px; border-radius: var(--radius-pill);
+  border: 1px solid var(--line); background: #fff; color: var(--ink); font: 600 13px Inter, sans-serif; cursor: pointer;
+}
+.dm-cat img { width: 24px; height: 24px; object-fit: contain; }
+.dm-cat.on { background: var(--iris); border-color: var(--iris); color: #fff; }
+.dm-pres-ligne { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+.dm-pres-nb { font: 800 18px "Inter Tight", Inter, sans-serif; color: var(--iris); min-width: 24px; text-align: right; flex: none; }
+.dm-pres-moi {
+  flex: none; display: inline-flex; align-items: center; gap: 4px; height: 34px; padding: 0 12px; border-radius: var(--radius-pill);
+  border: 1px solid var(--iris); background: #fff; color: var(--iris); font: 700 13px Inter, sans-serif; cursor: pointer;
+}
+.dm-pres-moi.on { background: var(--iris); color: #fff; }
+.dm-pres-moi.on svg { color: var(--lime); }
+.dm-pres-moi:disabled { cursor: progress; }
+/* Sur le site en grille, une rangée de l'accueil tient sur UNE ligne, quelle que soit la largeur (3 à 5 colonnes) : les cartes
+   qui passeraient à la ligne sont coupées (accueil plein, 2026-11-12 : 11 pizzerias ou 14 demandés en grille faisaient un mur ;
+   le titre touchable ouvre tout). Défini ici parce que la rangée des demandés en a besoin aussi. */
+html:not(.appli) .rest-grid.sl-grille.sl-une-ligne { grid-template-rows: auto; grid-auto-rows: 0; row-gap: 0; overflow: hidden; }

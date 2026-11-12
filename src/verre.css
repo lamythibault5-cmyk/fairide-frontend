@@ -434,8 +434,9 @@ html.appli body .dm-moi-aussi:not(.on) {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, .95), inset 0 0 0 1.5px rgba(59, 47, 181, .22), inset 0 -1px 0 rgba(255, 255, 255, .55),
     0 6px 18px rgba(20, 18, 31, .16);
 }
-/* « Un autre ? » est sur du blanc : son « Demander » garde le verre clair des autres boutons de l'app. */
-html.appli body .dm-ticket--autre .dm-moi-aussi { background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre); }
+/* « Le tien ? » (ex-« Un autre ? ») et la ligne fine sans demande sont sur du blanc : leur « Demander » garde le verre clair
+   des autres boutons de l'app (accueil plein, 2026-11-12). */
+html.appli body :is(.dm-ticket--autre, .dm-fine) .dm-moi-aussi { background: var(--verre-clair-fond); box-shadow: var(--verre-clair-ombre); }
 html.appli body .dm-moi-aussi.on {
   color: #fff; background: rgba(255, 255, 255, .18);
   -webkit-backdrop-filter: blur(8px) saturate(160%) brightness(1.15); backdrop-filter: blur(8px) saturate(160%) brightness(1.15);
