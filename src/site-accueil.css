@@ -10,6 +10,30 @@
 
 html:not(.appli) .wrap.wrap-accueil { max-width: calc(1120px + 2 * var(--gouttiere)); }
 
+/* LES DESSINS GOURMANDS (fondateur, 2026-11-12, maquettes/plus-gourmand/plus-gourmand-2.html, tour 7 ; Gourmandises.jsx, styles.css
+   pour .gourmand). Téléphone et tablette (≤ 900 px) : la grappe en haut à droite du bandeau, à côté du badge et du titre, rien
+   plus bas (« trop » au tour 5) ; sous 350 px, le badge la toucherait : rien. Ordinateur (≥ 1 300 px) : seulement les marges, à
+   hauteur fixe de la page, la taille réduite si la marge est étroite. Entre les deux, pas de place sans gêner la lecture. */
+html:not(.appli) .sa-accueil { position: relative; }
+html:not(.appli) .sa-accueil .sa-gourmand-tel, html:not(.appli) .sa-accueil .sa-gourmand-marges { display: none; }
+@media (min-width: 350px) and (max-width: 900px) {
+  html:not(.appli) .sa-accueil .sa-gourmand-tel { display: block; position: absolute; top: 0; right: 0; width: 0; height: 0; z-index: 2; pointer-events: none; }
+  html:not(.appli) .sa-accueil .sa-gourmand-tel .gourmand:nth-child(1) { top: 9px; right: -8px; }
+  html:not(.appli) .sa-accueil .sa-gourmand-tel .gourmand:nth-child(2) { top: 77px; right: -2px; }
+  html:not(.appli) .sa-accueil .sa-gourmand-tel .gourmand:nth-child(3) { top: 135px; right: 10px; }
+}
+@media (max-width: 359px) { html:not(.appli) .sa-accueil .sa-gourmand-tel .gourmand:nth-child(3) { display: none; } }
+@media (min-width: 1300px) {
+  /* --m : la marge de chaque côté, 8 px laissés à la barre de défilement. Le contenu fait 1 120 px dès 1 300 px de large ; pas de
+     « 100 % » ici : dans height, il vaudrait la hauteur de la page (la marge devenait négative et les dessins, hauts de 0 px). */
+  html:not(.appli) .sa-accueil .sa-gourmand-marges { display: block; position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    --m: calc((100vw - 1120px) / 2 - 8px); }
+  html:not(.appli) .sa-accueil .sa-gourmand-marges .gourmand { --t2: min(var(--t), calc(var(--m) - 24px)); width: var(--t2); height: auto;
+    aspect-ratio: 1; top: calc(var(--y) * 100%); }
+  html:not(.appli) .sa-accueil .sa-gourmand-marges .gauche { right: calc(100% + 12px + (var(--m) - 24px - var(--t2)) * var(--f)); }
+  html:not(.appli) .sa-accueil .sa-gourmand-marges .droite { left: calc(100% + 12px + (var(--m) - 24px - var(--t2)) * var(--f)); }
+}
+
 /* ---------------------------------------------------------------------------------------------------------------------
    1 · LE BANDEAU IRIS
    --------------------------------------------------------------------------------------------------------------------- */

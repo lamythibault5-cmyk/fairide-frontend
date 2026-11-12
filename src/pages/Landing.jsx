@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { GourmandSite } from '../components/Gourmandises';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import AppComingSoonSection from '../components/AppComingSoonSection';
@@ -88,6 +89,8 @@ export default function Landing() {
 
   return (
     <div className="sa-accueil">
+      {/* Les dessins gourmands : grappe en haut à droite du bandeau sur téléphone, marges sur l'ordinateur (Gourmandises.jsx). */}
+      <GourmandSite />
       <section className="sa-bandeau">
         <div className="sa-bandeau-texte">
           <span className="sa-belge">

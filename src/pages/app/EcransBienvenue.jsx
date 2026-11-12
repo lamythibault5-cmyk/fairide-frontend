@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { GourmandAccueil } from '../../components/Gourmandises';
 import { useLanguage } from '../../context/LanguageContext';
 import BrandMark from '../../components/BrandMark';
 import MotMarque from '../../components/MotMarque';
@@ -222,8 +223,9 @@ export function EcranAccueil({ onCommencer, onConnexion }) {
         <Langues />
       </div>
       <h1 className="bv-titre bv-titre-accueil">{t('landing.titreAccueil1')}<br />{t('landing.titreAccueil2')}</h1>
-      {/* Sur un grand écran, c'est le bandeau qui grandit (le vélo descend vers la feuille), pas la feuille. */}
-      <div className="bv-grandit" />
+      {/* Sur un grand écran, c'est le bandeau qui grandit (le vélo descend vers la feuille), pas la feuille. Les dessins
+          gourmands occupent ce vide (Gourmandises.jsx), au-dessus de la route du vélo. */}
+      <div className="bv-grandit bv-grandit-gourmand"><GourmandAccueil /></div>
       <SceneAccueil />
       <Feuille>
         <p className="bv-sous bv-accroche">{t('appli.accSub')}</p>
