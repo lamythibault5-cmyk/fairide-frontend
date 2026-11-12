@@ -15,6 +15,7 @@ import { CHEMIN_LISTE, jetonListe, nbPlatsHealthy, promoDUnPlat } from '../../re
 // de commerce téléchargeait Leaflet avant de voir la moindre ligne de texte — alors que la vue carte
 // est un affichage secondaire, choisi par l'utilisateur.
 import Icone from '../../components/Icone';
+import { experienceApp } from '../../natif';
 import ChoixAdresse from '../../components/ChoixAdresse';
 import FavoriteHeart from '../../components/FavoriteHeart';
 import CertifiedBadge from '../../components/CertifiedBadge';
@@ -1045,7 +1046,8 @@ export default function RestaurantList() {
             horloge que « Ouvert » sur l'onglet Carte. */}
         {pastilleOuvert && restaurants.length > 0 && (
           <button type="button" className={`cuisine-chip${ouvertActif ? ' active' : ''}`} aria-pressed={ouvertActif} onClick={() => { vibrer('bascule'); setOuvertsSeuls((v) => !v); }}>
-            <Icone nom="horloge" taille={16} />{t('mapClient.filterOpen')}
+            {/* Allumée dans l'app, l'horloge se remplit, comme l'icône de l'onglet choisi (maquettes/ouvert-verre) ; le site garde son trait. */}
+            <Icone nom={ouvertActif && experienceApp() ? 'horlogePleine' : 'horloge'} taille={16} />{t('mapClient.filterOpen')}
           </button>
         )}
         {pastilleLivre && restaurants.length > 0 && (

@@ -250,9 +250,18 @@ html.appli .sl-liste--calme .rest-card { animation: none; }
   html.appli .carte-page .carte-recherche { height: 50px; padding: 0 16px; }
   html.appli .carte-page .carte-recherche input { color: var(--ink); }
   html.appli .carte-page .carte-pastilles .cuisine-chip svg, html.appli .carte-page .carte-recherche svg { filter: none; }
+  /* Allumée (fondateur, 2026-11-11, réponse 2 de maquettes/ouvert-verre) : plus un bloc iris au milieu du verre clair ; la bulle
+     garde son verre et son filet, la pastille de l'onglet choisi s'y pose à 4 px du bord, le mot et l'icône passent en iris
+     (« Ouvert » prend l'horloge pleine, MapPage.jsx). Dans le panneau des cuisines, la cuisine choisie est cette pastille seule,
+     comme un onglet dans la barre. */
+  html.appli .carte-page .carte-pastilles .cuisine-chip { isolation: isolate; }
   html.appli .carte-page .carte-pastilles .cuisine-chip.active, html.appli .carte-page .carte-panneau .cuisine-chip.active {
-    background: var(--iris); border-color: var(--iris); color: #fff; text-shadow: none;
+    color: var(--iris); font-weight: 600; text-shadow: none;
   }
+  html.appli .carte-page .carte-pastilles .cuisine-chip.active::after {
+    content: ""; position: absolute; inset: 4px; z-index: -1; border-radius: inherit; background: var(--pastille-onglet); pointer-events: none;
+  }
+  html.appli .carte-page .carte-panneau .cuisine-chip.active { background: var(--pastille-onglet); border-color: transparent; box-shadow: none; }
   html.appli .carte-page .carte-pastilles .cuisine-chip.active svg { filter: none; }
   /* Dans le panneau, les cuisines non choisies : la pastille à peine grise des lentilles d'iOS 26, sans bord. */
   html.appli .carte-page .carte-panneau .cuisine-chip:not(.active) { background: rgba(255, 255, 255, .34); border-color: transparent; box-shadow: inset 0 0 0 .5px rgba(255, 255, 255, .6); }
