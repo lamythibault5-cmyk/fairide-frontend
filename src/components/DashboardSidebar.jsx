@@ -11,12 +11,14 @@ import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import { useSiteLarge } from '../hooks/useSiteLarge';
 import { experienceApp } from '../natif';
+import { estApercu } from '../apercuSite';
 import { defilement } from '../gestes';
 import { useModeEquipe } from '../modeEquipe';
 import { lazyPage } from '../lazyPage';
 import { useMiseAJourDispo } from '../miseAJour';
 
 const NATIF = experienceApp();
+const APERCU = estApercu();
 
 /* LA CONSOLE ADMIN HORS DU PREMIER CHARGEMENT DES CLIENTS (audit du 24/10). La recherche globale (et adminUtils.jsx qu'elle
    tire) et la navigation des pôles (adminModules.js) ne servent qu'au compte admin, sur le site ; importées en dur ici, elles
@@ -219,7 +221,10 @@ export default function DashboardSidebar() {
   // correspondantes, toujours réservées aux vrais clients côté API.
   const effectiveRole = previewMode && role === 'restaurant' ? 'client' : role;
   const etroit = !useSiteLarge(900);
-  const tous = isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname, etroit);
+  // L'aperçu de l'accueil du site (apercuSite.js) : Restaurants et Carte seulement, sans le rond Recherche (Owen, 2026-11-12,
+  // réponse 6 de maquettes/site-appli-essai) ; la pilule reste celle de l'appli, centrée seule (styles.css, html.apercu).
+  const tous = APERCU ? navItemsForRole('client', t).filter((item) => item.to === '/restaurants' || item.to === '/map')
+    : isAdminAccount ? [] : navItemsForRole(effectiveRole, t, user, membreEquipe, pathname, etroit);
   /* LA RECHERCHE À PART (fondateur, 2026-11-11, réponse 4 A de maquettes/barre-ios26) : dans l'app, sur téléphone, elle sort de
    * la pilule et devient un rond de verre à droite, comme sur iOS 26 (App Store, Musique). Le site garde ses cinq onglets. */
   const recherche = NATIF && etroit ? tous.find((item) => item.to === '/recherche') : null;
@@ -303,14 +308,15 @@ export default function DashboardSidebar() {
           </nav>
         </div>
       )}
-      <div className="dashboard-profile-card">
+      {/* Pas de carte de profil dans l'aperçu de l'accueil (apercuSite.js) : souvent sans compte, et cachée sur téléphone. */}
+      {!APERCU && <div className="dashboard-profile-card">
         <div className="dashboard-profile-avatar">{initial}</div>
         <div className="dashboard-profile-info">
           <span className="dashboard-profile-name" title={user?.name}>{user?.name}</span>
           <span className="dashboard-profile-role">{previewMode && role === 'restaurant' ? t('nav.customerPreviewLower') : isAdminAccount ? 'admin' : membreEquipe && role === 'restaurant' ? t('team.profileRole') : t(`account.role${String(role || 'client').charAt(0).toUpperCase()}${role.slice(1)}`)}</span>
           <button type="button" className="dashboard-profile-logout" onClick={logout}>{t('nav.logout')}</button>
         </div>
-      </div>
+      </div>}
     </aside>
   );
 }

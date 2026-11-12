@@ -45,9 +45,11 @@ The front page opens with the call, then the customer's why (founder's mix, 2026
 > Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. Ailleurs, c'est jusqu'à +55 %. Sur
 > Fairride, le restaurant ne gonfle plus sa carte, et ton argent reste à Bruxelles.
 
-« L'alternative à Uber Eats » left the subtitle but not the page: people search for it, so it is the heading of the
-section under « Déjà sur Fairride » (`landing.altTitre`), and it stays in the Google title and description (`seo.*`)
-and on « Notre histoire ».
+« L'alternative à Uber Eats » left the subtitle but not the page: people search for it, so it is the big title next to
+the fake phone under the iris band (`landing.altTitre`, EssaiAppli.jsx since 2026-11-12, « fairride » as the wordmark), with
+two short lines only: « Fini les prix gonflés. » and « Cherche le badge Prix du comptoir » (Owen, 2026-11-12: minimal). It
+stays in the Google title and description (`seo.*`) and on « Notre histoire ». Visitors never read how many restaurants
+there are (Owen, 2026-11-12), and the app is offered with « installer », never « prendre ».
 
 ## 2. The villain: the inflated price, never a company
 

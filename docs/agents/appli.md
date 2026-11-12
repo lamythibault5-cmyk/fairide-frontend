@@ -140,6 +140,19 @@ browser Google), the visitor header (logo + « Connexion » only; Aide, Contact 
 on every general and shop screen (the visitor site's white override is gone; Questions, Mode d'emploi and Aperçu got their
 band in the app too). Computers keep their own layout (side menu, columns). Still different on purpose: the visitor home
 (presentation page on the site, for search engines and the 10 % pitch). The courier dossier is ONE flow since 2026-10-25 (below).
+**The app inside the website's home page (2026-11-12, version A of `maquettes/site-appli-essai` and Owen's answers)**: the home
+page's fake phone ([EssaiAppli.jsx](../../src/components/landing/EssaiAppli.jsx)) is NOT a drawing: it is an `<iframe
+name="fairride-apercu" src="/restaurants">` of the real app, so every app change is in it as soon as the site is deployed.
+[apercuSite.js](../../src/apercuSite.js) recognises the frame by its name (never a sessionStorage flag: a same-origin frame shares the
+page's sessionStorage) and `experienceApp()` is true there (`html.appli` + `html.apercu`). What the preview changes, and nothing
+else: Layout renders the tab shell even without an account; the bar has only Restaurants and Carte, no Search round, centred
+(`--groupe-onglets: 236px`); `/map` is open without an account; every shop card looks the same (no offer, « Fermé », time, services,
+« Carte seule », greyed photo; the « Prix du comptoir » badge and « Sponsorisé » stay, the ORDER is untouched); the « Livrer à »
+band shows « Ajoute ton adresse »; no count on the map. [GardeApercu.jsx](../../src/components/GardeApercu.jsx) stops every link to
+another page (capture on `window`, before NavigationFeedback) and posts it to the site (`postMessage`, same origin only), which
+opens its window: phone = install the app first + « Continuer sur le site », computer = create an account first + QR code;
+sign-up comes back to `/?essai` (Home.jsx shows the home page even signed in, Layout keeps the visitor frame). No Sentry without
+the site's consent, no Plausible visit, no welcome / notifications / badge screens in the frame.
 **The app glass of 2026-10-23** (answers to `maquettes/verre-boutons/verre-boutons.html`) is in ONE file, [src/verre.css](../../src/verre.css): an iris glass band under the status bar once the page scrolls, on iPhone and, since 2026-10-26, on Android 15+ where the app runs edge to edge (on Android 14 and older the status bar is solid, `env(safe-area-inset-top)` is 0 and the band has no height; `maquettes/iphone-android`) ([verreBarreEtat.js](../../src/verreBarreEtat.js), it waits for a restaurant photo to leave, and stays off while a solid iris band fills that zone — the list's « Livrer à » band: on top of it the glass looked brighter with a line, 2026-10-25), milky « clear » glass with an iris rim for the restaurant round buttons, puces, Livraison / À emporter, map controls and the chips above the restaurant list (« Ouvert », commune, search word; 2026-10-26, `maquettes/filtre-ouvert`), vivid iris WITHOUT GLARE for every « + », a dish's « − 1 + », the Livraison / À emporter thumb and a lit list chip (the cart's « − 1 + » is white with an iris rim since 2026-10-25, #245) (2026-10-25: solid iris, white 1 px rim, iridescent edges, soft shadow; the top white shine, top highlight line and dark inner bottom shadow were removed — « like it was trying to go 3D » — and see-through iris glass is not an option: it dulls the iris on white, 2026-10-23). They still grow on press, with no light under the finger. Toasts keep the 72 % iris glass.
 **Glass everywhere (2026-10-26, answers to `maquettes/verre-partout/verre-partout.html`)**: an inventory of every button on 28 app
 screens (`inventaire.mjs` there) left five web-style families; all now use the recipes above, in the « LE VERRE PARTOUT » block of

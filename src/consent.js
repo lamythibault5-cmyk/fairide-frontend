@@ -8,6 +8,7 @@
 //
 // Valeurs possibles : 'accepted' | 'refused' | null (pas encore répondu).
 import { experienceApp } from './natif';
+import { estApercu } from './apercuSite';
 
 const STORAGE_KEY = 'fairide_cookie_consent';
 // Date du choix : la politique cookies promet un choix conservé 12 mois ; passé ce délai la bannière revient.
@@ -41,7 +42,8 @@ export function getConsent() {
  * un bouton pour couper dans Mon compte et une case décochable à l'inscription ; Sentry réduit aux erreurs (sentry.js). */
 export function rapportsPanneActifs() {
   const choix = getConsent();
-  return choix === 'accepted' || (choix === null && experienceApp());
+  // L'aperçu de l'accueil (apercuSite.js) est en mode appli mais sur le SITE : sans « Accepter », rien ne part.
+  return choix === 'accepted' || (choix === null && experienceApp() && !estApercu());
 }
 
 export function hasAcceptedConsent() {

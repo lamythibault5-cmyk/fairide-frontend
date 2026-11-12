@@ -13,11 +13,14 @@
 //                       et la feuille du code à la première commande (fondateur, 2026-11-02, maquettes/inscription-legere) —
 //                       pour voir où l'on s'arrête. Le nom de l'écran seulement.
 //   telephone_prouve    { support } : le code du numéro tapé (VerifTelephone.jsx)
+import { estApercu } from './apercuSite';
+
 const DOMAINE = import.meta.env.VITE_PLAUSIBLE_DOMAIN || '';
 let charge = false;
 
 export function demarrerAnalytics() {
-  if (charge || !DOMAINE || typeof document === 'undefined') return;
+  // L'aperçu de l'accueil (apercuSite.js) n'est pas une visite : la page du site qui le contient est déjà comptée.
+  if (charge || !DOMAINE || typeof document === 'undefined' || estApercu()) return;
   charge = true;
   const s = document.createElement('script');
   s.defer = true;

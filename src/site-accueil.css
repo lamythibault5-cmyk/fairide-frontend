@@ -28,10 +28,8 @@ html:not(.appli) .sa-accueil .sa-gourmand-tel, html:not(.appli) .sa-accueil .sa-
    10 px, pour que le texte ne passe jamais dessous ; le dessin est centré sur sa hauteur, penché, jamais coupé par le bord. */
 .sa-gourmand-titre { display: none; }
 @media (min-width: 350px) and (max-width: 900px) {
-  html:not(.appli) .sa-accueil .sa-avec-gourmand, html:not(.appli) .sa-accueil .hero-preview-head { position: relative; padding-right: 56px; }
+  html:not(.appli) .sa-accueil .sa-avec-gourmand { position: relative; padding-right: 56px; }
   html:not(.appli) .sa-accueil .sa-gourmand-titre { display: block; right: 4px; top: calc(50% - var(--t) / 2); z-index: 1; }
-  /* « Découvre » + titre : le bloc ne faisait que la largeur du texte (en-tête en flex), le dessin s'y collait au milieu. */
-  html:not(.appli) .sa-accueil .discover-head > .sa-avec-gourmand { flex: 1; }
 }
 @media (min-width: 1300px) {
   /* --m : la marge de chaque côté, 8 px laissés à la barre de défilement. Le contenu fait 1 120 px dès 1 300 px de large ; pas de
@@ -167,48 +165,45 @@ html:not(.appli) .sa-accueil .sa-feuille::before {
 }
 @keyframes sa-monte { from { transform: translateX(-50%) translateY(36px); } }
 
-/* « Déjà sur Fairide » (HeroPreview.jsx) : sorti de sa carte, il devient la première section de la feuille. */
-html:not(.appli) .sa-accueil .hero-preview.hero-preview-rangee { background: none; padding: 0; border-radius: 0; gap: 16px; }
-html:not(.appli) .sa-accueil .hero-preview-head { gap: 16px; align-items: baseline; flex-wrap: wrap; font-family: var(--font-titre); font-size: 28px; font-weight: 700; letter-spacing: -0.015em; text-transform: none; color: var(--ink); }
-html:not(.appli) .sa-accueil .hero-preview-dot { display: none; }
-html:not(.appli) .sa-accueil .hero-preview-count { font-family: var(--font-ui); font-size: 14px; font-weight: 600; }
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-list { gap: 16px; }
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-card { padding: 0 0 14px; gap: 10px; border-radius: 18px; overflow: hidden; background: #fff; }
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-img { border-radius: 0; }
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-body,
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-side,
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-lines { padding-left: 14px; padding-right: 14px; }
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-body b { font-size: 15.5px; }
-html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-meta { font-size: 13px; }
-
 html:not(.appli) .sa-accueil .sa-section-titre { font-size: 28px; letter-spacing: -0.015em; margin: 64px 0 18px; }
 
-/* Les deux arguments. */
-html:not(.appli) .sa-accueil .sa-arguments { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 56px; }
-html:not(.appli) .sa-accueil .sa-alternative + .sa-arguments { margin-top: 0; }
-html:not(.appli) .sa-accueil .sa-argument { display: flex; gap: 16px; align-items: flex-start; border: 1px solid var(--line); border-radius: 20px; padding: 22px 24px; background: #fff; }
-html:not(.appli) .sa-accueil .sa-tuile { width: 46px; height: 46px; border-radius: 14px; border: 1px solid var(--line); color: var(--iris); display: grid; place-items: center; flex: none; }
-html:not(.appli) .sa-accueil .sa-tuile-pleine { background: var(--iris); color: var(--lime); border: 0; }
-html:not(.appli) .sa-accueil .sa-argument h3 { font-size: 19px; margin: 2px 0 6px; }
-html:not(.appli) .sa-accueil .sa-argument p { margin: 0; font-size: 14.5px; line-height: 1.55; color: var(--ink-soft); }
+/* L'APPLI SUR L'ACCUEIL (EssaiAppli.jsx, Owen 2026-11-12, maquettes/site-appli-essai) : à gauche le vélo belge, « l'alternative »
+   en grand et deux lignes, un QR code sur ordinateur ; à droite le faux téléphone (la vraie page de l'appli dans un cadre,
+   réduite par EssaiAppli). Pas d'ombre (site) : le cadre noir du téléphone suffit à le détacher. */
+html:not(.appli) .sa-accueil .sa-essai { display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 48px; align-items: center; padding: 8px 0 0; scroll-margin-top: 24px; }
+html:not(.appli) .sa-accueil .sa-essai-texte .be-mark { display: block; }
+html:not(.appli) .sa-accueil .sa-essai-texte h2 { font-size: 44px; line-height: 1.06; letter-spacing: -0.02em; margin: 16px 0 28px; max-width: 15ch; }
+html:not(.appli) .sa-accueil .sa-essai-raisons { list-style: none; margin: 0 0 34px; padding: 0; display: grid; gap: 14px; }
+html:not(.appli) .sa-accueil .sa-essai-raisons li { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 12px; font-family: var(--font-titre); font-weight: 700; font-size: 21px; letter-spacing: -0.01em; color: var(--ink); }
+html:not(.appli) .sa-accueil .sa-essai-raisons li > svg { color: var(--iris); flex: none; }
+html:not(.appli) .sa-accueil .sa-essai-raisons .prix-comptoir { font-family: var(--font-ui); font-size: 15px; padding: 4px 12px; }
+html:not(.appli) .sa-accueil .sa-essai-tel { display: flex; flex-direction: column; align-items: center; width: 100%; }
+html:not(.appli) .sa-accueil .sa-essai-cadre { position: relative; overflow: hidden; isolation: isolate; box-sizing: border-box; border: 9px solid #111; background: #111; }
+html:not(.appli) .sa-accueil .sa-essai-cadre iframe { position: absolute; top: 0; left: 0; display: block; border: 0; background: #fff; transform-origin: 0 0; }
+.sa-essai-qr { display: flex; align-items: center; gap: 18px; }
+.sa-essai-qr img { width: 112px; height: 112px; padding: 10px; box-sizing: content-box; border: 1px solid var(--line); border-radius: 18px; background: #fff; display: block; flex: none; }
+.sa-essai-qr span { font-size: 16px; line-height: 1.35; color: var(--ink-soft); max-width: 15ch; }
+.sa-essai-stores { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; margin-top: 18px; }
+.sa-essai-stores .sa-badge { display: block; line-height: 0; border-radius: 9px; transition: opacity .15s; }
+.sa-essai-stores .sa-badge:hover { opacity: .82; }
+.sa-essai-stores .sa-badge img { height: 44px; width: auto; display: block; }
 
-/* La vitrine « Découvre » (DiscoverSection.jsx) garde sa grille, mais sort de sa grande carte ombrée : sur la feuille, c'est
-   une section comme les autres. Le sur-titre n'est plus une pastille (elle chevauchait le titre). Pas d'ombre sur le site. */
-html:not(.appli) .sa-accueil .discover-section { margin: 64px 0 0; padding: 0; background: none; border: 0; border-radius: 0; box-shadow: none; }
-html:not(.appli) .sa-accueil .pill.hero.discover-eyebrow {
-  display: block; background: none; border: 0; padding: 0; min-height: 0; margin: 0 0 6px;
-  font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--iris);
-}
-html:not(.appli) .sa-accueil .discover-head .section-title { font-size: 28px; letter-spacing: -0.015em; margin: 0 !important; }
-html:not(.appli) .sa-accueil .discover-head { margin-bottom: 16px; }
-/* Une carte seule sur sa rangée ne s'étire plus à la hauteur du bloc iris voisin. */
-html:not(.appli) .sa-accueil .discover-grid { align-items: start; }
-html:not(.appli) .sa-accueil .discover-tile { box-shadow: none; border-radius: 18px; }
-html:not(.appli) .sa-accueil .discover-info { box-shadow: none; }
-html:not(.appli) .sa-accueil .discover-tile { transition: border-color .2s, transform .2s; }
-html:not(.appli) .sa-accueil .discover-tile:hover { transform: translateY(-2px); border-color: var(--iris); box-shadow: none; }
-html:not(.appli) .sa-accueil .discover-tile:hover .discover-tile-img img { transform: none; }
-html:not(.appli) .sa-accueil .discover-tile-cuisine, html:not(.appli) .sa-accueil .discover-tile-rating { box-shadow: none; }
+/* La fenêtre d'un toucher dans le faux téléphone (Modale, rendue dans <body>, hors de .sa-accueil). */
+.sa-essai-fenetre { position: relative; padding: 24px 26px 22px; border-radius: 26px; text-align: left; }
+.sa-essai-fermer { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+.sa-essai-commerce { display: flex; align-items: center; gap: 14px; margin: 0 44px 16px 0; }
+.sa-essai-commerce img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; flex: none; }
+.sa-essai-commerce b { display: flex; align-items: center; gap: 6px; font-family: var(--font-titre); font-size: 20px; line-height: 1.2; }
+.sa-essai-commerce span { display: block; font-size: 14px; color: var(--ink-soft); }
+.sa-essai-fenetre h3 { font-size: 20px; line-height: 1.25; margin: 0 44px 4px 0; }
+.sa-essai-commerce + h3 { margin-right: 0; }
+.sa-essai-fenetre p { margin: 0 0 16px; font-size: 15px; line-height: 1.45; color: var(--ink-soft); }
+.sa-essai-principal { width: 100%; justify-content: center; }
+.sa-essai-lien { display: block; width: 100%; margin-top: 8px; padding: 10px; background: none; border: 0; color: var(--iris); font: inherit; font-weight: 700; font-size: 15px; cursor: pointer; }
+.sa-essai-fenetre .sa-essai-qr { border-top: 1px solid var(--line); margin-top: 14px; padding-top: 16px; }
+.sa-essai-fenetre .sa-essai-qr img { width: 76px; height: 76px; padding: 6px; }
+.sa-essai-fenetre .sa-essai-qr span { font-size: 14.5px; max-width: none; }
+.sa-essai-fenetre .sa-essai-stores { justify-content: flex-start; margin-top: 4px; }
 
 /* Les trois portes d'entrée. */
 html:not(.appli) .sa-accueil .sa-portes { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
@@ -222,17 +217,17 @@ html:not(.appli) .sa-accueil .sa-porte-role { display: inline-flex; align-items:
 html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 20px; line-height: 1.2; flex: 1; }
 html:not(.appli) .sa-accueil .sa-porte-lien { font-size: 14.5px; font-weight: 700; color: var(--iris); }
 
-/* L'application, en une carte (AppComingSoonSection.jsx, 2026-11-09) : fond iris très pâle, vraie icône de l'appli, badges
-   officiels d'Apple et de Google à la même hauteur. Pas d'ombre ; au survol, le badge s'éclaircit à peine. */
-html:not(.appli) .sa-accueil .sa-appli { display: flex; align-items: center; gap: 24px; border-radius: 24px; padding: 28px 32px; margin-top: 56px; background: var(--iris-tint); }
-html:not(.appli) .sa-accueil .sa-appli-icone { width: 88px; height: 88px; flex: none; border-radius: 22.5%; display: block; }
-html:not(.appli) .sa-accueil .sa-appli-texte { flex: 1; min-width: 0; }
-html:not(.appli) .sa-accueil .sa-appli h2 { font-size: 26px; line-height: 1.15; margin: 0; }
-html:not(.appli) .sa-accueil .sa-appli p { margin: 8px 0 0; font-size: 15px; line-height: 1.5; color: var(--ink-soft); max-width: 46ch; }
-html:not(.appli) .sa-accueil .sa-appli-stores { display: flex; gap: 12px; flex: none; }
-html:not(.appli) .sa-accueil .sa-badge { display: block; line-height: 0; border-radius: 9px; transition: opacity .15s; }
-html:not(.appli) .sa-accueil .sa-badge:hover { opacity: .82; }
-html:not(.appli) .sa-accueil .sa-badge img { height: 48px; width: auto; display: block; }
+/* « Rejoindre fairride » en deux portes (Landing.jsx, réponse 7) : le commerce sur l'iris avec le lime, le livreur en blanc. */
+html:not(.appli) .sa-accueil .sa-portes-deux { grid-template-columns: repeat(2, minmax(0, 1fr)); margin-bottom: 56px; }
+html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte { padding: 26px 28px; border-radius: 24px; gap: 10px; }
+html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte h3 { font-size: 24px; flex: none; max-width: 20ch; }
+html:not(.appli) .sa-accueil .sa-porte-ligne { margin: 0; flex: 1; font-size: 15.5px; line-height: 1.45; color: var(--ink-soft); }
+html:not(.appli) .sa-accueil .sa-porte-bouton { align-self: flex-start; margin-top: 8px; padding: 12px 20px; border-radius: 999px; font-size: 15px; font-weight: 700; background: var(--iris); color: #fff; }
+html:not(.appli) .sa-accueil .sa-porte-iris { background: var(--iris); border-color: var(--iris); color: #fff; }
+html:not(.appli) .sa-accueil .sa-porte-iris:hover { border-color: var(--iris); }
+html:not(.appli) .sa-accueil .sa-porte-iris .sa-porte-role { color: rgba(255, 255, 255, .75); }
+html:not(.appli) .sa-accueil .sa-porte-iris .sa-porte-ligne { color: rgba(255, 255, 255, .82); }
+html:not(.appli) .sa-accueil .sa-porte-iris .sa-porte-bouton { background: var(--lime); color: var(--ink); }
 
 /* ---------------------------------------------------------------------------------------------------------------------
    3 · TABLETTE ET TÉLÉPHONE
@@ -243,10 +238,16 @@ html:not(.appli) .sa-accueil .sa-badge img { height: 48px; width: auto; display:
   html:not(.appli) .sa-accueil .sa-portes { grid-template-columns: 1fr; gap: 12px; }
   html:not(.appli) .sa-accueil .sa-porte { flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 16px; }
   html:not(.appli) .sa-accueil .sa-porte-role { flex-basis: 100%; }
-  html:not(.appli) .sa-accueil .sa-appli { flex-wrap: wrap; gap: 18px 20px; padding: 24px; }
-  html:not(.appli) .sa-accueil .sa-appli-icone { width: 72px; height: 72px; }
-  html:not(.appli) .sa-accueil .sa-appli h2 { font-size: 22px; }
-  html:not(.appli) .sa-accueil .sa-appli-stores { flex-basis: 100%; flex-wrap: wrap; }
+  /* Le faux téléphone sous le texte, à ~70 % de la largeur : les bords restent libres pour descendre la page. */
+  html:not(.appli) .sa-accueil .sa-essai { grid-template-columns: 1fr; gap: 24px; }
+  html:not(.appli) .sa-accueil .sa-essai-texte h2 { font-size: clamp(27px, 7.4vw, 34px); margin: 12px 0 20px; }
+  html:not(.appli) .sa-accueil .sa-essai-raisons { gap: 12px; margin-bottom: 0; }
+  html:not(.appli) .sa-accueil .sa-essai-raisons li { font-size: 17.5px; gap: 8px 10px; }
+  html:not(.appli) .sa-accueil .sa-essai-raisons li > svg { width: 20px; height: 20px; }
+  html:not(.appli) .sa-accueil .sa-essai-raisons .prix-comptoir { font-size: 13.5px; padding: 3px 10px; }
+  html:not(.appli) .sa-accueil .sa-essai-tel { width: 72%; max-width: 330px; margin: 0 auto; }
+  html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte { flex-direction: column; align-items: flex-start; padding: 22px; }
+  html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte h3 { font-size: 21px; }
 }
 @media (max-width: 640px) {
   html:not(.appli) .sa-accueil .sa-bandeau { padding: 26px 0 60px; gap: 24px; }
@@ -283,29 +284,9 @@ html:not(.appli) .sa-accueil .sa-badge img { height: 48px; width: auto; display:
   html:not(.appli) .sa-accueil .sa-prix-pied { font-size: 16px; margin-top: 16px; padding-top: 14px; }
   html:not(.appli) .sa-accueil .sa-feuille { margin-top: -26px; padding-top: 30px; }
   html:not(.appli) .sa-accueil .sa-feuille::before { border-radius: 26px 26px 0 0; }
-  html:not(.appli) .sa-accueil .hero-preview-head { font-size: 23px; }
-  /* Les trois commerces défilent de côté, chacun à sa vraie taille, au lieu de trois vignettes écrasées. */
-  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-list {
-    display: grid; grid-template-columns: none; grid-auto-flow: column; grid-auto-columns: 76%; gap: 12px;
-    overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding-inline: var(--gouttiere); scrollbar-width: none; margin: 0 calc(-1 * var(--gouttiere)); padding: 0 var(--gouttiere);
-  }
-  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-list::-webkit-scrollbar { display: none; }
-  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-card { scroll-snap-align: start; padding: 0 0 12px; gap: 8px; }
-  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-img { aspect-ratio: 16 / 9; }
-  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-body b { font-size: 15px; white-space: nowrap; }
-  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-meta { font-size: 12.5px; }
-  html:not(.appli) .sa-accueil .hero-preview-rangee .hero-preview-open { font-size: 11px; padding: 3px 8px; }
-  html:not(.appli) .sa-accueil .sa-arguments { grid-template-columns: 1fr; gap: 12px; margin-top: 40px; }
-  html:not(.appli) .sa-accueil .sa-argument { padding: 18px; gap: 14px; }
   html:not(.appli) .sa-accueil .sa-section-titre { font-size: 23px; margin: 48px 0 14px; }
-  html:not(.appli) .sa-accueil .discover-section { margin-top: 48px; padding: 0; border-radius: 0; }
-  html:not(.appli) .sa-accueil .discover-head .section-title { font-size: 23px; }
   html:not(.appli) .sa-accueil .sa-porte { padding: 18px; }
   html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 18px; flex-basis: 100%; }
-  html:not(.appli) .sa-accueil .sa-appli { padding: 18px; margin-top: 40px; }
-  html:not(.appli) .sa-accueil .sa-appli-stores { padding-left: 0; gap: 10px; }
-  /* Les deux badges côte à côte sur un téléphone de 360 px et plus : à 48 px de haut, il manquait 4 px. */
-  html:not(.appli) .sa-accueil .sa-badge img { height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .sa-accueil .sa-scene *, .sa-accueil .sa-belge, .sa-accueil .sa-feuille::before, .sa-accueil .sa-prix-ligne i b, .sa-accueil .sa-prix-rang i b { animation: none !important; }
