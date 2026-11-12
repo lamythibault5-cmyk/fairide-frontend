@@ -52,7 +52,7 @@ import { normaliserRecherche } from '../../normaliserRecherche';
 import RangeeDemandes from '../../components/demandes/RangeeDemandes';
 import { FinDeListeDemande } from '../../components/demandes/CartesDemander';
 import { filtresEnvoyes } from '../../filtresEnvoyes';
-import usePositionLancement from '../../hooks/usePositionLancement';
+import usePositionLancement, { aPorteeDUnCommerce } from '../../hooks/usePositionLancement';
 import BulleAdresseLoin from '../../components/client/BulleAdresseLoin';
 import { adresseEnCours, nomAdresse } from '../../nomAdresse';
 
@@ -955,7 +955,8 @@ export default function RestaurantList() {
         cuisine={categorie}
         choisirCuisine={setCategorie}
         libelleBande={t('ecranListe.cuisinesAria')}
-        bulle={lancement.loin && !choixAdresse ? (
+        /* Seulement à portée d'un commerce (2026-11-12, usePositionLancement.js › HORS DE PORTÉE) : à Londres, rien. */
+        bulle={lancement.loin && !choixAdresse && aPorteeDUnCommerce(lancement.position, restaurants) ? (
           <BulleAdresseLoin km={lancement.loin.km} user={user} onGarder={lancement.garder} onIci={() => { lancement.garder(); setChoixAdresse('ici'); }} />
         ) : null}
         mode={modeSurBandeau ? {

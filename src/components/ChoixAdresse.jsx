@@ -8,6 +8,12 @@ import AddressSearch from './AddressSearch';
 import Icone from './Icone';
 import { positionPrecise } from '../natif';
 import { LIBELLES_RESERVES, nomAdresse, rueAdresse } from '../nomAdresse';
+import { haversineDistanceKm } from '../menuCategories';
+
+// Centre de Bruxelles (Grand-Place) et distance au-delà de laquelle aucun commerce ne peut livrer : les plus éloignés sont en
+// périphérie (une quinzaine de km du centre), plus 15 km de rayon au plus (backend rayonLivraison.js). 40 : de la marge.
+const CENTRE_BRUXELLES = [50.8467, 4.3525];
+const LOIN_BRUXELLES_KM = 40;
 
 // LE CARNET D'ADRESSES : choisir où livrer, ou en ajouter une.
 //
@@ -126,7 +132,14 @@ export default function ChoixAdresse({ onFermer, onChoisie, onSaisieManuelle, de
       // Au-delà de 200 m, c'est la position approximative (ou un GPS qui cherche encore) : pas de quoi trouver une porte.
       if (p.precision > 200) { setErreurIci(t('adresses.hereVague')); return; }
       const r = await api(`/restaurants/lookup/reverse?lat=${p.lat.toFixed(6)}&lng=${p.lng.toFixed(6)}`);
-      if (!r?.found) { setErreurIci(t('adresses.hereNotFound')); return; }
+      // TROP LOIN (fondateur, 2026-11-12, depuis Londres) : le serveur ne cherche qu'en Belgique, et « Aucune adresse trouvée,
+      // cherche-la ci-dessus » laissait croire qu'une autre recherche marcherait. À plus de LOIN_BRUXELLES_KM du centre, aucun
+      // commerce ne livre (ils sont à Bruxelles et autour, 15 km de rayon au plus) : on le dit.
+      if (!r?.found) {
+        const loin = haversineDistanceKm(p.lat, p.lng, CENTRE_BRUXELLES[0], CENTRE_BRUXELLES[1]) > LOIN_BRUXELLES_KM;
+        setErreurIci(t(loin ? 'adresses.hereTooFar' : 'adresses.hereNotFound'));
+        return;
+      }
       setACompleter({ street: r.street, postalCode: r.postalCode, city: r.city, parPosition: true });
       setNumero(r.number || ''); setErreur(''); setLibelle(cible || '');
     } catch (e) {
