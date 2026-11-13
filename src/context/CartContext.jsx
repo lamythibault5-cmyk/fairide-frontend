@@ -394,7 +394,7 @@ export function CartProvider({ children }) {
       rawSubtotal += line.unitPrice * line.qty;
       const promo = item.activePromo;
       // −X % / −X € (plafonné au prix du produit) / N achetés = 1 offert : même règle que le serveur (prixPlat.js).
-      const discount = remiseLigne(item, line.qty);
+      const discount = remiseLigne(item, line.qty, line.unitPrice);
       if (discount > 0) {
         promoDiscount += discount;
         lineDiscounts[cle] = { discount: +discount.toFixed(2), promo };

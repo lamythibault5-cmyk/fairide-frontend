@@ -44,8 +44,9 @@
 .ec-route-libs .actuel { color: #fff; font-weight: 700; }
 
 /* ---------- La feuille ---------- */
-.ec-feuille { position: relative; top: 0; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 24px;
-  animation: ec-monte .45s var(--ec-ressort) backwards; }
+/* Sans ressort à l'arrivée (2026-11-12, ecran-compte.css) : Mes commandes est un onglet ; le panier et le paiement arrivent
+   déjà en glissant de côté dans l'app (transitions-appli.css), la feuille qui montait en plus faisait deux mouvements. */
+.ec-feuille { position: relative; top: 0; background: #fff; color: var(--ink); border-radius: 26px 26px 0 0; margin-top: -22px; padding: 22px 24px 24px; }
 @keyframes ec-monte { from { top: 40px; opacity: .4; } }
 .ec-feuille .ec-section, .ec-feuille .co-recap-tete h3 { font-size: 12px !important; font-weight: 700 !important; color: var(--ink-soft);
   letter-spacing: .05em; text-transform: uppercase; margin: 22px 0 8px; }

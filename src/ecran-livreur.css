@@ -21,9 +21,9 @@
 @media (max-width: 900px) {
   /* Les marges négatives annulent celles de .dashboard-main (16 px + encoche en haut, la gouttière sur les côtés). */
   .ecl-bandeau { margin: calc(-16px - env(safe-area-inset-top)) calc(-1 * var(--gouttiere, 16px)) 0; padding: calc(18px + env(safe-area-inset-top)) 20px 46px; border-radius: 0; }
-  .ecl-feuille { margin: -24px calc(-1 * var(--gouttiere, 16px)) 0; padding: 20px 18px 8px; background: #fff; border-radius: 26px 26px 0 0; animation: ecl-monte .45s var(--ecl-ressort) both; }
+  /* Sans ressort à l'arrivée (2026-11-12, ecran-compte.css) : Courses et Gains sont des onglets. */
+  .ecl-feuille { margin: -24px calc(-1 * var(--gouttiere, 16px)) 0; padding: 20px 18px 8px; background: #fff; border-radius: 26px 26px 0 0; }
 }
-@keyframes ecl-monte { from { transform: translateY(36px); opacity: .5; } to { transform: none; opacity: 1; } }
 .ecl-b-haut { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; color: rgba(255, 255, 255, .78); min-height: 36px; }
 .ecl-b-haut b { color: #fff; font-weight: 600; }
 .ecl-b-droite { display: flex; align-items: center; gap: 8px; }

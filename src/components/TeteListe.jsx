@@ -3,6 +3,7 @@ import Icone from './Icone';
 import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { illustrationCuisine } from '../menuCategories';
+import { PucesCuisineVides } from './Skeleton';
 
 /* LE HAUT DE LA LISTE DES COMMERCES (fondateur, 2026-10-16, proposition A de « Le haut de la liste des commerces »,
  * maquettes/tous-les-ecrans/tous-les-ecrans.html). Deux étages :
@@ -42,16 +43,21 @@ const VELO = (
  * Par `transform` depuis sa place de départ (left: 8 %, ecran-liste.css), en pixels de la route mesurée une fois puis à
  * chaque changement de taille (2026-10-20, test de l'app Android) : `left` refaisait la mise en page à chaque image.
  * `avance` (en points de pourcentage) s'ajoute au défilement : la Recherche le fait avancer de 9 par lettre tapée
- * (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) ; il y glisse (transition .3s).
- * Il glisse À PLAT, sans sautiller (fondateur, 2026-10-25, version A de maquettes/velo-sans-cahot) : `roule` ne sert plus
- * qu'à couper la transition pendant le défilement (ecran-liste.css). */
+ * (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) ; il y glisse (`glisse`, transition .3s, le temps du
+ * glissement seulement).
+ * Il glisse À PLAT, sans sautiller (fondateur, 2026-10-25, version A de maquettes/velo-sans-cahot).
+ * POSÉ AVANT LA PREMIÈRE IMAGE (Owen, 2026-11-12 : « je descends, je vais dans Compte, je reviens sur Restaurants, et le
+ * vélo se recharge pour arriver à sa position »). L'onglet revient à sa place gardée (ScrollRestorer.jsx, rendu avant les
+ * pages : son effet de mise en page passe avant celui-ci), mais le vélo n'était placé qu'après l'affichage (useEffect) :
+ * dessiné au début de la route, puis glissé 0,3 s jusqu'à sa place par la transition qui ne sert qu'aux lettres tapées.
+ * Mesuré image par image (app, Chrome) : 110 ms au départ de la route, puis la glissade. Maintenant un effet de mise en
+ * page, et pas de transition hors `glisse`. */
 export function useVeloQuiRoule(velo, actif = true, avance = 0) {
   const avanceRef = useRef(avance);
   const poserRef = useRef(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (!actif || !velo.current) return undefined;
     let attente = false;
-    let arret = null;
     const route = velo.current.parentElement;
     let largeur = route ? route.clientWidth : 0;
     // La dernière place écrite : arrivé au bout de sa route (après ~1 400 px), le vélo ne bouge plus, et réécrire la même
@@ -68,24 +74,28 @@ export function useVeloQuiRoule(velo, actif = true, avance = 0) {
     poserRef.current = poser;
     const mesure = typeof ResizeObserver === 'undefined' || !route ? null : new ResizeObserver(() => { largeur = route.clientWidth; poser(); });
     mesure?.observe(route);
+    // Le doigt qui fait défiler reprend le vélo : une glissade de lettre en cours s'arrête, il suit la page image par image.
     const surDefilement = () => {
-      velo.current?.classList.add('roule');
-      clearTimeout(arret);
-      arret = setTimeout(() => velo.current?.classList.remove('roule'), 220);
+      velo.current?.classList.remove('glisse');
       if (attente) return;
       attente = true;
       window.requestAnimationFrame(poser);
     };
     poser();
     window.addEventListener('scroll', surDefilement, { passive: true });
-    return () => { window.removeEventListener('scroll', surDefilement); clearTimeout(arret); mesure?.disconnect(); poserRef.current = null; };
+    return () => { window.removeEventListener('scroll', surDefilement); mesure?.disconnect(); poserRef.current = null; };
   }, [actif, velo]);
-  // Une lettre tapée ou effacée : il glisse jusqu'à sa nouvelle place (la transition de .3s, ecran-liste.css).
+  // Une lettre tapée ou effacée : il glisse jusqu'à sa nouvelle place (`glisse`, transition de .3s, ecran-liste.css).
   useEffect(() => {
-    if (avanceRef.current === avance) return;
+    if (avanceRef.current === avance) return undefined;
     avanceRef.current = avance;
-    poserRef.current?.();
-  }, [avance]);
+    const el = velo.current;
+    if (!el || !poserRef.current) return undefined;
+    el.classList.add('glisse');
+    poserRef.current();
+    const fin = setTimeout(() => el.classList.remove('glisse'), 320);
+    return () => clearTimeout(fin);
+  }, [avance, velo]);
 }
 
 /* La route en pointillés et le vélo lime : le bandeau de la page Recherche (SearchPage.jsx) et celui de Mes commandes sans
@@ -105,7 +115,7 @@ export function RouteVelo({ position = 12, className = '', roule = false, avance
  * C'est le filtre « À emporter » qui existait déjà (RestaurantList.jsx, `emporter`) : « À emporter » ne garde que les
  * commerces qui proposent l'emporter, « Livraison » les montre tous, comme la pastille éteinte d'avant. Même état, même
  * logique : seule la place change. Forme : { emporter, choisir(bool), libelleLivraison, libelleEmporter, libelleGroupe }. */
-export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, bulle = null }) {
+export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, bulle = null, chargement = false }) {
   const app = experienceApp();
   const bandeau = adresse != null;
 
@@ -231,6 +241,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
           <div className="lt-defile" ref={defile} role="group" aria-label={libelleBande}>
             <div className="lt-piste" ref={piste}>
               <span className="lt-lentille" ref={lentille} aria-hidden="true" />
+              {chargement && <PucesCuisineVides />}
               {options.map((opt, i) => {
                 const on = estActive(opt);
                 return [

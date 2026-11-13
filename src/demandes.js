@@ -39,7 +39,10 @@ export function rangEcrit(n, langue) {
 // ou les plus demandés de Bruxelles.
 const point = (user) => (user?.lat && user?.lng ? `lat=${user.lat}&lng=${user.lng}` : '');
 
-export const chargerPres = (user, token) => api(`/demandes/pres?${point(user)}`, { token });
+// `limite` : 8 pour la rangée de l'accueil, LIMITE_PAGE pour la page « Demandés près de toi » (accueil plein, 2026-11-12). Le
+// serveur rend aussi `nombre`, combien en tout autour du point ; un serveur d'avant ce jour ne le rend pas et s'arrête à 12.
+export const LIMITE_PAGE = 500;
+export const chargerPres = (user, token, limite = 12) => api(`/demandes/pres?${[point(user), `limite=${limite}`].filter(Boolean).join('&')}`, { token });
 export const chercher = (q, user, token) => api(`/demandes/recherche?q=${encodeURIComponent(q)}&${point(user)}`, { token });
 export const demander = (corps, token) => api('/demandes', { method: 'POST', token, body: corps });
 export const retirer = (id, token) => api(`/demandes/${id}`, { method: 'DELETE', token });

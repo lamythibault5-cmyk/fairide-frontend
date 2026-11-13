@@ -168,6 +168,27 @@ Courses family). One shop: its card full width (`.rc-grande`, photo 9:4; website
 underneath. Two or more: dish tiles (`.tuile-apercu`), 3 per shop, one shop after another, open first; a shop without a
 preview keeps its usual card. `RangeeApercu` in `RestaurantList.jsx`. The row « Supermarchés » is now « Courses ».
 
+**The full home page (founder, 2026-11-12, `maquettes/accueil-plein/accueil-plein.html`, sections 3-5; rules in
+[accueilRangees.js](../../src/accueilRangees.js)).** Measured before: 20-21 of 29 public shops never appeared, and the same
+2-3 nearest open shops led several rows. Now every shop is on the page, and a shop leads one row only:
+- **Rows, top to bottom:** À la une (unchanged) · Autour de toi (8, was 15) · Demandés près de toi (always shown) · delivery
+  rows, Offres, admin cuisine rows, Healthy (unchanged place) · **one row per craving** (bar categories with ≥ 4 shops, ≤ 6
+  rows, 10 cards, not courses / diets / « Europe » / « Cuisine familiale » / a category mostly covered by a kept row) ·
+  Courses · **Tous les commerces** (every shop once, one big card per line on the phone, photo 2:1; grid on the website) ·
+  « Il manque ton restaurant ? ». « Déjà sur fairride » and « À découvrir » are gone (a paid 'discover' slot shows in Tous).
+- **Order in every row:** open first (2026-10-25) → distance bands 1.5/3/5/8 km (no position: commune rings) → in a band,
+  a draw per visit (the 10-06 rule) → « one head per row »: the first 2 cards go to shops not already first higher up,
+  **only within the same (open, band) group**, never pulling a farther shop forward (Owen: « near Snack bodrum, don't send
+  him to Molenbeek »). So a lone open neighbour may lead several rows: wanted. À la une and Autour de toi keep pure nearest.
+  Orderable before open « Carte seule » only in Tous (tried everywhere: the 8 signed shops led everything again).
+- **Craving row title is a button** (« Pizza → », arrow in a pale circle, no count, `.section-titre-bouton`): it opens the
+  category like its chip and scrolls to the top. No « Voir les 11 » tile (Owen: it did the same as the chip).
+- **Website:** every row is one line (`.sl-une-ligne`: later rows of the grid are clipped), « Il en manque un ? » is a link
+  right of the title.
+- **Status bar:** an iris card is not a banner (`regardSousBarre.js` › `fondSous`): only an iris background ≥ 97 % of the
+  width turns the status bar iris, so sliding the iris request tickets under it no longer flips it.
+- /classement describes all of this (`conformite.ranking_rows`, `ranking_notPaid`): change it in the same commit.
+
 The old names survive as aliases so ~100 call sites keep working: `--gold` = lime, `--gold-deep`
 = iris, `--teal` / `--teal-deep` = iris. Prefer `--iris` / `--lime` in new code.
 
@@ -244,11 +265,15 @@ monochrome glyph (✓ ✗). Message reactions are still *stored* as emoji (serve
 
 **The food drawings (founder, 2026-11-12, `maquettes/plus-gourmand/plus-gourmand-2.html`, 7 rounds).** The 3D food drawings
 (Fluent Emoji 3D, MIT: `public/cuisines` 112 px for the cuisine bar, `public/gourmand` 256 px for decoration) are *images*, not
-typed emoji, so the rule above holds. Decoration uses them in four places only, all in
-[Gourmandises.jsx](../../src/components/Gourmandises.jsx): the app welcome screen (the empty iris between the title and the bike,
+typed emoji, so the rule above holds. Decoration uses them in five places only, four in
+[Gourmandises.jsx](../../src/components/Gourmandises.jsx) and the fifth in [VignetteAppli.jsx](../../src/components/landing/VignetteAppli.jsx)
+(Owen, 2026-11-13, version B' of `maquettes/site-appli-essai/vignette-b1.html`, which brings them back around the app preview on
+phones: six, three on each side of the thumbnail, no frame, slightly tilted, floating; hidden under 350 px; a tap on one opens the app): the app welcome screen (the empty iris between the title and the bike,
 up to 8, fewer or none when that space is short, e.g. none on an iPhone SE), two small ones at the right edge of the following
-iris-band onboarding screens, the website front page (a cluster of 3 top right of the band on phones, ≤ 900 px; side margins
-only on computers, ≥ 1,300 px; nothing in between), and the store images (one per image, in the empty band under the caption,
+iris-band onboarding screens, the website front page (on phones, ≤ 900 px: a cluster of 3 top right of the band, then one small drawing, 38-46 px, at the
+right end of the section titles, which keep that width free so text never runs under it, Owen 2026-11-12 « des petits, sur
+les côtés » — only « Rejoindre fairride » since the app preview replaced the other sections the same day, and never around the
+fake phone, Owen: « retire-les »; on computers, ≥ 1,300 px: side margins only; nothing in between), and the store images (one per image, in the empty band under the caption,
 plus the banner and the search-results image, made in `maquettes/fiche-app-store`). Placement rules Owen set: never next to the
 punchline nor on what people read (address bar, price card, buttons), never on the road where the bike rides, never cut by an
 edge, tilted, mixed sizes, in clusters rather than lines; « trop » on the rest of the website page, so nothing below the band on
@@ -282,10 +307,15 @@ threshold + CSS transition) and, on iPhone, swiped right from the left edge (202
   plugin `Haptique` (ios/App/App/HaptiquePlugin.swift, registered by FairideViewController.swift; android/…/HaptiquePlugin.java,
   registered in MainActivity), with warmed-up generators; @capacitor/haptics is only the fallback for older builds. Old
   values (numbers, arrays, `selection`, `moyen`) are still mapped, but write meanings in new code.
-- **Loading** — [Skeleton.jsx](../../src/components/Skeleton.jsx): `SkeletonCards` are row-shaped light-iris skeletons;
-  `SqueletteEcran` is a whole loading screen in band + sheet (`titre` when the screen is known, shimmer bars otherwise,
-  `photo` for the restaurant page). App only at call sites (`experienceApp()`); the bike rides while a skeleton shows.
-  Skeleton rows (`.sq-lignes`) appear only after 0.3 s, so a fast answer never flickers. The full-screen `#splash` of
+- **Loading** — [Skeleton.jsx](../../src/components/Skeleton.jsx). **A skeleton has the shape of what it announces**
+  (founder, 2026-11-12, Instagram-style): `SqueletteAccueil` (home: cuisine circles via `PucesCuisineVides` in TeteListe,
+  « À la une » card, rows of `.rest-card.rc`), `SqueletteCommandes` (Mes commandes: order cards, table rows on desktop),
+  `SqueletteFavoris` (the `.fav-grille`), `SqueletteFiche` (a shop page: photo, name, pills, mode, dish tiles; app and
+  site, edge to edge through [bordAbord.js](../../src/bordAbord.js) like the page itself). They reuse the real classes or
+  measures so nothing moves when data lands; a new screen with its own layout gets its own skeleton, not the generic one.
+  `SkeletonCards` (thumbnail + two lines) stays for plain lists of rows; `SqueletteEcran` is a whole loading screen in
+  band + sheet (`titre` when the screen is known, shimmer bars otherwise). The bike rides while a skeleton shows.
+  Skeletons (`.sq-lignes`, `.sq-entre`) appear only after 0.3 s, so a fast answer never flickers. The full-screen `#splash` of
   [index.html](../../index.html) covers start-up only (app mounted), never the data wait: that is the skeletons' job
   (founder, 2026-10-26). On the website it is a plain white cover for the first second (it hides the prerendered text) and
   turns iris with the bike only on a slow load; in the app the native launch screen hands over to the iris bike directly.

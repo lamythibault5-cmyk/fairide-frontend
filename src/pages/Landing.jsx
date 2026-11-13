@@ -1,17 +1,15 @@
-import { useMemo } from 'react';
-import { GourmandSite } from '../components/Gourmandises';
+import { GourmandSite, GourmandTitre } from '../components/Gourmandises';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
-import AppComingSoonSection from '../components/AppComingSoonSection';
 import Reveal from '../components/Reveal';
 import BelgianMark from '../components/BelgianMark';
 import usePageMeta from '../hooks/usePageMeta';
 import useJsonLd from '../seo/useJsonLd';
 import { organizationJsonLd, websiteJsonLd } from '../seo/jsonLd';
-import HeroPreview, { useCommercesReels, vitrineAccueil } from '../components/landing/HeroPreview';
 import HeroAdresse from '../components/landing/HeroAdresse';
 import HeroPrix from '../components/landing/HeroPrix';
-import DiscoverSection from '../components/landing/DiscoverSection';
+import EssaiAppli from '../components/landing/EssaiAppli';
+import AvecMarque from '../components/AvecMarque';
 import Icone from '../components/Icone';
 import { useLancement } from '../launch';
 import '../site-accueil.css';
@@ -29,23 +27,15 @@ import '../site-accueil.css';
  *
  * Mise en page : site-accueil.css. L'application n'affiche jamais cette page (Home.jsx). */
 
-/* Les trois portes d'entrée. `icon` est un nom du jeu maison (Icone.jsx). Livreurs : indépendant ou étudiant-indépendant
-   (CODE-12 : plus d'économie collaborative). Les puces (`points`) ne sont plus affichées depuis la version courte du
-   2026-10-09 : rôle, titre et lien. */
-function joinCards(t) {
+/* « REJOINDRE FAIRRIDE » EN DEUX PORTES (Owen, 2026-11-12, réponse 7 de maquettes/site-appli-essai) : Commerce et Livreur. La
+   porte Client est partie : le faux téléphone juste au-dessus l'est déjà (EssaiAppli.jsx). La bande « Déjà 30 restaurants
+   pré-inscrits » est partie avec la vitrine (son chiffre ne collait plus). Le commerce sur l'iris avec le seul lime de la
+   section, le livreur en blanc à filet. Textes de voix.md : « 10 %, pas 30 », « personne ne te note » (le 90 % du livreur
+   n'est dit qu'aux livreurs, ici sur leur porte). Livreurs : indépendant ou étudiant-indépendant (CODE-12). */
+function portes(t) {
   return [
-    { key: 'client', icon: 'sac', eyebrow: t('landing.joinClientRole'), title: t('landing.joinClientTitle'), link: t('landing.joinClientLink'), to: '/login?audience=client' },
-    { key: 'restaurant', icon: 'commerce', eyebrow: t('landing.joinRestaurantRole'), title: t('landing.joinRestaurantTitle'), link: t('landing.joinRestaurantLink'), to: '/login?audience=partner&role=restaurant' },
-    { key: 'driver', icon: 'velo', eyebrow: t('landing.joinDriverRole'), title: t('landing.joinDriverTitle'), link: t('landing.joinDriverLink'), to: '/login?audience=partner&role=driver' }
-  ];
-}
-
-// Deux arguments (demande du fondateur, 2026-09-21 : les chiffres « 10 % · 19 · 100 % » disaient la même chose, en moins clair).
-// Les prix pas gonflés EN PREMIER (fondateur, 2026-10-19 : c'est la première raison de choisir Fairide), le local ensuite.
-function features(t) {
-  return [
-    { icon: 'euro', title: t('landing.featureFairTitle'), text: t('landing.featureFairText') },
-    { icon: 'commerce', title: t('landing.featureLocalTitle'), text: t('landing.featureLocalText') }
+    { key: 'restaurant', icon: 'commerce', role: t('landing.joinRestaurantRole'), title: t('landing.joinRestaurantTitle'), ligne: t('landing.joinRestaurantLigne'), link: t('landing.joinRestaurantLink'), to: '/login?audience=partner&role=restaurant' },
+    { key: 'driver', icon: 'velo', role: t('landing.joinDriverRole'), title: t('landing.joinDriverTitle'), ligne: t('landing.joinDriverLigne'), link: t('landing.joinDriverLink'), to: '/login?audience=partner&role=driver' }
   ];
 }
 
@@ -82,10 +72,6 @@ export default function Landing() {
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
   useJsonLd(organizationJsonLd(), 'ld-organization');
   useJsonLd(websiteJsonLd(), 'ld-website');
-  // Lus une fois pour toute la page : « Déjà sur Fairide » et la vitrine « Découvre ».
-  const reels = useCommercesReels();
-  // Vrais commerces seulement (fondateur, 22/09 puis 11/10 : jamais de démo, même s'ils sont peu nombreux).
-  const restaurants = useMemo(() => vitrineAccueil(reels), [reels]);
 
   return (
     <div className="sa-accueil">
@@ -115,39 +101,22 @@ export default function Landing() {
       </section>
 
       <div className="sa-feuille">
-        {/* « Déjà sur Fairide » : trois vrais commerces, tirés au sort (HeroPreview.jsx). */}
-        <HeroPreview restaurants={restaurants} rangee />
+        {/* L'appli sur l'accueil (Owen, 2026-11-12, maquettes/site-appli-essai) : « l'alternative », deux lignes, et le faux
+            téléphone qui montre la vraie page des commerces de l'appli (EssaiAppli.jsx). Remplace « Déjà sur Fairride »,
+            « L'alternative » et ses deux arguments, la vitrine « Les commerces partenaires » et la bande « L'appli fairride ». */}
+        <EssaiAppli />
 
-        {/* « L'alternative à Uber Eats » a quitté le sous-titre le 2026-10-26 ; les gens la cherchent sur Google, donc elle
-            reste sur la page en titre de section (et dans le titre et la description du résultat, seo.*). */}
-        <Reveal as="h2" className="sa-section-titre sa-alternative">{t('landing.altTitre')}</Reveal>
-        <div className="sa-arguments">
-          {features(t).map((f, i) => (
-            <Reveal className="sa-argument" key={f.title} delay={i * 90}>
-              <span className="sa-tuile"><Icone nom={f.icon} taille={22} /></span>
-              <div>
-                <h3>{f.title}</h3>
-                <p>{f.text}</p>
-              </div>
-            </Reveal>
-          ))}
-        </div>
-
-        <DiscoverSection restaurants={restaurants} />
-
-        {/* « Rejoindre Fairide » en version courte (fondateur, 2026-10-09) : rôle, titre et lien. */}
-        <Reveal as="h2" className="sa-section-titre">{t('landing.joinTitle')}</Reveal>
-        <div className="sa-portes">
-          {joinCards(t).map((c, i) => (
-            <Reveal as={Link} to={c.to} key={c.key} delay={i * 90} className="sa-porte">
-              <span className="sa-porte-role"><Icone nom={c.icon} taille={15} /> {c.eyebrow}</span>
+        <Reveal as="h2" className="sa-section-titre sa-avec-gourmand"><AvecMarque>{t('landing.joinTitle')}</AvecMarque><GourmandTitre ou="rejoindre" /></Reveal>
+        <div className="sa-portes sa-portes-deux">
+          {portes(t).map((c, i) => (
+            <Reveal as={Link} to={c.to} key={c.key} delay={i * 90} className={`sa-porte${c.key === 'restaurant' ? ' sa-porte-iris' : ''}`}>
+              <span className="sa-porte-role"><Icone nom={c.icon} taille={15} /> {c.role}</span>
               <h3>{c.title}</h3>
-              <span className="sa-porte-lien">{c.link} <span aria-hidden="true">→</span></span>
+              <p className="sa-porte-ligne">{c.ligne}</p>
+              <span className="sa-porte-bouton">{c.link}</span>
             </Reveal>
           ))}
         </div>
-
-        <Reveal><AppComingSoonSection /></Reveal>
       </div>
       {/* PAGE D'ACCUEIL RACCOURCIE (fondateur, 2026-10-09) : « Où va chaque euro », « Communes desservies », « Contact »,
           « Ils nous font confiance » et « Envie de soutenir le quartier ? » restent retirés. La ligne « Commerce ou

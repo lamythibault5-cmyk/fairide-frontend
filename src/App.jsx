@@ -1,6 +1,7 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { lazyPage } from './lazyPage';
 import { experienceApp } from './natif';
+import { estApercu } from './apercuSite';
 import { Navigate, Route, Routes, useLocation, useParams } from 'react-router-dom';
 import PageFeuille from './components/PageFeuille';
 import { estPageEnFeuille } from './feuilles';
@@ -158,7 +159,9 @@ const PAGES_CARTE = {
 };
 function PrechauffageCarte() {
   const { user } = useAuth();
-  const role = user ? user.role || 'client' : null;
+  // Le faux téléphone de l'accueil (apercuSite.js) prépare la carte comme pour un client : sans compte, l'onglet Carte
+  // attendait tout (moteur, style, page) au moment du toucher (Owen, 2026-11-12 : « la carte met du temps à charger »).
+  const role = user ? user.role || 'client' : estApercu() ? 'client' : null;
   useEffect(() => {
     if (role) import('./carte').then((m) => m.prechargerCarte(PAGES_CARTE[role])).catch(() => {});
   }, [role]);
@@ -242,7 +245,9 @@ export default function App() {
         <Route path="/favorites" element={<ProtectedRoute role="client"><Favorites /></ProtectedRoute>} />
         <Route path="/demandes" element={<ProtectedRoute role="client"><MesDemandes /></ProtectedRoute>} />
         <Route path="/orders" element={<ProtectedRoute role="client"><Orders /></ProtectedRoute>} />
-        <Route path="/map" element={<ProtectedRoute role="client"><ClientMapPage /></ProtectedRoute>} />
+        {/* La carte demande un compte client, sauf dans l'aperçu de l'accueil du site (apercuSite.js) : l'onglet Carte du faux
+            téléphone se visite sans compte, comme la liste. */}
+        <Route path="/map" element={estApercu() ? <ClientMapPage /> : <ProtectedRoute role="client"><ClientMapPage /></ProtectedRoute>} />
         {/* Le panier a sa page : il se depliait par-dessus le menu qu'on etait en train de lire. */}
         <Route path="/panier" element={<ProtectedRoute role="client"><PanierPage /></ProtectedRoute>} />
         {/* Commande groupée (backend routes/commandesGroupees.js) : un compte client, comme pour commander. */}

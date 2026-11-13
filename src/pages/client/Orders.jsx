@@ -35,7 +35,7 @@ import { useToast } from '../../context/ToastContext';
 import { usePreviewMode } from '../../context/PreviewModeContext';
 import { useLanguage, getLocale } from '../../context/LanguageContext';
 import { DeliveryTiming, ProchaineEtape, TitreHeure, heureArrivee, prenomLivreur, titreSuivi, deliveryInstructionLabel, statusLabel, orderTypeLabel, formatOrderItem } from '../../orderStatus';
-import { SkeletonCards } from '../../components/Skeleton';
+import { SqueletteCommandes } from '../../components/Skeleton';
 import TirerPourActualiser from '../../components/TirerPourActualiser';
 import DriverBadge from '../../components/DriverBadge';
 import DeliveryTrackingMap from '../../components/DeliveryTrackingMap';
@@ -424,9 +424,9 @@ export default function Orders() {
 
   /* LE BANDEAU DE MES COMMANDES SANS COMMANDE EN COURS (fondateur, 2026-10-24, version A de maquettes/commandes-recherche) : le
    * titre sur l'iris et la route où le vélo roule quand on fait défiler, dans l'app comme sur le site. Aussi pendant le
-   * chargement (des lignes iris pâle dans la feuille, Skeleton.jsx) et quand la liste n'a pas pu être lue. */
+   * chargement (des cartes de commande iris pâle dans la feuille, SqueletteCommandes) et quand la liste n'a pas pu être lue. */
   const bandeauTitre = <BandeauCommande titre={titre}><RouteVelo className="sc-route-velo" roule /></BandeauCommande>;
-  if (loading) return <div className="ec-page sc-page sc-commandes">{bandeauTitre}<FeuilleCommande><SkeletonCards count={3} /></FeuilleCommande></div>;
+  if (loading) return <div className="ec-page sc-page sc-commandes">{bandeauTitre}<FeuilleCommande><SqueletteCommandes /></FeuilleCommande></div>;
   // Pas lues (réseau, serveur) : jamais « Rien en route pour l'instant », qui ferait croire la commande perdue.
   if (echec && orders.length === 0) {
     return (

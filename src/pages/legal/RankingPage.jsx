@@ -16,10 +16,12 @@ import { useLanguage } from '../../context/LanguageContext';
  *   - tri « plus proches » : masqué (TRI = false ; plus de tri « mieux notés » depuis le 22/10/2026), d'où « pas d'autre tri » ; filtre par prix retiré, filtres
  *     bio, vegan, halal, sans gluten et rangées Bio et Vegan masqués (MENTIONS_ALIMENTAIRES = false, dietary.js), « à emporter »
  *     aussi (FILTRE_EMPORTER = false) : ni la liste des filtres ni celle des rangées ne les citent plus (21/10/2026) ;
- *   - rangées : même fichier (aLaUne + ownCover, inscrits = GET /restaurants/landing et son score — sans la note depuis le
- *     22/10/2026 —, nearbyList + completer (dans l'ordre de la liste),
- *     enviesList, livraisonOfferte / livraisonPasCher, offersList, rangeesCuisine, parMention, groceryList, discoverList) ;
- *     `epinglerOuMelanger` : hasard par commune sans position payée, ordre propre de la rangée sinon ;
+ *   - rangées : même fichier (aLaUne + ownCover, nearbyList (PROCHES_MAX = 8) + completer, RangeeDemandes,
+ *     livraisonOfferte / livraisonPasCher, offersList, rangeesCuisine, parMention, envies, groceryList, tous) et
+ *     accueilRangees.js (accueil plein, 2026-11-12) : bandes de distance BANDES_KM, tour tiré par visite dans une bande,
+ *     règle « une tête par rangée » limitée au même groupe (ouvert / fermé ; dans « Tous » : commandable, ouvert, fermé)
+ *     et à la même bande, rangées par envie (rangeesEnvies : ENVIE_MIN, ENVIES_MAX, PAR_RANGEE_ENVIE, catégories exclues) ;
+ *     `ranger` : position payée (epingler) après tout cela ; une position 'discover' va dans « Tous » ;
  *   - positions payées : misesEnAvant.js `epingler` (admissibles) et routes/placements.js côté API (commune du commerce,
  *     1 à 10 positions, une place par commerce et par rangée, mode automatique).
  * Si l'un de ces fichiers change, cette page change dans le même commit. */

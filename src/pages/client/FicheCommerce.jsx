@@ -15,8 +15,7 @@ import { useAuth } from '../../context/AuthContext';
 import { chargerAvecCache, garderEnCache, lireCache } from '../../cacheDonnees';
 import { estIdentifiant, idPourSlug, retenirSlugs } from '../../adresseFiche';
 import { CHEMIN_LISTE } from '../../resumeCarte';
-import { SkeletonCards, SqueletteEcran } from '../../components/Skeleton';
-import { experienceApp } from '../../natif';
+import { SqueletteFiche } from '../../components/Skeleton';
 import RestaurantMenu, { EchecFiche } from './RestaurantMenu';
 
 function idConnu(adresse) {
@@ -53,5 +52,5 @@ export default function FicheCommerce() {
 
   if (id) return <RestaurantMenu id={id} />;
   if (echec?.adresse === adresse && essai === echec.essai) return <EchecFiche erreur={echec.erreur} chemin={`/restaurants/${adresse}`} onReessayer={() => setEssai((n) => n + 1)} />;
-  return experienceApp() ? <SqueletteEcran photo /> : <SkeletonCards count={3} />;
+  return <SqueletteFiche />;
 }

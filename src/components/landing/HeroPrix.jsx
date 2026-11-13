@@ -1,3 +1,4 @@
+import { useId, useState } from 'react';
 import { useLanguage } from '../../context/LanguageContext';
 import AvecMarque from '../AvecMarque';
 import Icone from '../Icone';
@@ -14,6 +15,9 @@ import { euros } from '../../prixPlat';
 //   VÉRIFIABLE : quand l'annonce ne donne pas les détails, elle dit où les obtenir (Cour de justice, Lidl Belgium contre
 //   Colruyt, C-356/04, 2006). D'où « Détails sur demande » dans la ligne grise, et la question 9 de la FAQ de
 //   /notre-histoire (story.faqQ9), qui dit comment on a mesuré et à qui écrire.
+// - La ligne grise est derrière un « i » à côté du titre (Owen, 2026-11-13 : « retire-la, sans la cacher »), comme dans
+//   l'accueil de l'appli depuis le 2026-10-27 (SourcePlat, EcransBienvenue.jsx) : à un clic, jamais retirée ni cachée dans
+//   le code (un texte invisible ne rend pas la comparaison vérifiable, et passerait pour une dissimulation).
 // - Le plat et le restaurant ne sont PAS nommés (fondateur, 2026-10-26) : un partenaire ne doit jamais être reconnaissable
 //   à côté d'un prix gonflé. La date reste : sans elle, « +55 % » serait la seule phrase attaquable de la page.
 // - Les chiffres : 15,00 € au comptoir et 23,25 € sur la plateforme, relevés le 23/10/2026 (preuves datées dans
@@ -33,6 +37,8 @@ const ECART = Math.round((PLATEFORME / COMPTOIR - 1) * 100); // 55
 
 export default function HeroPrix() {
   const { t } = useLanguage();
+  const [source, setSource] = useState(false);
+  const idSource = useId();
   const lignes = [
     { cle: 'comptoir', nom: t('landing.prixComptoirLigne'), prix: COMPTOIR },
     { cle: 'plateforme', nom: t('landing.prixPlateformeLigne'), prix: PLATEFORME, alerte: `+${ECART} %` },
@@ -40,8 +46,12 @@ export default function HeroPrix() {
   ];
   return (
     <section className="sa-prix sa-prix-trois" aria-label={t('landing.prixTroisAria', { ecart: ECART })}>
-      <h2 className="sa-prix-titre">{t('landing.prixTroisTitre')}</h2>
-      <p className="sa-prix-releve">{t('landing.prixReleve')}</p>
+      <h2 className="sa-prix-titre">
+        {t('landing.prixTroisTitre')}
+        <button type="button" className="sa-prix-info" aria-expanded={source} aria-controls={idSource} aria-label={t('landing.prixReleveInfo')}
+          title={t('landing.prixReleveInfo')} onClick={() => setSource((o) => !o)}>i</button>
+      </h2>
+      <p className="sa-prix-releve" id={idSource} hidden={!source}>{t('landing.prixReleve')}</p>
       <div className="sa-prix-rangs">
         {lignes.map((l) => (
           <div key={l.cle} className={`sa-prix-rang sa-prix-rang-${l.cle}`}>

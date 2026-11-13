@@ -4,13 +4,21 @@ import { useAuth } from '../../context/AuthContext';
 import { useLanguage } from '../../context/LanguageContext';
 import useDialogue from '../../hooks/useDialogue';
 import useTirerPourFermer from '../../hooks/useTirerPourFermer';
-import { COMMUNES, communeDepuisCodePostal } from '../../menuCategories';
+import { COMMUNES, communeDepuisCodePostal, illustrationCuisine } from '../../menuCategories';
+import { CATEGORIES_CLIENT, categoriesClient, libelleCategorie } from '../../specialites';
+import { kmLisible } from '../../prixPlat';
 import { vibrer } from '../../gestes';
 import { experienceApp } from '../../natif';
 import Icone from '../Icone';
+import useMoiAussi from './useMoiAussi';
 import {
-  chercher, demander, dessinDemande, sousTitreDemande, rangEcrit, telephoneAVerifier, CHEMIN_VERIFIER_TELEPHONE
+  chercher, chargerPres, demander, dessinDemande, sousTitreDemande, specialiteDemande, rangEcrit, telephoneAVerifier,
+  CHEMIN_VERIFIER_TELEPHONE, LIMITE_PAGE
 } from '../../demandes';
+
+// La catégorie de la bande (pizza, sushi…) d'un restaurant demandé, d'après sa spécialité OpenStreetMap ; '' si inconnue.
+const CATEGORIES = categoriesClient([]);
+const categorieDemande = (d) => { const s = specialiteDemande(d); return s ? CATEGORIES.deSpecialite(s) : ''; };
 
 /* LA FENÊTRE « LEQUEL ? » (« Demande ton restaurant », fondateur, 2026-10-26 ; réponses 4, 5 et 8 du questionnaire de
  * maquettes/demande-restaurant). On choisit le restaurant dans une LISTE, pas en texte libre : « chez leon », « Chez Léon » et
@@ -20,8 +28,15 @@ import {
  * il arrive » (allumé : c'est ce qu'il a demandé, un seul message), et le bouton lime « Demander <nom> ».
  *
  * Même cadre que ConfirmDialog : feuille du bas dans l'app (on la tire pour fermer), fenêtre centrée sur le site.
- * Le bouton lime n'est jamais grisé (design.md, règle 4) : sans restaurant choisi, il ramène au champ de recherche. */
-export default function FenetreDemande({ requete, onFermer, onDemande }) {
+ * Le bouton lime n'est jamais grisé (design.md, règle 4) : sans restaurant choisi, il ramène au champ de recherche.
+ *
+ * C'EST AUSSI LA PAGE « DEMANDÉS PRÈS DE TOI » (fondateur, 2026-11-12, maquettes/accueil-plein section 5, réponse 9 bis : une
+ * seule page pour voir et demander). Rien de tapé : la liste des restaurants demandés autour du client, le plus demandé
+ * d'abord, ses catégories en puces, « Moi aussi » sur chaque ligne ; 100 ou 1 000, elle se parcourt pareil. Un nom tapé : la
+ * recherche d'avant. « Ce que tu y prends » et « Me prévenir » n'apparaissent qu'une fois un restaurant choisi (ils
+ * encombraient la liste). `mode` 'demander' : le champ prend le focus (clavier levé) ; 'voir' : la liste, clavier baissé.
+ * `categorie` : la puce déjà choisie (« Il en manque un ? » au bout d'une rangée « Pizza »). */
+export default function FenetreDemande({ requete, mode = 'demander', categorie = '', onFermer, onDemande }) {
   const { user, token } = useAuth();
   const { t, language } = useLanguage();
   const navigate = useNavigate();
@@ -45,6 +60,22 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
   const [fait, setFait] = useState(null); // { nom, rang, prevenir }
   useDialogue(racine, onFermer);
   const tirer = useTirerPourFermer(racine, envoi ? null : onFermer);
+  // La liste des demandés autour du client (null tant qu'elle n'est pas lue), et la puce choisie.
+  const [pres, setPres] = useState(null);
+  const [puce, setPuce] = useState(categorie || '');
+  const { basculer, dialogue: dialogueMoiAussi, occupe } = useMoiAussi();
+  useEffect(() => {
+    let annule = false;
+    chargerPres(user, token, LIMITE_PAGE).then((r) => { if (!annule) setPres(r.demandes || []); }).catch(() => { if (!annule) setPres([]); });
+    return () => { annule = true; };
+  }, [user, token]);
+  const majPres = (suivant) => { setPres((l) => (l || []).map((x) => (x.id === suivant.id ? { ...x, ...suivant } : x))); onDemande?.(); };
+  // Ouverte par un « Demander » : le champ prêt. Après le focus que useDialogue donne à la fenêtre elle-même.
+  useEffect(() => {
+    if (mode !== 'demander') return undefined;
+    const id = setTimeout(() => champ.current?.focus(), 60);
+    return () => clearTimeout(id);
+  }, [mode]);
 
   // La recherche part 350 ms après la dernière lettre : une requête par mot, pas par touche.
   useEffect(() => {
@@ -162,17 +193,59 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
   } else {
     const terme = q.trim();
     const rien = res && !res.deja.length && !res.fiches.length;
+    // La liste des demandés : rien de tapé, pas en train d'écrire un nom à la main, et au moins une demande autour.
+    const avecListe = !manuel && terme === '' && pres?.length > 0;
+    const puces = avecListe ? [...new Set(pres.map(categorieDemande).filter(Boolean))] : [];
+    const visibles = avecListe ? pres.filter((d) => !puce || categorieDemande(d) === puce) : [];
+    const app = experienceApp();
     corps = (
       <>
-        <h3 className="modal-titre" id="dm-titre">{t('demandes.fenetreTitre')}</h3>
+        <h3 className="modal-titre" id="dm-titre">{avecListe ? t('demandes.rangeeTitre') : t('demandes.fenetreTitre')}</h3>
         {!manuel && (
           <>
-            <p className="small" style={{ margin: '0 0 10px' }}>{t('demandes.fenetreSous')}</p>
+            <p className="small" style={{ margin: '0 0 10px' }}>
+              {avecListe ? t(pres.length === 1 ? 'demandes.pageSousUn' : 'demandes.pageSous', { n: pres.length }) : t('demandes.fenetreSous')}
+            </p>
             <div className="recherche-champ dm-champ" role="search">
               <span className="recherche-loupe" aria-hidden="true"><Icone nom="recherche" taille={20} /></span>
               <input ref={champ} type="search" value={q} onChange={(e) => { setQ(e.target.value); setChoix(null); }}
                 placeholder={t('demandes.champRecherche')} aria-label={t('demandes.champRecherche')} autoComplete="off" enterKeyHint="search" />
             </div>
+            {avecListe && (
+              <div className="dm-pres">
+                {puces.length > 1 && (
+                  <div className="dm-cats" role="group" aria-label={t('demandes.rangeeTitre')}>
+                    {puces.map((c) => {
+                      const illu = CATEGORIES_CLIENT.find((x) => x.cle === c)?.illustration;
+                      return (
+                        <button key={c} type="button" className={`dm-cat${puce === c ? ' on' : ''}`} aria-pressed={puce === c}
+                          onClick={() => { vibrer('bascule'); setPuce(puce === c ? '' : c); }}>
+                          {illu && <img src={illustrationCuisine(illu, { plat: !app })} alt="" width="24" height="24" decoding="async" draggable="false" />}
+                          {libelleCategorie(c, t, { court: true })}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+                {visibles.map((d) => {
+                  const dessin = dessinDemande(d);
+                  return (
+                    <div key={d.id} className="dm-pres-ligne">
+                      <span className="dm-choix-tuile" aria-hidden="true">{dessin ? <img src={dessin} alt="" width="26" height="26" /> : <Icone nom="restaurants" taille={18} />}</span>
+                      <span className="dm-choix-texte">
+                        <b>{d.nom}</b>
+                        <small>{[sousTitreDemande(d, t), d.distanceKm != null ? kmLisible(d.distanceKm) : null].filter(Boolean).join(' · ')}</small>
+                      </span>
+                      <span className="dm-pres-nb" aria-label={t('demandes.nDemandes', { n: d.total })}>{d.total}</span>
+                      <button type="button" className={`dm-pres-moi${d.moi ? ' on' : ''}`} aria-pressed={!!d.moi} disabled={occupe(d.id)}
+                        onClick={() => basculer(d, null, majPres)}>
+                        {d.moi ? <><Icone nom="coche" taille={14} />{t('demandes.demande')}</> : t('demandes.moiAussi')}
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
             <div className="dm-resultats" aria-live="polite">
               {terme.length > 0 && terme.length < 3 && <p className="small">{t('demandes.tapeTrois')}</p>}
               {chargement && <p className="small">{t('demandes.recherche')}</p>}
@@ -199,7 +272,7 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
                 </div>
               )}
             </div>
-            {!rien && <button type="button" className="dm-lien" onClick={() => { setManuel(true); setNom(q.trim()); setChoix(null); }}>{t('demandes.pasDansLaListe')}</button>}
+            {!rien && !avecListe && <button type="button" className="dm-lien" onClick={() => { setManuel(true); setNom(q.trim()); setChoix(null); }}>{t('demandes.pasDansLaListe')}</button>}
           </>
         )}
         {manuel && (
@@ -218,18 +291,24 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
             <button type="button" className="dm-lien" onClick={() => setManuel(false)}>{t('demandes.revenirListe')}</button>
           </>
         )}
-        <div className="field" style={{ marginTop: 12 }}>
-          <label htmlFor="dm-plat">{t('demandes.plat')}</label>
-          <input id="dm-plat" value={plat} onChange={(e) => setPlat(e.target.value)} maxLength={80} placeholder={t('demandes.platExemple')} autoComplete="off" />
-        </div>
-        <button type="button" role="switch" aria-checked={prevenir} className="dm-prevenir" onClick={() => { vibrer('bascule'); setPrevenir((p) => !p); }}>
-          <span className="dm-prevenir-texte"><b>{t('demandes.prevenir')}</b><small>{t('demandes.prevenirSous')}</small></span>
-          <span className={`co-interrupteur${prevenir ? ' on' : ''}`} aria-hidden="true" />
-        </button>
+        {(choix || manuel) && (
+          <>
+            <div className="field" style={{ marginTop: 12 }}>
+              <label htmlFor="dm-plat">{t('demandes.plat')}</label>
+              <input id="dm-plat" value={plat} onChange={(e) => setPlat(e.target.value)} maxLength={80} placeholder={t('demandes.platExemple')} autoComplete="off" />
+            </div>
+            <button type="button" role="switch" aria-checked={prevenir} className="dm-prevenir" onClick={() => { vibrer('bascule'); setPrevenir((p) => !p); }}>
+              <span className="dm-prevenir-texte"><b>{t('demandes.prevenir')}</b><small>{t('demandes.prevenirSous')}</small></span>
+              <span className={`co-interrupteur${prevenir ? ' on' : ''}`} aria-hidden="true" />
+            </button>
+          </>
+        )}
         {erreur && <p className="dm-erreur" role="alert">{erreur}</p>}
+        {/* Collé en bas de la page (ecran-demandes.css › .dm-fenetre .modal-pied) : avec 100 demandés, il restait tout en bas
+          * de la liste. Rien de choisi : il ramène au champ (« Demander un autre restaurant » quand la liste est là). */}
         <div className="modal-pied">
           <button type="button" className="btn-gold" onClick={envoyer} disabled={envoi}>
-            {envoi ? '...' : nomChoisi ? t('demandes.demanderNom', { nom: nomChoisi }) : t('demandes.demanderCeRestaurant')}
+            {envoi ? '...' : nomChoisi ? t('demandes.demanderNom', { nom: nomChoisi }) : avecListe ? t('demandes.demanderUnAutre') : t('demandes.demanderCeRestaurant')}
           </button>
           {/* Sur le site, pas de feuille à tirer (useTirerPourFermer) : sur téléphone, une fois les résultats affichés, la
             * fenêtre couvrait tout l'écran et rien ne la refermait (fondateur, 2026-11-03). */}
@@ -240,6 +319,7 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
   }
 
   return (
+    <>
     <div className="modal-overlay confirm-voile" onClick={envoi ? undefined : onFermer}>
       <div {...tirer} className="modal-box confirm-feuille dm-fenetre" onClick={(e) => e.stopPropagation()}
         role="dialog" aria-modal="true" aria-labelledby="dm-titre" ref={racine} tabIndex={-1}>
@@ -247,5 +327,8 @@ export default function FenetreDemande({ requete, onFermer, onDemande }) {
         {corps}
       </div>
     </div>
+    {/* Hors du voile : un toucher dans « Vérifie ton numéro » ne doit pas fermer la page derrière. */}
+    {dialogueMoiAussi}
+    </>
   );
 }

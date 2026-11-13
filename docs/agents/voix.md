@@ -45,9 +45,11 @@ The front page opens with the call, then the customer's why (founder's mix, 2026
 > Le même plat ne devrait pas coûter plus cher parce que tu le commandes en ligne. Ailleurs, c'est jusqu'à +55 %. Sur
 > Fairride, le restaurant ne gonfle plus sa carte, et ton argent reste à Bruxelles.
 
-« L'alternative à Uber Eats » left the subtitle but not the page: people search for it, so it is the heading of the
-section under « Déjà sur Fairride » (`landing.altTitre`), and it stays in the Google title and description (`seo.*`)
-and on « Notre histoire ».
+« L'alternative à Uber Eats » left the subtitle but not the page: people search for it, so it is the big title next to
+the fake phone under the iris band (`landing.altTitre`, EssaiAppli.jsx since 2026-11-12, « fairride » as the wordmark), with
+two short lines only: « Fini les prix gonflés. » and « Cherche le badge Prix du comptoir » (Owen, 2026-11-12: minimal). It
+stays in the Google title and description (`seo.*`) and on « Notre histoire ». Visitors never read how many restaurants
+there are (Owen, 2026-11-12), and the app is offered with « installer », never « prendre ».
 
 ## 2. The villain: the inflated price, never a company
 
@@ -75,7 +77,10 @@ Fairride picks a fight with a norm: paying the platform's ~30 % cut hidden in th
   price changes.
   « Jusqu'à +55 % » is the top of what we measured, not a typical figure: never « tu paies 50 % de plus » as a general fact.
   In the app's welcome card the line sits behind an « i » next to « Le même plat, 15 € au comptoir » (founder, 2026-10-27:
-  « retire la ligne Détails sur demande, ça fait trop de texte »): still one tap away, never removed.
+  « retire la ligne Détails sur demande, ça fait trop de texte »): still one tap away, never removed. The website's card
+  « Le même plat, trois prix » does the same since 2026-11-13 (`HeroPrix.jsx`, « i » next to its title). Never hide the line
+  in the code instead (white text, display: none with no way to open it): invisible text does not make the comparison
+  verifiable, and it would look like concealment.
 - **Fairride's own markup, to customers (founder, 2026-11-02, maquettes/prix-client)**: the cap became 11.11 % and « +11,11 % »
   sounded bad, so the website, e-mails, Google and « Notre histoire » give NO figure for Fairride (« le restaurant ne gonfle
   plus sa carte »); the badge screen says only « Le même prix que sur place. » (its line « Les autres : jamais une carte gonflée. » removed by

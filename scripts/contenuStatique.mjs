@@ -73,10 +73,11 @@ export function corpsAccueil({ t, langue, commerces }) {
   const contenu = [
     `        <h1>${texte(t('landing.titreAccueil1'))} ${texte(t('landing.titreAccueil2'))}</h1>`,
     `        <p>${texte(t('landing.subAdresse'))}</p>`,
-    `        <h2>${texte(t('landing.altTitre'))}</h2>\n        <p>${texte(t('landing.sub'))}</p>`,
-    `        <h2>${texte(t('landing.featureLocalTitle'))}</h2>\n        <p>${texte(t('landing.featureLocalText'))}</p>`,
-    `        <h2>${texte(t('landing.featureFairTitle'))}</h2>\n        <p>${texte(t('landing.featureFairText'))}</p>`,
-    listeCommerces(commerces, { t, langue })
+    // Le bloc de l'appli sur l'accueil (EssaiAppli.jsx, 2026-11-12) : « l'alternative » et ses deux lignes. Le faux téléphone est
+    // un cadre que les robots ne lisent pas : la liste des commerces, avec leurs liens, reste écrite ici pour eux.
+    `        <h2>${texte(t('landing.altTitre'))}</h2>\n        <p>${texte(t('landing.essaiPrix'))} ${texte(t('landing.essaiBadge'))} « ${texte(t('common.prixComptoir'))} ».</p>`,
+    listeCommerces(commerces, { t, langue }),
+    `        <h2>${texte(t('landing.joinTitle'))}</h2>\n        <p>${texte(t('landing.joinRestaurantTitle'))}. ${texte(t('landing.joinRestaurantLigne'))}</p>\n        <p>${texte(t('landing.joinDriverTitle'))} ${texte(t('landing.joinDriverLigne'))}</p>`
   ].filter(Boolean).join('\n');
   return cadre({ t, langue, cheminApplicatif: '/', contenu });
 }

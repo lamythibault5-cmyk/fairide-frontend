@@ -157,7 +157,7 @@ export default function CommandeGroupee() {
   }
 
   // Prix payé d'une ligne : son prix plein moins la remise du plat (même règle que le panier, prixPlat.js remiseLigne).
-  const prixPaye = (l) => Math.max(0, l.unitPrice * l.qty - remiseLigne(menu?.find((m) => m.id === l.itemId), l.qty));
+  const prixPaye = (l) => Math.max(0, l.unitPrice * l.qty - remiseLigne(menu?.find((m) => m.id === l.itemId), l.qty, l.unitPrice));
   const totalPaye = +g.lines.reduce((a, l) => a + prixPaye(l), 0).toFixed(2);
   const parInvite = g.lines.reduce((acc, l) => { (acc[l.guestName] ||= []).push(l); return acc; }, {});
   const ouvert = g.status === 'open';

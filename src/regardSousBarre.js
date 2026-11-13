@@ -9,6 +9,14 @@
 
 export const IRIS = new Set(['59,47,181', '42,33,133']);
 
+/* UNE CARTE N'EST PAS UN BANDEAU (fondateur, 2026-11-12, accueil plein : « sur du bleu les petites icônes deviennent blanches ;
+ * là c'est un mix des deux, fais ce qui te semble le mieux »). La rangée « Demandés près de toi » aligne des tickets iris
+ * (176 px) et des tuiles blanches : en la faisant glisser sous la barre d'état, le milieu de l'écran passait d'un ticket à un
+ * blanc, et la barre basculait iris / blanc (sur Android, une bande iris collée en haut d'une page blanche). Un fond iris ne
+ * compte donc que s'il couvre (presque) toute la largeur, comme les bandeaux des écrans ; plus étroit, on regarde à travers,
+ * jusqu'au fond de la page. Les autres couleurs ne changent pas. */
+const LARGEUR_BANDEAU = 0.97;
+
 // Le premier fond opaque sous le point (milieu de l'écran, hauteur `y`), en remontant les parents ; « r,v,b » ou null.
 export function fondSous(y) {
   let el = document.elementFromPoint(window.innerWidth / 2, y);
@@ -17,7 +25,9 @@ export function fondSous(y) {
     if (m) {
       const [r, v, b, a = 1] = m[1].split(',').map((x) => Number(x.trim()));
       // Un voile translucide (fond d'une feuille, verre) ne compte pas : on regarde ce qu'il laisse voir dessous.
-      if (a >= 0.9) return `${r},${v},${b}`;
+      const fond = `${r},${v},${b}`;
+      const etroit = IRIS.has(fond) && el.getBoundingClientRect().width < window.innerWidth * LARGEUR_BANDEAU;
+      if (a >= 0.9 && !etroit) return fond;
     }
     el = el.parentElement;
   }

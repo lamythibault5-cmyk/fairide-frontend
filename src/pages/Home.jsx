@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { experienceApp } from '../natif';
 import { lireBienvenue, lireReprise } from '../bienvenue';
@@ -6,6 +6,10 @@ import Landing from './Landing';
 
 export default function Home() {
   const { user, role } = useAuth();
+  const { search } = useLocation();
+  // Inscrit depuis la fenêtre du faux téléphone (EssaiAppli.jsx) : retour sur l'accueil du site, à la hauteur du faux
+  // téléphone (Owen, 2026-11-12, remarque 8 de maquettes/site-appli-essai), même connecté. Sur le site seulement.
+  if (user && !experienceApp() && new URLSearchParams(search).has('essai')) return <Landing />;
   if (!user) {
     // DANS L'APPLICATION, pas de page vitrine : elle est faite pour convaincre un visiteur du site, pas quelqu'un
     // qui a déjà installé l'app. Premier lancement → l'accueil de l'application ; ensuite → directement la liste
