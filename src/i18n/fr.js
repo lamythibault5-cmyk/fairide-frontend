@@ -8081,6 +8081,7 @@ export default {
       prixTroisTitre: "Le même plat, trois prix",
       prixTroisAria: "Le même plat au comptoir, sur une grande plateforme (+{ecart} %) et sur Fairride",
       prixReleve: "Un plat d'un restaurant bruxellois, relevé en octobre 2026. Détails sur demande.",
+      prixReleveInfo: "D'où vient ce relevé ?",
       prixComptoirLigne: "Au comptoir",
       prixPlateformeLigne: "Sur une grande plateforme",
       prixFairrideLigne: "Sur Fairride",
