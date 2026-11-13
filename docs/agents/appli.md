@@ -342,10 +342,13 @@ take (`GET /auth/me › bienvenue`), site too (after the cookie card); only once
 account). In the cart the credit is a lime row « Crédit de bienvenue · Offert par Fairride · 5,00 € offerts ». The SMS code
 at the first order (« Dernière étape », after « Commander et payer ») is the short version A: lime pill « 5 € de crédit
 t'attendent » when the credit is at stake, « Entre le code reçu par SMS », the number with « Changer », six boxes, « Pas
-reçu ? » only after the countdown, « Valider et payer · total after the credit »; Google / Apple accounts also get
+reçu ? » only after the countdown, « Valider et payer · total after the credit » (only for a code sent by SMS: while the code
+goes by e-mail, neither the pill nor the credit, since the server grants it to an SMS-proven number only; VerifTelephone
+`onCanal` / `onFait › parSms`, review 13/11); Google / Apple accounts also get
 « Commander sans le crédit », and never see it when no credit is at stake. The order-confirmed screen shows a quiet code ami
 reminder row once (`fairide_code_ami_rappel`, « Invite un ami : 3 € pour toi »), or « Qui te doit quoi » after a group order
-(QuiDoitQuoi.jsx). Group orders: a real « Commander à plusieurs » button under the toggle; `/groupe/:code` without an account
+(QuiDoitQuoi.jsx; each guest's dishes read from the order's lines « Pour <prénom> », not the group's,
+`src/partsGroupe.js`, `npm run check:groupe`). Group orders: a real « Commander à plusieurs » button under the toggle; `/groupe/:code` without an account
 shows the invitation (InvitationGroupe.jsx, `GET /group-orders/:code/invitation`) before sign-up.
 On the web `/bienvenue` redirects home unless `?apercu` is set (that is how to review it with `npm run dev`). Its copy
 is in the `appli` i18n namespace. **Sign-up happens inside it** (2026-10-15, [InscriptionAppli.jsx](../../src/pages/app/InscriptionAppli.jsx)):
@@ -369,7 +372,8 @@ top (« Ajouter » / « Changer »; one of each per account, `PATCH /auth/me/add
 the number step with chips Maison / Travail / Autre (labels stored as `maison` / `travail`, shown via `nomAdresse.js`), and the
 list header says « Livrer à · Maison ». **Position at every opening** (`hooks/usePositionLancement.js`, app and site): read
 without asking if allowed, the system question once if never asked (`fairide_position_demandee`), never after a refusal;
-re-read after 30 min in the background; nothing waits for it and it never leaves the phone. Within 150 m of a saved address
+re-read after 30 min in the background; nothing waits for it and it never leaves the phone. Never in the website's app
+preview (`actif: !APERCU` in RestaurantList.jsx): the visitor touched nothing, and the flag would have stopped the real list asking. Within 150 m of a saved address
 (and a position finer than 150 m) that address is selected silently; more than 1 km from the chosen address (after removing
 the phone's error margin) the bubble « Tu es à 4,2 km de … On livre bien là ? » points at the header (BulleAdresseLoin.jsx):
 « Livrer à ma position » opens the book on « Utiliser ma position » (precise position, number check; more than 40 km from
