@@ -24,7 +24,16 @@ export default function GardeApercu() {
     const tel = estApercuTel();
     if (tel) document.documentElement.classList.add('apercu-tel');
     const duSite = (e) => {
-      if (tel && messageDuSite(e) && e.data.type === 'plein') document.documentElement.classList.toggle('apercu-plein', !!e.data.ouvert);
+      if (!tel || !messageDuSite(e)) return;
+      if (e.data.type === 'plein') document.documentElement.classList.toggle('apercu-plein', !!e.data.ouvert);
+      // Refermée, la vignette remontre la page de départ de l'appli (Owen, 2026-11-13 : « quand je ressors, je veux revenir à
+      // la page d'accueil, pas où j'étais ») : Restaurants, sans filtre, en haut. Une nouvelle entrée de Restaurants, même si
+      // on y est : la liste efface ses filtres à chaque nouvelle entrée sans filtre (RestaurantList.jsx).
+      if (e.data.type === 'accueil') {
+        navigate('/restaurants', { replace: true });
+        window.scrollTo(0, 0);
+        requestAnimationFrame(() => window.scrollTo(0, 0));
+      }
     };
     window.addEventListener('message', duSite);
     // Le site ne sait pas quand le cadre a fini de se charger (React y monte après l'événement load) : on lui dit d'envoyer l'état.
@@ -64,7 +73,7 @@ export default function GardeApercu() {
       window.removeEventListener('scroll', actif, { capture: true });
       window.removeEventListener('pointerdown', actif, { capture: true });
     };
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     if (cheminPermisEnApercu(pathname)) { dernierPermis.current = `${pathname}${search}`; return; }
