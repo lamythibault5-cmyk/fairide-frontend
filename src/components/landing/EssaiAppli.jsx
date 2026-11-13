@@ -153,10 +153,22 @@ export default function EssaiAppli() {
   }, []);
 
   // Ce que le cadre a voulu ouvrir (GardeApercu.jsx) : la fenêtre, ici.
+  // Pendant qu'on fait défiler le téléphone (message « actif » de GardeApercu.jsx), les animations du site s'arrêtent : elles
+  // partagent le fil principal avec le cadre. Elles repartent 1,5 s après le dernier geste. Une classe sur <html>, pas un état
+  // React : rien à redessiner de ce côté.
   useEffect(() => {
-    const recevoir = (e) => { if (messageDeLApercu(e) && e.data.type === 'ouvrir') setFenetre({ chemin: e.data.chemin }); };
+    let reprise = null;
+    const recevoir = (e) => {
+      if (!messageDeLApercu(e)) return;
+      if (e.data.type === 'ouvrir') setFenetre({ chemin: e.data.chemin });
+      if (e.data.type === 'actif') {
+        document.documentElement.classList.add('sa-essai-actif');
+        clearTimeout(reprise);
+        reprise = setTimeout(() => document.documentElement.classList.remove('sa-essai-actif'), 1500);
+      }
+    };
     window.addEventListener('message', recevoir);
-    return () => window.removeEventListener('message', recevoir);
+    return () => { window.removeEventListener('message', recevoir); clearTimeout(reprise); document.documentElement.classList.remove('sa-essai-actif'); };
   }, []);
 
   // Revenu de l'inscription (« /?essai ») : on arrive sur le faux téléphone, la chose à faire (design.md, règle 5).

@@ -156,7 +156,9 @@ const PAGES_CARTE = {
 };
 function PrechauffageCarte() {
   const { user } = useAuth();
-  const role = user ? user.role || 'client' : null;
+  // Le faux téléphone de l'accueil (apercuSite.js) prépare la carte comme pour un client : sans compte, l'onglet Carte
+  // attendait tout (moteur, style, page) au moment du toucher (Owen, 2026-11-12 : « la carte met du temps à charger »).
+  const role = user ? user.role || 'client' : estApercu() ? 'client' : null;
   useEffect(() => {
     if (role) import('./carte').then((m) => m.prechargerCarte(PAGES_CARTE[role])).catch(() => {});
   }, [role]);
