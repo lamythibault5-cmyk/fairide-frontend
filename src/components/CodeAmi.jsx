@@ -38,7 +38,12 @@ export const PAR_AMI = 3;
 // Le crédit de bienvenue (backend referrals.REFERRAL_FRIEND_REWARD) : pour qui n'a pas encore de compte (l'invitation à un
 // groupe) ; connecté, le serveur le dit lui-même (GET /auth/me › bienvenue).
 export const MONTANT_BIENVENUE = 5;
-// « 5 € », « 3 € » : un montant rond, dans le format de la langue (« € 5 » en néerlandais).
+// La première commande qui déclenche les deux crédits, en plats (backend referrals.REFERRAL_MIN_ORDER_TOTAL) ; connecté, le
+// serveur dit celle du crédit de bienvenue (GET /auth/me › bienvenue.minimum).
+export const MINIMUM_PREMIERE_COMMANDE = 20;
+// « 5 € », « 3 € » : un montant rond, « 5 € » dans toutes les langues (fondateur, 2026-11-08, design.md « Prices »). Les
+// montants des textes passent par ici plutôt que d'être écrits dans les traductions (revue avant GO du 13/11, langues 2 : le
+// néerlandais et l'anglais écrivaient encore « € 5 » / « €5 »).
 export const eurosRond = (n) => eurosCourt(n);
 
 function lire(cle) {
@@ -61,7 +66,7 @@ function useCodeAmi() {
  * true quand le partage est parti (ou copié) ; un partage annulé n'est pas une erreur. */
 async function partager({ code, ouvert, t, toast }) {
   const url = lienPublic(`/login?ref=${encodeURIComponent(code)}`);
-  const text = t(ouvert ? 'codeAmi.messageBienvenue' : 'codeAmi.messageSeul', { code });
+  const text = t(ouvert ? 'codeAmi.messageBienvenue' : 'codeAmi.messageSeul', { code, montant: eurosRond(MONTANT_BIENVENUE) });
   try {
     if (estNatif()) {
       const { Share } = await import('@capacitor/share');
@@ -163,7 +168,7 @@ export function CarteCodeAmi({ stats }) {
         <span>{t('codeAmi.carteQuand')}</span>
         <button type="button" className="code-ami-lien-conditions" aria-expanded={conditions} onClick={() => setConditions((c) => !c)}>{t('codeAmi.conditionsLien')}</button>
       </div>
-      {conditions && <p className="small code-ami-conditions">{t('codeAmi.conditions', { montant })}</p>}
+      {conditions && <p className="small code-ami-conditions">{t('codeAmi.conditions', { montant, minimum: eurosRond(MINIMUM_PREMIERE_COMMANDE) })}</p>}
     </div>
   );
 }
