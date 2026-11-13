@@ -63,11 +63,13 @@ async function charger() {
   return { u: greffon };
 }
 
-// Le paquet mis en place au dernier démarrage n'est pas celui qui tourne : le greffon l'a écarté.
+// Le paquet mis en place au dernier démarrage n'est pas celui qui tourne : le greffon l'a écarté. Un paquet reçu sous
+// un ancien socle porte un identifiant plus long que celui de ses écrans (<ordre>-<début du commit + 1>,
+// scripts/paquet-appli.mjs, LES ANCIENS SOCLES) : c'est bien lui qui tourne.
 function noterEssai() {
   const essai = lire(ESSAI);
   if (!essai) return;
-  if (essai !== ID) ecrire(RATES, [...lire(RATES, []), essai].slice(-20));
+  if (!ID || !String(essai).startsWith(ID)) ecrire(RATES, [...lire(RATES, []), essai].slice(-20));
   ecrire(ESSAI, null);
 }
 

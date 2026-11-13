@@ -55,6 +55,12 @@ jobs:
       - name: Décisions de mise à jour des applis
         run: npm run check:mises-a-jour
 
+      # Le socle des mises à jour directes (scripts/paquet-appli.mjs) : un numéro de version ne doit jamais couper les
+      # applis installées de leurs paquets (le 12/11, la 1.0.1 a coupé l'iPhone App Store 1.0), et le nettoyage de la
+      # release garde le dernier zip de chaque socle.
+      - name: Socle des mises à jour directes
+        run: npm run check:socle
+
       # Le build inclut le pré-rendu (scripts/prerender.mjs), qui écrit une page statique par page
       # publique et par langue. Il échoue si une table de traduction manque.
       - name: Build de production
