@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { cheminPermisEnApercu, signalerAuSite } from '../apercuSite';
+import { cheminPermisEnApercu, signalerAuSite, estApercuTel, messageDuSite } from '../apercuSite';
 import { cheminSansPrefixe } from '../i18n/routing';
 import { brancherGlisserSouris } from '../glisserSouris';
 
@@ -19,6 +19,16 @@ export default function GardeApercu() {
 
   useEffect(() => {
     document.documentElement.classList.add('apercu');
+    // La vignette du téléphone (apercuSite.js) : `apercu-tel` pour la barre de l'appli (pilule à gauche, rond ✕ à droite), et
+    // `apercu-plein` quand le site l'a ouverte en plein écran : la croix sort alors de la barre (styles.css).
+    const tel = estApercuTel();
+    if (tel) document.documentElement.classList.add('apercu-tel');
+    const duSite = (e) => {
+      if (tel && messageDuSite(e) && e.data.type === 'plein') document.documentElement.classList.toggle('apercu-plein', !!e.data.ouvert);
+    };
+    window.addEventListener('message', duSite);
+    // Le site ne sait pas quand le cadre a fini de se charger (React y monte après l'événement load) : on lui dit d'envoyer l'état.
+    if (tel) signalerAuSite({ type: 'pret' });
     // Glisser à la souris comme au doigt (glisserSouris.js). Branché AVANT la garde ci-dessous : le clic qui termine un glissé
     // est arrêté avant qu'elle ne le prenne pour un toucher sur un restaurant.
     const debrancherGlisser = brancherGlisserSouris();
@@ -48,6 +58,7 @@ export default function GardeApercu() {
     window.addEventListener('scroll', actif, { capture: true, passive: true });
     window.addEventListener('pointerdown', actif, { capture: true, passive: true });
     return () => {
+      window.removeEventListener('message', duSite);
       debrancherGlisser();
       window.removeEventListener('click', arreter, true);
       window.removeEventListener('scroll', actif, { capture: true });

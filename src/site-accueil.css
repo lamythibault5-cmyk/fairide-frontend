@@ -194,11 +194,15 @@ html:not(.appli) .sa-accueil .sa-essai-cadre iframe { position: absolute; top: 0
 /* La fenêtre d'un toucher dans le faux téléphone (Modale, rendue dans <body>, hors de .sa-accueil). */
 .sa-essai-fenetre { position: relative; padding: 24px 26px 22px; border-radius: 26px; text-align: left; }
 /* On fait défiler le faux téléphone : les animations de la page s'arrêtent (EssaiAppli.jsx, message « actif »). */
-html.sa-essai-actif .sa-accueil *, html.sa-essai-actif .sa-accueil *::before, html.sa-essai-actif .sa-accueil *::after { animation-play-state: paused !important; }
+html:is(.sa-essai-actif, .sa-essai-plein) .sa-accueil *, html:is(.sa-essai-actif, .sa-essai-plein) .sa-accueil *::before, html:is(.sa-essai-actif, .sa-essai-plein) .sa-accueil *::after { animation-play-state: paused !important; }
 /* La boîte reçoit le focus à l'ouverture (useDialogue). Ouverte par un clic DANS le cadre, Chrome la croit atteinte au clavier et
    lui dessinait son gros contour noir (Owen, 2026-11-12) : la boîte n'est pas un contrôle, ses boutons gardent leur contour. */
 .sa-essai-fenetre:focus, .sa-essai-fenetre:focus-visible { outline: none; }
-.sa-essai-fermer { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+/* Un rond (40 px, 44 au doigt) : le bouton gardait le rembourrage du navigateur (42 × 36 sur ordinateur) et la hauteur minimale des boutons
+   sur téléphone (36 × 44) : un ovale à la croix décentrée (Owen, 2026-11-13). */
+.sa-essai-fermer { position: absolute; top: 12px; right: 12px; width: 40px; height: 40px; padding: 0; box-sizing: border-box; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+/* Au doigt, la règle des cibles tactiles (styles.css, 44 px de haut au moins) gagne : le rond fait alors 44 px dans les deux sens. */
+@media (pointer: coarse) { .sa-essai-fermer { width: 44px; height: 44px; top: 10px; right: 10px; } }
 .sa-essai-commerce { display: flex; align-items: center; gap: 14px; margin: 0 44px 16px 0; }
 .sa-essai-commerce img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; flex: none; }
 .sa-essai-commerce b { display: flex; align-items: center; gap: 6px; font-family: var(--font-titre); font-size: 20px; line-height: 1.2; }
@@ -301,7 +305,49 @@ html:not(.appli) .sa-accueil .sa-porte-iris .sa-porte-bouton { background: var(-
   html:not(.appli) .sa-accueil .sa-porte h3 { font-size: 18px; flex-basis: 100%; }
   html:not(.appli) .sa-accueil .sa-portes-deux .sa-porte h3 { flex-basis: auto; }
 }
+/* ---------------------------------------------------------------------------------------------------------------------
+   4 · SUR TÉLÉPHONE, L'APPLI EN VIGNETTE (VignetteAppli.jsx ; Owen, 2026-11-13, B' de maquettes/site-appli-essai/vignette-b1.html)
+   Le texte aux règles de l'appli : titre 22 px (titres de rangée), lignes en Inter avec la petite tuile d'icône des rangées.
+   --------------------------------------------------------------------------------------------------------------------- */
+html:not(.appli) .sa-accueil .sa-essai--tel { display: block; padding-top: 4px; }
+/* !important : .be-mark (styles.css) force 128 à 190 px ; ici le petit vélo de la maquette. */
+html:not(.appli) .sa-accueil .sa-essai--tel .be-mark { width: 46px !important; height: 23px !important; margin: 0; }
+html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-texte h2 { font-size: 22px; line-height: 1.25; letter-spacing: 0; margin: 12px 0 16px; max-width: none; }
+html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-raisons { gap: 10px; margin: 0 0 22px; }
+html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-raisons li { font-family: var(--font-ui); font-weight: 600; font-size: 15.5px; letter-spacing: 0; gap: 8px 10px; }
+html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-raisons .prix-comptoir { font-size: 12.5px; padding: 3px 9px; }
+html:not(.appli) .sa-accueil .sa-tuile-ic { width: 30px; height: 30px; border-radius: 9px; background: var(--iris-tint); color: var(--iris); display: grid; place-items: center; flex: none; }
+html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-stores { margin-top: 20px; }
+html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-stores .sa-badge img { height: 38px; }
+.sa-vignette-scene { position: relative; display: grid; justify-items: center; }
+/* Pas d'isolation ni de transform ici : le cadre ouvert passe en position fixed et doit échapper à la vignette. */
+.sa-vignette { position: relative; z-index: 1; overflow: hidden; border: 4px solid #111; background: #111; cursor: pointer; }
+.sa-vignette iframe { position: absolute; top: 0; left: 0; display: block; border: 0; background: #fff; transform-origin: 0 0; pointer-events: none; }
+/* Ouvert : tout l'écran, sous les fenêtres (.modal-overlay à 100, la fenêtre d'un restaurant touché s'ouvre par-dessus). */
+.sa-vignette iframe.plein { position: fixed; inset: 0 auto auto 0; width: 100vw; height: 100dvh; z-index: 95; pointer-events: auto;
+  transition: transform .42s cubic-bezier(.2, .9, .25, 1.04), border-radius .42s; }
+/* La feuille blanche fait un contexte d'empilement (isolation) : ouvert, elle passe au-dessus de l'en-tête collant (20) ; la
+   vignette, elle aussi, passe au-dessus du bouton lime et des dessins posés sur elle (sinon l'appli grandissait dessous). */
+html.sa-essai-plein:not(.appli) .sa-accueil .sa-feuille { z-index: 95; }
+html.sa-essai-plein .sa-vignette { z-index: 3; }
+/* Ouvert : la page ne défile plus (verrou sur <html>, design.md) ; une fois l'appli à sa taille, la page dessous n'est plus
+   peinte du tout, seuls le cadre, les fenêtres et les messages restent visibles. */
+html.sa-essai-plein { overflow: hidden; }
+html.sa-essai-cache body { visibility: hidden; }
+html.sa-essai-cache .sa-vignette iframe, html.sa-essai-cache .modal-overlay, html.sa-essai-cache .toast { visibility: visible; }
+.sa-vignette-bouton { position: relative; z-index: 2; margin-top: -26px; display: inline-flex; align-items: center; gap: 9px; padding: 15px 26px;
+  border: 0; border-radius: 999px; background: var(--lime); color: var(--ink); font: 600 16px/1.2 var(--font-ui); cursor: pointer;
+  box-shadow: 0 0 0 5px #fff; -webkit-tap-highlight-color: transparent; transition: scale .15s var(--ressort-ui, ease); }
+.sa-vignette-bouton:active { scale: .97; }
+.sa-vignette-bouton:focus-visible { outline: 2px solid var(--iris); outline-offset: 7px; }
+/* Nos dessins gourmands (public/gourmand) qui flottent autour : sans cadre, un peu penchés ; un toucher ouvre aussi l'appli. */
+.sa-vignette-dessin { position: absolute; z-index: 0; rotate: var(--a); animation: sa-flotte var(--d) ease-in-out infinite alternate; cursor: pointer; -webkit-user-drag: none; user-select: none; }
+@keyframes sa-flotte { from { translate: 0 -5px; } to { translate: 0 6px; } }
+@media (max-width: 349px) { .sa-vignette-dessin { display: none; } }
+
 @media (prefers-reduced-motion: reduce) {
+  .sa-vignette-dessin { animation: none; }
+  .sa-vignette iframe.plein { transition: none; }
   .sa-accueil .sa-scene *, .sa-accueil .sa-belge, .sa-accueil .sa-feuille::before, .sa-accueil .sa-prix-ligne i b, .sa-accueil .sa-prix-rang i b { animation: none !important; }
   .sa-accueil .sa-porte { transition: none; }
 }

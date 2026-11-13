@@ -8017,6 +8017,7 @@ export default {
       essaiOuStores: 'Or install the app',
       essaiVoirCarte: 'See its menu',
       essaiFermer: 'Close',
+      essaiVoir: 'See the restaurants',
       prixTroisTitre: "The same dish, three prices",
       prixTroisAria: "The same dish at the counter, on a big platform (+{ecart}%) and on Fairride",
       prixReleve: "A dish from a Brussels restaurant, checked in October 2026. Details on request.",

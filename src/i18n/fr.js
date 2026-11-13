@@ -8078,6 +8078,7 @@ export default {
       essaiOuStores: "Ou installe l'appli",
       essaiVoirCarte: 'Voir sa carte',
       essaiFermer: 'Fermer',
+      essaiVoir: 'Voir les restaurants',
       prixTroisTitre: "Le même plat, trois prix",
       prixTroisAria: "Le même plat au comptoir, sur une grande plateforme (+{ecart} %) et sur Fairride",
       prixReleve: "Un plat d'un restaurant bruxellois, relevé en octobre 2026. Détails sur demande.",
