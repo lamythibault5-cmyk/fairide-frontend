@@ -77,7 +77,8 @@ rule below. Options and new extras still go through the team (« Une modificatio
 - Team says « La photo ne montre pas ce prix » (note required): the shop gets a card at the top of Ta carte with the note, the
   deadline and three choices: put back the old price, send another photo, or keep the price without the « Prix du comptoir »
   badge (only offered to a shop that has the badge; the badge then leaves its whole menu). No choice by the deadline: the
-  server puts back the old price.
+  server puts back the old price. The same refused price declared again does not count as a choice: the card stays (front
+  `declarationsHausses.js`), since the server would still put the old price back; another price replaces the refusal.
 - Name, description and section: the owner changes them himself (dish name touched → « Changer ce plat »), live at once
   (`PATCH /:id/menu/:itemId/textes`); the team sees the last 7 days with « Remettre comme avant » (watch « 2 steaks » →
   « 1 steak » at the same price, a hidden rise). Withdrawal moved to the bottom of that sheet.
