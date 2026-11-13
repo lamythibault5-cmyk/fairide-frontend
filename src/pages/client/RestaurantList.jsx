@@ -496,7 +496,8 @@ export default function RestaurantList() {
   const [choixAdresse, setChoixAdresse] = useState(false);
   // LA POSITION À CHAQUE OUVERTURE (2026-11-08, usePositionLancement.js) : l'adresse du carnet où l'on est, la bulle « Tu es
   // à 4,2 km de … », et, sans compte, le tri du plus proche.
-  const lancement = usePositionLancement({ user, token, refreshUser });
+  // Pas dans l'aperçu de l'accueil du site : le visiteur n'a rien demandé (usePositionLancement.js).
+  const lancement = usePositionLancement({ user, token, refreshUser, actif: !APERCU });
   // D'où se mesurent les distances : l'adresse du compte, sinon (sans compte) la position du téléphone.
   const reperePos = user?.lat && user?.lng ? { lat: user.lat, lng: user.lng } : (!user && lancement.position ? lancement.position : null);
   const { t } = useLanguage();

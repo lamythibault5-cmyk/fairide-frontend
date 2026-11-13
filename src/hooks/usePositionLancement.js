@@ -35,6 +35,11 @@ import { adresseEnCours } from '../nomAdresse';
  * là ? » n'avait pas de sens, et « Livrer à ma position » n'y trouvait rien (le serveur ne cherche qu'en Belgique). Le filtre
  * vit dans RestaurantList.jsx (aPorteeDUnCommerce), qui a la liste des commerces.
  *
+ * PAS DANS L'APERÇU DU SITE (revue avant GO du 13/11/2026, client-avant 0). Le faux téléphone de l'accueil du site charge cette
+ * liste dans un cadre (apercuSite.js) : la question du système partait au chargement de l'accueil, sans que le visiteur touche
+ * rien, au nom de fairride.be, et POSITION_DEMANDEE, posé dans le stockage que le cadre partage avec le site, empêchait la
+ * vraie liste de jamais la poser. `actif: false` (RestaurantList.jsx, dans l'aperçu) : aucune position n'est lue ni demandée.
+ *
  * Rend { position, loin, adresses, garder, relireCarnet }. `loin` : { km, adresse } ou null. */
 const PRES_M = 150;
 const LOIN_KM = 1;
@@ -91,7 +96,7 @@ function gardees() {
 const gardeeIci = (cle, position) => gardees().some((g) => g.cle === cle
   && haversineDistanceKm(position.lat, position.lng, Number(g.lat), Number(g.lng)) <= GARDEE_RAYON_KM);
 
-export default function usePositionLancement({ user, token, refreshUser }) {
+export default function usePositionLancement({ user, token, refreshUser, actif = true }) {
   const [position, setPosition] = useState(null);
   const [adresses, setAdresses] = useState(null);
   const [loin, setLoin] = useState(null);
@@ -111,10 +116,11 @@ export default function usePositionLancement({ user, token, refreshUser }) {
 
   // La position de cette ouverture.
   useEffect(() => {
+    if (!actif) return undefined;
     let vivant = true;
     positionDeCetteOuverture().then((p) => { if (vivant && p) setPosition(p); });
     return () => { vivant = false; };
-  }, [tour]);
+  }, [tour, actif]);
 
   // Retour au premier plan après 30 min : une nouvelle « ouverture ».
   useEffect(() => {
