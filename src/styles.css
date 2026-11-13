@@ -3066,6 +3066,12 @@ html:not(.appli) .sq-fiche .sq-feuille { margin: -22px 0 0; }
   html.apercu img, html.apercu a { -webkit-user-drag: none; }
   html.apercu body { -webkit-user-select: none; user-select: none; }
   html.apercu input, html.apercu textarea { -webkit-user-select: text; user-select: text; }
+  /* La vignette du téléphone (apercuSite.js, Owen 2026-11-13) : la barre comme dans l'appli, la pilule à gauche à sa taille
+     (`:has(> .dashboard-recherche)` plus haut met le groupe à 532 px, donc au bord gauche) et, à la place de Recherche, le rond ✕
+     qui la referme. Un vrai bouton : sans la bordure ni le fond gris du navigateur. Petite vignette : le rond est rentré ; il sort
+     d'un coup de ressort quand le site ouvre l'appli en plein écran. */
+  html.apercu-tel .dashboard-fermer-apercu { border: 0; padding: 0; font: inherit; cursor: pointer; transition: scale .38s var(--rebond-ui), opacity .2s, box-shadow .35s; }
+  html.apercu-tel:not(.apercu-plein) .dashboard-fermer-apercu { scale: .2; opacity: 0; pointer-events: none; }
   html.appli .dashboard-recherche { margin-left: auto; }
   html.appli .dashboard-nav { padding: 5px; border: 0; touch-action: none; transition: transform .15s var(--ressort-ui), width .42s var(--rebond-ui), background-color .35s, box-shadow .35s; }
   html.appli .dashboard-nav.admin { touch-action: pan-x; }

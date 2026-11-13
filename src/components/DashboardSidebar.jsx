@@ -11,7 +11,7 @@ import { useCurseurOnglets } from '../hooks/useCurseurOnglets';
 import { useEnteteDefilement } from '../hooks/useEnteteDefilement';
 import { useSiteLarge } from '../hooks/useSiteLarge';
 import { experienceApp } from '../natif';
-import { estApercu } from '../apercuSite';
+import { estApercu, estApercuTel, signalerAuSite } from '../apercuSite';
 import { defilement } from '../gestes';
 import { useModeEquipe } from '../modeEquipe';
 import { lazyPage } from '../lazyPage';
@@ -19,6 +19,7 @@ import { useMiseAJourDispo } from '../miseAJour';
 
 const NATIF = experienceApp();
 const APERCU = estApercu();
+const APERCU_TEL = estApercuTel();
 
 /* LA CONSOLE ADMIN HORS DU PREMIER CHARGEMENT DES CLIENTS (audit du 24/10). La recherche globale (et adminUtils.jsx qu'elle
    tire) et la navigation des pôles (adminModules.js) ne servent qu'au compte admin, sur le site ; importées en dur ici, elles
@@ -292,6 +293,15 @@ export default function DashboardSidebar() {
           {...ongletAppli(recherche.to, pathname)}>
           <span className="dashboard-nav-icon"><Icone nom="recherche" taille={22} /><IconePleine nom="recherche" taille={22} className="dashboard-nav-plein" /></span>
         </NavLink>
+      )}
+      {/* La vignette du téléphone, ouverte en plein écran (apercuSite.js, Owen 2026-11-13) : à la place du rond Recherche de l'appli,
+          le même rond de verre avec une croix, qui la referme. Caché tant que la vignette est petite ; il sort quand le site
+          l'ouvre (html.apercu-plein, styles.css). */}
+      {APERCU_TEL && (
+        <button type="button" className="dashboard-recherche dashboard-fermer-apercu" aria-label={t('landing.essaiFermer')} title={t('landing.essaiFermer')}
+          onClick={() => signalerAuSite({ type: 'fermer' })}>
+          <span className="dashboard-nav-icon"><Icone nom="croix" taille={22} /></span>
+        </button>
       )}
       {/* LE BAS DE LA BARRE, SUR LE SITE (fondateur, 2026-10-16, maquettes/site-ordinateur/site-ordinateur.html) : la langue et les liens
           légaux y descendent — ils étaient une rangée sous chaque page, et la langue n'existait que dans Mon compte. Rendu

@@ -17,6 +17,7 @@ import Icone from '../Icone';
 import PrixComptoir from '../PrixComptoir';
 import CertifiedBadge from '../CertifiedBadge';
 import Modale from '../Modale';
+import VignetteAppli from './VignetteAppli';
 
 /* L'APPLI SUR L'ACCUEIL DU SITE (Owen, 2026-11-12, version A de maquettes/site-appli-essai et ses réponses).
  *
@@ -36,7 +37,11 @@ import Modale from '../Modale';
  * sur téléphone l'appli d'abord (les deux stores) avec « Continuer sur le site » ; sur ordinateur le compte d'abord, avec le
  * QR code. Créer son compte mène à la vraie inscription du site, qui ramène ensuite ICI (« /?essai », Home.jsx et
  * Layout.jsx), à la hauteur du faux téléphone (Owen, remarque 8). Déjà connecté : « Voir sa carte » ouvre sa fiche sur le site.
- * Le nombre de restaurants n'est jamais écrit (Owen, 2026-11-12). */
+ * Le nombre de restaurants n'est jamais écrit (Owen, 2026-11-12).
+ *
+ * SUR TÉLÉPHONE (Owen, 2026-11-13, version B' de maquettes/site-appli-essai/vignette-b1.html) : plus de grand faux téléphone,
+ * une vignette qui s'ouvre en plein écran (VignetteAppli.jsx). Le texte prend la règle de l'appli : petit vélo, titre à 22 px
+ * (la taille des titres de rangée), les deux lignes avec la petite tuile d'icône des rangées (« À la une »). */
 
 // Le téléphone de référence de l'appli (celui des captures et de verifier-appli.mjs), réduit pour tenir dans sa colonne.
 const LARGEUR_APPLI = 390;
@@ -150,7 +155,7 @@ export default function EssaiAppli() {
     const ro = new ResizeObserver(mesurer);
     ro.observe(el);
     return () => ro.disconnect();
-  }, []);
+  }, [large]);
 
   // Ce que le cadre a voulu ouvrir (GardeApercu.jsx) : la fenêtre, ici.
   // Pendant qu'on fait défiler le téléphone (message « actif » de GardeApercu.jsx), les animations du site s'arrêtent : elles
@@ -161,7 +166,9 @@ export default function EssaiAppli() {
     const recevoir = (e) => {
       if (!messageDeLApercu(e)) return;
       if (e.data.type === 'ouvrir') setFenetre({ chemin: e.data.chemin });
-      if (e.data.type === 'actif') {
+      // Appli ouverte en plein écran (VignetteAppli.jsx) : la page est déjà cachée et figée. Poser puis retirer la classe à chaque
+      // geste y recalculait les styles de toute la page, sur le fil que partage l'appli.
+      if (e.data.type === 'actif' && !document.documentElement.classList.contains('sa-essai-plein')) {
         document.documentElement.classList.add('sa-essai-actif');
         clearTimeout(reprise);
         reprise = setTimeout(() => document.documentElement.classList.remove('sa-essai-actif'), 1500);
@@ -177,17 +184,19 @@ export default function EssaiAppli() {
   }, [search]);
 
   return (
-    <section className="sa-essai" id="essai" ref={section}>
+    <section className={`sa-essai${large ? '' : ' sa-essai--tel'}`} id="essai" ref={section}>
       <div className="sa-essai-texte">
-        <BelgianMark width={large ? 84 : 64} title={t('landing.proudlyBelgian')} />
+        <BelgianMark width={large ? 84 : 46} title={t('landing.proudlyBelgian')} />
         <h2><AvecMarque>{t('landing.altTitre')}</AvecMarque></h2>
         <ul className="sa-essai-raisons">
-          <li><Icone nom="euro" taille={24} />{t('landing.essaiPrix')}</li>
-          <li><Icone nom="etiquette" taille={24} />{t('landing.essaiBadge')} <PrixComptoir /></li>
+          <li>{large ? <Icone nom="euro" taille={24} /> : <span className="sa-tuile-ic"><Icone nom="euro" taille={17} /></span>}{t('landing.essaiPrix')}</li>
+          <li>{large ? <Icone nom="etiquette" taille={24} /> : <span className="sa-tuile-ic"><Icone nom="etiquette" taille={17} /></span>}{t('landing.essaiBadge')} <PrixComptoir /></li>
         </ul>
         {large && <QrAppli t={t} />}
       </div>
-      <div className="sa-essai-tel" ref={colonne}>
+      {!large && <VignetteAppli t={t} language={language} />}
+      {!large && <BadgesStores t={t} language={language} />}
+      {large && <div className="sa-essai-tel" ref={colonne}>
         <div className="sa-essai-cadre" style={{ width: LARGEUR_APPLI * echelle + 18, height: HAUTEUR_APPLI * echelle + 18, borderRadius: 50 * echelle + 9 }}>
           {/* Le cadre s'ouvre dans la langue de la page (/en/restaurants, /nl/restaurants : i18n/routing.js) et se recharge
               quand elle change. Avec « /restaurants » tout court, un visiteur arrivé par /en sans préférence enregistrée avait
@@ -195,8 +204,7 @@ export default function EssaiAppli() {
           <iframe key={language} name={NOM_CADRE_APERCU} src={cheminLocalise('/restaurants', language)} title={t('landing.essaiCadre')} loading="lazy"
             width={LARGEUR_APPLI} height={HAUTEUR_APPLI} style={{ transform: `scale(${echelle})`, borderRadius: 50 }} />
         </div>
-        {!large && <BadgesStores t={t} language={language} />}
-      </div>
+      </div>}
       {fenetre && <FenetreEssai chemin={fenetre.chemin} onFermer={() => setFenetre(null)} />}
     </section>
   );

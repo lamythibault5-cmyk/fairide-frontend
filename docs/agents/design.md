@@ -265,8 +265,10 @@ monochrome glyph (✓ ✗). Message reactions are still *stored* as emoji (serve
 
 **The food drawings (founder, 2026-11-12, `maquettes/plus-gourmand/plus-gourmand-2.html`, 7 rounds).** The 3D food drawings
 (Fluent Emoji 3D, MIT: `public/cuisines` 112 px for the cuisine bar, `public/gourmand` 256 px for decoration) are *images*, not
-typed emoji, so the rule above holds. Decoration uses them in four places only, all in
-[Gourmandises.jsx](../../src/components/Gourmandises.jsx): the app welcome screen (the empty iris between the title and the bike,
+typed emoji, so the rule above holds. Decoration uses them in five places only, four in
+[Gourmandises.jsx](../../src/components/Gourmandises.jsx) and the fifth in [VignetteAppli.jsx](../../src/components/landing/VignetteAppli.jsx)
+(Owen, 2026-11-13, version B' of `maquettes/site-appli-essai/vignette-b1.html`, which brings them back around the app preview on
+phones: six, three on each side of the thumbnail, no frame, slightly tilted, floating; hidden under 350 px; a tap on one opens the app): the app welcome screen (the empty iris between the title and the bike,
 up to 8, fewer or none when that space is short, e.g. none on an iPhone SE), two small ones at the right edge of the following
 iris-band onboarding screens, the website front page (on phones, ≤ 900 px: a cluster of 3 top right of the band, then one small drawing, 38-46 px, at the
 right end of the section titles, which keep that width free so text never runs under it, Owen 2026-11-12 « des petits, sur

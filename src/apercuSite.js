@@ -22,11 +22,33 @@
  *   - pas d'écran de bienvenue, de carte des cookies, de demande de notifications, et pas de rapports de panne sans le
  *     consentement donné sur le site (consent.js) : le visiteur est sur le site, pas dans l'appli. */
 export const NOM_CADRE_APERCU = 'fairride-apercu';
+/* SUR TÉLÉPHONE, UNE VIGNETTE QUI S'OUVRE EN PLEIN ÉCRAN (Owen, 2026-11-13, version B' de maquettes/site-appli-essai/vignette-b1.html).
+ * Le même aperçu, sous un autre nom de cadre : fermé, c'est une petite vignette qu'on ne touche pas (un toucher l'ouvre) ;
+ * ouvert, il prend tout l'écran et devient l'appli, la vraie : la pilule Restaurants · Carte à gauche, à sa taille, qui se plie
+ * en descendant, et à la place du rond Recherche un rond de verre ✕ qui le referme (DashboardSidebar.jsx). Le site dit au
+ * cadre quand il est ouvert (message « plein ») : la croix sort à ce moment-là. */
+export const NOM_CADRE_APERCU_TEL = 'fairride-apercu-tel';
 export const CHEMINS_APERCU = ['/restaurants', '/map'];
 const SOURCE = 'fairride-apercu';
 
+function nomDuCadre() {
+  try { return window.self !== window.top ? window.name : ''; } catch { return ''; }
+}
 export function estApercu() {
-  try { return window.self !== window.top && window.name === NOM_CADRE_APERCU; } catch { return false; }
+  const n = nomDuCadre();
+  return n === NOM_CADRE_APERCU || n === NOM_CADRE_APERCU_TEL;
+}
+export function estApercuTel() {
+  return nomDuCadre() === NOM_CADRE_APERCU_TEL;
+}
+
+// Le site parle au cadre (seulement le sien : même origine, notre source).
+export function signalerAuCadre(cadre, message) {
+  try { cadre?.contentWindow?.postMessage({ source: SOURCE, ...message }, window.location.origin); } catch { /* cadre pas prêt */ }
+}
+// Côté cadre : un message vient-il bien du site qui le contient ?
+export function messageDuSite(e) {
+  return e.origin === window.location.origin && e.source === window.parent && e.data && e.data.source === SOURCE;
 }
 
 // Le cadre parle au site qui le contient, jamais à une autre origine.
