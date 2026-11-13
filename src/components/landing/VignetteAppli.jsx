@@ -16,7 +16,9 @@ import Icone from '../Icone';
  *     descendant, et à la place du rond Recherche un rond de verre ✕ qui le referme (DashboardSidebar.jsx). Le bouton retour
  *     du téléphone le referme aussi (une entrée d'historique), comme dans une appli ;
  *   - ouverte, la page dessous est cachée (visibility) et ses animations arrêtées : le cadre partage le fil principal de la
- *     page (même origine), rien d'autre ne lui prend d'image.
+ *     page (même origine), rien d'autre ne lui prend d'image ;
+ *   - refermée, elle remontre la page de départ de l'appli (Restaurants, sans filtre, en haut), pas l'endroit où on l'a
+ *     quittée (Owen, 2026-11-13) : le cadre y retourne une fois rentré dans la vignette, sans saut sous les yeux.
  * Le cadre a la taille de l'écran du visiteur dès la vignette (réduite par transform) : à l'ouverture, rien ne se remet en
  * page dedans, seule la hauteur s'ajuste si la barre d'adresse du navigateur a bougé. Pas de défilement automatique dans la
  * vignette (celui de la maquette) : il ferait travailler l'appli à chaque image pendant qu'on lit la page. */
@@ -38,6 +40,7 @@ export default function VignetteAppli({ t, language }) {
   const boite = useRef(null);
   const cadre = useRef(null);
   const depart = useRef(null);
+  const rentre = useRef(false);
   const [ecran, setEcran] = useState(tailleEcran);
   const [largeur, setLargeur] = useState(180);
   // ferme → ouverture (il grandit) → ouvert → fermeture (il rentre) → ferme
@@ -119,11 +122,17 @@ export default function VignetteAppli({ t, language }) {
       return () => clearTimeout(fin);
     }
     if (phase === 'fermeture') {
+      rentre.current = true;
       const fin = setTimeout(() => setPhase('ferme'), DUREE + 30);
       return () => clearTimeout(fin);
     }
     // Refermé : React remet le style de la vignette (taille de l'écran, réduite) ; sans la classe `plein`, pas de transition.
-    if (phase === 'ferme') html.classList.remove('sa-essai-plein', 'sa-essai-cache');
+    // Juste rentré : le cadre retourne à sa page de départ (GardeApercu.jsx).
+    if (phase === 'ferme') {
+      html.classList.remove('sa-essai-plein', 'sa-essai-cache');
+      if (rentre.current) signalerAuCadre(f, { type: 'accueil' });
+      rentre.current = false;
+    }
     return undefined;
   }, [phase]);
   useEffect(() => () => document.documentElement.classList.remove('sa-essai-plein', 'sa-essai-cache'), []);

@@ -330,7 +330,10 @@ html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-stores { margin-top: 20px;
 html:not(.appli) .sa-accueil .sa-essai--tel .sa-essai-stores .sa-badge img { height: 38px; }
 .sa-vignette-scene { position: relative; display: grid; justify-items: center; }
 /* Pas d'isolation ni de transform ici : le cadre ouvert passe en position fixed et doit échapper à la vignette. */
-.sa-vignette { position: relative; z-index: 1; overflow: hidden; border: 4px solid #111; background: #111; cursor: pointer; }
+/* content-box : la taille donnée par VignetteAppli.jsx est celle de l'appli réduite, la bordure noire en plus. En border-box (la
+   règle du site), l'intérieur faisait 8 px de moins que l'appli : son bord droit et son bas étaient rognés, l'appli collait au
+   bord (Owen, 2026-11-13). */
+.sa-vignette { position: relative; z-index: 1; overflow: hidden; box-sizing: content-box; border: 4px solid #111; background: #111; cursor: pointer; }
 .sa-vignette iframe { position: absolute; top: 0; left: 0; display: block; border: 0; background: #fff; transform-origin: 0 0; pointer-events: none; }
 /* Ouvert : tout l'écran, sous les fenêtres (.modal-overlay à 100, la fenêtre d'un restaurant touché s'ouvre par-dessus). */
 .sa-vignette iframe.plein { position: fixed; inset: 0 auto auto 0; width: 100vw; height: 100dvh; z-index: 95; pointer-events: auto;
