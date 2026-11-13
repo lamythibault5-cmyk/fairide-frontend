@@ -27,7 +27,8 @@ const SITE_TEL = [['pizza', 52, -16], ['burger', 44, 14], ['sushi', 28, -22]];
 // autres tombaient à côté du téléphone, qu'Owen veut sans dessin autour (« retire-les »). Ils restent dans le bandeau tant que
 // la page fait moins de ~5 000 px de haut (0,131 × 5 000 = 655 px, le bas du bandeau est à ~745 px).
 const SITE_MARGES = [
-  ['pizza', 'd', 0.64, 0.023, 100, -16], ['burger', 'd', 0.5, 0.13, 84, 12], ['belge', 'g', 0.62, 0.131, 80, -14], ['chinois', 'g', 0.5, 0.028, 50, 14],
+  // En haut à gauche, le bol de nouilles plutôt que le ravioli (Owen, 2026-11-13), un peu plus grand : son image a plus de vide.
+  ['pizza', 'd', 0.64, 0.023, 100, -16], ['burger', 'd', 0.5, 0.13, 84, 12], ['belge', 'g', 0.62, 0.131, 80, -14], ['asiatique', 'g', 0.5, 0.028, 68, -10],
 ];
 
 /* SITE, TÉLÉPHONE, PLUS BAS QUE LE BANDEAU (fondateur, 2026-11-12, après la mise en ligne : « des petits, sur les côtés, du même
