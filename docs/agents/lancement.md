@@ -66,7 +66,7 @@ ignored since, and can be deleted.
   (`users.driver_offer_pushed_at`, the first offer since his last visit, overwritten) with no visit to the app since. Then no
   more offers until he comes back; no effect on pay or account (`couriers.sqlVuRecemment`, backend `docs/dispatch.md`). Approved or reinstated couriers start paused; logging out, or turning location
   off, pauses them. Each free courier covers `delivery_orders_per_free_courier` (1) delivery already sold and still waiting
-  for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time). An open
+  for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time, or from when it is offered to couriers if earlier: review of 11-13, F21). An open
   Stripe page reserves nothing: the rule runs again when the payment lands (`fermeALArriveeDuPaiement`, reason `livreur`,
   one delivery payment at a time via `verrouPaiementLivraison`); the first paid keeps the courier, the next is refunded at
   once and never reaches the shop (2026-11-07). The same rule
