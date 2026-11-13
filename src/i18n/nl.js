@@ -9092,7 +9092,7 @@ export default {
       referral: {
         title: 'Nodig een vriend uit',
         how: {
-          client: 'Deel je code met een vriend. Zodra die een klantaccount aanmaakt en zijn eerste bestelling van minstens 20 € plaatst, krijg jij 5 € Fairride-tegoed.',
+          client: 'Deel je code met een vriend. Zodra die een klantaccount aanmaakt en zijn eerste bestelling van minstens 20 € plaatst, krijg jij 3 € Fairride-tegoed.',
           restaurant: 'Deel je code met een andere zaakvoerder. Zodra zijn zaak zijn eerste bestelling van minstens 20 € ontvangt, krijg jij 5 € Fairride-tegoed.',
           driver: 'Deel je code met een andere koerier. Zodra die zijn eerste bestelling van minstens 20 € levert, krijg jij 5 € Fairride-tegoed.'
         },
