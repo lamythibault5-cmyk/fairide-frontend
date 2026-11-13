@@ -8021,6 +8021,7 @@ export default {
       prixTroisTitre: "The same dish, three prices",
       prixTroisAria: "The same dish at the counter, on a big platform (+{ecart}%) and on Fairride",
       prixReleve: "A dish from a Brussels restaurant, checked in October 2026. Details on request.",
+      prixReleveInfo: "Where was this measured?",
       prixComptoirLigne: "At the counter",
       prixPlateformeLigne: "On a big platform",
       prixFairrideLigne: "On Fairride",

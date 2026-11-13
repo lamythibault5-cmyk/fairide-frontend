@@ -8030,6 +8030,7 @@ export default {
       prixTroisTitre: "Hetzelfde gerecht, drie prijzen",
       prixTroisAria: "Hetzelfde gerecht aan de toog, op een groot platform (+{ecart}%) en op Fairride",
       prixReleve: "Een gerecht van een Brussels restaurant, opgemeten in oktober 2026. Details op aanvraag.",
+      prixReleveInfo: "Waar komt deze meting vandaan?",
       prixComptoirLigne: "Aan de toog",
       prixPlateformeLigne: "Op een groot platform",
       prixFairrideLigne: "Op Fairride",
