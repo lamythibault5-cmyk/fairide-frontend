@@ -92,8 +92,9 @@ number or was deleted. « First order »: `first_order_only`, a takeaway paid at
 cancelled order frees it **only when the customer's money went back or was never taken** (Owen, 2026-11-13, F10): « aucun
 livreur », a team cancel, a refusal, an expired or unpaid order free the credit and single-use codes again; a paid order
 closed without a refund (`client_absent`, `pickup_not_collected` including the 12-hour auto-close, `age_check =
-'refused_absent'`) uses them up like a handed-over one (`codesPromo.SQL_USAGES` / `SQL_COMMANDE_PRECEDENTE`, backend test
-`revue-1113-credit-bienvenue`). A typed code wins (one code per order) and the credit waits. The quote's `codeAmi` says why it
+'refused_absent'`) uses them up like a handed-over one, until the team refunds it in full (same « fully refunded » as the
+commission, `commissionRemboursee.sqlIntegralementRemboursee`; a partial refund keeps them used): money kept = used, refunded
+= freed (`codesPromo.SQL_USAGES` / `SQL_COMMANDE_PRECEDENTE`, backend test `revue-1113-credit-bienvenue`). A typed code wins (one code per order) and the credit waits. The quote's `codeAmi` says why it
 doesn't apply yet (`minimum`, `sur_place`, `numero_sms`) so the cart can explain it; already received, second order, number
 already used: **nothing is said**, the cart is normal (founder). `GET /auth/me › bienvenue` ({ montant, minimum } or null)
 says whether the welcome sheet should show. **Google / Apple accounts** may order without proving their number (their e-mail
@@ -239,7 +240,7 @@ After a look at Uber Eats, Deliveroo and Takeaway, Owen settled the open points 
   Fairride pays the shop the voucher's value as a complement, since the share it keeps had already deducted it. Refused or
   expired orders (share taken back) are unchanged.
 - **Welcome credit and single-use codes (F10)**: only a refunded or unpaid cancellation frees them; a paid order closed
-  without a refund uses them up (details in « Welcome credit » above).
+  without a refund uses them up, until it is refunded in full (details in « Welcome credit » above).
 - **Missing item on an order paid with balance or a promo (F11)**: the refund is the dish's menu price, capped at what the
   customer really paid (card + balance); the card first, up to what the card paid, the rest to the Fairride balance. The
   shop still gives back 90 % and Fairride its 10 % (« Pre-GO money review » above). The customer's push says both amounts,
