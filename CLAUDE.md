@@ -22,9 +22,10 @@ platforms. The customer pays the delivery fee on top, nothing else. **This repo 
 
 - **Branch from `origin/main` in a worktree** (`worktrees/front-<topic>`, see the workspace `CLAUDE.md`), never in the
   shared `fairide-frontend/` checkout: other sessions work at the same time. Stage only your own files.
-- **Never commit or push without the founder's (Owen's) go.** When asked to push: open the PR on `main` (never on another
-  feature branch: stacked PRs got lost), give its link, and say in plain words what a CI / build / signing change does.
-  When a change needs the backend too, say which PR to merge first (usually the backend).
+- **Commit, push and PRs follow the workspace `CLAUDE.md` › « What you do on your own »** (Owen, 2026-11-13): commit in
+  your branch, push it and open a **draft** PR on `main` (never on another feature branch: stacked PRs got lost), give its
+  link, and say in plain words what a CI / build / signing change does. Owen marks it ready and merges. When a change
+  needs the backend too, say which PR to merge first (usually the backend).
 - **A big design change starts as an HTML mockup** in the workspace `maquettes/<topic>/`, with a questionnaire, and is
   built only after Owen picks. Fixes don't need one. **Copy the format of `maquettes/_modele/badge-position.html`** and read
   `maquettes/LISEZMOI.md` first (Owen, 2026-10-28: mockups made any other way were rejected): numbered sections, real captures
@@ -84,7 +85,8 @@ without a `.env.local` your dev server edits live data. Local backend on a Neon 
 ## Rules that are never broken
 
 Founder decisions and legal constraints. Each one has its reasons and details in the doc named at the end of its line;
-read that doc before working near it.
+read that doc before working near it. They say what the product must keep doing, not which code you may touch: fix,
+refactor and test freely near them as long as the rule still holds.
 
 **The app**
 - The app never shows website chrome (header, footer, legal row, cookie card): `npm run check:app` must pass before any
@@ -300,8 +302,8 @@ menus went to `modelesCarte.js` on 2026-10-28 for that reason, see its header).
 ## Git
 
 Remotes are `https://github.com/lamythibault5-cmyk/fairide-frontend` and, for the backend,
-`https://github.com/lamythibault5-cmyk/fairide-backend`. The `gh` CLI is installed and logged in: `gh pr create --base main`.
+`https://github.com/lamythibault5-cmyk/fairide-backend`. The `gh` CLI is installed and logged in: `gh pr create --draft --base main`.
 
-Work on a feature branch in a worktree and let the owner merge; never commit straight to `main`, and **never push
-without being asked to**. When you are asked to push, give the PR link in the same reply. After a merge, check that
+Work on a feature branch in a worktree; never commit or push to `main` itself. Run the checks above, push your branch,
+open a draft PR and give its link in the same reply; Owen marks it ready and merges. After a merge, check that
 production really serves it (workspace `CLAUDE.md`, « After a merge ») before saying it is live.
