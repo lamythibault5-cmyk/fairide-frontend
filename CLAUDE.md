@@ -23,8 +23,8 @@ platforms. The customer pays the delivery fee on top, nothing else. **This repo 
 - **Branch from `origin/main` in a worktree** (`worktrees/front-<topic>`, see the workspace `CLAUDE.md`), never in the
   shared `fairide-frontend/` checkout: other sessions work at the same time. Stage only your own files.
 - **Commit, push and PRs follow the workspace `CLAUDE.md` › « What you do on your own »** (Owen, 2026-11-13): commit in
-  your branch, push it and open a **draft** PR on `main` (never on another feature branch: stacked PRs got lost), give its
-  link, and say in plain words what a CI / build / signing change does. Owen marks it ready and merges. When a change
+  your branch, push it and open a PR on `main` (never on another feature branch: stacked PRs got lost), give its
+  link, and say in plain words what a CI / build / signing change does. Owen merges. When a change
   needs the backend too, say which PR to merge first (usually the backend).
 - **A big design change starts as an HTML mockup** in the workspace `maquettes/<topic>/`, with a questionnaire, and is
   built only after Owen picks. Fixes don't need one. **Copy the format of `maquettes/_modele/badge-position.html`** and read
@@ -302,8 +302,8 @@ menus went to `modelesCarte.js` on 2026-10-28 for that reason, see its header).
 ## Git
 
 Remotes are `https://github.com/lamythibault5-cmyk/fairide-frontend` and, for the backend,
-`https://github.com/lamythibault5-cmyk/fairide-backend`. The `gh` CLI is installed and logged in: `gh pr create --draft --base main`.
+`https://github.com/lamythibault5-cmyk/fairide-backend`. The `gh` CLI is installed and logged in: `gh pr create --base main`.
 
 Work on a feature branch in a worktree; never commit or push to `main` itself. Run the checks above, push your branch,
-open a draft PR and give its link in the same reply; Owen marks it ready and merges. After a merge, check that
+open a PR and give its link in the same reply; Owen merges. After a merge, check that
 production really serves it (workspace `CLAUDE.md`, « After a merge ») before saying it is live.
