@@ -20,7 +20,8 @@
 #               VITE_PLAUSIBLE_DOMAIN.
 #
 # NUMÉRO DE BUILD : numéro du lancement + 100 (les premiers envois faits depuis le Mac avaient 1, 2, 3…). La version
-# visible (1.0) se change dans le projet Xcode (MARKETING_VERSION).
+# visible (1.0) se change dans le projet Xcode (MARKETING_VERSION) ; elle ne change pas le socle des mises à jour
+# directes (scripts/paquet-appli.mjs) : les iPhone de la version d'avant continuent de recevoir les paquets.
 name: App iPhone TestFlight
 
 on:

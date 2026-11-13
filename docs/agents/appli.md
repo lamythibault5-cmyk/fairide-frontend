@@ -24,7 +24,14 @@ its sha256. It is applied only at the next start, or on a return after 30 minute
 something (`signalerOccupe`) nor when the app opens on a link. Safety: (1) the **socle**
 ([scripts/paquet-appli.mjs](../../scripts/paquet-appli.mjs)), a fingerprint per platform of `capacitor.config.json`,
 the plugin versions and the `ios/` or `android/` tree of the commit; a phone only takes a zip of its own socle, so a native
-change never reaches a shell without it and waits for the store; (2) the app calls `notifyAppReady` 3 s after React mounted
+change never reaches a shell without it and waits for the store. **Version numbers are not in the socle** (2026-11-13):
+the tree is fingerprinted with `MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` (Xcode) and `versionName` / `versionCode`
+(`android/app/build.gradle`) put back to 1.0 / 1. Until then they were, and the 1.0 → 1.0.1 bump of 2026-11-12 (#421) cut
+App Store iPhones 1.0 (build 301) off every zip after #419, the double-payment fix included. The 1.0.1 builds made in
+between (TestFlight, build 315 sent to Apple) carry the old raw socle, so each zip is also announced under it (`ANCIENS`
+in the script: a second id `<ordre>-<commit + 1 char>`, same zip; withdraw both ids). The release keeps the 60 newest zips
+plus the 2 newest of each socle (socles in the zip name), so a shell left behind never gets a dead link.
+`npm run check:socle` (CI) checks both; (2) the app calls `notifyAppReady` 3 s after React mounted
 without a crashed page, otherwise the plugin goes back to the previous screens after 30 s (15 s until 2026-11-08) and that zip is never
 retried on this phone; (3) the team can withdraw a zip (`POST /api/admin/app/paquets/:id/retrait`: phones go back to the previous one,
 else to the store version) or stop everything (`app_paquets_arret` = 1 in Admin › Conformité › Paramètres); reverting

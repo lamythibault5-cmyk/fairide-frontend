@@ -10,7 +10,9 @@
 #
 # CE QUI NE PASSE PAS PAR ICI : tout changement de la coque native (greffons, capacitor.config.json, ios/, android/). Il
 # change le « socle » (scripts/paquet-appli.mjs) : les applis installées gardent leur dernier paquet compatible, et la
-# correction n'arrive qu'avec la version du store (workflows App iPhone TestFlight / App Android Play Store).
+# correction n'arrive qu'avec la version du store (workflows App iPhone TestFlight / App Android Play Store). Sauf les
+# numéros de version (MARKETING_VERSION, versionName…) : ils ne comptent pas dans le socle depuis le 13/11, et chaque
+# paquet est aussi annoncé sous l'ancien socle des builds 1.0.1 d'avant cette règle (deux annonces, un seul zip).
 #
 # EN CAS DE MAUVAIS PAQUET. Un paquet qui ne démarre pas est écarté seul par l'appli (retour au précédent). Pour un paquet
 # qui démarre mais casse quelque chose : annuler la fusion sur GitHub (Revert) donne un nouveau paquet en ~10 minutes ; ou
@@ -74,9 +76,11 @@ jobs:
 
       # index.html à la racine du zip (ce que le greffon attend). Le numéro de lancement et d'essai dans le nom : un
       # workflow relancé dépose un nouveau fichier au lieu d'écraser celui que des téléphones téléchargent peut-être.
+      # Puis les débuts des socles sous lesquels il est annoncé (PAQUET_ETIQUETTE, s<ios>-<android>[-<ancien>…]) : le
+      # nettoyage plus bas garde ainsi le dernier zip de chaque socle.
       - name: Zip
         run: |
-          NOM="fairride-${VITE_PAQUET_ID}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}.zip"
+          NOM="fairride-${VITE_PAQUET_ID}-${GITHUB_RUN_NUMBER}-${GITHUB_RUN_ATTEMPT}-${PAQUET_ETIQUETTE}.zip"
           (cd dist && zip -qr -X "$RUNNER_TEMP/$NOM" .)
           echo "NOM=$NOM" >> "$GITHUB_ENV"
           ls -lh "$RUNNER_TEMP/$NOM"
@@ -92,9 +96,11 @@ jobs:
           APP_BUILDS_TOKEN: ${{ secrets.APP_BUILDS_TOKEN }}
         run: node scripts/paquet-appli.mjs annoncer "https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE}/${NOM}" "$RUNNER_TEMP/$NOM"
 
-      # Les 60 zips les plus récents restent (assez pour revenir en arrière de plusieurs jours) ; les autres sont retirés.
+      # Les 60 zips les plus récents restent (assez pour revenir en arrière de plusieurs jours), et les 2 derniers de chaque
+      # socle même plus vieux : le serveur les donne encore aux applis restées sur une coque plus ancienne, et un zip
+      # effacé leur laisserait une adresse morte (règle dans scripts/paquet-appli.mjs, aRetirer). Les autres sont retirés.
       - name: Vieux zips retirés
         run: |
           REL=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE}" --jq .id)
-          gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${REL}/assets?per_page=100" --jq '.[] | "\(.created_at) \(.id)"' |
-            sort -r | tail -n +61 | while read -r _ ID; do gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$ID"; done
+          gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${REL}/assets?per_page=100" --jq '.[] | "\(.created_at) \(.id) \(.name)"' |
+            node scripts/paquet-appli.mjs elaguer | while read -r ID; do gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$ID"; done

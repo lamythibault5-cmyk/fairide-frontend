@@ -11,6 +11,7 @@
     "check:i18n": "node scripts/check-i18n.mjs",
     "check:greffons": "node scripts/verifier-greffons-android.mjs",
     "check:mises-a-jour": "node scripts/mises-a-jour.mjs verifier",
+    "check:socle": "node scripts/paquet-appli.mjs verifier",
     "app:sync": "npm run build && npx cap sync",
     "app:android": "npm run app:sync && npx cap open android",
     "app:ios": "npm run app:sync && npx cap open ios",

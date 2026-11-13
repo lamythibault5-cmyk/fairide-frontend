@@ -101,8 +101,9 @@ refactor and test freely near them as long as the rule still holds.
   [mises-a-jour/LISEZMOI.md](mises-a-jour/LISEZMOI.md). *(appli.md)*
 - Screen fixes reach installed apps by live update; a native change (a plugin, `capacitor.config.json`, `ios/`,
   `android/`) changes the app's « socle » and does NOT: installed apps keep their last compatible screens until the store
-  version. Keep native changes out of urgent fixes, and say so in the PR. Never point `capacitor.config.json` ›
-  `CapacitorUpdater` at Capgo's servers. *(appli.md)*
+  version. Keep native changes out of urgent fixes, and say so in the PR. A version number (`MARKETING_VERSION`,
+  `versionName`) is not a native change and never enters the socle (`npm run check:socle`, 2026-11-13). Never point
+  `capacitor.config.json` › `CapacitorUpdater` at Capgo's servers. *(appli.md)*
 
 **Look and feel**
 - Two brand colours: iris `#3B2FB5` and lime `#C8F03C`. Lime only on iris, or as a filled block with ink text; backgrounds
