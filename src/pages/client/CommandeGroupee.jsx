@@ -159,7 +159,9 @@ export default function CommandeGroupee() {
   // Prix payé d'une ligne : son prix plein moins la remise du plat (même règle que le panier, prixPlat.js remiseLigne).
   const prixPaye = (l) => Math.max(0, l.unitPrice * l.qty - remiseLigne(menu?.find((m) => m.id === l.itemId), l.qty, l.unitPrice));
   const totalPaye = +g.lines.reduce((a, l) => a + prixPaye(l), 0).toFixed(2);
-  const parInvite = g.lines.reduce((acc, l) => { (acc[l.guestName] ||= []).push(l); return acc; }, {});
+  // Une part par personne : la clé `participant` du serveur quand il la donne, sinon le prénom (deux invités au même prénom
+  // restent alors ensemble, revue avant GO du 13/11, client-commande 3 ; même clé que src/partsGroupe.js).
+  const parInvite = g.lines.reduce((acc, l) => { (acc[l.participant != null ? `p:${l.participant}` : `n:${l.guestName}`] ||= []).push(l); return acc; }, {});
   const ouvert = g.status === 'open';
   const peutCommander = g.isHost && ['open', 'locked'].includes(g.status) && g.lines.length > 0;
   // L'UNIQUE action lime de l'écran : commander (hôte), sinon envoyer son panier, sinon aller choisir ses plats.
@@ -260,8 +262,8 @@ export default function CommandeGroupee() {
           {g.isHost && (
             <section className="eg-section" aria-labelledby="eg-parts">
               <h2 className="ec-section" id="eg-parts">{t('groupOrder.allParts')}</h2>
-              {g.lines.length === 0 ? <p className="eg-texte">{t('groupOrder.noPartsYet')}</p> : Object.entries(parInvite).map(([nom, lignes]) => (
-                <div key={nom} className="eg-personne">
+              {g.lines.length === 0 ? <p className="eg-texte">{t('groupOrder.noPartsYet')}</p> : Object.entries(parInvite).map(([cle, lignes]) => { const nom = lignes[0].guestName; return (
+                <div key={cle} className="eg-personne">
                   <div className="eg-personne-tete">
                     <span className="eg-initiale" aria-hidden="true">{nom.trim().charAt(0).toUpperCase()}</span>
                     <b>{nom}</b>
@@ -269,7 +271,7 @@ export default function CommandeGroupee() {
                   </div>
                   <ul className="eg-lignes">{lignes.map(ligneDePart)}</ul>
                 </div>
-              ))}
+              ); })}
               {total && <div className="eg-total-feuille">{total}<p className="eg-petit">{t('groupOrder.estimateNote')}</p></div>}
             </section>
           )}

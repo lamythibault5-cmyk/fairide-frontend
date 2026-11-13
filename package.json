@@ -22,6 +22,7 @@
     "sonde": "node scripts/sonde-nouveaux.mjs",
     "check:barres": "node scripts/verifier-barres-bas.mjs",
     "check:marque": "node scripts/verifier-mot-marque.mjs",
+    "check:groupe": "node scripts/verifier-qui-doit-quoi.mjs",
     "postinstall": "node scripts/corriger-connexion-google.mjs"
   },
   "dependencies": {

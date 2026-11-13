@@ -44,6 +44,7 @@ npm run lint           # oxlint: 0 errors, ~150 pre-existing warnings on 2026-10
 npm run check:i18n     # fr / nl / en have the same keys
 npm run check:app      # every app page in app mode, four profiles: fails on any website chrome, crash, scrolling full screen
 npm run check:barres   # the bottom tab bar stays on the bottom edge at Android sizes
+npm run check:groupe   # « Qui te doit quoi » (src/partsGroupe.js): what each guest of a group order owes the host, no browser
 npm run sonde          # new accounts on the LOCAL backend (dev DB) tap every button like a finger: covered, hidden window,
                        # crash, 5xx (10-20 min, before a big merge; header of scripts/sonde-nouveaux.mjs)
 npm run preview        # serve the build locally

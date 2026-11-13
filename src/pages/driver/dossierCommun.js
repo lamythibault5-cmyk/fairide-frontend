@@ -62,6 +62,18 @@ export function corpsInfos(f, c = null) {
   return body;
 }
 
+/* DOSSIER VALIDÉ OU SUSPENDU : SEULEMENT CE QUI RESTE À SA MAIN (revue avant GO, 13/11). Le serveur refuse tout le PATCH
+ * (409 « Dossier validé : ton statut se change… ») dès qu'une clé sort de sa liste (backend routes/couriers.js,
+ * CHAMPS_DOSSIER_VALIDE, recopiée ici). « Ton activité » après l'envoi (FeuilleActivite) renvoyait tout le formulaire, date
+ * de naissance et numéro d'entreprise compris : un livreur validé à qui il manquait encore son régime TVA ne pouvait pas le
+ * donner. Dénomination et siège ne partent que si le manque « siege » les attend ; le serveur doit encore les accepter pour
+ * un dossier validé (à ajouter à sa liste). */
+export const CHAMPS_DOSSIER_VALIDE = ['incomeExternalDeclared', 'iban', 'bagOption', 'socialInsuranceFund', 'vatStatus', 'vatNumber', 'schoolName', 'academicYear', 'nationalityGroup', 'minFeeCents', 'minFeePerKmCents', 'worksOtherPlatforms', 'otherPlatforms', 'otherPlatformNote', 'preferredZones', 'zone', 'vehicleType', 'licenceNumber', 'licencePlate'];
+export function corpsDossierValide(corps, manques = []) {
+  const permis = [...CHAMPS_DOSSIER_VALIDE, ...(manques.includes('siege') ? ['legalName', 'seatAddress'] : [])];
+  return Object.fromEntries(Object.entries(corps).filter(([k]) => permis.includes(k)));
+}
+
 // Valeurs de départ du formulaire « Infos », reprises du dossier. `zones` : celles que propose le serveur (d.zones). Une
 // commune de préférence n'est reprise comme zone que si elle en est une (audit du 19/10, courier-1) : « Vilvoorde »,
 // pré-rempli tel quel, partait avec le premier écran et le faisait refuser.

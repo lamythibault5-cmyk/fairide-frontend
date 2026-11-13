@@ -156,7 +156,8 @@ components live in [src/components/conformite/](../../src/components/conformite/
   courier; it replaced FeuilleTextesLivreur) and DashboardLayout.jsx (shop). It never shows while something is in progress
   (the `occupe` state of `miseAJour.js`: a customer order followed, a ride in hand, a shop order waiting to be accepted),
   at checkout, on the pages where the texts are read and signed, to the team acting for an account, to a shop's staff
-  member, to test accounts or in simulation. No backend change: it calls `/auth/terms/accept` (`reaccept`),
+  member, to admin accounts or in simulation. Test accounts do see it (founder, 2026-11-07: « je veux voir si tout marche »),
+  store reviewers' accounts included; the account accepts for itself. No backend change: it calls `/auth/terms/accept` (`reaccept`),
   `/restaurants/:id/contract/accept` (name of the last signature, notice waiver) and `/couriers/me/engagements` (no name:
   the server signs with the verified ID name).
   **« Je n'accepte pas » must stay**, for the three roles (founder asked « make sure my decisions hold legally »; he had

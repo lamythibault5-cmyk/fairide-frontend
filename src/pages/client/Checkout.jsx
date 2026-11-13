@@ -145,12 +145,19 @@ export default function Checkout() {
   const sansCredit = useRef(false);
   const viaFournisseur = !!(user?.hasGoogleAuth || user?.hasAppleAuth);
   const creditEnAttente = () => (devisValide?.codeAmi?.raison === 'numero_sms' ? devisValide.codeAmi : null);
+  /* LE CRÉDIT SEULEMENT PAR SMS (revue avant GO du 13/11, comptes 1). Le serveur ne l'accorde qu'à un numéro prouvé par SMS :
+   * le code attendu par e-mail (« Je n'ai pas reçu le SMS », numéro qu'un SMS ne joint pas) ne l'annonce pas, et la commande
+   * part au total sans crédit quand le code tapé est arrivé par e-mail (VerifTelephone, onCanal et onFait › parSms). Avant,
+   * le bouton disait le total moins 5 € et le serveur refusait d'ouvrir le paiement (« Le total a changé »). */
+  const [codeParEmail, setCodeParEmail] = useState(false);
+  const creditAnnonce = () => (codeParEmail ? null : creditEnAttente());
+  const totalApresCode = (info) => (info?.parSms ? montantApresCredit() : montantDebite);
   // Lu à l'appel (pas au rendu) : la commande relancée juste après le code part d'une fermeture d'avant la session relue.
   const telAVerifier = () => telephoneAVerifier(user) && !telOk.current && !sansCredit.current && !(viaFournisseur && !creditEnAttente());
   // Le code prouvé, la commande part avec le crédit : le total annoncé est celui d'après le crédit (sinon la carte « le total
   // a changé » s'ouvrirait pour une bonne nouvelle).
   const montantApresCredit = () => {
-    const c = creditEnAttente();
+    const c = creditAnnonce();
     return c ? Math.max(0, +(montantDebite - Number(c.montant || 0)).toFixed(2)) : montantDebite;
   };
   const [scheduleEnabled, setScheduleEnabled] = useState(false);
@@ -1252,9 +1259,9 @@ export default function Checkout() {
         }>
           {(telAVerifier() || telOk.current) && (
             <div className="co-telephone co-telephone--simple">
-              {creditEnAttente() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditEnAttente().montant) })}</span>}
-              <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onFait={() => {
-                const attendu = montantApresCredit();
+              {creditAnnonce() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditAnnonce().montant) })}</span>}
+              <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onCanal={(c) => setCodeParEmail(c === 'email')} onFait={(_maj, info) => {
+                const attendu = totalApresCode(info);
                 telOk.current = true;
                 // Rien d'autre à cocher : la commande part, le client a déjà touché « Commander ».
                 if (!casesAvant) { setSousEcran(null); placeOrder(attendu); }
@@ -1277,8 +1284,8 @@ export default function Checkout() {
       )}
       {fenetreTel && (
         <Modale titre={t('verifTel.derniereEtape')} onFermer={() => setFenetreTel(false)} classeBoite="co-telephone-fenetre co-telephone--simple">
-          {creditEnAttente() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditEnAttente().montant) })}</span>}
-          <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onFait={() => { const attendu = montantApresCredit(); telOk.current = true; setFenetreTel(false); placeOrder(attendu); }} />
+          {creditAnnonce() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditAnnonce().montant) })}</span>}
+          <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onCanal={(c) => setCodeParEmail(c === 'email')} onFait={(_maj, info) => { const attendu = totalApresCode(info); telOk.current = true; setFenetreTel(false); placeOrder(attendu); }} />
           {viaFournisseur && creditEnAttente() && (
             <button type="button" className="co-sans-credit" onClick={() => { sansCredit.current = true; setFenetreTel(false); placeOrder(); }}>{t('verifTel.sansCredit')}</button>
           )}

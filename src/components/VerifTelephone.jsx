@@ -28,7 +28,12 @@ import { telephoneLisible } from '../validation';
  *     dans l'espace commerce ou livreur, sans prouver le numéro (backend phone_email_fallback_at) : un SMS perdu ne bloque ni
  *     une commande ni une inscription. Pas dans Mon compte ni dans le dossier livreur : là, le numéro doit vraiment être
  *     prouvé (l'étape « Vérifie ton mobile » du commerce, l'envoi du dossier).
- * `onFait(user, { credited })` une fois le compte à jour ; `credited` : le code promo de l'inscription, crédité à cette preuve.
+ * `onFait(user, { credited, parSms })` une fois le compte à jour ; `credited` : le code promo de l'inscription, crédité à cette
+ * preuve ; `parSms` : le code tapé est arrivé par SMS. Seul un numéro prouvé PAR SMS touche le crédit de bienvenue (backend
+ * routes/orders.js, G38) : un code reçu par e-mail (« Je n'ai pas reçu le SMS », ou un numéro qu'un SMS ne joint pas) laisse
+ * commander sans lui. Le paiement annonce son total d'après cela (revue avant GO du 13/11, comptes 1 : il retirait le crédit
+ * après un code reçu par e-mail, et la carte « Le total a changé » s'ouvrait). `onCanal(canal)` : 'sms' ou 'email', le
+ * canal du code attendu, à chaque changement (le paiement n'annonce pas le crédit pendant qu'on attend un code par e-mail).
  * `simple` (paiement, fondateur, 2026-11-08, maquettes/bienvenue-partage, version A) : moins de texte. « Entre le code reçu
  * par SMS », le numéro avec « Changer », six cases, et « Pas reçu ? » seulement après le décompte (puis « Renvoyer le code »
  * et, au paiement, le code par e-mail). Le code se remplit tout seul quand le SMS arrive (one-time-code). */
@@ -50,7 +55,7 @@ function envoiRecent(user) {
   return dernierEnvoi && user && dernierEnvoi.userId === user.id && Date.now() - dernierEnvoi.at < CODE_RECENT_MS ? dernierEnvoi : null;
 }
 
-export default function VerifTelephone({ auto = false, repliEmail = false, onFait, focusRef, simple = false }) {
+export default function VerifTelephone({ auto = false, repliEmail = false, onFait, onCanal, focusRef, simple = false }) {
   const { user, token, refreshUser, requestContactChange, confirmContactChange } = useAuth();
   const { t } = useLanguage();
   const toast = useToast();
@@ -70,6 +75,8 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
   const [attenteEmail, lancerAttenteEmail] = useDecompte();
   const champ = useRef(null);
   const lance = useRef(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { onCanal?.(canal); }, [canal]);
 
   // Le code est parti : le champ, et le décompte de « Renvoyer le code » (`ecoule` : secondes déjà passées depuis l'envoi).
   function codeParti(r, ecoule = 0) {
@@ -117,12 +124,14 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
   // Le bouton « Commander » de la feuille ramène ici quand le code manque.
   if (focusRef) focusRef.current = () => { champ.current?.focus(); champ.current?.scrollIntoView?.({ block: 'center' }); };
 
-  async function finir(maj, credited) {
+  // `parSms` : faux quand on ne sait pas par où le numéro a été prouvé (déjà prouvé ailleurs) : le paiement n'annonce alors
+  // pas le crédit, et si le serveur l'applique quand même, la carte « Le total a changé » montre un total plus bas.
+  async function finir(maj, credited, parSms = false) {
     dernierEnvoi = null;
     setEtape('fait'); setCode('');
     suivre('telephone_prouve', { support: 'commun' });
     if (credited) toast(t('verifTel.credite', { montant: euros(credited) }), 'succes');
-    onFait?.(maj, { credited });
+    onFait?.(maj, { credited, parSms });
   }
 
   async function confirmer(valeur) {
@@ -133,11 +142,11 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
         const maj = await confirmContactChange('phone', numeroEnCours, valeur);
         // Un numéro qui ne reçoit pas de SMS est changé, pas prouvé : son code de vérification part alors par e-mail.
         if (!maj.phoneVerified) { setNumeroEnCours(''); await demander(); return; }
-        await finir(maj);
+        await finir(maj, undefined, canal === 'sms');
       } else {
         const r = await api('/auth/me/phone/verify', { method: 'POST', token, body: { code: valeur } });
         const maj = await refreshUser();
-        await finir(maj || r.user, r.credited);
+        await finir(maj || r.user, r.credited, canal === 'sms');
       }
     } catch (e) {
       setErreur(e.message); setCode('');

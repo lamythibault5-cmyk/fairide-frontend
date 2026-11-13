@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { api, apiUpload } from '../../api';
 import { useToast } from '../../context/ToastContext';
 import { vibrer } from '../../gestes';
+import { derniereParPlat } from './declarationsHausses';
 
 /* LES PRIX QUI MONTENT (Owen, 2026-11-08, version B « Avec preuve » de maquettes/carte-hausses/carte-hausses.html).
  *   1. Une hausse du prix d'un plat ou d'un supplément : le commerce joint une photo de son tableau des prix (ou de sa carte
@@ -45,12 +46,9 @@ export function supplementsPayants(groupes) {
   return (groupes || []).flatMap((g) => (g.items || []).filter((i) => Number(i.priceDelta) > 0).map((i) => ({ ...i, groupe: g })));
 }
 
-const instant = (d) => { const n = typeof d === 'number' ? d : Date.parse(d); return Number.isFinite(n) ? n : 0; };
-// Une déclaration vise un plat ou un supplément : la clé qui les sépare (un plat et un supplément peuvent avoir le même id).
-export const cleDeclaration = (d) => (d?.optionItemId ? `o:${d.optionItemId}` : d?.itemId ? `p:${d.itemId}` : null);
-
 /* Les déclarations du commerce (GET /menu/declarations). Seule la DERNIÈRE d'un plat ou d'un supplément compte : un refus
- * suivi d'une baisse n'appelle plus de choix. Le titulaire seul la lit (la route est réservée au titulaire). */
+ * suivi d'une baisse n'appelle plus de choix. Sauf le même prix redit après un refus : le refus attend toujours
+ * (declarationsHausses.js). Le titulaire seul la lit (la route est réservée au titulaire). */
 export function useDeclarations(restoId, token, actif) {
   const [liste, setListe] = useState([]);
   const charger = useCallback(() => {
@@ -60,14 +58,7 @@ export function useDeclarations(restoId, token, actif) {
       .catch(() => { /* rien à montrer : la carte reste celle d'aujourd'hui */ });
   }, [restoId, token, actif]);
   useEffect(() => { charger(); }, [charger]);
-  const derniere = useMemo(() => {
-    const m = new Map();
-    [...liste].sort((a, b) => instant(b.declaredAt) - instant(a.declaredAt)).forEach((d) => {
-      const k = cleDeclaration(d);
-      if (k && !m.has(k)) m.set(k, d);
-    });
-    return m;
-  }, [liste]);
+  const derniere = useMemo(() => derniereParPlat(liste), [liste]);
   // Refusée, pas encore choisie, pas déjà remise par le serveur (délai de choix passé).
   const refus = useMemo(() => [...derniere.values()].filter((d) => d.checkStatus === 'refusee' && !d.shopChoice && !d.restoredAt), [derniere]);
   return { charger, derniere, refus };
