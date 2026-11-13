@@ -1672,6 +1672,12 @@ h2.section-title { font-size: clamp(var(--t-display-md), 4vw, var(--t-display-lg
   a.chip, span.chip, .pill.recherche-pastille, .role-nav a { display: inline-flex; align-items: center; justify-content: center; }
 }
 .footer-lien-bouton { background: none; border: none; padding: 0; color: inherit; font: inherit; text-align: left; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+/* Dans le pied de page, « Gérer mes cookies » ressemble à ses voisins : `font: inherit` ci-dessus écrasait la taille de
+   .small (16 px au lieu de 14) et `color: inherit` le passait à l'encre, souligné, seul de sa colonne. */
+/* Sur un téléphone, tout bouton a 44 px de haut (plus haut, « cibles tactiles ») : le texte, centré dedans, tombait 12 px
+   sous ses voisins. On le cale en haut ; la zone à toucher garde ses 44 px. */
+.footer-col .footer-lien-bouton { font-size: 14px; line-height: 1.45; color: var(--ink-soft); text-decoration: none; display: inline-flex; align-items: flex-start; align-self: flex-start; }
+.footer-col .footer-lien-bouton:hover { color: var(--ink); text-decoration: underline; }
 
 /* Rangée « libellé + bouton Afficher » au-dessus du champ mot de passe. */
 .field-label-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
@@ -2340,7 +2346,19 @@ body:has(.modal-overlay, .plat-feuille) .toast.show { transform: translateY(0); 
 .footer-col a.small { color: var(--ink-soft); text-decoration: none; }
 .footer-col a.small:hover { color: var(--ink); text-decoration: underline; }
 .footer-bottom { text-align: center; border-top: 1px solid var(--line); padding-top: 16px; }
-@media (max-width: 640px) { .footer-grid { grid-template-columns: 1fr; gap: 20px; } }
+/* LE PIED DE PAGE SUR UN TÉLÉPHONE TIENT EN DEMI-ÉCRAN (Owen, 2026-11-13 : « ça prend tout un écran pour quelques mots »).
+ * Les trois colonnes s'empilaient : 820 px de haut sur un iPhone de 390 px pour dix-sept liens. La marque garde toute la
+ * largeur ; « Rejoindre » et les pages légales se mettent côte à côte (les libellés tiennent en 160 px, un plus long passe
+ * à la ligne) ; les deux phrases de la marque perdent les marges de paragraphe qui les séparaient de 50 px. Rien n'est
+ * retiré, rien n'est réécrit. Chaque lien garde 28 px d'un lien à l'autre : la cible de 24 px (WCAG 2.5.8) reste. */
+@media (max-width: 640px) {
+  .site-footer { margin-top: 28px; padding-top: 24px; }
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 20px 16px; }
+  .footer-brand { grid-column: 1 / -1; gap: 4px; }
+  .footer-brand p.small { margin: 0; }
+  .footer-langues { margin-top: 4px; }
+  .footer-bottom { font-size: 12.5px; padding-top: 12px; }
+}
 
 /* Cartes d'arguments : alignées à gauche (et non centrées) pour rester cohérentes
    avec la bannière, et sans pastille ronde de fond derrière l'emoji — un aplat
