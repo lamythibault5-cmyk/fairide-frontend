@@ -95,6 +95,11 @@ export default function MapPage() {
   // Les catégories de la bande de la liste (categoriesClient, specialites.js) : seulement celles qui ont au moins un
   // commerce — proposer « Sushi » quand aucun commerce n'en fait donne un filtre qui ne renvoie jamais rien.
   const categories = useMemo(() => categoriesClient(restaurants, { garder: cuisine }), [restaurants, cuisine]);
+  /* « OFFRES » SEULEMENT S'IL Y EN A (Owen, 2026-11-13 : « il n'y aura jamais d'offre » sur la carte du site). Même règle que
+   * les cuisines ci-dessus : une pastille qui ne renvoie jamais rien n'a rien à faire là. Elle sort dès qu'un commerce a une
+   * promo, et reste tant qu'elle est allumée (sinon on ne pourrait plus l'éteindre). Jamais dans l'aperçu de l'accueil du
+   * site (apercuSite.js) : il ne montre aucune offre, ni sur les cartes de la liste ni sur la fiche ci-dessous. */
+  const pastilleOffres = !APERCU && (promosSeules || restaurants.some((r) => r.hasPromo));
 
   const liste = useMemo(() => {
     const maintenant = new Date();
@@ -172,9 +177,11 @@ export default function MapPage() {
             )}
           </div>
           <div className="carte-pastilles">
+            {pastilleOffres && (
             <button type="button" className={`cuisine-chip${promosSeules ? ' active' : ''}`} aria-pressed={promosSeules} onClick={() => setPromosSeules((v) => !v)}>
               <Icone nom="etiquette" taille={16} />{t('mapClient.filterOffers')}
             </button>
+            )}
             {pastilleOuvert && (
             <button type="button" className={`cuisine-chip${ouvertsSeuls ? ' active' : ''}`} aria-pressed={ouvertsSeuls} onClick={() => setOuvertsSeuls((v) => !v)}>
               {/* Allumée dans l'app, l'horloge se remplit, comme sur la liste (maquettes/ouvert-verre). */}
