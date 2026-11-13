@@ -89,7 +89,11 @@ itself (no typing), through the reserved promo row `CODE-AMI` of type `order_ref
 person**: one account AND one number proven **by SMS** (`phone_verified_via = 'sms'`, G38); the use keeps a sha256 of the
 number (`promo_code_uses.phone_hash`), so a second account on the same number gets nothing, even after the first changed
 number or was deleted. « First order »: `first_order_only`, a takeaway paid at the shop (before GO) doesn't count; a
-cancelled order frees it. A typed code wins (one code per order) and the credit waits. The quote's `codeAmi` says why it
+cancelled order frees it **only when the customer's money went back or was never taken** (Owen, 2026-11-13, F10): « aucun
+livreur », a team cancel, a refusal, an expired or unpaid order free the credit and single-use codes again; a paid order
+closed without a refund (`client_absent`, `pickup_not_collected` including the 12-hour auto-close, `age_check =
+'refused_absent'`) uses them up like a handed-over one (`codesPromo.SQL_USAGES` / `SQL_COMMANDE_PRECEDENTE`, backend test
+`revue-1113-credit-bienvenue`). A typed code wins (one code per order) and the credit waits. The quote's `codeAmi` says why it
 doesn't apply yet (`minimum`, `sur_place`, `numero_sms`) so the cart can explain it; already received, second order, number
 already used: **nothing is said**, the cart is normal (founder). `GET /auth/me › bienvenue` ({ montant, minimum } or null)
 says whether the welcome sheet should show. **Google / Apple accounts** may order without proving their number (their e-mail
@@ -97,7 +101,8 @@ is proven), but without the credit (« Commander sans le crédit »). The **shar
 friend, no cap** (`referrals.CLIENT_REFERRAL_REWARD`; a friend who signed up before the switch, `platform_parameters.
 code_ami_3e_depuis`, keeps the €5 promised), when that friend's first qualifying order is handed over, **only if it was paid
 online** and the friend's number is proven by SMS (`maybeAwardClientReferralReward`); the friend gets nothing more than the
-welcome everyone gets. Before GO nothing can be paid online: the welcome sheet and the code ami reminder wait for GO
+welcome everyone gets. The sharer **keeps the €3 even if the friend's order is refunded after handover** (Owen, 2026-11-13:
+the handover is what earns it; abuse is handled by the team as fraud, never by taking it back automatically). Before GO nothing can be paid online: the welcome sheet and the code ami reminder wait for GO
 (`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged (€5).
 **No subscription (founder, 2026-11-04: « on retire les 20 € par mois ; ça bloque les inscriptions »).** A shop pays
 nothing each month: Fairride earns only the 10 % commission on orders paid online and the system fee inside the delivery fee.
@@ -218,6 +223,33 @@ the phone, with location already allowed (never asked for this), is more than 1 
 - Payout screens: « Prochain virement » no longer lists refused/cancelled refunded orders (except the incidents above) and
   shows shares still waiting apart, outside the total; Admin › Paiements › Versements shows the share minus what was taken
   back, and « à verser » means a share really waiting for its transfer.
+
+## Money and order review of 2026-11-13 (Owen's decisions)
+
+After a look at Uber Eats, Deliveroo and Takeaway, Owen settled the open points of the review of 2026-11-13 (workspace
+`revues/2026-11-10-argent-commandes.md`, section 5). Each holds in the backend from the round of PRs of that date.
+- **Courier never came, shop never tapped « Prête » (F5)**: the customer's « aucun livreur » cancel also opens from
+  « en préparation », 20 minutes (`DELAI_SANS_LIVREUR_MIN`) after the expected ready time when the shop never said it was
+  ready, while the courier who claimed the job never picked it up. Same outcome as from « Prête »: the customer is refunded
+  in full, Fairride pays, the shop keeps its share (food cooked), the courier who didn't come gets nothing.
+- **« Aucun livreur » clocks (F19)**: the **automatic** cancel (`delivery_no_courier_cancel_min`) adds the time a courier held
+  the job before releasing it (`orders.held_ms`), so other couriers always get the full delay; the customer's own button keeps
+  its time (Owen, 2026-11-13).
+- **Gift voucher on a cancellation through nobody's fault (F9, option a)**: the voucher goes back to the customer, and
+  Fairride pays the shop the voucher's value as a complement, since the share it keeps had already deducted it. Refused or
+  expired orders (share taken back) are unchanged.
+- **Welcome credit and single-use codes (F10)**: only a refunded or unpaid cancellation frees them; a paid order closed
+  without a refund uses them up (details in « Welcome credit » above).
+- **Missing item on an order paid with balance or a promo (F11)**: the refund is the dish's menu price, capped at what the
+  customer really paid (card + balance); the card first, up to what the card paid, the rest to the Fairride balance. The
+  shop still gives back 90 % and Fairride its 10 % (« Pre-GO money review » above). The customer's push says both amounts,
+  and it is sent only once the refund exists.
+- **Team cancel with a refund choice (Question 1)**: the customer's Fairride balance and gift voucher follow the refund the
+  team picks: « aucun » = nothing back; « partiel » = the typed amount, card first then balance (the voucher only comes back
+  on a full refund); « complet » = everything. Before, the balance came back in full whatever the choice.
+- **Sharer's €3 (Question 2)**: kept even if the friend's order is refunded after handover (« Welcome credit » above).
+- **Courier pay is never lost between closing and transfer (F1)**: the write that closes a delivery marks the courier's pay as
+  due, so a restart or a database error before the Stripe transfer leaves it in the retry queue instead of nowhere.
 
 ## Costs and break-even screen (founder, 2026-11-04)
 
