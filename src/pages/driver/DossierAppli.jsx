@@ -21,7 +21,7 @@ import GuideIndependant from '../../components/livreur/GuideIndependant';
 import { AvantDeCommencer } from './dossierBlocs';
 import '../../ecran-livreur.css';
 import '../../ecran-general.css'; // le rond du retour (.gn-rond) de la fin express
-import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
+import { MANQUES_INFORMATIFS, MANQUES_APRES_ENVOI, ERREURS_IDENTITE, AVEC_ECHEANCE, ECHEANCE_REQUISE, documentsRequis, corpsInfos, corpsDossierValide, infosDepuisDossier, ouvrirPdf } from './dossierCommun';
 import VerifTelephone from '../../components/VerifTelephone';
 
 /* UN SEUL DOSSIER, SUR LE SITE COMME DANS L'APP (fondateur, 2026-10-25). Le site avait son propre dossier en six étapes
@@ -520,7 +520,10 @@ function corpsActivite(f, d) {
 export function FeuilleActivite({ d, t, token, busy, action, onFait }) {
   const [f, setF] = useState(() => infosDepuisDossier(d.courier, d.zones));
   const val = (k, v) => setF((x) => ({ ...x, [k]: v }));
-  const enregistrer = async () => { if (await action(() => api('/couriers/me', { method: 'PATCH', token, body: corpsActivite(f, d) }))) onFait?.(); };
+  // Dossier validé ou suspendu : seulement les champs que le serveur laisse encore changer (dossierCommun, corpsDossierValide).
+  const valide = ['approved', 'suspended'].includes(d.courier?.lifecycleStatus);
+  const corps = () => (valide ? corpsDossierValide(corpsActivite(f, d), d.missing ?? []) : corpsActivite(f, d));
+  const enregistrer = async () => { if (await action(() => api('/couriers/me', { method: 'PATCH', token, body: corps() }))) onFait?.(); };
   return (
     <>
       <EcranActivite d={d} f={f} val={val} t={t} token={token} busy={busy} action={action} />
