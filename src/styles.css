@@ -3058,6 +3058,14 @@ html:not(.appli) .sq-fiche .sq-feuille { margin: -22px 0 0; }
   /* L'aperçu de l'accueil du site (apercuSite.js) : Restaurants et Carte seulement, sans rond Recherche (Owen, 2026-11-12) — la
      même pilule, resserrée sur ses deux onglets et centrée par les marges ; repliée, le même rond au bord gauche du groupe. */
   html.apercu .dashboard-sidebar, html.apercu .dashboard-sidebar--compacte { --groupe-onglets: 236px; }
+  /* Pas de barre de défilement dans le faux téléphone : sur un ordinateur, Windows en dessinait une grise sous chaque rangée
+     (Owen, 2026-11-12). On y glisse à la souris comme au doigt (glisserSouris.js). */
+  html.apercu, html.apercu * { scrollbar-width: none; }
+  html.apercu ::-webkit-scrollbar { display: none; }
+  html.apercu.apercu-glisse, html.apercu.apercu-glisse * { cursor: grabbing !important; user-select: none; }
+  html.apercu img, html.apercu a { -webkit-user-drag: none; }
+  html.apercu body { -webkit-user-select: none; user-select: none; }
+  html.apercu input, html.apercu textarea { -webkit-user-select: text; user-select: text; }
   html.appli .dashboard-recherche { margin-left: auto; }
   html.appli .dashboard-nav { padding: 5px; border: 0; touch-action: none; transition: transform .15s var(--ressort-ui), width .42s var(--rebond-ui), background-color .35s, box-shadow .35s; }
   html.appli .dashboard-nav.admin { touch-action: pan-x; }
