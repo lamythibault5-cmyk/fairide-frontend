@@ -12,6 +12,7 @@ import { euros } from '../../prixPlat';
 import { imgProps } from '../../images';
 import { vibrer } from '../../gestes';
 import { courbeRoute } from '../../routeProgression';
+import { deCommune } from '../../deCommune';
 
 /* Les écrans de l'accueil de l'application — l'enchaînement, la mémoire et la recherche des commerces vivent dans
  * Bienvenue.jsx. Ces composants ne font qu'afficher et remonter des gestes.
@@ -402,7 +403,7 @@ export function EcranRecherche({ commune, livraison = true, points, lignes, fait
     <>
       <div className="bv-grandit" />
       <Cercle points={points} anime progres={ANNEAU_RECHERCHE[faites] ?? 1} accelere />
-      <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t(livraison ? 'appli.calcTitre' : 'appli.calcTitrePres', { c: commune }) : t(livraison ? 'appli.calcTitrePosition' : 'appli.calcTitrePositionPres')}</h1>
+      <h1 className="bv-titre bv-centre" style={{ fontSize: 26 }} aria-live="polite">{commune ? t(livraison ? 'appli.calcTitre' : 'appli.calcTitrePres', { c: commune, deC: deCommune(commune) }) : t(livraison ? 'appli.calcTitrePosition' : 'appli.calcTitrePositionPres')}</h1>
       <ul className="bv-etapes" aria-live="polite">
         {lignes.map((txt, k) => (
           <li key={k} className={k < faites ? 'fait' : k === faites ? 'en-cours' : ''}>

@@ -9,6 +9,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import { titreRangee, libellePosition, euros, jourCourt } from '../../misesEnAvant';
 import { restaurantTypeLabel, COMMUNES_SUGGEREES } from '../../menuCategories';
 import { SPECIALITES } from '../../specialites';
+import { deCommune } from '../../deCommune';
 
 // Admin › Mises en avant (fondateur, 2026-10-02) : le prix de la 1re, 2e et 3e position de chaque rangée de la liste
 // (par semaine, hors TVA), et les demandes des commerçants à accepter ou refuser. Changer un prix ne touche pas les
@@ -189,7 +190,7 @@ export default function AdminPlacementsPage() {
                 </>
               )}
             </div>
-            <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{zoneId ? tr('adminPlacements.zoneHelp', { zone: nomPortee }) : commune ? tr('adminPlacements.communeHelp', { commune }) : tr('adminPlacements.defaultHelp')}</p>
+            <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{zoneId ? tr('adminPlacements.zoneHelp', { zone: nomPortee }) : commune ? tr('adminPlacements.communeHelp', { commune, deC: deCommune(commune) }) : tr('adminPlacements.defaultHelp')}</p>
             {/* Les communes de la zone affichée, modifiables. */}
             {zoneId && etat.zone && (
               <div className="mea-zone-communes">
