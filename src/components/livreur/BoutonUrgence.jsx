@@ -24,6 +24,9 @@ export default function BoutonUrgence({ token, toast, commande = null }) {
   const [motif, setMotif] = useState('accident');
   const [envoi, setEnvoi] = useState(false);
   const [envoye, setEnvoye] = useState(null);
+  /* L'ALERTE N'EST PAS PARTIE (revue avant GO, 13/11) : hors réseau, 429 (déjà prévenue) ou 500, il ne restait que le 112 et
+   * un toast de 3 s. Le numéro et le WhatsApp de Fairride s'affichent alors aussi, sous le bouton qui permet de réessayer. */
+  const [echec, setEchec] = useState(false);
 
   async function prevenir() {
     setEnvoi(true);
@@ -32,6 +35,7 @@ export default function BoutonUrgence({ token, toast, commande = null }) {
       const r = await api('/couriers/me/sos', { method: 'POST', token, body: { motif, ...(position || {}) } });
       setEnvoye({ positionSent: !!r.positionSent, telephone: r.supportPhone || null });
     } catch (e) {
+      setEchec(true);
       toast(e.message, 'erreur');
     } finally {
       setEnvoi(false);
@@ -40,7 +44,7 @@ export default function BoutonUrgence({ token, toast, commande = null }) {
 
   return (
     <>
-      <button type="button" className="btn-outline" style={{ color: 'var(--red)', borderColor: 'var(--red)', minHeight: 40 }} onClick={() => { setEnvoye(null); setOuvert(true); }}>
+      <button type="button" className="btn-outline" style={{ color: 'var(--red)', borderColor: 'var(--red)', minHeight: 40 }} onClick={() => { setEnvoye(null); setEchec(false); setOuvert(true); }}>
         <Icone nom="alerte" taille={16} className="icone-texte" /> {t('dashDriver.sosButton')}
       </button>
       {ouvert && (
@@ -80,6 +84,7 @@ export default function BoutonUrgence({ token, toast, commande = null }) {
                 {envoi ? '…' : t('dashDriver.sosAlertTeam')}
               </button>
               <p className="small" style={{ margin: '6px 0 0', color: 'var(--ink-soft)' }}>{t('dashDriver.sosAlertTeamHelp')}</p>
+              {echec && <div style={{ marginTop: 12 }}><AppelerFairide numero={null} commande={commande} /></div>}
             </>
           )}
         </SousEcran>
