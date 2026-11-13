@@ -2620,6 +2620,7 @@ export default {
       statut_sans_reponse: "No answer: online on the shop's word",
       choix_ancien_prix: "Shop's choice: old price put back",
       choix_sans_badge: "Shop's choice: kept without the badge",
+      choix_nouvelle_photo: "Shop's choice: another photo sent",
       textesIntro: "What shops changed themselves over the last 7 days. It is already online. Watch for a name that changes while the price stays (« 2 patties » becoming « 1 patty »).",
       textesVide: "No text changes in the last 7 days.",
       champ_name: "Name",

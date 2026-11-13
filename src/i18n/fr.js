@@ -2621,6 +2621,7 @@ export default {
       statut_sans_reponse: "Sans réponse : en ligne sur sa parole",
       choix_ancien_prix: "Choix du commerce : ancien prix remis",
       choix_sans_badge: "Choix du commerce : gardé sans le badge",
+      choix_nouvelle_photo: "Choix du commerce : autre photo envoyée",
       textesIntro: "Ce que les commerces ont changé eux-mêmes ces 7 derniers jours. C'est déjà en ligne. Regarde surtout un nom qui change sans que le prix bouge (« 2 steaks » devenu « 1 steak »).",
       textesVide: "Aucun changement de texte ces 7 derniers jours.",
       champ_name: "Nom",
