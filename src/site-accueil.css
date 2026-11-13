@@ -198,7 +198,10 @@ html.sa-essai-actif .sa-accueil *, html.sa-essai-actif .sa-accueil *::before, ht
 /* La boîte reçoit le focus à l'ouverture (useDialogue). Ouverte par un clic DANS le cadre, Chrome la croit atteinte au clavier et
    lui dessinait son gros contour noir (Owen, 2026-11-12) : la boîte n'est pas un contrôle, ses boutons gardent leur contour. */
 .sa-essai-fenetre:focus, .sa-essai-fenetre:focus-visible { outline: none; }
-.sa-essai-fermer { position: absolute; top: 14px; right: 14px; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+/* Un rond, pas un ovale : le style commun des boutons (padding 12px 20px, min-height 44 px sur téléphone) l'étirait en 42 × 36
+   (Owen, 2026-11-13). Taille fixe, sans marge intérieure ; 44 px sur téléphone pour le doigt. */
+.sa-essai-fermer { position: absolute; top: 14px; right: 14px; width: 40px; height: 40px; min-width: 0; min-height: 0; padding: 0; flex: none; box-sizing: border-box; border-radius: 50%; border: 1px solid var(--line); background: #fff; color: var(--ink); display: grid; place-items: center; cursor: pointer; }
+@media (max-width: 640px) { .sa-essai-fermer { width: 44px; height: 44px; } }
 .sa-essai-commerce { display: flex; align-items: center; gap: 14px; margin: 0 44px 16px 0; }
 .sa-essai-commerce img { width: 72px; height: 72px; border-radius: 16px; object-fit: cover; flex: none; }
 .sa-essai-commerce b { display: flex; align-items: center; gap: 6px; font-family: var(--font-titre); font-size: 20px; line-height: 1.2; }
