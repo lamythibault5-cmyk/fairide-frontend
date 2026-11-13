@@ -9083,7 +9083,7 @@ export default {
       referral: {
         title: 'Refer a friend',
         how: {
-          client: 'Share your code with a friend. Once they create a customer account and place their first order of 20 € or more, you get 5 € of Fairride credit.',
+          client: 'Share your code with a friend. Once they create a customer account and place their first order of 20 € or more, you get 3 € of Fairride credit.',
           restaurant: 'Share your code with another restaurant owner. Once their restaurant receives its first order of 20 € or more, you get 5 € of Fairride credit.',
           driver: 'Share your code with another courier. Once they deliver their first order of 20 € or more, you get 5 € of Fairride credit.'
         },
