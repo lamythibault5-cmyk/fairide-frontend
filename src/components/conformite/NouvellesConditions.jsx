@@ -52,7 +52,8 @@ import '../../nouvelles-conditions.css';
 
 const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];
 // Ce qui change, en une phrase, par version du contrat livreur (la fin de la version : « IND-v4-2026.9 » → « 2026.9 »).
-const CHANGEMENTS_LIVREUR = { '2026.9': 'ecranLivreur.feuilleContrat_2026_9' };
+// 2026.11 ne change que les montants de l'attente (le texte ne les cite pas) : même phrase que 2026.10.
+const CHANGEMENTS_LIVREUR = { '2026.9': 'ecranLivreur.feuilleContrat_2026_9', '2026.10': 'ecranLivreur.feuilleContrat_2026_10', '2026.11': 'ecranLivreur.feuilleContrat_2026_10' };
 const REFUS = 'fairide_conditions_refusees';
 const PAGES_LIBRES = ['/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/documents', '/account', '/checkout', '/order-success',
   '/dashboard/engagements', '/driver/onboarding'];

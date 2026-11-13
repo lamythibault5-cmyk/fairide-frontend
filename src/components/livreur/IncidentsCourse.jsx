@@ -2,7 +2,10 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
-import { ATTENTE_PORTE_MIN, APPELS_CLIENT_MIN } from '../../conformite';
+import { Link } from 'react-router-dom';
+import { ATTENTE_PORTE_MIN, APPELS_CLIENT_MIN, ATTENTE_COMPTOIR } from '../../conformite';
+import { positionPrecise } from '../../natif';
+import { euros } from '../../prixPlat';
 import Icone from '../Icone';
 import AppelerFairide from './AppelerFairide';
 
@@ -41,6 +44,19 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
     }
   }
 
+  /* ATTENTE AU COMPTOIR PAYÉE (Owen, 12/11/2026 ; serveur attenteComptoir.js). La position part avec « J'attends au commerce » :
+   * près du commerce, l'attente est payée après le délai de grâce, comptée de l'heure promise à la prise (ou de l'arrivée) et
+   * arrêtée par le « Prête » du commerce, jamais par le livreur. Sans position (refusée, GPS muet), l'attente est signalée au
+   * commerce comme avant, mais pas payée : l'écran le dit et propose de réessayer. */
+  async function signalerAttente() {
+    setEnCours(true);
+    const p = await positionPrecise().catch(() => null);
+    await appeler('waiting', p ? { lat: p.lat, lng: p.lng } : {});
+  }
+  const debutPaye = order.courierWaitingSince
+    ? Math.max(order.courierWaitingSince, order.waitingPromisedAt || 0) + ATTENTE_COMPTOIR.graceMin * 60000 : null;
+  const heurePaye = debutPaye ? new Date(debutPaye).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : null;
+
   const avantRetrait = ['preparation', 'pret'].includes(order.status);
   const enLivraison = order.status === 'livraison';
   const attenteMin = order.courierWaitingSince ? Math.max(0, Math.floor((maintenant - order.courierWaitingSince) / 60000)) : null;
@@ -60,8 +76,25 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
   return (
     <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
       {avantRetrait && (attenteMin === null
-        ? <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={() => appeler('waiting')}>{t('dashDriver.incident_waiting')}</button>
-        : <span className="small">{t('dashDriver.incident_waitingSince', { min: attenteMin })}</span>)}
+        ? <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={signalerAttente}>{t('dashDriver.incident_waiting')}</button>
+        : (
+          <div style={{ width: '100%' }}>
+            <p className="small" style={{ margin: 0 }}>{t('dashDriver.incident_waitingSince', { min: attenteMin })}</p>
+            {/* Serveur d'avant (pas de waitingPaid) : rien de plus, l'attente n'y est pas payée. */}
+            {order.waitingPaid === true && (
+              <p className="small" style={{ margin: '4px 0 0' }}>
+                {t('dashDriver.incident_waitingPaid', { heure: heurePaye, parMin: euros(ATTENTE_COMPTOIR.perMinute), plafond: euros(ATTENTE_COMPTOIR.cap) })}{' '}
+                <Link to="/driver/regles">{t('dashDriver.incident_waitingRules')}</Link>
+              </p>
+            )}
+            {order.waitingPaid === false && (
+              <p className="small" style={{ margin: '4px 0 0' }}>
+                {t('dashDriver.incident_waitingNotPaid')}{' '}
+                <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={signalerAttente}>{t('dashDriver.incident_waitingRetry')}</button>
+              </p>
+            )}
+          </div>
+        ))}
       {avantRetrait && <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={() => setConfirmer('rendre')}>{t('dashDriver.incident_release')}</button>}
       {enLivraison && !order.containsAlcohol && resteClient === null && (
         <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={() => appeler('client-absent')}>{t('dashDriver.incident_clientAbsent')}</button>
