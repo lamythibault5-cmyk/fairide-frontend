@@ -24,15 +24,26 @@ export function prixRemise(item) {
 // Remise d'une ligne du panier (`qty` fois ce plat), la règle du serveur : « −X % » et « −X € » sur le prix de base du plat
 // (pas sur les suppléments), « −X € » plafonné au prix du plat, « N achetés = 1 offert » par paquet de N + 1. Partagée par
 // CartContext.totals (panier, paiement) et la commande groupée, pour que chaque écran montre le même prix payé.
-export function remiseLigne(item, qty) {
+// `prixUnitaire` : le prix d'une unité de la ligne, options comprises (ligne du panier `unitPrice`) ; absent, le prix du plat.
+//
+// JAMAIS PLUS QUE LA LIGNE (revue argent du 13/11, F14, jumeau de routes/orders.js côté serveur) : une option de réduction
+// (« Sans boisson » −3,50 € sur un plat à 6 €) rend la ligne moins chère que le prix du plat sur lequel l'offre se calcule.
+// « 1 + 1 » sur 2 × 2,50 € offrait 6 € (le prix du plat) : sous-total négatif, commande impayable. La remise est donc
+// plafonnée à ce que la ligne coûte (prix unitaire × quantité), et l'unité offerte d'un « N achetés = 1 offert » vaut le
+// moins cher des deux, prix du plat ou prix de l'unité : une option payante n'est toujours pas offerte (l'offre reste
+// calculée sur le prix de base), une option de réduction l'est au prix réellement payé.
+export function remiseLigne(item, qty, prixUnitaire) {
   const p = item?.activePromo;
   if (!p || !(qty > 0)) return 0;
   const prix = Number(item.price) || 0;
-  if (p.roundTenths && (p.type === 'percent' || p.type === 'amount')) return +((prix - prixOffreArrondi(prix, p)) * qty).toFixed(2);
-  if (p.type === 'percent') return prix * qty * (Number(p.value) / 100);
-  if (p.type === 'amount') return Math.min(Number(p.value) || 0, prix) * qty;
-  if (p.type === 'bogo') return Math.floor(qty / ((Number(p.value) || 1) + 1)) * prix;
-  return 0;
+  const unite = prixUnitaire != null && Number.isFinite(Number(prixUnitaire)) ? Number(prixUnitaire) : prix;
+  const ligne = Math.max(0, +(unite * qty).toFixed(2));
+  let remise = 0;
+  if (p.roundTenths && (p.type === 'percent' || p.type === 'amount')) remise = +((prix - prixOffreArrondi(prix, p)) * qty).toFixed(2);
+  else if (p.type === 'percent') remise = prix * qty * (Number(p.value) / 100);
+  else if (p.type === 'amount') remise = Math.min(Number(p.value) || 0, prix) * qty;
+  else if (p.type === 'bogo') remise = +(Math.floor(qty / ((Number(p.value) || 1) + 1)) * Math.min(prix, unite)).toFixed(2);
+  return Math.max(0, Math.min(remise, ligne));
 }
 
 // L'offre en deux ou trois signes, pour « −5 % inclus » sous une ligne du panier et « Offre Maestro −5 % » sur le ticket

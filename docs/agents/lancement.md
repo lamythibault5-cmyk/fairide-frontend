@@ -42,7 +42,12 @@ ignored since, and can be deleted.
   fails (`bilanIllisible`, G72).
   GO is refused (409 `DELAI_SANS_LIVREUR_VIDE`) while `delivery_no_courier_cancel_min` (Admin › Conformité › Dispatch) is
   empty: without it a paid delivery nobody takes never closes (pre-GO bug hunt, 2026-11-06, G4). The card says so in red
-  (`bilan().annulationSansLivreurMin` null). Closing stays possible.
+  (`bilan().annulationSansLivreurMin` null). Closing stays possible. After GO the delay can no longer be emptied either.
+  This automatic cancel counts from the time the job is offered **plus the time a courier held it before releasing it**
+  (`orders.held_ms`, Owen 2026-11-13, F19), so the other couriers always get the full delay; the customer's own « aucun
+  livreur » button keeps its 20 minutes, and since 2026-11-13 also opens from « en préparation » when the courier who claimed
+  never came and the shop never tapped « Prête » (20 minutes after the expected ready time, F5; outcome in argent.md ›
+  « Money and order review of 2026-11-13 »).
 - **GO announcement (G12, founder 2026-11-06)**: no longer to every approved shop and courier. `lancement.destinatairesAnnonce`
   (from `pretLancement`): shops that can sell everything (ready, Stripe active, delivery or online payment offered) get
   « c'est parti »; shops that can only sell takeaway paid at the shop get a takeaway text; the others nothing; only ready
@@ -61,7 +66,7 @@ ignored since, and can be deleted.
   (`users.driver_offer_pushed_at`, the first offer since his last visit, overwritten) with no visit to the app since. Then no
   more offers until he comes back; no effect on pay or account (`couriers.sqlVuRecemment`, backend `docs/dispatch.md`). Approved or reinstated couriers start paused; logging out, or turning location
   off, pauses them. Each free courier covers `delivery_orders_per_free_courier` (1) delivery already sold and still waiting
-  for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time). An open
+  for a courier (`lancement.livreurPourUneLivraison`, G6; a scheduled one counts from 60 min before its time, or from when it is offered to couriers if earlier: review of 11-13, F21). An open
   Stripe page reserves nothing: the rule runs again when the payment lands (`fermeALArriveeDuPaiement`, reason `livreur`,
   one delivery payment at a time via `verrouPaiementLivraison`); the first paid keeps the courier, the next is refunded at
   once and never reaches the shop (2026-11-07). The same rule

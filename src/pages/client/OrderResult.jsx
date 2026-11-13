@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import ProtectedRoute from '../../components/ProtectedRoute';
 import { api } from '../../api';
 import { vibrer } from '../../gestes';
@@ -14,6 +14,7 @@ import { formatOrderItem, orderTypeLabel, heureArrivee } from '../../orderStatus
 import { ListeAttente, RouteArretsAttente } from '../../components/client/AttenteCommande';
 import { etapesAttente, lignesCochees, titreAttente, useEtatAttente } from '../../attenteCommande';
 import { euros } from '../../prixPlat';
+import { oublierSaisiePaiement } from '../../saisiePaiement';
 import { RappelCodeAmi } from '../../components/CodeAmi';
 import QuiDoitQuoi from '../../components/client/QuiDoitQuoi';
 
@@ -60,7 +61,8 @@ function RetourSansSession({ success }) {
 export default function OrderResult({ success }) {
   const { user } = useAuth();
   if (!user) return <RetourSansSession success={success} />;
-  return <ProtectedRoute role="client"><ResultatCommande success={success} /></ProtectedRoute>;
+  // La clé : /order-cancelled puis /order-success (déjà payée, F23) montent un écran neuf, qui repart de « Confirmation… ».
+  return <ProtectedRoute role="client"><ResultatCommande key={success ? 'payee' : 'annulee'} success={success} /></ProtectedRoute>;
 }
 
 function ResultatCommande({ success }) {
@@ -82,6 +84,7 @@ function ResultatCommande({ success }) {
   // liste de l'attente ; payée, son récapitulatif monte dans la feuille de l'écran de succès.
   const [commande, setCommande] = useState(null);
   const location = useLocation();
+  const navigate = useNavigate();
   /* L'ATTENTE PAS À PAS (fondateur, 2026-11-08, maquettes/retours-08-11/attente-v2.html) : pendant la vérification, le bandeau iris
      avec la route de la commande (la même que le suivi : Paiement · Confirmée · Livreur · En route · Livrée) et la liste qui se
      coche. Le paiement confirmé par le serveur coche « Paiement sécurisé vérifié » (le vélo part vers Confirmée), puis
@@ -106,7 +109,18 @@ function ResultatCommande({ success }) {
   // panier immédiatement, sans rien interroger — il n'y a rien à vérifier, l'issue est connue.
   useEffect(() => {
     if (success) return;
-    cartRef.current.restoreStashed();
+    const rendu = cartRef.current.restoreStashed();
+    /* DÉJÀ PAYÉE (revue argent du 13/11, F23) : Bancontact validé sur le téléphone pendant que le client touche la flèche
+       retour de Stripe. Le serveur ferme la page de paiement, la trouve payée et répond 409 ALREADY_PAID ; l'erreur était
+       avalée : l'écran disait « annulé », le panier revenait, et le client repassait commande, payée une deuxième fois. Le
+       panier rendu repart donc, comme sur le paiement (Checkout.jsx, même code), et l'écran de confirmation prend le relais.
+       Seulement le panier rendu ICI : un retour arrière vers une ancienne page ne vide pas le panier en cours. Déjà payée à
+       la lecture (le webhook est arrivé avant ce retour) : la même confirmation. */
+    const dejaPayee = (restaurantId) => {
+      if (rendu) cartRef.current.clear();
+      oublierSaisiePaiement(restaurantId);
+      navigate(`/order-success?order=${orderId}`, { replace: true });
+    };
     // Paiement abandonné : la commande restée impayée est annulée tout de suite. Le serveur retient le
     // solde Fairide et le bon cadeau DÈS la création de la commande ; sans cette annulation, ils restaient
     // bloqués jusqu'au ménage des commandes impayées (45 min, orderTimeouts.js côté serveur) — et le client,
@@ -117,11 +131,16 @@ function ResultatCommande({ success }) {
       api('/orders/mine?suivi=1', { token })
         .then((orders) => {
           const o = orders.find((x) => String(x.id) === String(orderId));
-          if (o && !o.paid && o.status === 'nouveau') return api(`/orders/${orderId}/cancel`, { method: 'PATCH', token });
+          if (o?.paid && !['annule', 'refuse'].includes(o.status)) { dejaPayee(o.restaurantId); return null; }
+          if (o && !o.paid && o.status === 'nouveau') {
+            return api(`/orders/${orderId}/cancel`, { method: 'PATCH', token })
+              .catch((e) => { if (e?.code === 'ALREADY_PAID') dejaPayee(o.restaurantId); });
+          }
           return null;
         })
         .catch(() => {});
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [success, orderId, token]);
 
   useEffect(() => {
