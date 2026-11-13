@@ -1135,8 +1135,10 @@ export default function RestaurantList() {
           {aLaUne.length > 0 && <ALaUne list={aLaUne} inscritLe={inscritLe} t={t} />}
           <Section title={t('restaurantList.sectionNearby')} icon="position" list={nearbyList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="nearby" />
           {/* « Demandés près de toi » (fondateur, 2026-10-26, version B de maquettes/demande-restaurant) : sous « Autour de toi ». */}
-          {/* Toujours là, « Le tien ? » en premier (accueil plein, 2026-11-12, réponse 8). */}
-          <RangeeDemandes grand={grand} demandes={demandesPres} ouvrir={ouvrirDemande} />
+          {/* Toujours là, « Le tien ? » en premier (accueil plein, 2026-11-12, réponse 8). Jamais dans le faux téléphone de l'accueil
+              du site (Owen, 2026-11-12 : « retire la vue demander un restaurant ») : ni cette rangée, ni « Il en manque un ? » au bout
+              des rangées, ni le rappel dans « Tous », ni la carte de fin. L'aperçu montre les restaurants, rien d'autre. */}
+          {!APERCU && <RangeeDemandes grand={grand} demandes={demandesPres} ouvrir={ouvrirDemande} />}
           <Section title={t('restaurantList.sectionFreeDelivery')} icon="velo" list={livraisonOfferteEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="free_delivery" />
           <Section title={t('restaurantList.sectionDeliveryFrom', { amount: eurosCourts(3) })} icon="velo" list={livraisonPasCherEpinglee} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} loop grille={grand} cle="cheap_delivery" />
           <RangeeApercu title={t('restaurantList.sectionOffers')} icon="etiquette" list={offersList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="offers" />
@@ -1153,8 +1155,8 @@ export default function RestaurantList() {
             return (
               <Section key={e.cle} title={libelleCategorie(e.cle, t)} dessin={dessin} list={e.liste} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t}
                 grille={grand} cle={`envie:${e.cle}`} surTitre={() => ouvrirCategorie(e.cle)}
-                fin={<TuileIlEnManque categorie={e.cle} dessin={dessin} onOuvrir={ouvrirDemande} />}
-                finGrille={<LienIlEnManque categorie={e.cle} onOuvrir={ouvrirDemande} />} />
+                fin={APERCU ? null : <TuileIlEnManque categorie={e.cle} dessin={dessin} onOuvrir={ouvrirDemande} />}
+                finGrille={APERCU ? null : <LienIlEnManque categorie={e.cle} onOuvrir={ouvrirDemande} />} />
             );
           })}
           <RangeeApercu title={t('restaurantList.sectionGrocery')} icon="commerce" list={groceryList} favoriteIds={favoriteIds} onToggleFavorite={toggleFavorite} t={t} grille={grand} cle="grocery" />
@@ -1166,14 +1168,14 @@ export default function RestaurantList() {
                   <Fragment key={r.id}>
                     <RestaurantCard r={r} isFavorite={favoriteIds.has(r.id)} onToggleFavorite={toggleFavorite} t={t} />
                     {/* Le rappel des demandés après le 10e (réponse 9) : un seul. */}
-                    {i === Math.min(RAPPEL_APRES, tous.length) - 1 && <RappelDemande demandes={demandesPres} onOuvrir={ouvrirDemande} />}
+                    {!APERCU && i === Math.min(RAPPEL_APRES, tous.length) - 1 && <RappelDemande demandes={demandesPres} onOuvrir={ouvrirDemande} />}
                   </Fragment>
                 ))}
               </div>
             </section>
           )}
           {/* « Il manque ton restaurant ? » : là où la liste s'arrête et où l'on se dit qu'il manque le sien (2026-10-26). */}
-          {restaurants.length > 0 && <FinDeListeDemande onOuvrir={ouvrirDemande} />}
+          {!APERCU && restaurants.length > 0 && <FinDeListeDemande onOuvrir={ouvrirDemande} />}
         </>
       )}
       {fenetreDemande}
