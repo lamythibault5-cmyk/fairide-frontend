@@ -137,8 +137,15 @@ html:not(.appli) .sa-accueil .sa-prix-etiquette-nous { border: 2px solid var(--i
 html:not(.appli) .sa-accueil .sa-prix-etiquette-nous strong { color: var(--iris); }
 /* « Le même plat, trois prix » (HeroPrix.jsx, 2026-10-26) : comptoir, grande plateforme EN ROUGE (avertissement), Fairride
    en iris sur fond iris pâle. Les barres sont à l'échelle du prix le plus haut. */
-html:not(.appli) .sa-accueil .sa-prix-trois .sa-prix-titre { margin-bottom: 6px; }
-html:not(.appli) .sa-accueil .sa-prix-releve { font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); margin: 0 0 24px; }
+html:not(.appli) .sa-accueil .sa-prix-trois .sa-prix-titre { margin-bottom: 24px; display: flex; align-items: center; gap: 8px; }
+/* La source du relevé derrière un « i » (HeroPrix.jsx) : le titre garde l'écart de 24 px, la ligne s'ouvre dessous. */
+html:not(.appli) .sa-accueil .sa-prix-releve { font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); margin: -16px 0 24px; }
+html:not(.appli) .sa-accueil .sa-prix-releve[hidden] { display: none; }
+html:not(.appli) .sa-accueil .sa-prix-info { position: relative; display: inline-grid; place-items: center; box-sizing: border-box; flex: none;
+  width: 20px; height: 20px !important; min-width: 0; min-height: 0 !important; padding: 0; border-radius: 50%; /* !important : la hauteur de toucher de 44 px des boutons du site sur téléphone en faisait un ovale ; la zone de toucher passe par ::before */ border: 1.5px solid var(--ink-faint); background: none;
+  color: var(--ink-soft); font: 700 12px/1 Inter, sans-serif; letter-spacing: 0; cursor: pointer; }
+html:not(.appli) .sa-accueil .sa-prix-info::before { content: ""; position: absolute; inset: -12px; }
+html:not(.appli) .sa-accueil .sa-prix-info[aria-expanded="true"] { border-color: var(--iris); color: var(--iris); }
 html:not(.appli) .sa-accueil .sa-prix-rangs { display: grid; gap: 14px; }
 html:not(.appli) .sa-accueil .sa-prix-rang { display: grid; grid-template-columns: 180px minmax(0, 1fr) 112px; align-items: center; gap: 16px; font-size: 16px; }
 html:not(.appli) .sa-accueil .sa-prix-nom { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; line-height: 1.25; }
@@ -288,7 +295,8 @@ html:not(.appli) .sa-accueil .sa-porte-iris .sa-porte-bouton { background: var(-
   html:not(.appli) .sa-accueil .sa-prix-etiquette { padding: 12px; border-radius: 14px; }
   html:not(.appli) .sa-accueil .sa-prix-etiquette strong { font-size: 21px; }
   /* Trois prix : le nom et le prix sur une ligne, la barre dessous, toute la largeur. */
-  html:not(.appli) .sa-accueil .sa-prix-releve { font-size: 12.5px; margin-bottom: 16px; }
+  html:not(.appli) .sa-accueil .sa-prix-trois .sa-prix-titre { margin-bottom: 16px; }
+  html:not(.appli) .sa-accueil .sa-prix-releve { font-size: 12.5px; margin: -8px 0 16px; }
   html:not(.appli) .sa-accueil .sa-prix-rangs { gap: 12px; }
   html:not(.appli) .sa-accueil .sa-prix-rang { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 10px; font-size: 14px; }
   html:not(.appli) .sa-accueil .sa-prix-rang i { grid-column: 1 / -1; grid-row: 2; height: 10px; }

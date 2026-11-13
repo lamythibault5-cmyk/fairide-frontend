@@ -77,7 +77,10 @@ Fairride picks a fight with a norm: paying the platform's ~30 % cut hidden in th
   price changes.
   « Jusqu'à +55 % » is the top of what we measured, not a typical figure: never « tu paies 50 % de plus » as a general fact.
   In the app's welcome card the line sits behind an « i » next to « Le même plat, 15 € au comptoir » (founder, 2026-10-27:
-  « retire la ligne Détails sur demande, ça fait trop de texte »): still one tap away, never removed.
+  « retire la ligne Détails sur demande, ça fait trop de texte »): still one tap away, never removed. The website's card
+  « Le même plat, trois prix » does the same since 2026-11-13 (`HeroPrix.jsx`, « i » next to its title). Never hide the line
+  in the code instead (white text, display: none with no way to open it): invisible text does not make the comparison
+  verifiable, and it would look like concealment.
 - **Fairride's own markup, to customers (founder, 2026-11-02, maquettes/prix-client)**: the cap became 11.11 % and « +11,11 % »
   sounded bad, so the website, e-mails, Google and « Notre histoire » give NO figure for Fairride (« le restaurant ne gonfle
   plus sa carte »); the badge screen says only « Le même prix que sur place. » (its line « Les autres : jamais une carte gonflée. » removed by
