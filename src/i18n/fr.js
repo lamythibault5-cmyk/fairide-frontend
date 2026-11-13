@@ -9156,7 +9156,7 @@ export default {
       referral: {
         title: 'Parrainer un ami',
         how: {
-          client: 'Partage ton code avec un ami. Dès qu\'il crée un compte client et passe sa première commande de 20€ minimum, tu reçois 5€ de crédit Fairride.',
+          client: 'Partage ton code avec un ami. Dès qu\'il crée un compte client et passe sa première commande de 20€ minimum, tu reçois 3€ de crédit Fairride.',
           restaurant: 'Partage ton code avec un autre restaurateur. Dès que son restaurant reçoit sa première commande de 20€ minimum, tu reçois 5€ de crédit Fairride.',
           driver: 'Partage ton code avec un autre livreur. Dès qu\'il livre sa première commande de 20€ minimum, tu reçois 5€ de crédit Fairride.'
         },
