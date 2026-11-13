@@ -2620,6 +2620,7 @@ export default {
       statut_sans_reponse: "Geen antwoord: online op haar woord",
       choix_ancien_prix: "Keuze van de zaak: oude prijs teruggezet",
       choix_sans_badge: "Keuze van de zaak: gehouden zonder label",
+      choix_nouvelle_photo: "Keuze van de zaak: andere foto gestuurd",
       textesIntro: "Wat zaken de afgelopen 7 dagen zelf hebben gewijzigd. Het staat al online. Let vooral op een naam die verandert terwijl de prijs blijft (« 2 burgers » wordt « 1 burger »).",
       textesVide: "Geen tekstwijzigingen de afgelopen 7 dagen.",
       champ_name: "Naam",

@@ -126,6 +126,9 @@ export function HaussesAVerifier({ onChange }) {
   );
 }
 
+/* Les champs d'une ligne : ceux de haussesPrix.journalTextes (backend), before / after / changedAt. L'écran lisait beforeValue,
+ * afterValue et createdAt, que le serveur n'envoie pas : chaque changement s'affichait « (vide) → (vide) », sans date (revue
+ * avant GO, 13/11). */
 const CHAMPS = { name: 'champ_name', desc: 'champ_desc', description: 'champ_desc', category: 'champ_category', subsection: 'champ_subsection' };
 
 export function ChangementsTextes() {
@@ -166,11 +169,11 @@ export function ChangementsTextes() {
               {l.restaurantId ? <Link to={`/admin/restaurants/${l.restaurantId}/menu`}><b>{l.restaurantName || '—'}</b></Link> : <b>{l.restaurantName || '—'}</b>}
               {l.itemName && <span style={{ display: 'block' }}>{l.itemName}</span>}
             </span>
-            <span className="small" style={{ color: 'var(--ink-soft)' }}>{tr('adminHausses.par', { nom: l.changedByName || '—', date: dateCourte(l.createdAt) })}</span>
+            <span className="small" style={{ color: 'var(--ink-soft)' }}>{tr('adminHausses.par', { nom: l.changedByName || '—', date: dateCourte(l.changedAt) })}</span>
           </div>
           <p style={{ margin: '8px 0 0', overflowWrap: 'anywhere' }}>
             <b>{CHAMPS[l.field] ? tr(`adminHausses.${CHAMPS[l.field]}`) : l.field}</b>{' : '}
-            <span style={{ color: 'var(--ink-soft)' }}>{valeur(l.beforeValue)}</span>{' → '}<span>{valeur(l.afterValue)}</span>
+            <span style={{ color: 'var(--ink-soft)' }}>{valeur(l.before)}</span>{' → '}<span>{valeur(l.after)}</span>
           </p>
           {l.revertedAt
             ? <p className="small" style={{ margin: '8px 0 0', color: 'var(--ink-soft)' }}>{tr('adminHausses.remis', { date: dateCourte(l.revertedAt) })}</p>
