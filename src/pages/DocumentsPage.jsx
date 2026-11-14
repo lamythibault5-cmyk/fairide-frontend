@@ -20,7 +20,9 @@ import '../ecran-liste.css';
 // Les données viennent de GET /me/documents ; rien n'est calculé ici.
 export default function DocumentsPage() {
   const { t } = useLanguage();
-  const { token } = useAuth();
+  // « Fairride s'en occupe » (actingAs) : le serveur refuse que l'équipe accepte les conditions à la place du titulaire (403,
+  // refuserAgirPour) ; le bouton « Accepter » n'est donc pas montré dans cette session (revue avant GO du 14/11).
+  const { token, actingAs } = useAuth();
   const toast = useToast();
   const [d, setD] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -84,7 +86,7 @@ export default function DocumentsPage() {
             </p>
             <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
               <Link to={d.terms.path} className="btn-outline btn-sm"><Icone nom="guide" taille={16} className="icone-texte" />{' '}{t('mesDocuments.read')}</Link>
-              {!d.terms.accepted && <button type="button" className={`${aFaire === 'cgu' ? 'btn-gold' : 'btn-outline'} btn-sm`} disabled={busy} onClick={accepterCgu}>{t('mesDocuments.acceptTerms')}</button>}
+              {!d.terms.accepted && !actingAs && <button type="button" className={`${aFaire === 'cgu' ? 'btn-gold' : 'btn-outline'} btn-sm`} disabled={busy} onClick={accepterCgu}>{t('mesDocuments.acceptTerms')}</button>}
             </div>
           </div>
           {/* Confidentialité */}

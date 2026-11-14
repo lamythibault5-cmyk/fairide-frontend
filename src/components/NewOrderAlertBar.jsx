@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 import { SONNERIES, REPETITIONS } from '../hooks/useNewOrderAlert';
 import Icone from './Icone';
@@ -27,6 +28,12 @@ const PRESSANT = experienceApp() ? 'btn-gold' : 'btn-teal';
 export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme, compact = false, onOuvrir = null, sansCommande = false }) {
   const { t } = useLanguage();
   const toast = useToast();
+  /* « FAIRRIDE S'EN OCCUPE » (actingAs, revue avant GO du 14/11) : l'équipe tient la console du commerce depuis SON navigateur.
+   * Le serveur refuse alors les gestes personnels du titulaire (403), et l'abonnement push de ce navigateur est celui de la
+   * personne de l'équipe : « Désactiver » le lui retirait. Le bouton du push n'est donc pas montré dans cette session ; le
+   * bouton « notifications » de repli garde sa règle (seulement là où le push n'est pas proposé). Mêmes règles dans
+   * AlerteBandeau.jsx. */
+  const { actingAs } = useAuth();
   const active = newCount > 0;
   // Hooks avant tout retour anticipé (règle de React) : la version compacte n'en a pas besoin, mais la complète si.
   const [reglagesOuverts, setReglagesOuverts] = useState(false);
@@ -75,7 +82,7 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
   if (sansCommande) {
     const pushPossible = push?.supporte && push?.disponible;
     const sonBloque = soundEnabled && audioBloque;
-    const pushAActiver = pushPossible && !push.abonne;
+    const pushAActiver = pushPossible && !push.abonne && !actingAs;
     const notifAActiver = permission === 'default' && !pushPossible;
     if (!sonBloque && !pushAActiver && !notifAActiver && permission !== 'denied') return null;
     return (
@@ -201,7 +208,7 @@ export default function NewOrderAlertBar({ audioBloque, debloquerAudio, newCount
             ET clés VAPID configurées côté serveur. Ailleurs, rien — plutôt qu'un bouton qui échoue.
             C'est aussi la seule action de cette barre qui vaut du lime : elle couvre l'onglet
             fermé, ce qu'aucune des autres ne fait. */}
-        {push?.supporte && push?.disponible && (
+        {push?.supporte && push?.disponible && !actingAs && (
           <button
             type="button"
             className={push.abonne ? 'btn-outline' : PRESSANT}

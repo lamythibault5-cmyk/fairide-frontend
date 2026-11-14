@@ -11,7 +11,9 @@ import { useActionOptimiste } from '../actionOptimiste';
 // (GET/PATCH /auth/me/marketing). Sorti d'Account.jsx, qui ne doit plus grossir (CLAUDE.md).
 export default function NouvellesFairide({ ouverte, onClick }) {
   const { t } = useLanguage();
-  const { token } = useAuth();
+  // « Fairride s'en occupe » (actingAs) : le choix des nouvelles reste le geste du titulaire, le serveur refuse le PATCH (403) ;
+  // la case n'est pas montrée dans cette session, la ligne garde son état lu (revue avant GO du 14/11).
+  const { token, actingAs } = useAuth();
   const toast = useToast();
   const [abonne, setAbonne] = useState(null); // null tant que le serveur n'a pas répondu
   const agir = useActionOptimiste();
@@ -43,10 +45,12 @@ export default function NouvellesFairide({ ouverte, onClick }) {
   return (
     <LigneCompte icone="courrier" titre={t('nouvelles.rowTitle')} sous={sous} ouverte={ouverte} onClick={onClick}>
       <p className="small" style={{ margin: '0 0 10px' }}>{t('nouvelles.explain')}</p>
-      <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
-        <input type="checkbox" style={{ width: 'auto' }} checked={!!abonne} disabled={abonne === null} onChange={basculer} />
-        <span className="small">{t('nouvelles.toggleLabel')}</span>
-      </label>
+      {!actingAs && (
+        <label className="row" style={{ gap: 8, cursor: 'pointer' }}>
+          <input type="checkbox" style={{ width: 'auto' }} checked={!!abonne} disabled={abonne === null} onChange={basculer} />
+          <span className="small">{t('nouvelles.toggleLabel')}</span>
+        </label>
+      )}
       {abonne === null && erreur && (
         <p className="small" role="alert" style={{ margin: '8px 0 0' }}>
           {erreur.message}{' '}

@@ -3,6 +3,7 @@ import { remplissage } from '../../curseur';
 import { Link } from 'react-router-dom';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
+import { useAuth } from '../../context/AuthContext';
 import { SONNERIES, REPETITIONS } from '../../hooks/useNewOrderAlert';
 import Icone from '../Icone';
 
@@ -15,6 +16,8 @@ import Icone from '../Icone';
 export default function AlerteBandeau({ audioBloque, debloquerAudio, soundEnabled, setSoundEnabled, permission, requestPermission, push, sonnerie, setSonnerie, testerAlarme, volume, setVolume, repetitions, setRepetitions, alarmeEnCours, couperAlarme, terminal }) {
   const { t } = useLanguage();
   const toast = useToast();
+  // « Fairride s'en occupe » : pas de bouton push, comme NewOrderAlertBar.jsx (l'abonnement est celui de l'équipe).
+  const { actingAs } = useAuth();
   const [reglagesOuverts, setReglagesOuverts] = useState(false);
 
   async function basculerPush() {
@@ -52,7 +55,7 @@ export default function AlerteBandeau({ audioBloque, debloquerAudio, soundEnable
             <Icone nom="reglages" taille={16} />{t('alertBar.settings')}
           </button>
         )}
-        {pushPossible && (
+        {pushPossible && !actingAs && (
           <button type="button" className="sp-puce" aria-pressed={push.abonne} disabled={push.occupe} onClick={basculerPush}>
             <Icone nom="cloche" taille={16} />{push.abonne ? t('alertBar.pushOn') : t('alertBar.pushOff')}
           </button>

@@ -94,7 +94,7 @@ export default function Account({ integre = false, milieu = null }) {
   // Identifiants d'etiquette : useId donne une valeur par instance, donc pas de collision
   // quand ce composant est rendu plusieurs fois sur la meme page.
   const idsA11y = useId();
-  const { user, role, roles, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout } = useAuth();
+  const { user, role, roles, token, updateProfile, refreshUser, requestContactChange, confirmContactChange, requestDeletionCode, deleteAccount, logout, actingAs } = useAuth();
   const location = useLocation();
   const etroit = !useSiteLarge(900);
   const membreEquipeConnu = useModeEquipe();
@@ -682,7 +682,9 @@ export default function Account({ integre = false, milieu = null }) {
     </>
   );
   const ligneNouvelles = <NouvellesFairide ouverte={ouvertes.has('nouvelles')} onClick={() => basculer('nouvelles')} />;
-  const ligneDonnees = (
+  // « Fairride s'en occupe » (actingAs) : l'export et « Se déconnecter de tous les appareils » sont refusés par le serveur
+  // (403, refuserAgirPour) ; la ligne, qui n'a que ces deux gestes, n'est pas montrée dans cette session (revue avant GO, 14/11).
+  const ligneDonnees = actingAs ? null : (
     <LigneCompte icone="dossier" titre={t('accountUi.myData_rowTitle')} sous={t('accountUi.myData_rowSub')} ouverte={ouvertes.has('donnees')} onClick={() => basculer('donnees')}>
       {ouvertes.has('donnees') && <MesDonnees />}
     </LigneCompte>
