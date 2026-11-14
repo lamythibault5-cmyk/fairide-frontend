@@ -1,4 +1,5 @@
 import { orderTypeLabel, deliveryInstructionLabel } from '../orderStatus';
+import { codeSeul } from '../codePromo';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { euros } from '../prixPlat';
 import { telephoneLisible } from '../validation';
@@ -69,7 +70,7 @@ export default function OrderReceipt({ order, restaurant }) {
           comme au paiement et sur le reçu PDF (backend recuClient.js ; Owen, 2026-11-14, G2-16). */}
       {order.promoCodeDiscount > 0 && (order.promoCode === CODE_AMI
         ? <div className="receipt-line"><span>{t('codeAmi.panier')}</span><span>{euros(order.promoCodeDiscount)} {t('codeAmi.panierOfferts')}</span></div>
-        : <div className="receipt-line"><span>{t('receipt.promoCode', { code: order.promoCode || '' })}</span><span>-{euros(order.promoCodeDiscount)}</span></div>)}
+        : <div className="receipt-line"><span>{t('receipt.promoCode', { code: codeSeul(order.promoCode) })}</span><span>-{euros(order.promoCodeDiscount)}</span></div>)}
       {order.giftVoucherDiscount > 0 && <div className="receipt-line"><span>{t('receipt.giftVoucher', { code: order.giftVoucherCode || '' })}</span><span>-{euros(order.giftVoucherDiscount)}</span></div>}
       {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{euros(order.balanceUsed)}</span></div>}
       <div className="receipt-divider" />

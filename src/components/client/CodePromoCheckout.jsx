@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { codeSeul } from '../../codePromo';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import { euros } from '../../prixPlat';
@@ -55,7 +56,7 @@ export default function CodePromoCheckout({ token, toast, subtotal, deliveryFee,
           ? <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} onClick={() => { onChange(null); setCode(''); }}>{t('checkout.promoCodeRemove')}</button>
           : <button type="button" className="btn-outline" style={{ padding: '6px 12px' }} disabled={code.trim().length < 3 || enCours} onClick={appliquer}>{enCours ? '…' : t('checkout.promoCodeApply')}</button>}
       </div>
-      {applique && !payOnSite && <p className="small" style={{ margin: '6px 0 0', color: 'var(--teal-deep)' }}>{t('checkout.promoCodeLine', { label: applique.label, amount: euros(applique.discount) })}</p>}
+      {applique && !payOnSite && <p className="small" style={{ margin: '6px 0 0', color: 'var(--teal-deep)' }}>{t('checkout.promoCodeLine', { label: codeSeul(applique.label), amount: euros(applique.discount) })}</p>}
       {applique && payOnSite && <p className="small" style={{ margin: '6px 0 0' }}>{t('checkout.promoCodeKeptOnline')}</p>}
     </details>
   );
