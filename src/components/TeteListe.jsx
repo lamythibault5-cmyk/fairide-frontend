@@ -4,6 +4,8 @@ import { experienceApp } from '../natif';
 import { defilement } from '../gestes';
 import { illustrationCuisine } from '../menuCategories';
 import { PucesCuisineVides } from './Skeleton';
+import CompteARebours from './CompteARebours';
+import { useCompteARebours } from '../launch';
 
 /* LE HAUT DE LA LISTE DES COMMERCES (fondateur, 2026-10-16, proposition A de « Le haut de la liste des commerces »,
  * maquettes/tous-les-ecrans/tous-les-ecrans.html). Deux étages :
@@ -118,6 +120,9 @@ export function RouteVelo({ position = 12, className = '', roule = false, avance
 export default function TeteListe({ adresse, intituleAdresse, libelleChanger, onAdresse, options, estActive, surPuce, cuisine, choisirCuisine, libelleBande, mode = null, bulle = null, chargement = false }) {
   const app = experienceApp();
   const bandeau = adresse != null;
+  // Le compte à rebours de l'ouverture (Owen, 2026-11-14, version A de maquettes/compte-a-rebours) : sous l'adresse, le
+  // bandeau grandit (compte-a-rebours.css) ; seulement quand l'équipe a annoncé une heure et que GO n'est pas pressé.
+  const compte = useCompteARebours();
 
   const bande = useRef(null);
   const defile = useRef(null);
@@ -202,7 +207,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
       {/* Seul le bandeau est dans le bloc collé : la bande des cuisines, après lui, part avec la page. */}
       {bandeau && (
         <div className="liste-tete liste-tete--collante liste-tete--bandeau">
-          <div className={`lt-bandeau${mode ? ' lt-bandeau--mode' : ''}`}>
+          <div className={`lt-bandeau${mode ? ' lt-bandeau--mode' : ''}${compte ? ' lt-bandeau--compte' : ''}`}>
             {/* aria-label : le mot « Modifier » a quitté l'écran au profit d'un chevron (capture du fondateur, 2026-09-17), et
                 un chevron seul ne dit rien à un lecteur d'écran — le libellé porte l'action, le chevron est aria-hidden. */}
             <button type="button" className="lt-adresse" onClick={onAdresse} aria-label={libelleChanger}>
@@ -224,6 +229,7 @@ export default function TeteListe({ adresse, intituleAdresse, libelleChanger, on
                 </button>
               </div>
             )}
+            {compte && <CompteARebours className="lt-compte" />}
             <div className="lt-route" aria-hidden="true">
               <span className="lt-velo" ref={velo}>{VELO}</span>
             </div>

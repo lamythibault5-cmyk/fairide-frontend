@@ -11,7 +11,8 @@ import HeroPrix from '../components/landing/HeroPrix';
 import EssaiAppli from '../components/landing/EssaiAppli';
 import AvecMarque from '../components/AvecMarque';
 import Icone from '../components/Icone';
-import { useLancement } from '../launch';
+import { useLancement, useCompteARebours } from '../launch';
+import CompteARebours from '../components/CompteARebours';
 import '../site-accueil.css';
 
 /* L'ACCUEIL DU SITE, VERSION « BANDEAU ET FEUILLE » (fondateur, 2026-10-16, version B de maquettes/accueil-site/accueil-site.html).
@@ -69,6 +70,7 @@ function SceneRoute() {
 export default function Landing() {
   const { t } = useLanguage();
   const { go, emporter } = useLancement();
+  const compte = useCompteARebours();
   usePageMeta({ description: t('seo.homeDescription'), path: '/' });
   useJsonLd(organizationJsonLd(), 'ld-organization');
   useJsonLd(websiteJsonLd(), 'ld-website');
@@ -91,7 +93,10 @@ export default function Landing() {
           <HeroAdresse />
           {/* Où en est l'ouverture, sans aucune date (fondateur, 2026-10-31) : « bientôt » avant « Ouvrir l'à emporter », l'à
               emporter ouvert ensuite, plus rien après le GO. La phrase longue ne tient pas sur un téléphone : la courte y prend le relais. */}
-          {!go && <>
+          {/* Le compte à rebours, quand l'équipe a annoncé l'heure (Owen, 2026-11-14, maquettes/compte-a-rebours : « site pareil »).
+              Le lien de la bio Instagram mène ici : le visiteur retrouve le compte de la story. Il remplace la ligne « bientôt ». */}
+          {compte && <CompteARebours className="sa-compte" />}
+          {!go && !compte && <>
             <p className="sa-ouverture sa-ouverture-long"><Icone nom="reservations" taille={16} /> {t(emporter ? 'landing.ordersOpenNotePickup' : 'landing.ordersOpenNote')}</p>
             <p className="sa-ouverture sa-ouverture-court"><Icone nom="reservations" taille={16} /> {t(emporter ? 'landing.ordersOpenCourtPickup' : 'landing.ordersOpenCourt')}</p>
           </>}

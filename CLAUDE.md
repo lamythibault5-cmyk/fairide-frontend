@@ -147,7 +147,8 @@ refactor and test freely near them as long as the rule still holds.
 **The launch** *(lancement.md)*
 - Nothing opens on a date: takeaway paid at the shop opens when the team presses « Ouvrir l'à emporter » (2026-10-31),
   delivery and online payment when it presses GO; after GO, no free courier means no delivery. Customer texts say
-  « bientôt », never a date. Never reintroduce `*_PICKUP_OPEN_AT` / `*_DELIVERY_OPEN_AT` / `*_ONLINE_PAYMENT_OPEN_AT`.
+  « bientôt », never a date, except the opening countdown to the time the team announces in Admin, which opens nothing
+  (Owen, 2026-11-14). Never reintroduce `*_PICKUP_OPEN_AT` / `*_DELIVERY_OPEN_AT` / `*_ONLINE_PAYMENT_OPEN_AT`.
 
 ## Read before touching
 

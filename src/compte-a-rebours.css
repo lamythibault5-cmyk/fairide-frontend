@@ -1,0 +1,48 @@
+/* LE COMPTE À REBOURS DE L'OUVERTURE (CompteARebours.jsx, Owen 2026-11-14, maquettes/compte-a-rebours, version « Rouleau »).
+   Toujours sur l'iris (bandeau de la liste, bloc de la fiche, haut de l'accueil du site) : chiffres lime en Inter Tight,
+   libellés blancs. `--car-t` = la hauteur d'un chiffre ; chaque lieu règle la sienne. */
+.car { --car-t: 34px; display: flex; flex-direction: column; align-items: center; color: #fff; }
+.car-titre { font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .8); margin-bottom: 6px; }
+.car-rangee { display: flex; align-items: flex-start; gap: calc(var(--car-t) * .3); }
+.car-grp { display: flex; flex-direction: column; align-items: center; }
+.car-chiffres { display: flex; gap: calc(var(--car-t) * .04); }
+/* Une colonne 0-9 dans une fenêtre d'un chiffre : elle glisse vers le haut (transform seulement), avec un léger rebond. */
+.car-ch {
+  display: block; height: 1em; overflow: hidden;
+  font: 800 var(--car-t)/1 'Inter Tight', Inter, sans-serif; letter-spacing: -.02em; color: var(--lime);
+  font-variant-numeric: tabular-nums;
+}
+.car-col { display: flex; flex-direction: column; transition: transform .55s cubic-bezier(.3, 1.35, .5, 1); }
+.car-col > span { display: block; height: 1em; text-align: center; }
+.car-lib { margin-top: calc(var(--car-t) * .14); font-size: calc(var(--car-t) * .22 + 4px); line-height: 1; font-weight: 600; color: rgba(255, 255, 255, .78); }
+@media (prefers-reduced-motion: reduce) { .car-col { transition: none; } }
+
+/* À zéro sans GO (version H1) : une phrase, pas de chiffres figés. */
+.car--attente b { font: 800 calc(var(--car-t) * .78)/1.1 'Inter Tight', Inter, sans-serif; letter-spacing: -.02em; color: var(--lime); }
+.car--attente span { margin-top: 6px; font-size: 13px; font-weight: 600; color: rgba(255, 255, 255, .8); }
+
+/* 1 · Le bandeau de la liste (TeteListe.jsx, version A) : sous l'adresse, centré ; le bandeau grandit de 88 px (mesuré : à
+   moins, la route passe sous la lèvre de la feuille blanche). */
+.lt-bandeau.lt-bandeau--compte { --lt-hb: 176px; }
+.lt-compte { margin: 6px 0 4px; }
+/* Sur l'ordinateur, le bandeau garde ses 96 px : le compteur se met à droite de l'adresse, sur une ligne. */
+html:not(.appli) .sl-liste--grand .lt-bandeau.lt-bandeau--compte {
+  --lt-hb: 96px;
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; align-content: start; column-gap: 24px;
+}
+html:not(.appli) .sl-liste--grand .lt-bandeau--compte .lt-route { grid-column: 1 / -1; }
+html:not(.appli) .sl-liste--grand .lt-compte { --car-t: 24px; flex-direction: row; gap: 14px; margin: 0; }
+html:not(.appli) .sl-liste--grand .lt-compte .car-titre { margin: 0 0 12px; }
+
+/* 2 · La fiche du commerce : le bloc « bientôt » ne garde que le rouleau (Owen : « juste met le rouleau »), et sa route. */
+.ouverture-bandeau.fiche-info--compte { display: block; background: var(--iris); color: #fff; border-radius: 18px; padding: 14px 14px 8px; }
+.fiche-info--compte .car { --car-t: 36px; }
+.fiche-appli .fiche-info.fiche-info--route.fiche-info--compte { display: block; }
+/* Hors de la grille, la route est un <span> en ligne : sans display block, son conteneur de taille n'a pas de largeur et ni
+   les pointillés ni le vélo ne se voient. */
+.fiche-info--compte .fiche-info-route { display: block; margin-top: 6px; }
+
+/* 3 · L'accueil du site : à la place de la ligne « bientôt », sous la barre d'adresse, aligné à gauche. */
+.sa-compte { --car-t: 40px; align-items: flex-start; margin: 22px 0 0; }
+.sa-compte .car-titre { font-size: 14px; }
+@media (max-width: 560px) { .sa-compte { --car-t: 34px; margin-top: 18px; } }

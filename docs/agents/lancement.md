@@ -13,7 +13,7 @@ and customers would pay for deliveries nobody can do.
 (1 November) and was about to open by itself while the team was not ready. Now nothing opens on a date: the team presses
 « Ouvrir l'à emporter » first (no courier, no Stripe needed), then GO when couriers are ready. GO also opens takeaway
 (and writes it open, so closing GO later leaves takeaway open); takeaway can't be closed alone while GO is open
-(`GO_OUVERT`). Texts say « bientôt » with no date. Do not reintroduce `FAIRIDE_PICKUP_OPEN_AT` /
+(`GO_OUVERT`). Texts say « bientôt » with no date, except the countdown below (display only). Do not reintroduce `FAIRIDE_PICKUP_OPEN_AT` /
 `FAIRIDE_DELIVERY_OPEN_AT` / `FAIRIDE_ONLINE_PAYMENT_OPEN_AT` (no longer read, so a leftover Railway variable can't reopen
 anything) or any `VITE_*_OPEN_AT` (the app copies `src/launch.js` into its package: a date there stayed in every installed
 app). On 2026-10-31 evening `FAIRIDE_PICKUP_OPEN_AT=2099-…` was set on Railway as a stopgap until the button shipped; it is
@@ -92,13 +92,26 @@ ignored since, and can be deleted.
   with GO; G35). The card counts them (`commercesEnLigneSeulement`) in the closed state and in the close confirmation. For a
   courier or delivery incident, cut delivery per shop (Admin › Restaurants, `fairide_delivery_disabled`) or per zone
   (Admin › Logistique): keep « Refermer » for a payment incident.
+- **Opening countdown (Owen, 2026-11-14, `maquettes/compte-a-rebours`)**: for the Instagram launch, the app and the
+  website count down to the second to an opening time the team **announces** in Admin › Aujourd'hui (field « Ouverture
+  annoncée » in the GO card, `POST /api/admin/launch/countdown` `{ at: ISO | null }`, owner and admin, written to
+  `platform_audit_log` as `launch_countdown`; stored in `platform_parameters.launch_countdown_at`, a past time or one more
+  than a year away is refused). **Display only: it opens nothing.** No order guard reads it (`lancement.etat()` does not;
+  `tests/compte-a-rebours.test.js` orders after a passed time and is refused). `GET /orders/launch` sends it as
+  `compteAReboursAt` before GO only, so it disappears the moment the app sees GO. Where it shows
+  ([CompteARebours.jsx](../../src/components/CompteARebours.jsx), rolling digits): the list band in the app and on the
+  site (version A, the band grows by 88 px on a phone; on a desktop it sits right of the address), the shop page's
+  « bientôt » block (digits only: Owen, « juste met le rouleau »), and the website home under the address bar in place of
+  the « bientôt » line. At zero without GO it says « C'est pour aujourd'hui. On ouvre dans un instant. » (version H1). No
+  « Me prévenir », no share, no animation at GO (Owen: « petits plus : aucun »). Empty field = no countdown anywhere;
+  push it back a day in Admin, no app update. Never write the time in the app's code (the 2026-10-31 lesson above).
 - **Website** ([src/launch.js](../../src/launch.js)): reads `GET /orders/launch` (`go`, `goAt`, `pickupOpen`) at start, every
   minute while visible, on return to the tab and right after any `*_NOT_OPEN` refusal (G100; through `api()`, so the app
   falls back to the relay); the last answer is kept in `localStorage` (`fairide_lancement`). Components that depend
   on it call `useLancement()` to re-render. `livraisonDisponible(id)` reads `GET /orders/delivery-available/:id`
   (yes/no only, never the courier count); [Checkout](../../src/pages/client/Checkout.jsx) and
   [RestaurantMenu](../../src/pages/client/RestaurantMenu.jsx) switch to takeaway and show `noCourierNow` / `noCourierBanner`.
-  Texts say « bientôt » with no date; `datePremierPrelevement()` returns null before GO (`*AvantGo` texts).
+  Texts say « bientôt » with no date (the countdown above aside); `datePremierPrelevement()` returns null before GO (`*AvantGo` texts).
 - **Contract** `RESTO-2026.20` (`restaurantContract.js`): « à la date que Fairide annonce au Commerce par e-mail »
   instead of 10 November. Calendar set to published 20/10/2026, in force 05/11/2026 (15-day P2B notice); `notifier`
   is false, so the founders send it themselves, and both dates move if it goes out later.
