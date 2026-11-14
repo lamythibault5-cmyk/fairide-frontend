@@ -108,7 +108,9 @@ components live in [src/components/conformite/](../../src/components/conformite/
   approved page (DossierSuivi.jsx, site and app, blocks in dossierBlocs.jsx) lets the courier change
   zone, vehicle, « other platforms » (1 vs 3 jobs at a time), bag and minimum, upload a
   renewed residence permit / professional card (date first) —
-  none of it re-opens the review; the team gets a task (vehicle changed, permit to check). A STATUS change sends the
+  none of it re-opens the review; the team gets a task (vehicle changed, permit to check). An approved courier still missing
+  his legal name and seat (approval forced with a reason, or data changed since) gives them in « Ton activité » the same way:
+  accepted only while the seat is missing, task « Siège donné » (Owen, 2026-11-14, G2-22; backend `CHAMPS_SIEGE`). A STATUS change sends the
   dossier back to draft when the new status needs something (siège, contract), else to the team; no offers until
   re-verified. The daily job also e-mails / pushes 30 and 7 days before a dated document expires
   (`couriers.rappelerEcheancesPieces`).
