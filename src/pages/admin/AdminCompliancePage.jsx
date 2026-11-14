@@ -19,6 +19,7 @@ import CriteresSalariatTab from './compliance/CriteresSalariatTab';
 import { ONGLETS_CONFORMITE, DecisionsTab, DsaTab, BreachesTab, ProcessorsTab, ForbiddenTab, ParametersTab } from './compliance/ConformiteP0Tabs';
 import DispatchTab from './compliance/DispatchTab';
 import DeclarationsTab from './compliance/DeclarationsTab';
+import AnnoncesVersions from './compliance/AnnoncesVersions';
 
 // Application « Conformité & RGPD » : registre des demandes des personnes concernées (délai légal d'un
 // mois), export / suppression des données d'un compte, suivi des versions de contrats des partenaires,
@@ -433,6 +434,8 @@ function ContractsTab() {
               </div>
             </div>
           </div>
+
+          <AnnoncesVersions annonces={data.announcements} onDone={load} />
 
           <div className="admin-control-panel">
             <b>{tr('adminCompliance.outdatedTitle', { n: data.outdatedTotal ?? data.outdated.length })}</b>

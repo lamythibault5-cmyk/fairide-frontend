@@ -176,3 +176,19 @@ components live in [src/components/conformite/](../../src/components/conformite/
   the box at checkout (the server refuses an order without the current T&Cs), the card at the top of Commandes
   (RenouvellementContrat, which the shop clause names), « Signe ton nouveau contrat » on Courses. The screen comes back at
   the next opening. The privacy policy is « prise en connaissance », never « acceptée » (information, not consent).
+- **A new version never announces itself: the screen does, the e-mail waits for Owen's go** (Owen, 2026-11-14). That
+  morning a backend merge publishing courier contract 2026.12 was enough for the hourly reminder job
+  (`rappelsLivreurs.js`) to e-mail and push « Ton contrat livreur a changé » to 25 couriers by itself; Owen had not chosen
+  to send it and a courier was worried. His words: « I'd like to myself choose when to send an email for a new contract
+  for restaurants, drivers or customers, because usually they just get a screen that pops up saying they have to re-sign
+  (…) I'd like to give my go. » So publishing a new version of any contract or legal text (courier or shop contract,
+  courier notices, geolocation policy, DAC7, mandate, declaration, T&Cs, privacy, commitments) sends no e-mail, push or SMS
+  to anyone; people learn it from the screen above at their next opening (and couriers get no offer until they sign).
+  An announcement goes out only for a version the team released: Admin › Conformité › Contrats › « Annonce des nouvelles
+  versions » › « Annoncer » (owner and admins; backend `POST /api/admin/compliance/version-announcements { version }`,
+  `annoncesVersions.js`, logged in admin_actions). It then goes once to whoever accepted an earlier version and has not had
+  it: couriers within the hour (9 am to 9 pm), shops at the daily run; never again to someone who already got it (the 25
+  of 2026-11-14 keep their `courier_reminders` rows). Without the go nothing is sent and no reminder key is used, so a later
+  go still works. A go cannot be taken back. Unchanged: the dossier step reminders (the day after, then 3 days after; they
+  never say « ton contrat » for someone whose only gap is a new version), order messages, and the « Relancer » buttons of
+  the same screen, which were always a team action. Customers' T&Cs and privacy versions never had an automatic message.
