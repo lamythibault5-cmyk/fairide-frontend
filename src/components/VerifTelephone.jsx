@@ -94,7 +94,7 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
       // Gardé dès le départ : un remontage pendant la requête (une page qui redirige aussitôt) attend sa réponse.
       dernierEnvoi = { userId: user?.id, at: Date.now(), attente: requete };
       const r = await requete;
-      if (r.alreadyVerified) { await finir(await refreshUser()); return; }
+      if (r.alreadyVerified) { const maj = await refreshUser(); await finir(maj, undefined, maj?.phoneVerifiedVia === 'sms'); return; }
       dernierEnvoi = { userId: user?.id, at: Date.now(), canal: r.canal, phoneMasked: r.phoneMasked };
       codeParti(r);
       if (parEmail) setSmsPasRecu(false);
@@ -124,8 +124,10 @@ export default function VerifTelephone({ auto = false, repliEmail = false, onFai
   // Le bouton « Commander » de la feuille ramène ici quand le code manque.
   if (focusRef) focusRef.current = () => { champ.current?.focus(); champ.current?.scrollIntoView?.({ block: 'center' }); };
 
-  // `parSms` : faux quand on ne sait pas par où le numéro a été prouvé (déjà prouvé ailleurs) : le paiement n'annonce alors
-  // pas le crédit, et si le serveur l'applique quand même, la carte « Le total a changé » montre un total plus bas.
+  // `parSms` : un numéro déjà prouvé ailleurs (alreadyVerified) le prend du compte relu, `phoneVerifiedVia` (backend
+  // publicUser, revue avant GO du 14/11) : prouvé par SMS, le paiement envoie le total avec le crédit, que le serveur applique ;
+  // avant, la carte « Le total a changé » s'ouvrait sur un total plus bas. Un serveur qui ne rend pas encore ce champ : faux,
+  // comme avant (le paiement n'annonce pas le crédit, et si le serveur l'applique, la carte montre le total plus bas).
   async function finir(maj, credited, parSms = false) {
     dernierEnvoi = null;
     setEtape('fait'); setCode('');
