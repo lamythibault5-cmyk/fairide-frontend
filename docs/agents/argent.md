@@ -96,14 +96,18 @@ closed without a refund (`client_absent`, `pickup_not_collected` including the 1
 commission, `commissionRemboursee.sqlIntegralementRemboursee`; a partial refund keeps them used): money kept = used, refunded
 = freed (`codesPromo.SQL_USAGES` / `SQL_COMMANDE_PRECEDENTE`, backend test `revue-1113-credit-bienvenue`). A typed code wins (one code per order) and the credit waits. The quote's `codeAmi` says why it
 doesn't apply yet (`minimum`, `sur_place`, `numero_sms`) so the cart can explain it; already received, second order, number
-already used: **nothing is said**, the cart is normal (founder). `GET /auth/me › bienvenue` ({ montant, minimum } or null)
+already used: **nothing is said**, the cart is normal (founder). **A number no SMS can reach** (country outside the SMS list,
+Belgian landline: `referrals.numeroSansSms`) can never prove itself by SMS, so it is never promised the credit (Owen,
+2026-11-14, G2-9): no welcome sheet, no `codeAmi` in the quote, so no pill, no lower button total, nothing on « Dernière
+étape » or in the cart; no new sentence either. `GET /auth/me › bienvenue` ({ montant, minimum } or null)
 says whether the welcome sheet should show. **Google / Apple accounts** may order without proving their number (their e-mail
 is proven), but without the credit (« Commander sans le crédit »). The **sharer** of a code ami gets **€3 on the balance per
 friend, no cap** (`referrals.CLIENT_REFERRAL_REWARD`; a friend who signed up before the switch, `platform_parameters.
 code_ami_3e_depuis`, keeps the €5 promised), when that friend's first qualifying order is handed over, **only if it was paid
 online** and the friend's number is proven by SMS (`maybeAwardClientReferralReward`); the friend gets nothing more than the
 welcome everyone gets. The sharer **keeps the €3 even if the friend's order is refunded after handover** (Owen, 2026-11-13:
-the handover is what earns it; abuse is handled by the team as fraud, never by taking it back automatically). Before GO nothing can be paid online: the welcome sheet and the code ami reminder wait for GO
+the handover is what earns it; abuse is handled by the team as fraud, never by taking it back automatically). Wherever the credit is written (checkout, pending-order recap, printable receipt, customer PDF receipt, order e-mail) it reads
+« Crédit de bienvenue » and « 5,00 € offerts », never « −5 € » nor the technical `CODE-AMI` (Owen, 2026-11-14, G2-16). Before GO nothing can be paid online: the welcome sheet and the code ami reminder wait for GO
 (`paiementEnLigneOuvert`, CodeAmi.jsx). Shop and courier referrals are unchanged (€5).
 **No subscription (founder, 2026-11-04: « on retire les 20 € par mois ; ça bloque les inscriptions »).** A shop pays
 nothing each month: Fairride earns only the 10 % commission on orders paid online and the system fee inside the delivery fee.
@@ -244,7 +248,8 @@ After a look at Uber Eats, Deliveroo and Takeaway, Owen settled the open points 
 - **Missing item on an order paid with balance or a promo (F11)**: the refund is the dish's menu price, capped at what the
   customer really paid (card + balance); the card first, up to what the card paid, the rest to the Fairride balance. The
   shop still gives back 90 % and Fairride its 10 % (« Pre-GO money review » above). The customer's push says both amounts,
-  and it is sent only once the refund exists.
+  and it is sent only once the refund exists. A refund that goes wholly to the balance also sends the customer the « Tu es
+  remboursé » e-mail, saying the amount is on the Fairride balance instead of the bank delay (Owen, 2026-11-14, G2-25).
 - **Team cancel with a refund choice (Question 1)**: the customer's Fairride balance and gift voucher follow the refund the
   team picks: « aucun » = nothing back; « partiel » = the typed amount, card first then balance (the voucher only comes back
   on a full refund); « complet » = everything. Before, the balance came back in full whatever the choice.
