@@ -301,14 +301,22 @@ async function ecrire(chemin, html) {
   await writeFile(path.join(dossier, 'index.html'), html, 'utf8');
 }
 
+// UNE API QUI NE RÉPOND PAS N'ARRÊTE PLUS LA CONSTRUCTION 5 MINUTES (revue avant GO du 14/11). Sans délai, fetch attendait les
+// en-têtes jusqu'à 300 s (le délai par défaut de Node) avant de construire le site sans fiches. 60 s couvrent un réveil lent
+// de l'API ; la lecture du corps compte dans ces 60 s. Le résultat reste le même : site construit, sortie 0 (la construction
+// ne tombe pas faute de commerces, le fondateur ne l'a pas décidé), avec UNE ligne d'avertissement claire.
+const DELAI_LISTE_MS = 60 * 1000;
+
 async function commercesPublics() {
   try {
     // La réponse COMPLÈTE, sans `?vue=liste` (resumeCarte.js) : les fiches statiques écrivent les plats de chaque carte.
-    const reponse = await fetch(`${API}/restaurants`, { headers: { accept: 'application/json' } });
+    const reponse = await fetch(`${API}/restaurants`, { headers: { accept: 'application/json' }, signal: AbortSignal.timeout(DELAI_LISTE_MS) });
     if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`);
     const donnees = await reponse.json();
     const liste = Array.isArray(donnees) ? donnees : (donnees?.restaurants || []);
-    return liste.filter((r) => r && r.id);
+    const commerces = liste.filter((r) => r && r.id);
+    if (!commerces.length) console.warn(`[prerender] AUCUNE FICHE DE COMMERCE PRÉ-RENDUE : ${API} a répondu une liste vide ; site construit sans fiches (sortie 0).`);
+    return commerces;
   } catch (e) {
     // Un déploiement ne doit pas échouer parce que l'API dort : les pages statiques valent d'être
     // publiées seules, et les fiches seront reprises au déploiement suivant.
@@ -317,8 +325,9 @@ async function commercesPublics() {
     // probable de ce script : un VITE_API_BASE absent ou injoignable depuis la machine de
     // construction produit un site complet, un plan du site amputé de toutes ses fiches, et aucune
     // erreur visible ailleurs que dans ce journal.
-    console.warn(`[prerender] AUCUNE FICHE DE COMMERCE PRÉ-RENDUE : ${API} n'a pas répondu (${e.message}).`);
-    console.warn('[prerender] Vérifier VITE_API_BASE dans les variables d\'environnement du déploiement.');
+    // Une seule ligne, qui dit aussi la suite : rien ne s'arrête, mais le plan du site n'a aucune fiche.
+    const raison = e?.name === 'TimeoutError' ? `pas de réponse en ${DELAI_LISTE_MS / 1000} s` : e.message;
+    console.warn(`[prerender] AUCUNE FICHE DE COMMERCE PRÉ-RENDUE : ${API} n'a pas répondu (${raison}) ; vérifier VITE_API_BASE dans les variables d'environnement du déploiement ; site construit sans fiches (sortie 0).`);
     return null;
   }
 }

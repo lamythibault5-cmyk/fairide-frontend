@@ -68,6 +68,8 @@ historique. Un remboursement Stripe est réel et ne s'annule pas.
    - **Une commande attend et le commerce est là mais ne voit pas l'écran** (téléphone à la caisse, pas de
      notification) : Admin › Commerces › **Fairide s'en occupe** ouvre son tableau de bord dans un onglet (session de
      8 h, journalisée dans ses notes) ; tu peux accepter la commande pour lui après l'avoir eu au téléphone.
+     Ses gestes personnels n'y sont pas montrés (le serveur les refuse depuis le 14/11) : notifications push de ce
+     navigateur, export de ses données, « Me déconnecter de tous les appareils », nouvelles par e-mail, acceptation des CGU.
 4. Le lendemain : appel au commerce. Si ça se répète, la suspension passe par la décision motivée (cas 4, point 3).
 
 ## 4. Client agressif, ou abus

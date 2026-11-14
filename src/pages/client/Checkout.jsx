@@ -1,4 +1,5 @@
 import { allerAuPaiement, experienceApp } from '../../natif';
+import { codeSeul } from '../../codePromo';
 
 /* DANS L'APPLICATION (2026-10-15), rien d'obligatoire n'attend en bas de la page : les codes (promo, bon cadeau) et la
  * demande d'allergie sont des rangées qui ouvrent une feuille, comme l'adresse et la remise ; l'âge et les CGU, quand il
@@ -1063,7 +1064,7 @@ export default function Checkout() {
                   <span className="co-t-bienvenue-texte"><b>{t('codeAmi.panier')}</b><small>{t('codeAmi.panierOffert')}</small></span>
                   <span className="co-t-bienvenue-montant">{euros(codePromoMontant)}<small>{t('codeAmi.panierOfferts')}</small></span>
                 </div>
-              ) : <LigneTicket libelle={t('checkout.promoCodeRecap', { label: codePromo?.code || devisValide?.promoCode || '' })} montant={`−${euros(codePromoMontant)}`} />)}
+              ) : <LigneTicket libelle={t('checkout.promoCodeRecap', { label: codeSeul(codePromo?.code || devisValide?.promoCode || '') })} montant={`−${euros(codePromoMontant)}`} />)}
               {devisValide?.giftVoucherDiscount > 0 && <LigneTicket libelle={t('checkout.giftVoucherLine', { code: devisValide.giftVoucherCode })} montant={`−${euros(devisValide.giftVoucherDiscount)}`} />}
               {soldeTicket > 0 && <LigneTicket libelle={t('checkout.balanceUsedLine')} montant={`−${euros(soldeTicket)}`} />}
               {/* Sur le site, ce total est celui que l'on regarde (la barre n'y garde que le bouton) : ses chiffres roulent. */}
@@ -1358,7 +1359,7 @@ export default function Checkout() {
               {/* Le crédit de bienvenue se lit comme au paiement : « 5,00 € offerts », jamais « −5 € » (argent.md ; Owen, 2026-11-14, G2-16). */}
               {pendingOrder.promoCodeDiscount > 0 && (pendingOrder.promoCode === CODE_AMI
                 ? <div className="line"><span>{t('codeAmi.panier')}</span><span>{euros(pendingOrder.promoCodeDiscount)} {t('codeAmi.panierOfferts')}</span></div>
-                : <div className="line"><span>{t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>)}
+                : <div className="line"><span>{t('checkout.promoCodeRecap', { label: codeSeul(pendingOrder.promoCode) })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>)}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
               <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(Number(pendingOrder.total))}</span></div>
             </div>
