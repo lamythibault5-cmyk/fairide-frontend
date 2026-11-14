@@ -34,7 +34,8 @@
 // socle-là (ANCIENS), avec un identifiant un caractère plus long (<ordre>-<début du commit + 1>, même ordre) : la clé du
 // serveur est (plate-forme, identifiant), un même identifiant ne peut pas porter deux socles. Une fois un tel paquet en
 // place, l'appli annonce le socle normalisé de ses nouveaux écrans et suit les paquets ordinaires. Retirer un paquet
-// (Admin, POST /api/admin/app/paquets/<id>/retrait) : retirer aussi son identifiant long. La liste ANCIENS se vide quand
+// (Admin, POST /api/admin/app/paquets/<id>/retrait) retire aussi son identifiant long : le serveur retire toutes les lignes
+// du même commit (fairide-backend, paquetsAppli.retirer, revue du 2026-11-14). La liste ANCIENS se vide quand
 // plus aucune appli 1.0.1 d'avant cette règle ne tourne (une version plus récente obligatoire au store).
 import { execFileSync } from 'node:child_process';
 import { createHash, randomBytes } from 'node:crypto';
