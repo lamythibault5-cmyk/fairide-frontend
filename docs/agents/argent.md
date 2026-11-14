@@ -225,15 +225,31 @@ the phone, with location already allowed (never asked for this), is more than 1 
   shows shares still waiting apart, outside the total; Admin › Paiements › Versements shows the share minus what was taken
   back, and « à verser » means a share really waiting for its transfer.
 
-## Courier questions: paid waiting, cancelled after pickup, « Ma compta » (Owen, 2026-11-12)
+## Courier questions: paid waiting (paused), cancelled after pickup, « Ma compta » (Owen, 2026-11-12 and 2026-11-14)
 
 Couriers asked what happens when they wait, when an order is cancelled late, on detours, fuel, and whether Fairride helps
-with VAT and taxes. Owen's answers, built in backend PR « attente payée » and its frontend PR:
-- **Waiting at the shop is paid** (backend `attenteComptoir.js`, migration 124): 0,10 € per minute beyond 10 minutes, 2 € at
-  most per delivery (contract 2026.11; the first setting, 0,20 € beyond 5 minutes and 4 € at most, contract 2026.10, looked
-  too expensive to Owen the same day and was brought close to Bolt Food, which pays 0,75 € for the first 15 minutes then
-  0,05 € a minute in Latvia and Lithuania; platform parameters `attente_grace_min`, `attente_cents_par_min`, `attente_plafond_cents`). Owen
-  feared couriers would stretch 4 minutes to 5, so the courier controls neither end: the clock starts at the ready time
+with VAT and taxes. Owen's answers, built in backend PR #192 and the frontend PR « Ma compta, règles de course »:
+- **Paid waiting at the shop is PAUSED (Owen, 2026-11-14: « I'd actually prefer to remove the paid waiting time for the
+  moment, I'm still figuring it out »).** One switch, the platform parameter `attente_payee_active` (backend
+  `attenteComptoir.js`; absent or 0 = paused, the default). While paused: no waiting pay is computed or written (no
+  `attente` complement, no 613-ATTENTE line, `waiting_pay_cents` stays 0); « J'attends au commerce » is the plain signal to
+  the shop it was before 11-12 (push to the shop, team task after 10 min) and no position is read or sent;
+  `GET /couriers/options` answers `pricing.waiting = { active: false }` and the app shows no pay line (`src/attentePayee.js`:
+  IncidentsCourse.jsx, ReglesCoursePage.jsx; no amount is hard-coded in the front any more). The courier contract in force,
+  **2026.12**, no longer promises it and the geolocation policy no longer mentions it. Nobody was ever paid for waiting (the
+  app on `main` never sent the position, and no delivery exists before GO). **Never show or promise waiting pay while the
+  switch is off.**
+  **To switch it back on** (Owen's go: a money rule and a signed text), in this order: a new courier contract version with
+  the waiting sentences (`courierContracts.js` › `ATTENTE_AU_CONTRAT = true` + new number; the 2026.10 sentences are kept
+  there word for word), its line in `rappelsLivreurs.CHANGEMENTS_CONTRAT` and in NouvellesConditions.jsx; the « Quand tu
+  attends au commerce » paragraph back in `docs/livreurs/politique-geolocalisation.md` (backend commit d56c742); then
+  `PATCH /api/admin/compliance/parameters { attente_payee_active: 1 }` (no admin screen for it). The front follows by itself.
+  The full list is in the header of `attenteComptoir.js`; `tests/attente-en-pause.test.js` holds what « paused » guarantees.
+- **How it works when it is on** (backend `attenteComptoir.js`, migration 124, columns kept): by default 0,20 € per minute
+  beyond 5 minutes, 4 € at most per delivery (platform parameters `attente_grace_min`, `attente_cents_par_min`,
+  `attente_plafond_cents`; Owen found that too expensive the same day, « ça me paraît énorme », and backend PR #193 proposed
+  0,10 € beyond 10 minutes, 2 € at most, close to Bolt Food: never merged, the amounts are part of what he is still figuring
+  out). Owen feared couriers would stretch 4 minutes to 5, so the courier controls neither end: the clock starts at the ready time
   **promised when he took the job** (`orders.attente_promise_at`, frozen at claim) or at his arrival if later, and **stops
   when the shop taps « Prête »** (`ready_at`), never at pickup; per minute, no 5-minute steps. Arrival counts only if the
   phone's position, sent with « J'attends au commerce », is within 300 m of the shop (`courier_waiting_verified`; no
@@ -244,12 +260,17 @@ with VAT and taxes. Owen's answers, built in backend PR « attente payée » and
 - **Cancelled by the team after pickup = the whole delivery paid** (`annulationLivreur.payerCourseApresRetrait`, from Admin's
   status override when the order was `livraison`), unless the team puts the cancellation on the courier (`responsibility`
   `driver`). Before pickup it stays the 5,22 € trip. The courier's push says « Ta course est payée en entier ».
-- Unchanged and now written for couriers on **/driver/regles** (« Attente, annulations, détours »): 10 min + two calls at
+- Unchanged and now written for couriers on **/driver/regles** (« Attente, annulations, détours »; its « Au commerce » block
+  follows the waiting switch): 10 min + two calls at
   the door then « client absent » paid in full; the customer can't cancel once the shop accepted; address changes only
   before pickup, the courier keeps the higher price; no fuel index: the courier sets his own minimum, and Fairride reviews
   its rates **at least every six months** (contract clause).
-- **Courier contract 2026.10** (`ETI-2026.10`, `IND-v4-2026.10`) writes the two new payments and the six-month review; every
-  courier re-signs in one screen (Owen: « ils doivent juste re-signer, c'est facile »).
+- **Courier contract 2026.12** (`ETI-2026.12`, `IND-v4-2026.12`, 2026-11-14) is 2026.10 word for word minus the sentences
+  on paid waiting: it keeps the whole delivery paid after pickup and the six-month review. 2026.10 (11-12) also promised
+  paid waiting; ten couriers had signed it by 11-14. Removing a promised payment is not in the courier's favour, so a 2026.10
+  signature does not count for 2026.12: every courier re-signs in one screen (NouvellesConditions.jsx says « L'attente au
+  commerce n'est pas payée pour le moment »), and gets no offer before (`contratAJour`). 2026.11 was only ever a number in
+  the unmerged PR #193.
 - **« Ma compta »** (**/driver/compta**, backend `comptaLivreur.js`, `GET /couriers/me/compta`): per quarter the deliveries,
   sales, tips and total received; for a VAT-registered courier the VAT inside his sales and the amount excl. VAT (21 %
   extracted like his monthly statement, tips outside VAT); for a franchise courier a counter against the franchise ceiling

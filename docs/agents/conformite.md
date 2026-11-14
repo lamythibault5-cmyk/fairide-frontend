@@ -120,6 +120,11 @@ components live in [src/components/conformite/](../../src/components/conformite/
   on the other dashboard pages, read-only in « agir pour ». It replaced the status card, the CarteAValider banner and
   MenuReadiness's merchant list — add a new go-live step there, not in a new banner. Signing the menu now also confirms a
   menu handed over by the team (`carteSignee.signer` sets `menu_confirmed_at`; backend migration 037 repaired shops left hidden).
+- **Courier contract in force: 2026.12** (2026-11-14; backend `courierContracts.js`). Paid waiting at the shop is paused
+  (Owen, 2026-11-14; `argent.md` › « Courier questions »): the contract and the geolocation policy no longer mention it, the
+  position is not read at « J'attends au commerce », and a courier who signed 2026.10 (which promised it) re-signs, because
+  a text that takes a payment away never counts as accepted by an older signature. The file's rule: a change only in the
+  courier's favour may keep its number; anything else is a new version and a new signature.
 - **Courier**: notices to accept before the first ride, biometric consent before Stripe Identity (withdrawable from the
   identity step and Mon compte › Mes pièces: an open Stripe check is cancelled and the identity goes to an in-person check),
   nationality and residence permit (onboarding); ID check at the door (dashboard). The team records an identity check in
