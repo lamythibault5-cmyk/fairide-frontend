@@ -63,7 +63,7 @@ const PAGES = {
   visiteur: ['/', '/restaurants', '/restaurants/1', '/recherche', '/login', '/login?oubli=1', '/reset-password?token=essai', '/carte/valider/essai', '/equipe/essai', '/preuve/essai', '/confidentialite/confirmer/essai', ...COMMUNES],
   client: ['/', '/restaurants', '/restaurants/1', '/recherche', '/panier', '/checkout', '/orders', '/favorites', '/map', '/invoices', '/account', '/order-success', '/login', '/carte/valider/essai', '/groupe/essai1234', '/equipe/essai', '/demandes', '/preuve/essai', '/confidentialite/confirmer/essai', ...COMMUNES],
   // ?dossier= : le même dossier simulé, envoyé ou validé (DossierSuivi.jsx) ; sans lui, le brouillon réel (DossierAppli.jsx).
-  driver: ['/', '/driver', '/driver/onboarding', '/driver/onboarding?dossier=pending_review', '/driver/onboarding?dossier=approved', '/driver/map', '/driver/earnings', '/driver/invoices', '/documents', '/account', ...COMMUNES],
+  driver: ['/', '/driver', '/driver/onboarding', '/driver/onboarding?dossier=pending_review', '/driver/onboarding?dossier=approved', '/driver/map', '/driver/earnings', '/driver/invoices', '/driver/compta', '/driver/regles', '/documents', '/account', ...COMMUNES],
   admin: ['/', '/admin', '/admin/cartes', '/admin/restaurants', '/admin/demandes', '/account'],
   restaurant: ['/', '/dashboard', '/dashboard/engagements', '/dashboard/menu', '/dashboard/questions', '/dashboard/orders', '/dashboard/terminal', '/dashboard/preview', '/dashboard/promotions', '/dashboard/stats', '/dashboard/invoices', '/dashboard/guide', '/sales', '/account', '/carte/valider/essai', ...COMMUNES]
 };
@@ -95,6 +95,16 @@ function simuler(chemin, methode, profil, vue = null) {
     byWeek: [{ week: '2026-10-05', gross: 5.6, withholding: 0, net: 5.6, deliveries: 1 }, { week: '2026-10-12', gross: 0, withholding: 0, net: 0, deliveries: 0 }, { week: '2026-10-19', gross: 7.3, withholding: 0, net: 7.3, deliveries: 1 }],
     lines: [], rides: [{ id: 'e1', orderId: 'o1', kind: 'delivery', earnedAt: '2026-10-20T18:05:00Z', gross: 5.8, withholding: 0, net: 5.8, tip: 1.5, restaurantName: COMMERCE.name, commune: 'Ixelles', distanceKm: 1.2 }, { id: 'e2', orderId: 'o2', kind: 'delivery', earnedAt: '2026-10-06T19:10:00Z', gross: 5.6, withholding: 0, net: 5.6, tip: 0, restaurantName: COMMERCE.name, commune: 'Etterbeek', distanceKm: 2.1 }]
   };
+  // Ma compta (backend comptaLivreur.recap, 12/11/2026) : la forme exacte, un livreur en franchise avec deux trimestres.
+  if (methode === 'GET' && chemin === '/couriers/me/compta') {
+    const q = (n, courses, ventes, pourboires) => ({ trimestre: n, courses, ventes, pourboires, total: +(ventes + pourboires).toFixed(2), fraisRetenus: +(ventes / 9).toFixed(2), baseHt: ventes, tva: 0 });
+    const trimestres = [q(1, 0, 0, 0), q(2, 0, 0, 0), q(3, 31, 172.4, 18.5), q(4, 44, 251.9, 26)];
+    return {
+      annee: 2026, annees: [2026], assujetti: false, tauxTva: 0, trimestres,
+      totaux: { courses: 75, ventes: 424.3, pourboires: 44.5, total: 468.8, fraisRetenus: 47.14, baseHt: 424.3, tva: 0 },
+      franchise: { plafond: 25000, chiffre: 424.3, reste: 24575.7, part: 0.017 }, dac7: { brut: 468.8, fraisRetenus: 47.14 }
+    };
+  }
   if (/^\/auth\/me$/.test(chemin)) return methode === 'GET' ? u : { ...u, user: u };
   if (/^\/auth\/terms\/current$/.test(chemin)) return { version: '2026-10-12' };
   // « Demande ton restaurant » (backend routes/demandes.js, 2026-10-26) : la forme exacte des réponses.

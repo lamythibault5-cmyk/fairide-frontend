@@ -73,6 +73,9 @@ const DriverDashboard = lazyPage(() => import('./pages/driver/Dashboard'));
 const DriverMapPage = lazyPage(() => import('./pages/driver/MapPage'));
 const DriverInvoicesPage = lazyPage(() => import('./pages/driver/InvoicesPage'));
 const DriverEarningsPage = lazyPage(() => import('./pages/driver/EarningsPage'));
+// Ma compta et les règles de course (Owen, 12/11/2026, questions des livreurs).
+const DriverComptaPage = lazyPage(() => import('./pages/driver/ComptaPage'));
+const DriverReglesPage = lazyPage(() => import('./pages/driver/ReglesCoursePage'));
 const DriverOnboarding = lazyPage(() => import('./pages/driver/Onboarding'));
 
 // --- Console d'administration ---
@@ -196,7 +199,9 @@ export default function App() {
     ['/invoices', t('accountUi.myReceipts'), <ProtectedRoute role="client"><ClientInvoicesPage /></ProtectedRoute>],
     ['/documents', t('mesDocuments.rowTitle'), <ProtectedRoute><DocumentsPage /></ProtectedRoute>],
     ['/driver/earnings', t('nav.earnings'), <ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>],
-    ['/driver/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>]
+    ['/driver/invoices', t('accountUi.myInvoices'), <ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>],
+    ['/driver/compta', t('comptaLivreur.titre'), <ProtectedRoute role="driver"><DriverComptaPage /></ProtectedRoute>],
+    ['/driver/regles', t('reglesCourse.titre'), <ProtectedRoute role="driver"><DriverReglesPage /></ProtectedRoute>]
   ];
   return (
     <>
@@ -289,6 +294,8 @@ export default function App() {
         <Route path="/driver/tips" element={<Navigate to="/driver/earnings" replace />} />
         <Route path="/driver/invoices" element={<ProtectedRoute role="driver"><DriverInvoicesPage /></ProtectedRoute>} />
         <Route path="/driver/earnings" element={<ProtectedRoute role="driver"><DriverEarningsPage /></ProtectedRoute>} />
+        <Route path="/driver/compta" element={<ProtectedRoute role="driver"><DriverComptaPage /></ProtectedRoute>} />
+        <Route path="/driver/regles" element={<ProtectedRoute role="driver"><DriverReglesPage /></ProtectedRoute>} />
         <Route path="/driver/onboarding" element={<ProtectedRoute role="driver"><DriverOnboarding /></ProtectedRoute>} />
         <Route path="/account" element={<ProtectedRoute><Account /></ProtectedRoute>} />
         {/* Mes documents (2026-10-09) : CGU, confidentialité, contrats acceptés et signés — tous les rôles. */}

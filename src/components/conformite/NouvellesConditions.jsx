@@ -52,7 +52,11 @@ import '../../nouvelles-conditions.css';
 
 const AVANT_COURSE = ['transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];
 // Ce qui change, en une phrase, par version du contrat livreur (la fin de la version : « IND-v4-2026.9 » → « 2026.9 »).
-const CHANGEMENTS_LIVREUR = { '2026.9': 'ecranLivreur.feuilleContrat_2026_9' };
+// 2026.12 (Owen, 14/11/2026) : l'attente au commerce payée est en pause. La phrase garde ce qui reste nouveau depuis 2026.9 (la
+// course entière payée après le retrait) et dit que l'attente n'est pas payée pour le moment : dix livreurs avaient signé
+// 2026.10, qui la promettait, et l'écran ne doit pas le leur cacher. 2026.10 et 2026.11 ne seront plus jamais « en vigueur »
+// (2026.11 n'a pas été publié) : leurs phrases sont retirées.
+const CHANGEMENTS_LIVREUR = { '2026.9': 'ecranLivreur.feuilleContrat_2026_9', '2026.12': 'ecranLivreur.feuilleContrat_2026_12' };
 const REFUS = 'fairide_conditions_refusees';
 const PAGES_LIBRES = ['/cgv', '/confidentialite', '/mentions-legales', '/cookies', '/documents', '/account', '/checkout', '/order-success',
   '/dashboard/engagements', '/driver/onboarding'];

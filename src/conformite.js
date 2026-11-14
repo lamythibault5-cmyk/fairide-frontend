@@ -31,6 +31,8 @@ export function manqueConformite(valeur, restaurant, lignes, _typeCommande, t) {
 export const ATTENTE_PORTE_MIN = 10;
 // Appels au client exigés pendant cette attente avant de clore (APPELS_CLIENT_MIN de routes/orders.js).
 export const APPELS_CLIENT_MIN = 2;
+// (Les montants de l'attente au comptoir payée ne sont plus écrits ici : elle est en pause depuis le 14/11/2026, et quand elle
+// est active ses montants viennent du serveur, src/attentePayee.js.)
 
 // Libellé d'un manquement du dossier livreur ajouté par le backlog (les autres restent dans courierOnboarding).
 export const MANQUES_CONFORMITE = ['nationalite', 'titre_sejour', 'carte_professionnelle', 'transparency_notice', 'geolocation_policy', 'dac7_info', 'self_billing_mandate', 'declaration_honneur'];

@@ -152,17 +152,21 @@ export default function EarningsPage() {
   const ligneCourse = (r) => {
     const quand = r.earnedAt ? new Date(r.earnedAt) : null;
     const lieu = r.restaurantName ? (r.commune ? `${r.restaurantName} → ${r.commune}` : r.restaurantName) : null;
-    const nature = ['delivery', 'tip', 'reversal', 'correction', 'cancellation'].includes(r.kind) ? t(`driverPay.kind_${r.kind}`) : r.kind;
+    const nature = ['delivery', 'tip', 'reversal', 'correction', 'cancellation', 'waiting'].includes(r.kind) ? t(`driverPay.kind_${r.kind}`) : r.kind;
     const titre = r.kind === 'delivery' ? (lieu || `${nature} #${String(r.orderId || '').slice(0, 8)}`) : [nature, r.restaurantName].filter(Boolean).join(' · ');
     const retenue = Number(r.withholding || 0) !== 0 ? `${t('driverPay.gross')} ${euro(r.gross)} · ${t('driverPay.withholding')} ${euro(r.withholding)}${r.withholdingRate ? ` (${pctTexte(r.withholdingRate)})` : ''}` : null;
     const sous = [quand && quand.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit' }), r.distanceKm != null && r.kind === 'delivery' ? km(r.distanceKm) : null, retenue].filter(Boolean).join(' · ');
     const net = Number(r.net || 0);
     const tip = Number(r.tip || 0);
+    // L'attente au comptoir payée, repliée sur sa course par le serveur (gainsLivreur.parCourse, 12/11/2026) : dite sous le
+    // montant de la course, comme le pourboire (« + 1,40 € d'attente »).
+    const attente = Number(r.waiting || 0);
     return (
       <div className="ecl-gain" key={r.id}>
         <span className="ecl-grow"><b>{titre}</b>{sous && <small>{sous}</small>}</span>
         <span className="ecl-gain-montant" aria-label={tip > 0 ? t('ecranLivreur.gainsAvecPourboire', { amount: euro(net), tip: euro(tip) }) : undefined}>
           <b className={net < 0 ? 'negatif' : undefined}>{euro(net)}</b>
+          {attente > 0 && <small>{t('ecranLivreur.gainsPlusAttente', { montant: euro(attente) })}</small>}
           {tip > 0 && <small aria-hidden="true">{t('ecranLivreur.gainsPlusPourboire', { tip: deux(tip) })}</small>}
         </span>
       </div>
@@ -274,7 +278,7 @@ export default function EarningsPage() {
             </div>
             <CopieDac7 chemin={(a) => `/couriers/me/dac7/${a}.pdf`} token={token} annees={annees.slice(0, 2)} />
             <ul className="ecl-etapes">
-              <li><Link to="/driver/invoices" className="ecl-etape"><span className="ecl-grow"><b>{t('ecranLivreur.gainsFactures')}</b><small>{t('ecranLivreur.gainsFacturesSous')}</small></span><Icone nom="retour" taille={16} className="bv-chevron" /></Link></li>
+              <li><Link to="/driver/compta" className="ecl-etape"><span className="ecl-grow"><b>{t('comptaLivreur.titre')}</b><small>{t('comptaLivreur.rowSous')}</small></span><Icone nom="retour" taille={16} className="bv-chevron" /></Link></li>
               <li><Link to="/driver/onboarding" className="ecl-etape"><span className="ecl-grow"><b>{t('dashDriver.courierFileTitle')}</b><small>{t('dashDriver.courierFileSub')}</small></span><Icone nom="retour" taille={16} className="bv-chevron" /></Link></li>
             </ul>
             <p className="ecl-pied-legal">{t('courierOnboarding.legalFooter', { year: legal.year ?? annee })}</p>

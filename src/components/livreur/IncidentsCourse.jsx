@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { api } from '../../api';
 import { useLanguage } from '../../context/LanguageContext';
 import ConfirmDialog from '../ConfirmDialog';
+import { Link } from 'react-router-dom';
 import { ATTENTE_PORTE_MIN, APPELS_CLIENT_MIN } from '../../conformite';
+import useAttentePayee from '../../attentePayee';
+import { positionPrecise } from '../../natif';
+import { euros } from '../../prixPlat';
 import Icone from '../Icone';
 import AppelerFairide from './AppelerFairide';
 
@@ -41,6 +45,24 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
     }
   }
 
+  /* ATTENTE AU COMPTOIR PAYÉE : EN PAUSE (Owen, 14/11/2026 ; src/attentePayee.js lit l'interrupteur du serveur). En pause,
+   * « J'attends au commerce » est le simple signal d'avant le 12/11 : le commerce est prévenu, aucune position n'est demandée
+   * ni envoyée, et rien à l'écran ne parle de paie.
+   * QUAND ELLE EST ACTIVE (Owen, 12/11/2026 ; serveur attenteComptoir.js) : la position part avec « J'attends au commerce » ;
+   * près du commerce, l'attente est payée après le délai de grâce, comptée de l'heure promise à la prise (ou de l'arrivée) et
+   * arrêtée par le « Prête » du commerce, jamais par le livreur. Sans position (refusée, GPS muet), l'attente est signalée au
+   * commerce, mais pas payée : l'écran le dit et propose de réessayer. Les montants sont ceux du serveur. */
+  const attentePayee = useAttentePayee();
+  async function signalerAttente() {
+    if (!attentePayee) { await appeler('waiting'); return; }
+    setEnCours(true);
+    const p = await positionPrecise().catch(() => null);
+    await appeler('waiting', p ? { lat: p.lat, lng: p.lng } : {});
+  }
+  const debutPaye = attentePayee && order.courierWaitingSince
+    ? Math.max(order.courierWaitingSince, order.waitingPromisedAt || 0) + attentePayee.graceMin * 60000 : null;
+  const heurePaye = debutPaye ? new Date(debutPaye).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' }) : null;
+
   const avantRetrait = ['preparation', 'pret'].includes(order.status);
   const enLivraison = order.status === 'livraison';
   const attenteMin = order.courierWaitingSince ? Math.max(0, Math.floor((maintenant - order.courierWaitingSince) / 60000)) : null;
@@ -60,8 +82,25 @@ export default function IncidentsCourse({ order, token, toast, onChange }) {
   return (
     <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginTop: 8 }}>
       {avantRetrait && (attenteMin === null
-        ? <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={() => appeler('waiting')}>{t('dashDriver.incident_waiting')}</button>
-        : <span className="small">{t('dashDriver.incident_waitingSince', { min: attenteMin })}</span>)}
+        ? <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={signalerAttente}>{t('dashDriver.incident_waiting')}</button>
+        : (
+          <div style={{ width: '100%' }}>
+            <p className="small" style={{ margin: 0 }}>{t('dashDriver.incident_waitingSince', { min: attenteMin })}</p>
+            {/* En pause (ou serveur d'avant, sans waitingPaid) : rien de plus, l'attente n'est pas payée et rien ne le promet. */}
+            {attentePayee && order.waitingPaid === true && (
+              <p className="small" style={{ margin: '4px 0 0' }}>
+                {t('dashDriver.incident_waitingPaid', { heure: heurePaye, parMin: euros(attentePayee.perMinute), plafond: euros(attentePayee.cap) })}{' '}
+                <Link to="/driver/regles">{t('dashDriver.incident_waitingRules')}</Link>
+              </p>
+            )}
+            {attentePayee && order.waitingPaid === false && (
+              <p className="small" style={{ margin: '4px 0 0' }}>
+                {t('dashDriver.incident_waitingNotPaid')}{' '}
+                <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={signalerAttente}>{t('dashDriver.incident_waitingRetry')}</button>
+              </p>
+            )}
+          </div>
+        ))}
       {avantRetrait && <button type="button" className="btn-ghost btn-sm" disabled={enCours} onClick={() => setConfirmer('rendre')}>{t('dashDriver.incident_release')}</button>}
       {enLivraison && !order.containsAlcohol && resteClient === null && (
         <button type="button" className="btn-outline btn-sm" disabled={enCours} onClick={() => appeler('client-absent')}>{t('dashDriver.incident_clientAbsent')}</button>
