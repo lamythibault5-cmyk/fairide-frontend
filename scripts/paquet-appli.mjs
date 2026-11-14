@@ -58,8 +58,10 @@ const VERSIONS = {
   android: {
     fichier: 'app/build.gradle',
     normales: { marketing: '1.0', build: '1' },
+    // Toutes les écritures Gradle (Groovy et Kotlin) : versionName "x", 'x', = "x", ("x") ; versionCode : chaque nombre de
+    // sa ligne (revue du 2026-11-14 ; seule la première était reconnue). \b après versionName : versionNameSuffix reste.
     remettre: (t, v) => t
-      .replace(/(\bversionName\s+")[^"\n]*"/g, (_, a) => `${a}${v.marketing}"`)
+      .replace(/(\bversionName\b\s*(?:=\s*)?\(?\s*)(["'])[^"'\n]*\2/g, (_, a, q) => `${a}${q}${v.marketing}${q}`)
       .replace(/^(\s*versionCode\b.*)$/gm, (ligne) => ligne.replace(/\d+/g, v.build))
   }
 };
@@ -225,6 +227,25 @@ if (action === 'verifier') {
     const avecAutre = socle(p, { texteDe: () => autre });
     if (avecAutre !== normal) dire(`${p} : un autre numéro de version change le socle normalisé.`);
     if (socle(p, { valeurs: { marketing: '9.8.7', build: '654' } }) === normal) dire(`${p} : le socle brut ne voit pas les numéros (empreinte suspecte).`);
+  }
+  // 1 bis. Les autres écritures Gradle des lignes de version (revue du 2026-11-14) : guillemets simples, `=`, parenthèses.
+  //    Deux numéros différents donnent le même texte normalisé ; versionNameSuffix ne bouge pas.
+  const { remettre: remettreAndroid, normales } = VERSIONS.android;
+  const formes = [
+    (n, c) => `versionName "${n}"\nversionCode ${c}`,
+    (n, c) => `versionName '${n}'\nversionCode ${c}`,
+    (n, c) => `versionName = "${n}"\nversionCode = ${c}`,
+    (n, c) => `versionName = '${n}'\nversionCode = ${c}`,
+    (n, c) => `versionName("${n}")\nversionCode(${c})`,
+    (n, c) => `versionName('${n}')\nversionCode('${c}'.toInteger())`,
+    (n, c) => `    versionName "${n}"\n    versionCode((System.getenv('VERSION_CODE') ?: '${c}') as Integer)`
+  ];
+  for (const forme of formes) {
+    const a = remettreAndroid(`${forme('1.0.1', 7)}\nversionNameSuffix '-test'`, normales);
+    const b = remettreAndroid(`${forme('2.3', 315)}\nversionNameSuffix '-test'`, normales);
+    if (a !== b || !a.includes(forme(normales.marketing, normales.build)) || !a.endsWith("versionNameSuffix '-test'")) {
+      dire(`android : la forme « ${forme('X', 'N').replace(/\n/g, ' / ')} » n'est pas remise aux numéros normaux (${JSON.stringify(a)}).`);
+    }
   }
   // 2. L'élagage : le dernier zip d'un socle reste, même au-delà des 60 plus récents.
   const zips = [];
