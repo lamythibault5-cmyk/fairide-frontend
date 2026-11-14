@@ -96,11 +96,14 @@ jobs:
           APP_BUILDS_TOKEN: ${{ secrets.APP_BUILDS_TOKEN }}
         run: node scripts/paquet-appli.mjs annoncer "https://github.com/${GITHUB_REPOSITORY}/releases/download/${RELEASE}/${NOM}" "$RUNNER_TEMP/$NOM"
 
-      # Les 60 zips les plus récents restent (assez pour revenir en arrière de plusieurs jours), et les 2 derniers de chaque
-      # socle même plus vieux : le serveur les donne encore aux applis restées sur une coque plus ancienne, et un zip
-      # effacé leur laisserait une adresse morte (règle dans scripts/paquet-appli.mjs, aRetirer). Les autres sont retirés.
+      # Les 60 zips les plus récents restent (assez pour revenir en arrière de plusieurs jours), et ceux des 2 derniers
+      # commits de chaque socle même plus vieux : le serveur les donne encore aux applis restées sur une coque plus ancienne,
+      # et un zip effacé leur laisserait une adresse morte (règle dans scripts/paquet-appli.mjs, aRetirer). Les autres sont
+      # retirés. pipefail : une liste des zips qui échoue (réseau, page manquante) ne doit rien retirer ; sans lui, une liste
+      # tronquée passait quand même à l'élagage, qui jugeait sur une partie des zips.
       - name: Vieux zips retirés
         run: |
+          set -o pipefail
           REL=$(gh api "repos/${GITHUB_REPOSITORY}/releases/tags/${RELEASE}" --jq .id)
           gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${REL}/assets?per_page=100" --jq '.[] | "\(.created_at) \(.id) \(.name)"' |
             node scripts/paquet-appli.mjs elaguer | while read -r ID; do gh api -X DELETE "repos/${GITHUB_REPOSITORY}/releases/assets/$ID"; done

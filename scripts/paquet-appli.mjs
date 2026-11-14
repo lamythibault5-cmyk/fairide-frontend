@@ -126,7 +126,7 @@ function anciens(plateforme, rev = 'HEAD') {
 const court = (s) => s.slice(0, 8);
 
 // LES VIEUX ZIPS. La release garde les 60 zips les plus récents (de quoi revenir en arrière de plusieurs jours) ET, pour
-// chaque socle, les 2 meilleurs zips (ordre du commit, puis date) : le serveur donne le plus récent non retiré d'un
+// chaque socle, tous les zips de ses 2 derniers commits (ordres distincts) : le serveur donne le plus récent non retiré d'un
 // socle, parfois pendant des semaines à une coque restée en arrière ; effacé, l'appli recevrait une adresse morte et
 // resterait sur les écrans de son store. Les socles d'un zip sont dans son nom (…-s<ios8>-<android8>[-<ancien8>…].zip,
 // depuis le 13/11) ; un zip d'avant n'a que la règle des 60.
@@ -139,9 +139,13 @@ export function aRetirer(lignes, { garder = 60, parSocle = 2 } = {}) {
   const garde = new Set(
     [...zips].sort((a, b) => b.date.localeCompare(a.date)).slice(0, garder).map((z) => z.id)
   );
-  const parOrdre = [...zips].sort((a, b) => b.ordre - a.ordre || b.date.localeCompare(a.date));
+  // Les 2 derniers COMMITS (ordres distincts) du socle, avec tous leurs zips : un workflow relancé sur le même commit dépose
+  // un second zip, qui comptait pour un second commit, et le zip du commit d'avant (le vrai repli) partait (revue du
+  // 2026-11-14).
   for (const s of new Set(zips.flatMap((z) => z.socles))) {
-    parOrdre.filter((z) => z.socles.includes(s)).slice(0, parSocle).forEach((z) => garde.add(z.id));
+    const duSocle = zips.filter((z) => z.socles.includes(s));
+    const ordres = new Set([...new Set(duSocle.map((z) => z.ordre))].sort((a, b) => b - a).slice(0, parSocle));
+    duSocle.filter((z) => ordres.has(z.ordre)).forEach((z) => garde.add(z.id));
   }
   return zips.filter((z) => !garde.has(z.id)).map((z) => z.id);
 }
@@ -233,6 +237,15 @@ if (action === 'verifier') {
   if (retires.has('1004') || retires.has('1003')) dire('élagage : les 2 derniers zips du socle aaaaaaaa sont retirés.');
   if (!retires.has('1002') || !retires.has('999')) dire('élagage : un vieux zip qui n\'est le dernier de rien est gardé.');
   if (retires.size !== 70 + 1 - 60 - 2) dire(`élagage : ${retires.size} zips retirés au lieu de ${70 + 1 - 60 - 2}.`);
+  // 3. Un workflow relancé sur le même commit (revue du 2026-11-14) : deux zips du commit 300, puis 200 et 100, tous
+  //    plus vieux que les 60 récents. Les 2 derniers COMMITS du socle restent (300, ses deux zips, et 200) ; 100 part.
+  const relance = [...Array(60)].map((_, i) => `2026-11-20T${String(10 + Math.floor(i / 6)).padStart(2, '0')}:${String(i % 6)}0:00Z ${5000 + i} fairride-${1800000000 + i}-1234567-${i}-1-sffffffff.zip`);
+  relance.push('2026-11-10T12:00:00Z 3002 fairride-300-abcdef3-12-2-seeeeeeee.zip', '2026-11-10T10:00:00Z 3001 fairride-300-abcdef3-12-1-seeeeeeee.zip',
+    '2026-11-09T10:00:00Z 2001 fairride-200-abcdef2-11-1-seeeeeeee.zip', '2026-11-08T10:00:00Z 1001 fairride-100-abcdef1-10-1-seeeeeeee.zip');
+  const sansRelance = new Set(aRetirer(relance));
+  if (sansRelance.has('2001')) dire('élagage : un workflow relancé compte pour deux commits, le zip du commit d\'avant (200) est retiré.');
+  if (sansRelance.has('3001') || sansRelance.has('3002')) dire('élagage : un zip du dernier commit du socle est retiré.');
+  if (!sansRelance.has('1001') || sansRelance.size !== 1) dire(`élagage (relance) : retirés ${[...sansRelance].join(', ')} au lieu de 1001 seul.`);
   for (const m of erreurs) console.error(`✗ ${m}`);
   console.log(erreurs.length ? `${erreurs.length} erreur(s) dans le socle des applis.` : 'Socle des applis : numéros de version ignorés, derniers zips de chaque socle gardés.');
   process.exit(erreurs.length ? 1 : 0);
