@@ -11,10 +11,11 @@ import { horsZoneLivraison, distanceLivraisonKm, tarifLivraison, eurosCourts } f
 import { fourchette, minutesLivraison, pointDuClient, prepAnnoncee } from '../../delaiEstime';
 import { normaliserRecherche } from '../../normaliserRecherche';
 import Icone from '../../components/Icone';
+import CompteARebours from '../../components/CompteARebours';
 import BandeauGroupe from '../../components/client/BandeauGroupe';
 import { groupeEnCours } from '../../commandeGroupee';
 import VisuelVide from '../../components/VisuelVide';
-import { commandesOuvertes, livraisonOuverte, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
+import { useCompteARebours, commandesOuvertes, livraisonOuverte, paiementEnLigneOuvert, useLancement, livraisonDisponible, exempteLancement } from '../../launch';
 import { useToast } from '../../context/ToastContext';
 import { SqueletteFiche } from '../../components/Skeleton';
 import EtatVide from '../../components/EtatVide';
@@ -451,6 +452,8 @@ export default function RestaurantMenu({ id }) {
   // n'est proposée que si un livreur est libre à l'instant (relu toutes les minutes) : sinon un bandeau le dit et
   // l'à emporter est choisi. Les comptes exemptés (équipe, test, simulation) ne sont pas concernés, comme côté serveur.
   useLancement();
+  // L'heure d'ouverture annoncée (compte à rebours, Owen 2026-11-14) : le bloc « bientôt » ne montre plus que le rouleau.
+  const compteARebours = useCompteARebours();
   const [livraisonDispo, setLivraisonDispo] = useState(null);
   const verifierLivraison = !!restaurant?.offersDelivery && livraisonOuverte(user) && !exempteLancement(user);
   // Distance à vol d'oiseau depuis l'adresse du compte : le serveur écarte les vélos au-delà de leur portée (audit du 19/10,
@@ -982,7 +985,9 @@ export default function RestaurantMenu({ id }) {
           l'à emporter payé en ligne) attend. Rien n'est annoncé pour un commerce qui ne propose aucun service en ligne, et l'à emporter
           n'est promis que s'il se paie sur place (le paiement en ligne ouvre avec la livraison). */}
       {bandeauOuverture && (
-        <div className={`ouverture-bandeau fiche-info${vueAppli ? ' fiche-info--route' : ''}`} role="status">
+        <div className={`ouverture-bandeau fiche-info${vueAppli ? ' fiche-info--route' : ''}${compteARebours ? ' fiche-info--compte' : ''}`} role="status">
+          {/* Compte à rebours (maquettes/compte-a-rebours, Owen : « trop d'info, juste met le rouleau ») : ni icône ni phrase. */}
+          {compteARebours ? <CompteARebours titre={false} /> : <>
           <span className="fiche-info-icone" aria-hidden="true"><Icone nom="horloge" taille={18} /></span>
           <span>
           {!emporterSurPlace
@@ -993,6 +998,7 @@ export default function RestaurantMenu({ id }) {
                 ? t('restaurantMenu.ordersOpenBanner')
                 : t('restaurantMenu.ordersOpenBannerPickupOnly')}
           </span>
+          </>}
           {/* App (version B) : l'annonce roule sur la route du vélo. */}
           {vueAppli && <span className="fiche-info-route" aria-hidden="true"><span className="fiche-info-velo"><VeloMarque largeur={26} /></span></span>}
         </div>

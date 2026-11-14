@@ -113,6 +113,7 @@ export default function BoutonGo() {
       {/* Délai d'annulation faute de livreur vide : le serveur refuse le GO (chasse aux bogues d'avant GO, 2026-11-06, G4). */}
       {!etat.go && etat.annulationSansLivreurMin === null && <p className="small texte-erreur" style={{ margin: '0 0 12px' }}>{tr('adminGo.noCourierCancelMissing')}</p>}
       <EquipeJoignable n={etat.equipeJoignable} relire={lire} />
+      {!etat.go && <CompteAReboursAdmin at={etat.compteAReboursAt || null} setEtat={setEtat} peutAppuyer={peutAppuyer} />}
       {!peutAppuyer ? (
         <p className="small" style={{ margin: 0 }}>{tr('adminGo.roleOnly')}</p>
       ) : etat.force ? null : etat.go ? (
@@ -170,6 +171,57 @@ function EquipeJoignable({ n, relire }) {
       {push.supporte && (push.abonne
         ? <p className="small" style={{ margin: 0, color: 'var(--ink-soft)' }}>{tr('adminGo.teamAlertsOn')}</p>
         : <button type="button" className="btn-outline btn-sm" disabled={push.occupe} onClick={activer}>{tr('adminGo.teamAlertsButton')}</button>)}
+    </div>
+  );
+}
+
+/* LE COMPTE À REBOURS (Owen, 2026-11-14, maquettes/compte-a-rebours ; lancement.reglerCompteARebours et POST
+ * /admin/launch/countdown côté serveur). L'heure d'ouverture ANNONCÉE que l'app et le site comptent à la seconde. Affichage
+ * seulement : à cette heure rien ne s'ouvre, l'équipe presse GO ; avant GO, le compteur dit ensuite « On ouvre dans un
+ * instant ». Vide = aucun compteur. Repousser l'ouverture d'un jour se fait ici, sans mise à jour de l'app. L'heure se tape
+ * à l'heure de Bruxelles (celle du navigateur de l'équipe) et part en ISO. */
+const versChamp = (iso) => {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+function CompteAReboursAdmin({ at, setEtat, peutAppuyer }) {
+  const { t: tr } = useLanguage();
+  const { token } = useAuth();
+  const toast = useToast();
+  const [valeur, setValeur] = useState(versChamp(at));
+  const [enCours, setEnCours] = useState(false);
+  useEffect(() => { setValeur(versChamp(at)); }, [at]);
+  async function regler(nouvelle) {
+    setEnCours(true);
+    try {
+      const r = await api('/admin/launch/countdown', { method: 'POST', token, body: { at: nouvelle ? new Date(nouvelle).toISOString() : null } });
+      setEtat((avant) => ({ ...avant, compteAReboursAt: r.compteAReboursAt }));
+      chargerLancement();
+      toast(tr(r.compteAReboursAt ? 'adminGo.countdownSaved' : 'adminGo.countdownCleared'), 'succes');
+    } catch (e) {
+      toast(e.message, 'erreur');
+    } finally {
+      setEnCours(false);
+    }
+  }
+  const affiche = at ? new Date(at).toLocaleString(getLocale(), { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) : '';
+  return (
+    <div style={{ margin: '0 0 12px', paddingTop: 10, borderTop: '1px solid var(--line)' }}>
+      <p style={{ margin: '0 0 2px' }}><b>{tr('adminGo.countdownTitle')}</b></p>
+      <p className="small" style={{ margin: '0 0 4px' }}>{at ? tr('adminGo.countdownShown', { date: affiche }) : tr('adminGo.countdownNone')}</p>
+      <p className="small" style={{ margin: '0 0 8px', color: 'var(--ink-soft)' }}>{tr('adminGo.countdownHint')}</p>
+      {peutAppuyer && (
+        <form className="row" style={{ gap: 8, alignItems: 'flex-end', flexWrap: 'wrap' }} onSubmit={(e) => { e.preventDefault(); if (valeur) regler(valeur); }}>
+          <label className="field" style={{ margin: 0 }}>
+            <span className="field-intitule">{tr('adminGo.countdownLabel')}</span>
+            <input type="datetime-local" value={valeur} onChange={(e) => setValeur(e.target.value)} />
+          </label>
+          <button type="submit" className="btn-outline" disabled={enCours || !valeur || valeur === versChamp(at)}>{tr('adminGo.countdownSave')}</button>
+          {at && <button type="button" className="btn-outline" disabled={enCours} onClick={() => regler(null)}>{tr('adminGo.countdownClear')}</button>}
+        </form>
+      )}
     </div>
   );
 }

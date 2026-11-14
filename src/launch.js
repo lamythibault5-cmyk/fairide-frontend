@@ -28,14 +28,18 @@ const CLE = 'fairide_lancement';
 // emporter : l'à emporter payé sur place est-il ouvert ? Une réponse gardée d'avant ce bouton n'en dit rien : fermé.
 // livraisonLoinMaintenant / veloMaxKm : la même question au-delà de la distance d'un vélo (comparaison front / serveur, 2026-11-05).
 const oui = (v) => (typeof v === 'boolean' ? v : null);
+// compteAReboursAt (Owen, 2026-11-14, maquettes/compte-a-rebours) : l'heure d'ouverture ANNONCÉE, réglée dans Admin › Aujourd'hui.
+// Affichage seulement (CompteARebours.jsx) : elle n'ouvre rien, seul GO ouvre ; le serveur ne l'envoie plus après GO.
+const heure = (v) => (typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : null);
 const lire = (c) => ({ go: c.go, goAt: c.goAt || null, emporter: c.emporter === true || c.go === true, livraisonMaintenant: oui(c.livraisonMaintenant),
-  livraisonLoinMaintenant: oui(c.livraisonLoinMaintenant), veloMaxKm: Number(c.veloMaxKm) || null });
-let etat = { go: false, goAt: null, emporter: false, livraisonMaintenant: null, livraisonLoinMaintenant: null, veloMaxKm: null };
+  livraisonLoinMaintenant: oui(c.livraisonLoinMaintenant), veloMaxKm: Number(c.veloMaxKm) || null, compteAReboursAt: c.go ? null : heure(c.compteAReboursAt) });
+let etat = { go: false, goAt: null, emporter: false, livraisonMaintenant: null, livraisonLoinMaintenant: null, veloMaxKm: null, compteAReboursAt: null };
 try { const c = JSON.parse(localStorage.getItem(CLE) || 'null'); if (c && typeof c.go === 'boolean') etat = lire(c); } catch { /* stockage indisponible */ }
 const abonnes = new Set();
 function poser(suivant) {
   if (suivant.go === etat.go && suivant.goAt === etat.goAt && suivant.emporter === etat.emporter && suivant.livraisonMaintenant === etat.livraisonMaintenant
-    && suivant.livraisonLoinMaintenant === etat.livraisonLoinMaintenant && suivant.veloMaxKm === etat.veloMaxKm) return;
+    && suivant.livraisonLoinMaintenant === etat.livraisonLoinMaintenant && suivant.veloMaxKm === etat.veloMaxKm
+    && suivant.compteAReboursAt === etat.compteAReboursAt) return;
   etat = suivant;
   try { localStorage.setItem(CLE, JSON.stringify(etat)); } catch { /* stockage indisponible */ }
   abonnes.forEach((f) => f());
@@ -66,6 +70,11 @@ siRefusOuverture(() => { if (Date.now() - dernierRefus > 5000) { dernierRefus = 
 function abonner(f) { abonnes.add(f); suivre(); return () => abonnes.delete(f); }
 export function useLancement() { return useSyncExternalStore(abonner, () => etat, () => etat); }
 export function lancementGo() { return etat.go; }
+// L'heure du compte à rebours à afficher (CompteARebours.jsx), ou null : pas d'heure annoncée, ou GO déjà pressé.
+export function useCompteARebours() {
+  const e = useLancement();
+  return !e.go && e.compteAReboursAt ? e.compteAReboursAt : null;
+}
 
 export function emporterOuvert() { return etat.emporter; }
 
