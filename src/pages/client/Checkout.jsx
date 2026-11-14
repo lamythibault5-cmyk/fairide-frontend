@@ -152,6 +152,12 @@ export default function Checkout() {
   const [codeParEmail, setCodeParEmail] = useState(false);
   const creditAnnonce = () => (codeParEmail ? null : creditEnAttente());
   const totalApresCode = (info) => (info?.parSms ? montantApresCredit() : montantDebite);
+  /* LE CODE PROUVÉ, LE TOTAL ANNONCÉ LE SAIT JUSQU'AU DEVIS SUIVANT (revue avant GO du 14/11, point 6). Le devis n'est relu
+   * qu'à un changement du panier ou à la minute : quand le code ne lance pas la commande (une case encore à cocher, dans la
+   * feuille de l'app ou sur le site), le toucher suivant envoyait le total d'avant le code, et le serveur, qui applique
+   * maintenant le crédit, rouvrait « Le total a changé ». `preuveTel` garde ce que le code a dit (par SMS ou par e-mail). */
+  const preuveTel = useRef(null);
+  const codeAccepte = (info) => { preuveTel.current = info || null; telOk.current = true; setMinute((n) => n + 1); };
   // Lu à l'appel (pas au rendu) : la commande relancée juste après le code part d'une fermeture d'avant la session relue.
   const telAVerifier = () => telephoneAVerifier(user) && !telOk.current && !sansCredit.current && !(viaFournisseur && !creditEnAttente());
   // Le code prouvé, la commande part avec le crédit : le total annoncé est celui d'après le crédit (sinon la carte « le total
@@ -521,7 +527,7 @@ export default function Checkout() {
 
   // `attendu` : le total annoncé quand il a changé depuis le devis (crédit de bienvenue gagné à l'instant par le code SMS).
   async function placeOrder(attendu) {
-    const annonce = typeof attendu === 'number' ? attendu : montantAnnonce;
+    const annonce = typeof attendu === 'number' ? attendu : telOk.current ? totalApresCode(preuveTel.current) : montantAnnonce;
     if (apercu) { setApercuOuvert(true); return; }
     if (fulfillmentType === 'delivery' && (!addressStreet.trim() || !addressNumber.trim() || !addressPostalCode.trim() || !addressCity.trim())) {
       signalerChamp('adresse', t('checkout.toastAddressRequired'), 'checkout-rangee-adresse');
@@ -1262,7 +1268,7 @@ export default function Checkout() {
               {creditAnnonce() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditAnnonce().montant) })}</span>}
               <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onCanal={(c) => setCodeParEmail(c === 'email')} onFait={(_maj, info) => {
                 const attendu = totalApresCode(info);
-                telOk.current = true;
+                codeAccepte(info);
                 // Rien d'autre à cocher : la commande part, le client a déjà touché « Commander ».
                 if (!casesAvant) { setSousEcran(null); placeOrder(attendu); }
               }} />
@@ -1285,7 +1291,7 @@ export default function Checkout() {
       {fenetreTel && (
         <Modale titre={t('verifTel.derniereEtape')} onFermer={() => setFenetreTel(false)} classeBoite="co-telephone-fenetre co-telephone--simple">
           {creditAnnonce() && <span className="co-pastille-credit"><i aria-hidden="true"><Icone nom="cadeau" taille={16} /></i>{t('verifTel.creditAttend', { montant: eurosRond(creditAnnonce().montant) })}</span>}
-          <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onCanal={(c) => setCodeParEmail(c === 'email')} onFait={(_maj, info) => { const attendu = totalApresCode(info); telOk.current = true; setFenetreTel(false); placeOrder(attendu); }} />
+          <VerifTelephone auto repliEmail simple focusRef={focusCodeTel} onCanal={(c) => setCodeParEmail(c === 'email')} onFait={(_maj, info) => { const attendu = totalApresCode(info); codeAccepte(info); setFenetreTel(false); placeOrder(attendu); }} />
           {viaFournisseur && creditEnAttente() && (
             <button type="button" className="co-sans-credit" onClick={() => { sansCredit.current = true; setFenetreTel(false); placeOrder(); }}>{t('verifTel.sansCredit')}</button>
           )}
