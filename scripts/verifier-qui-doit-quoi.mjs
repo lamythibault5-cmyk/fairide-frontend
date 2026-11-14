@@ -61,6 +61,32 @@ const CAS = [
     lignes: [ligne('Ana', 'calzone', 'Calzone', 10), ligne('Anabelle', 'calzone', 'Calzone', 10)],
     attendu: { 'n:Anabelle': 12.25 }
   },
+  // Revue du 2026-11-14 : le prénom était cherché n'importe où dans la consigne. On la lit sur sa forme : « Pour <prénom> »,
+  // puis éventuellement « · <la consigne de l'invité> ».
+  {
+    nom: "« Marie » et « Marie D » : chacune ses plats",
+    commande: commande([{ itemId: 'calzone', name: 'Calzone', price: 10, qty: 1, note: 'Pour Marie D' }, { itemId: 'calzone', name: 'Calzone', price: 8, qty: 1, note: 'Pour Marie' }]),
+    lignes: [ligne('Marie', 'calzone', 'Calzone', 10), ligne('Marie D', 'calzone', 'Calzone', 10)],
+    attendu: { 'n:Marie': 9.5, 'n:Marie D': 11.5 }
+  },
+  {
+    nom: "« Pour Paul · comme Marie » est à Paul, pas à Marie",
+    commande: commande([{ itemId: 'calzone', name: 'Calzone', price: 10, qty: 1, note: 'Pour Paul · comme Marie' }]),
+    lignes: [ligne('Marie', 'calzone', 'Calzone', 10), ligne('Paul', 'calzone', 'Calzone', 10, 1, { note: 'comme Marie' })],
+    attendu: { 'n:Paul': 12.25 }
+  },
+  {
+    nom: 'hôte en néerlandais (« Voor ») : « Marie D » ne prend pas la part de « Marie »',
+    commande: commande([{ itemId: 'calzone', name: 'Calzone', price: 10, qty: 1, note: 'Voor Marie · zonder Marie D' }]),
+    lignes: [ligne('Marie D', 'calzone', 'Calzone', 10), ligne('Marie', 'calzone', 'Calzone', 10, 1, { note: 'zonder Marie D' })],
+    attendu: { 'n:Marie': 12.25 }
+  },
+  {
+    nom: 'hôte en anglais (« For ») : la consigne de l\'invité après « · » ne compte pas',
+    commande: commande([{ itemId: 'tiramisu', name: 'Tiramisu', price: 6, qty: 1, note: 'For Igor · Paul likes it' }, { itemId: 'tiramisu', name: 'Tiramisu', price: 6, qty: 1, note: 'For Paul' }]),
+    lignes: [ligne('Paul', 'tiramisu', 'Tiramisu', 6), ligne('Igor', 'tiramisu', 'Tiramisu', 6, 1, { note: 'Paul likes it' })],
+    attendu: { 'n:Paul': 7.5, 'n:Igor': 7.5 }
+  },
   {
     nom: 'deux invités au même prénom, quand le serveur les distingue (participant)',
     // Les deux Calzone « Pour Marie » sont une seule ligne du panier (qty 2), comme CartContext.replaceGroupLines les fusionne.
