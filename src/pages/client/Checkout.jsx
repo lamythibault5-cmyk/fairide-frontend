@@ -1349,7 +1349,10 @@ export default function Checkout() {
                 </>
               )}
               {pendingOrder.giftVoucherDiscount > 0 && <div className="line"><span><Icone nom="cadeau" taille={14} /> {t('checkout.giftVoucherLine', { code: pendingOrder.giftVoucherCode })}</span><span>-{euros(pendingOrder.giftVoucherDiscount)}</span></div>}
-              {pendingOrder.promoCodeDiscount > 0 && <div className="line"><span>{pendingOrder.promoCode === CODE_AMI ? t('codeAmi.panier') : t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>}
+              {/* Le crédit de bienvenue se lit comme au paiement : « 5,00 € offerts », jamais « −5 € » (argent.md ; Owen, 2026-11-14, G2-16). */}
+              {pendingOrder.promoCodeDiscount > 0 && (pendingOrder.promoCode === CODE_AMI
+                ? <div className="line"><span>{t('codeAmi.panier')}</span><span>{euros(pendingOrder.promoCodeDiscount)} {t('codeAmi.panierOfferts')}</span></div>
+                : <div className="line"><span>{t('checkout.promoCodeRecap', { label: pendingOrder.promoCode })}</span><span>-{euros(pendingOrder.promoCodeDiscount)}</span></div>)}
               {pendingOrder.balanceUsed > 0 && <div className="line"><span>{t('checkout.balanceUsedLine')}</span><span>-{euros(pendingOrder.balanceUsed)}</span></div>}
               <div className="line total"><span>{pendingOrder.paymentMode === 'on_site' ? t('checkout.toPayOnSite') : t('checkout.totalToPay')}</span><span>{euros(Number(pendingOrder.total))}</span></div>
             </div>

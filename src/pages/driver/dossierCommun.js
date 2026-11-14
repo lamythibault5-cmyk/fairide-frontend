@@ -66,11 +66,12 @@ export function corpsInfos(f, c = null) {
  * (409 « Dossier validé : ton statut se change… ») dès qu'une clé sort de sa liste (backend routes/couriers.js,
  * CHAMPS_DOSSIER_VALIDE, recopiée ici). « Ton activité » après l'envoi (FeuilleActivite) renvoyait tout le formulaire, date
  * de naissance et numéro d'entreprise compris : un livreur validé à qui il manquait encore son régime TVA ne pouvait pas le
- * donner. Dénomination et siège ne partent que si le manque « siege » les attend ; le serveur doit encore les accepter pour
- * un dossier validé (à ajouter à sa liste). */
+ * donner. Dénomination et siège ne partent que si le manque « siege » les attend : le serveur les accepte alors sans nouvelle
+ * revue, et l'équipe en est informée (Owen, 2026-11-14, revue avant GO G2-22 ; backend CHAMPS_SIEGE et siegeManquant). */
 export const CHAMPS_DOSSIER_VALIDE = ['incomeExternalDeclared', 'iban', 'bagOption', 'socialInsuranceFund', 'vatStatus', 'vatNumber', 'schoolName', 'academicYear', 'nationalityGroup', 'minFeeCents', 'minFeePerKmCents', 'worksOtherPlatforms', 'otherPlatforms', 'otherPlatformNote', 'preferredZones', 'zone', 'vehicleType', 'licenceNumber', 'licencePlate'];
+export const CHAMPS_SIEGE = ['legalName', 'seatAddress'];
 export function corpsDossierValide(corps, manques = []) {
-  const permis = [...CHAMPS_DOSSIER_VALIDE, ...(manques.includes('siege') ? ['legalName', 'seatAddress'] : [])];
+  const permis = [...CHAMPS_DOSSIER_VALIDE, ...(manques.includes('siege') ? CHAMPS_SIEGE : [])];
   return Object.fromEntries(Object.entries(corps).filter(([k]) => permis.includes(k)));
 }
 

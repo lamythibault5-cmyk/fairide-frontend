@@ -2,6 +2,7 @@ import { orderTypeLabel, deliveryInstructionLabel } from '../orderStatus';
 import { useLanguage, getLocale } from '../context/LanguageContext';
 import { euros } from '../prixPlat';
 import { telephoneLisible } from '../validation';
+import { CODE_AMI } from './CodeAmi';
 
 function formatDateTime(ms) {
   return new Date(ms).toLocaleString(getLocale(), { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
@@ -64,7 +65,11 @@ export default function OrderReceipt({ order, restaurant }) {
       {/* TVA comprise (serviceFee est HTVA, serviceFeeVat sa TVA) : le total la contient, la ligne doit la contenir aussi. */}
       {order.serviceFee > 0 && <div className="receipt-line"><span>{t('receipt.serviceFee')}</span><span>{euros((order.serviceFee + (order.serviceFeeVat || 0)))}</span></div>}
       {order.orderType === 'delivery' && order.deliveryDiscount > 0 && <div className="receipt-line"><span>{t('receipt.deliveryOffer')}</span><span>-{euros(order.deliveryDiscount)}</span></div>}
-      {order.promoCodeDiscount > 0 && <div className="receipt-line"><span>{t('receipt.promoCode', { code: order.promoCode || '' })}</span><span>-{euros(order.promoCodeDiscount)}</span></div>}
+      {/* Le crédit de bienvenue (ligne réservée CODE-AMI, jamais tapée par le client) : « Crédit de bienvenue », « 5,00 € offerts »,
+          comme au paiement et sur le reçu PDF (backend recuClient.js ; Owen, 2026-11-14, G2-16). */}
+      {order.promoCodeDiscount > 0 && (order.promoCode === CODE_AMI
+        ? <div className="receipt-line"><span>{t('codeAmi.panier')}</span><span>{euros(order.promoCodeDiscount)} {t('codeAmi.panierOfferts')}</span></div>
+        : <div className="receipt-line"><span>{t('receipt.promoCode', { code: order.promoCode || '' })}</span><span>-{euros(order.promoCodeDiscount)}</span></div>)}
       {order.giftVoucherDiscount > 0 && <div className="receipt-line"><span>{t('receipt.giftVoucher', { code: order.giftVoucherCode || '' })}</span><span>-{euros(order.giftVoucherDiscount)}</span></div>}
       {order.balanceUsed > 0 && <div className="receipt-line"><span>{t('receipt.balanceUsed')}</span><span>-{euros(order.balanceUsed)}</span></div>}
       <div className="receipt-divider" />

@@ -8,7 +8,7 @@ describes, change this file in the same commit: a stale guide gets believed.
 
 **Pre-launch cleanup (2026-10-17).** Demo shops no longer come back on deploy: every demo seed in the backend's `server.js` runs only
 with `FAIRIDE_SEED_DEMO=on` (absent in production). SMS codes go through GatewayAPI, only to +32/+31/+33/+49/+352, the rest by
-e-mail. Stripe is in live mode (`/api/health` › `stripeLive: true`, re-checked 2026-10-24); the reset of the test IDs is
+e-mail (Belgian landlines too); such a number never gets the €5 welcome credit, and is never promised it (argent.md, 2026-11-14). Stripe is in live mode (`/api/health` › `stripeLive: true`, re-checked 2026-10-24); the reset of the test IDs is
 described in `../fairide-backend/docs/nettoyage-pre-lancement-2026-10-17.md`.
 
 
