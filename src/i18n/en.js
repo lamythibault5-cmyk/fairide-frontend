@@ -9237,6 +9237,7 @@ export default {
       pendingText: 'Your payment is not confirmed on our side yet. This can take a minute. Your order is listed under "My orders" and its status will update there on its own.',
       failedTitle: 'This payment did not go through',
       failedText: "We did not receive this payment. Your order was not sent to the restaurant and you have not been charged. Your cart is waiting: you can try again.",
+      failedRembourseText: "Your order was not sent to the restaurant. Your card was charged and then refunded: you'll see the money back within a few days. Your cart is waiting: you can try again.",
       notFoundTitle: 'Order not found',
       notFoundText: 'This order is not on your account. Check that you are signed in with the account that placed it.',
       backToCart: "Back to cart",

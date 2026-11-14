@@ -9310,6 +9310,8 @@ export default {
       pendingText: "Ton paiement n'est pas encore confirmé de notre côté. Cela peut prendre une minute. Ta commande apparaît dans « Mes commandes » et son statut s'y mettra à jour tout seul.",
       failedTitle: "Ce paiement n'a pas abouti",
       failedText: "Nous n'avons pas reçu ce paiement. Ta commande n'a pas été transmise au restaurant, et rien ne t'a été débité. Ton panier t'attend : tu peux réessayer.",
+      // Paiement arrivé commerce fermé, GO refermé ou sans livreur libre : refusé et rendu (Owen, 2026-11-14, G2-13).
+      failedRembourseText: "Ta commande n'a pas été transmise au restaurant. Ta carte a été débitée puis remboursée, tu revois l'argent sous quelques jours. Ton panier t'attend : tu peux réessayer.",
       notFoundTitle: 'Commande introuvable',
       notFoundText: 'Cette commande n\'est pas sur ton compte. Vérifie que tu es connecté avec le compte qui l\'a passée.',
       backToCart: "Revenir au panier",

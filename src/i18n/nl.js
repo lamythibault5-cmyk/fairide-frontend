@@ -9246,6 +9246,7 @@ export default {
       pendingText: 'Je betaling is bij ons nog niet bevestigd. Dit kan een minuut duren. Je bestelling staat onder "Mijn bestellingen" en de status wordt daar vanzelf bijgewerkt.',
       failedTitle: 'Deze betaling is niet gelukt',
       failedText: "We hebben deze betaling niet ontvangen. Je bestelling is niet naar het restaurant gestuurd en er is niets afgeschreven. Je winkelmandje wacht op je: je kunt het opnieuw proberen.",
+      failedRembourseText: 'Je bestelling is niet naar het restaurant gestuurd. Je kaart is gedebiteerd en daarna terugbetaald: je ziet het geld binnen enkele dagen terug. Je winkelmandje wacht op je: je kunt het opnieuw proberen.',
       notFoundTitle: 'Bestelling niet gevonden',
       notFoundText: 'Deze bestelling staat niet op je account. Controleer of je bent aangemeld met het account dat ze plaatste.',
       backToCart: "Terug naar winkelmandje",

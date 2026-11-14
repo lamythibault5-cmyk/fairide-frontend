@@ -211,6 +211,11 @@ function ResultatCommande({ success }) {
   // principal de la page, celui qui annonce au client si sa commande est passée ou non. Un tracé
   // posé dans un rond gris, c'est la forme que l'application donne déjà à ses écrans vides
   // (components/EtatVide.jsx), et celle des écrans de confirmation de l'application de référence.
+  /* CARTE DÉBITÉE PUIS RENDUE (Owen, 2026-11-14, revue avant GO G2-13). Le paiement est arrivé commerce fermé, GO refermé ou
+     sans livreur libre : le serveur annule la commande et rend tout (backend payments.refuserPaiementFerme, qui pose
+     paymentRefused avec l'annulation). « Rien ne t'a été débité » était faux. `refundedAmount` couvre un serveur d'avant le
+     drapeau, une fois le remboursement inscrit. */
+  const carteRendue = !!commande && !commande.paid && (commande.paymentRefused || Number(commande.refundedAmount) > 0);
   const view = {
     checking: { icone: 'horloge', title: t('orderResult.checkingTitle'), text: t('orderResult.checkingText') },
     paid: { icone: 'bouclier', title: t('orderResult.successTitle'), text: t('orderResult.successText') },
@@ -221,7 +226,7 @@ function ResultatCommande({ success }) {
       // /order-cancelled est une annulation volontaire du client, pas un échec technique : on garde le
       // texte d'origine, moins alarmant, et on réserve failedText au paiement qui n'a pas abouti.
       title: success ? t('orderResult.failedTitle') : t('orderResult.cancelTitle'),
-      text: success ? t('orderResult.failedText') : t('orderResult.cancelText')
+      text: success ? t(carteRendue ? 'orderResult.failedRembourseText' : 'orderResult.failedText') : t('orderResult.cancelText')
     }
   }[state];
 
